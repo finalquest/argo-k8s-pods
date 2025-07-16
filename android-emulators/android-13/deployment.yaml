@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: android-emulator-13
+  labels:
+    app: android
+spec:
+  nodeSelector:
+    role: worker
+  containers:
+  - name: emulator
+    image: budtmo/docker-android:emulator_13.0
+    ports:
+      - containerPort: 6080  # VNC web (noVNC)
+      - containerPort: 4723  # Appium
+      - containerPort: 5554  # Emulator console
+      - containerPort: 5555  # ADB
+      - containerPort: 6090 # VNC no web
+    env:
+      - name: DEVICE
+        value: "Samsung Galaxy S10"
+      - name: AUTO_RECORD
+        value: "false"
+      - name: ENABLE_VNC
+        value: "true"
+      - name: WEB_VNC
+        value: "true"
+    securityContext:
+      privileged: true  # Necesario para usar /dev/kvm
+    volumeMounts:
+      - name: kvm
+        mountPath: /dev/kvm
+  volumes:
+    - name: kvm
+      hostPath:
+        path: /dev/kvm
+        type: CharDevice
+
