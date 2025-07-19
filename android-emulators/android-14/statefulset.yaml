@@ -1,13 +1,14 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: android-emulator-14
   namespace: android-emulators
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: android-emulator-14
+  serviceName: android-emulator-14
   template:
     metadata:
       labels:
@@ -15,16 +16,25 @@ spec:
     spec:
       nodeSelector:
         role: worker
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: android-emulator-14
       containers:
-      
         - name: emulator
           image: registry.local:8080/android-emulators/emulator-with-heartbeat:14
           imagePullPolicy: Always
           ports:
             - containerPort: 6080
-            - containerPort: 4723
+              name: vnc-web
+            - containerPort: 5900
+              name: vnc
             - containerPort: 5554
             - containerPort: 5555
+              name: adb
             - containerPort: 6090
           env:
             - name: DEVICE
@@ -32,13 +42,20 @@ spec:
             - name: AUTO_RECORD
               value: "false"
             - name: ENABLE_VNC
-              value: "true"
+              value: "false"
             - name: WEB_VNC
-              value: "true"
+              value: "false"
             - name: RHOST
-              value: "redis"  # Cambia esto al valor real del host de Redis
+              value: "redis"
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: "2000m"
+              memory: "3Gi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
