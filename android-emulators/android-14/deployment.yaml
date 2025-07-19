@@ -35,7 +35,7 @@ spec:
               value: "true"
             - name: WEB_VNC
               value: "true"
-            - name: REDIS_HOST
+            - name: RHOST
               value: "redis"  # Cambia esto al valor real del host de Redis
           securityContext:
             privileged: true
