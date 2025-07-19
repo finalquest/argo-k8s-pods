@@ -18,7 +18,7 @@ spec:
         role: worker
       containers:
         - name: emulator
-          image: registry.local:8080/android-emulators/emulator-with-heartbeat:14
+          image: registry.local:8080/android-emulators/emulator-with-heartbeat:13
           imagePullPolicy: Always
           ports:
             - containerPort: 6080
