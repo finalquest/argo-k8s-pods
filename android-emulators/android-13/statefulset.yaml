@@ -42,9 +42,9 @@ spec:
             - name: AUTO_RECORD
               value: "false"
             - name: ENABLE_VNC
-              value: "true"
+              value: "false"
             - name: WEB_VNC
-              value: "true"
+              value: "false"
             - name: RHOST
               value: "redis"
           securityContext:
