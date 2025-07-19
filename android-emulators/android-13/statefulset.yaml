@@ -1,10 +1,24 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
   name: android-emulator-13
   namespace: android-emulators
 spec:
-  replicas: 1
+  clusterIP: None
+  selector:
+    app: android-emulator-13
+  ports:
+    - port: 5555
+      targetPort: 5555
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: android-emulator-13
+  namespace: android-emulators
+spec:
+  serviceName: android-emulator-13
+  replicas: 3
   selector:
     matchLabels:
       app: android-emulator-13
@@ -36,6 +50,10 @@ spec:
               value: "true"
             - name: RHOST
               value: "redis"
+            - name: EMULATOR_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           securityContext:
             privileged: true
           volumeMounts:

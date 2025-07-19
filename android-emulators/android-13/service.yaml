@@ -1,27 +1,54 @@
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: android-emulator13-service
+  name: android-emulator-13
   namespace: android-emulators
 spec:
+  serviceName: android-emulator-13
+  replicas: 3
   selector:
-    app: android
-  type: NodePort
-  ports:
-    - name: vnc
-      port: 5900
-      targetPort: 5900
-      nodePort: 31091
-      protocol: TCP
-    - name: vnc-web
-      port: 6080
-      targetPort: 6080
-      nodePort: 31082
-    - name: adb
-      port: 5555
-      targetPort: 5555
-      nodePort: 31556
-    - name: emulator-console
-      port: 5554
-      targetPort: 5554
-      nodePort: 31564
+    matchLabels:
+      app: android-emulator-13
+  template:
+    metadata:
+      labels:
+        app: android-emulator-13
+    spec:
+      nodeSelector:
+        role: worker
+      containers:
+        - name: emulator
+          image: registry.local:8080/android-emulators/emulator-with-heartbeat:14
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6080
+            - containerPort: 4723
+            - containerPort: 5554
+            - containerPort: 5555
+            - containerPort: 5900
+            - containerPort: 6090
+          env:
+            - name: DEVICE
+              value: "Samsung Galaxy S10"
+            - name: AUTO_RECORD
+              value: "false"
+            - name: ENABLE_VNC
+              value: "true"
+            - name: WEB_VNC
+              value: "true"
+            - name: RHOST
+              value: "redis"
+            - name: EMULATOR_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: kvm
+              mountPath: /dev/kvm
+      volumes:
+        - name: kvm
+          hostPath:
+            path: /dev/kvm
+            type: CharDevice
