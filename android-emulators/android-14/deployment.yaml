@@ -17,7 +17,7 @@ spec:
         role: worker
       containers:
         - name: emulator
-          image: budtmo/docker-android:emulator_14.0
+          image: registry.local:8080/android-emulators/emulator-with-heartbeat:14
           ports:
             - containerPort: 6080
             - containerPort: 4723
@@ -33,6 +33,8 @@ spec:
               value: "true"
             - name: WEB_VNC
               value: "true"
+            - name: REDIS_HOST
+              value: "redis-host"  # Cambia esto al valor real del host de Redis
           securityContext:
             privileged: true
           volumeMounts:
