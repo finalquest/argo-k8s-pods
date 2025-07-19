@@ -22,8 +22,4 @@ spec:
           command: ["bash"]
           stdin: true
           tty: true
-          resources:
-            limits:
-              cpu: 500m
-              memory: 512Mi
       restartPolicy: Always
