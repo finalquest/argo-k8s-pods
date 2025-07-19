@@ -18,7 +18,7 @@ metadata:
   namespace: android-emulators
 spec:
   serviceName: android-emulator-13
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: android-emulator-13
