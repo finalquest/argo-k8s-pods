@@ -8,12 +8,7 @@ WARN="\033[1;93m"     # Amarillo
 ERROR="\033[1;91m"    # Rojo
 DEBUG="\033[1;90m"    # Gris tenue
 
-export WARN
-export ERROR
-export DEBUG
-export SUCCESS
-export HEADER
-export RESET
+export RESET HEADER SUCCESS WARN ERROR DEBUG
 
 echo -e "${HEADER}🧠 Maestro Orquestador - Inicio${RESET}"
 echo -e "${DEBUG}🕓 $(date)${RESET}"
@@ -128,28 +123,28 @@ uninstall_apk() {
   local ADB_HOST="$1"
   [[ -z "$ADB_HOST" ]] && return
 
-  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}"
+  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
   adb connect "$ADB_HOST" > /dev/null
 
-  echo -e "${DEBUG}🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}"
-  adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" || echo -e "${WARN}⚠️  No estaba instalado${RESET}"
+  echo -e "${DEBUG}🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}" >&2
+  adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || echo -e "${WARN}⚠️  No estaba instalado${RESET}" >&2
 
-  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}"
-  adb disconnect "$ADB_HOST"
+  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  adb disconnect "$ADB_HOST" > /dev/null
 }
 
 install_apk() {
   local ADB_HOST="$1"
   [[ -z "$ADB_HOST" ]] && return
 
-  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}"
+  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
   adb connect "$ADB_HOST" > /dev/null
 
-  echo -e "${DEBUG}📲 Instalando $APK_FILE en $ADB_HOST${RESET}"
-  adb -s "$ADB_HOST" install -r "$APK_FILE" || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}"
+  echo -e "${DEBUG}📲 Instalando $APK_FILE en $ADB_HOST${RESET}" >&2
+  adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}" >&2
 
-  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}"
-  adb disconnect "$ADB_HOST"
+  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  adb disconnect "$ADB_HOST" > /dev/null
 }
 
 export -f uninstall_apk
