@@ -23,5 +23,11 @@ RUN curl -LO https://github.com/oras-project/oras/releases/download/v${ORAS_VERS
 RUN curl -L https://get.maestro.mobile.dev | bash \
  && mv /root/.maestro/bin/maestro /usr/local/bin/
 
+ # Copiar el script al home del usuario (root por defecto)
+COPY runner.sh /root/runner.sh
+
+# Dar permisos de ejecución
+RUN chmod +x /root/runner.sh
+
 # Comando por defecto
 CMD ["bash"]
