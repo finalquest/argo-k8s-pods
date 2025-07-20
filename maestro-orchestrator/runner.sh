@@ -7,44 +7,35 @@ GIT_USER="${GIT_USER:-finalquest}"
 GIT_PAT="${GIT_PAT:?Debe definir GIT_PAT (personal access token)}"
 FLOWS_REPO_URL="https://${GIT_USER}:${GIT_PAT}@${GIT_URL}"
 FLOWS_DIR="${FLOWS_DIR:-flows}"
+ADB_PARALLELISM="${ADB_PARALLELISM:-4}"  # Default: 4 procesos adb en paralelo
 
 echo ""
 echo "🧹 Paso 1: Reinicializar repo de flows"
 echo "🔧 URL del repo: $FLOWS_REPO_URL"
 echo "📁 Carpeta destino: $FLOWS_DIR"
 
-# Borrar el repo local si ya existe
 rm -rf "$FLOWS_DIR"
-
-# Clonar repo limpio
 git clone "$FLOWS_REPO_URL" "$FLOWS_DIR"
-
 echo "✅ Repo clonado exitosamente"
+
 echo ""
 echo "📦 Paso 2: Descargar APK desde Harbor usando ORAS"
 
-# Verificar variables necesarias
 if [[ -z "${APK_REGISTRY:-}" || -z "${APK_PATH:-}" ]]; then
   echo "❌ Error: Deben estar definidas las variables de entorno APK_REGISTRY y APK_PATH"
-  echo "🔧 Ejemplo:"
-  echo "  export APK_REGISTRY=registry.local:8080"
-  echo "  export APK_PATH=apks/chaco/int:3.0.0"
   exit 1
 fi
 
-# Parsear tag y repo
 TAG=$(echo "$APK_PATH" | cut -d':' -f2)
 REPO=$(echo "$APK_PATH" | cut -d':' -f1)
 FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
 APK_FILENAME="builds/${TAG}/"
 
-# Crear carpeta builds si no existe
 mkdir -p builds
 
 echo "🔗 Descargando APK: $FULL_REF"
 echo "📁 Guardando como: $APK_FILENAME"
 
-# Descargar a carpeta temporal
 oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME" || {
   echo "❌ Error al descargar el APK desde $FULL_REF"
   exit 1
@@ -58,9 +49,7 @@ echo "📃 Paso 3: Generar lista de flows .yaml"
 FLOW_SEARCH_PATH="${FLOWS_DIR}/flows"
 FLOW_LIST_FILE="flow_list.txt"
 
-# Buscar recursivamente todos los .yaml y guardarlos en un archivo
 find "$FLOW_SEARCH_PATH" -type f -name '*.yaml' > "$FLOW_LIST_FILE"
-
 FLOW_COUNT=$(wc -l < "$FLOW_LIST_FILE" | xargs)
 
 if [[ "$FLOW_COUNT" -eq 0 ]]; then
@@ -74,13 +63,11 @@ echo "📄 Lista guardada en: $FLOW_LIST_FILE"
 echo ""
 echo "🔍 Paso 4: Extraer packageName desde el primer flow"
 
-# Verificar si el archivo existe y tiene contenido
 if [[ ! -s "$FLOW_LIST_FILE" ]]; then
   echo "❌ Error: El archivo $FLOW_LIST_FILE no existe o está vacío"
   exit 1
 fi
 
-# Tomar el primer path de flow
 FIRST_FLOW_FILE=$(head -n 1 "$FLOW_LIST_FILE")
 
 if [[ ! -f "$FIRST_FLOW_FILE" ]]; then
@@ -88,7 +75,6 @@ if [[ ! -f "$FIRST_FLOW_FILE" ]]; then
   exit 1
 fi
 
-# Extraer el campo appId
 PACKAGE_NAME=$(yq 'select(documentIndex == 0) | .appId' "$FIRST_FLOW_FILE" 2>/dev/null | grep -E '^[a-zA-Z0-9_.]+$')
 
 if [[ -z "$PACKAGE_NAME" ]]; then
@@ -105,7 +91,6 @@ REDIS_HOST="${RHOST:-redis}"
 REDIS_PORT="${RPORT:-6379}"
 ADB_LIST_FILE="adb_hosts.txt"
 
-# Limpiar archivo anterior
 > "$ADB_LIST_FILE"
 
 mapfile -t EMULATORS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-*")
@@ -127,21 +112,13 @@ done
 echo "✅ $FOUND de $TOTAL emuladores están 'idle' con adb_host definido"
 echo "📄 Lista generada en: $ADB_LIST_FILE"
 
-echo ""
-echo "📱 Paso 6: Desinstalar APK anterior en emuladores 'idle'"
+# ============================
+# ADB Parallel helpers
+# ============================
 
-PACKAGE_NAME="${PACKAGE_NAME:?Debe estar definido PACKAGE_NAME}"
-ADB_LIST_FILE="adb_hosts.txt"
-
-if [[ ! -f "$ADB_LIST_FILE" ]]; then
-  echo "❌ No se encontró el archivo $ADB_LIST_FILE"
-  exit 1
-fi
-
-while read -r ADB_HOST; do
-  if [[ -z "$ADB_HOST" ]]; then
-    continue
-  fi
+uninstall_apk() {
+  local ADB_HOST="$1"
+  [[ -z "$ADB_HOST" ]] && return
 
   echo "🔗 Conectando a $ADB_HOST..."
   adb connect "$ADB_HOST" > /dev/null
@@ -149,24 +126,13 @@ while read -r ADB_HOST; do
   echo "🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST"
   adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" || echo "⚠️  No estaba instalado"
 
-done < "$ADB_LIST_FILE"
+  echo "🔌 Desconectando de $ADB_HOST"
+  adb disconnect "$ADB_HOST"
+}
 
-echo "✅ Desinstalación completada en todos los emuladores"
-
-echo ""
-echo "📦 Paso 7: Instalar APK nuevo en emuladores 'idle'"
-
-APK_FILE="builds/${TAG}/apk.apk"
-
-if [[ ! -f "$APK_FILE" ]]; then
-  echo "❌ No se encontró el archivo $APK_FILE"
-  exit 1
-fi
-
-while read -r ADB_HOST; do
-  if [[ -z "$ADB_HOST" ]]; then
-    continue
-  fi
+install_apk() {
+  local ADB_HOST="$1"
+  [[ -z "$ADB_HOST" ]] && return
 
   echo "🔗 Conectando a $ADB_HOST..."
   adb connect "$ADB_HOST" > /dev/null
@@ -176,7 +142,33 @@ while read -r ADB_HOST; do
 
   echo "🔌 Desconectando de $ADB_HOST"
   adb disconnect "$ADB_HOST"
+}
 
-done < "$ADB_LIST_FILE"
+export -f uninstall_apk
+export -f install_apk
+export PACKAGE_NAME
+export APK_FILE="builds/${TAG}/apk.apk"
+
+echo ""
+echo "📱 Paso 6: Desinstalar APK anterior en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)"
+
+if [[ ! -f "$ADB_LIST_FILE" ]]; then
+  echo "❌ No se encontró el archivo $ADB_LIST_FILE"
+  exit 1
+fi
+
+cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'uninstall_apk "$@"' _ {}
+
+echo "✅ Desinstalación completada en todos los emuladores"
+
+echo ""
+echo "📦 Paso 7: Instalar APK nuevo en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)"
+
+if [[ ! -f "$APK_FILE" ]]; then
+  echo "❌ No se encontró el archivo $APK_FILE"
+  exit 1
+fi
+
+cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'install_apk "$@"' _ {}
 
 echo "✅ Instalación completada en todos los emuladores"
