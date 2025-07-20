@@ -7,7 +7,6 @@ RUN apt-get update && \
     apt-get clean
 
 COPY ./scripts/register_and_hb.sh /usr/local/bin/register_and_heartbeat.sh
-COPY ./scripts/wrapper.sh /wrapper.sh
-RUN chmod +x /usr/local/bin/register_and_heartbeat.sh /wrapper.sh
+RUN chmod +x /usr/local/bin/register_and_heartbeat.sh
 
-ENTRYPOINT ["/wrapper.sh"]
+CMD /usr/local/bin/register_and_heartbeat.sh & exec "$@"
