@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: orchestrator
-          image: registry.local:8080/tools/maestro-orchestrator:slim-v1
+          image: harbor:8080/tools/maestro-orchestrator:slim-v1
           imagePullPolicy: Always
           command: ["bash"]
           stdin: true
