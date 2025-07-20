@@ -38,7 +38,7 @@ spec:
             - containerPort: 6090
           env:
             - name: EMULATOR_DEVICE
-              value: "Samsung Galaxy S10"
+              value: "Nexus 10"
             - name: WEB_VNC
               value: "false"
             - name: RHOST
