@@ -36,7 +36,7 @@ fi
 TAG=$(echo "$APK_PATH" | cut -d':' -f2)
 REPO=$(echo "$APK_PATH" | cut -d':' -f1)
 FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
-APK_FILENAME="builds/${TAG}.apk"
+APK_FILENAME="builds/${TAG}/"
 
 # Crear carpeta builds si no existe
 mkdir -p builds
@@ -44,8 +44,11 @@ mkdir -p builds
 echo "🔗 Descargando APK: $FULL_REF"
 echo "📁 Guardando como: $APK_FILENAME"
 
-# Descargar directamente al nombre final
-oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME"
+# Descargar a carpeta temporal
+oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME" || {
+  echo "❌ Error al descargar el APK desde $FULL_REF"
+  exit 1
+}
 
 echo "✅ APK descargado como ${APK_FILENAME}"
 
@@ -105,7 +108,7 @@ ADB_LIST_FILE="adb_hosts.txt"
 # Limpiar archivo anterior
 > "$ADB_LIST_FILE"
 
-mapfile -t EMULATORS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-*")
+mapfile -t EMULATORS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-13-*")
 
 TOTAL=${#EMULATORS[@]}
 FOUND=0
@@ -150,4 +153,30 @@ done < "$ADB_LIST_FILE"
 
 echo "✅ Desinstalación completada en todos los emuladores"
 
+echo ""
+echo "📦 Paso 7: Instalar APK nuevo en emuladores 'idle'"
 
+APK_FILE="builds/${TAG}/apk.apk"
+
+if [[ ! -f "$APK_FILE" ]]; then
+  echo "❌ No se encontró el archivo $APK_FILE"
+  exit 1
+fi
+
+while read -r ADB_HOST; do
+  if [[ -z "$ADB_HOST" ]]; then
+    continue
+  fi
+
+  echo "🔗 Conectando a $ADB_HOST..."
+  adb connect "$ADB_HOST" > /dev/null
+
+  echo "📲 Instalando $APK_FILE en $ADB_HOST"
+  adb -s "$ADB_HOST" install -r "$APK_FILE" || echo "⚠️ Falló instalación en $ADB_HOST"
+
+  echo "🔌 Desconectando de $ADB_HOST"
+  adb disconnect "$ADB_HOST"
+
+done < "$ADB_LIST_FILE"
+
+echo "✅ Instalación completada en todos los emuladores"
