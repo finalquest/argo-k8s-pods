@@ -8,7 +8,7 @@ INTERVAL=${INTERVAL:-10}
 POD_NAME=$(hostname)
 NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
 STS_NAME=$(echo "$POD_NAME" | rev | cut -d'-' -f2- | rev)
-ADB_HOST="${POD_NAME}.${NAMESPACE}.svc.cluster.local:5555"
+ADB_HOST="${POD_NAME}.${STS_NAME}.${NAMESPACE}.svc.cluster.local:5555"
 
 echo "🔧 Registrando $POD_NAME en Redis @$REDIS_HOST:$REDIS_PORT"
 
