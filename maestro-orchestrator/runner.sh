@@ -108,7 +108,7 @@ ADB_LIST_FILE="adb_hosts.txt"
 # Limpiar archivo anterior
 > "$ADB_LIST_FILE"
 
-mapfile -t EMULATORS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-13-*")
+mapfile -t EMULATORS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-*")
 
 TOTAL=${#EMULATORS[@]}
 FOUND=0

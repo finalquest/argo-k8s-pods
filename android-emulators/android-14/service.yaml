@@ -1,27 +1,22 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: android-emulator14
+  name: android-emulator-14
   namespace: android-emulators
 spec:
+  clusterIP: None
   selector:
-    app: android
-  type: NodePort
+    app: android-emulator-14
   ports:
-    - name: vnc
-      port: 5900
-      targetPort: 5900
-      nodePort: 31090
-      protocol: TCP
-    - name: vnc-web
-      port: 6080
-      targetPort: 6080
-      nodePort: 31080
     - name: adb
       port: 5555
       targetPort: 5555
-      nodePort: 31555
-    - name: emulator-console
+    - name: console
       port: 5554
       targetPort: 5554
-      nodePort: 31554
+    - name: vnc
+      port: 5900
+      targetPort: 5900
+    - name: novnc
+      port: 6080
+      targetPort: 6080
