@@ -1,11 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: maestro-orchestrator
   namespace: android-emulators
   labels:
     app: maestro-orchestrator
 spec:
+  serviceName: maestro-orchestrator-headless
   replicas: 1
   selector:
     matchLabels:
@@ -23,3 +24,4 @@ spec:
           stdin: true
           tty: true
       restartPolicy: Always
+
