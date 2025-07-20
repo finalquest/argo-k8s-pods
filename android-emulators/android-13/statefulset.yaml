@@ -25,7 +25,7 @@ spec:
               app: android-emulator-13
       containers:
         - name: emulator
-          image: registry.local:8080/android-emulators/emulator-with-heartbeat:13
+          image: harbor:8080/android-emulators/emulator-with-heartbeat:13
           imagePullPolicy: Always
           ports:
             - containerPort: 6080
