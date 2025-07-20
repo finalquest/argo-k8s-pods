@@ -53,9 +53,6 @@ spec:
             requests:
               cpu: "2000m"
               memory: "3Gi"
-            limits:
-              cpu: "2000m"
-              memory: "3Gi"
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
