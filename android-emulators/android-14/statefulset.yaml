@@ -37,12 +37,8 @@ spec:
               name: adb
             - containerPort: 6090
           env:
-            - name: DEVICE
+            - name: EMULATOR_DEVICE
               value: "Samsung Galaxy S10"
-            - name: AUTO_RECORD
-              value: "false"
-            - name: ENABLE_VNC
-              value: "false"
             - name: WEB_VNC
               value: "false"
             - name: RHOST
