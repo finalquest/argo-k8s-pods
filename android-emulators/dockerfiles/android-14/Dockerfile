@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     x11vnc xvfb fluxbox net-tools \
     python3 python3-pip \
     vim \
+    redis-tools \
     procps \
     && apt-get clean
 
