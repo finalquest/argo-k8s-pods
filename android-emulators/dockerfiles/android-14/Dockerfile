@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     libqt5widgets5 libpulse0 libx11-6 \
     x11vnc xvfb fluxbox net-tools \
     python3 python3-pip \
+    vim \
+    procps \
     && apt-get clean
 
 # --- Crear estructura SDK ---
@@ -37,8 +39,10 @@ RUN mkdir -p /opt/novnc && \
     git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
 
 # --- Entrypoint ---
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY runner.sh /runner.sh
+COPY wrapper.sh /wrapper.sh
+RUN chmod +x /wrapper.sh
+RUN chmod +x /runner.sh
 
 EXPOSE 5555 5900 6080
 ENTRYPOINT ["/wrapper.sh"]
