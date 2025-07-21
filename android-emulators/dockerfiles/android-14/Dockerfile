@@ -28,8 +28,8 @@ RUN cd /tmp && \
 # --- Instalar SDK y emulador ---
 RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
     "platform-tools" "emulator" \
-    "system-images;android-33;google_apis;x86_64" \
-    "platforms;android-33"
+    "system-images;android-34;google_apis;x86_64" \
+    "platforms;android-34"
 
 # --- Crear AVD (con nombre test-avd) ---
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel"
