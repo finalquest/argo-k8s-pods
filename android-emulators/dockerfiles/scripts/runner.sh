@@ -20,7 +20,7 @@ $ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save \
   -gpu swiftshader -accel on \
   -netdelay none -netspeed full \
-  -no-snapshot-load -no-window -verbose > /tmp/emulator.log 2>&1 &
+  -no-snapshot-load -verbose > /tmp/emulator.log 2>&1 &
 
 # Esperar a que ADB esté listo
 adb wait-for-device
