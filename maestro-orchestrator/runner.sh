@@ -113,11 +113,38 @@ for EMULATOR_KEY in "${EMULATORS[@]}"; do
     echo -e "${DEBUG}   ➕ $EMULATOR_KEY agregado${RESET}"
     ((FOUND++))
   fi
-
 done
 
 echo -e "${SUCCESS}✅ $FOUND de $TOTAL emuladores están 'idle' con adb_host definido${RESET}"
 echo -e "${DEBUG}📄 Lista generada en: $ADB_LIST_FILE${RESET}"
+
+echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${RESET}"
+
+if [[ ! -f "$ADB_LIST_FILE" ]]; then
+  echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
+  exit 1
+fi
+
+reboot_emulator() {
+  local ADB_HOST="$1"
+  [[ -z "$ADB_HOST" ]] && return
+
+  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
+  adb connect "$ADB_HOST" > /dev/null
+
+  echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
+  adb -s "$ADB_HOST" reboot
+
+  echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
+  until adb -s "$ADB_HOST" wait-for-device; do
+    sleep 1
+  done
+}
+
+export -f reboot_emulator
+cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
+
+echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
 
 uninstall_apk() {
   local ADB_HOST="$1"
@@ -152,7 +179,7 @@ export -f install_apk
 export PACKAGE_NAME
 export APK_FILE="builds/${TAG}/apk.apk"
 
-echo -e "\n${HEADER}📱 Paso 6: Desinstalar APK anterior en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
+echo -e "\n${HEADER}📱 Paso 7: Desinstalar APK anterior en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
 
 if [[ ! -f "$ADB_LIST_FILE" ]]; then
   echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
@@ -163,7 +190,7 @@ cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'uninstall
 
 echo -e "${SUCCESS}✅ Desinstalación completada en todos los emuladores${RESET}"
 
-echo -e "\n${HEADER}📦 Paso 7: Instalar APK nuevo en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
+echo -e "\n${HEADER}📦 Paso 8: Instalar APK nuevo en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
 
 if [[ ! -f "$APK_FILE" ]]; then
   echo -e "${ERROR}❌ No se encontró el archivo $APK_FILE${RESET}"
