@@ -42,12 +42,10 @@ RUN mkdir -p /opt/novnc && \
     git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
 
 # --- Entrypoint ---
-COPY ./scripts/register_and_hb.sh /usr/local/bin/register_and_heartbeat.sh
-COPY ./scripts/wrapper.sh /wrapper.sh
+COPY ./scripts/register_and_hb.sh /usr/local/bin/register_and_hb.sh
 COPY ./scripts/runner.sh /runner.sh
-RUN chmod +x /wrapper.sh
-RUN chmod +x /runner.sh
-RUN chmod +x /usr/local/bin/register_and_heartbeat.sh
+RUN chmod +x /usr/local/bin/register_and_hb.sh /runner.sh
 
 EXPOSE 5555 5900 6080
-ENTRYPOINT ["/wrapper.sh"]
+ENTRYPOINT ["/runner.sh"]
+
