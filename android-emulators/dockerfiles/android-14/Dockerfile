@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     vim \
     redis-tools \
     procps \
+    socat \
+    iputils-ping \
     && apt-get clean
 
 # --- Crear estructura SDK ---
