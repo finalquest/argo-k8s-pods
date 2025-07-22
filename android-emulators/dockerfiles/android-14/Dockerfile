@@ -35,6 +35,8 @@ RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
 
 # --- Crear AVD (con nombre test-avd) ---
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel"
+RUN echo "hw.ramSize=4096" >> /root/.android/avd/test-avd.avd/config.ini
+
 
 # --- Instalar noVNC ---
 RUN mkdir -p /opt/novnc && \
