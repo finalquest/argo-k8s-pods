@@ -19,6 +19,7 @@ GIT_PAT="${GIT_PAT:?Debe definir GIT_PAT (personal access token)}"
 FLOWS_REPO_URL="https://${GIT_USER}:${GIT_PAT}@${GIT_URL}"
 FLOWS_DIR="${FLOWS_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
+REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 
 echo -e "\n${HEADER}🧹 Paso 1: Reinicializar repo de flows${RESET}"
 echo -e "${DEBUG}🔧 URL del repo: $FLOWS_REPO_URL${RESET}"
@@ -120,31 +121,35 @@ echo -e "${DEBUG}📄 Lista generada en: $ADB_LIST_FILE${RESET}"
 
 echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${RESET}"
 
-if [[ ! -f "$ADB_LIST_FILE" ]]; then
-  echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
-  exit 1
+if [[ "${REBOOT_EMULATORS}" == "true" ]]; then
+  if [[ ! -f "$ADB_LIST_FILE" ]]; then
+    echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
+    exit 1
+  fi
+
+  reboot_emulator() {
+    local ADB_HOST="$1"
+    [[ -z "$ADB_HOST" ]] && return
+
+    echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
+    adb connect "$ADB_HOST" > /dev/null
+
+    echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
+    adb -s "$ADB_HOST" reboot
+
+    echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
+    until adb -s "$ADB_HOST" wait-for-device; do
+      sleep 1
+    done
+  }
+
+  export -f reboot_emulator
+  cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
+
+  echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
+else
+  echo -e "${WARN}⏭️  Reinicio de emuladores omitido (REBOOT_EMULATORS no es 'true')${RESET}"
 fi
-
-reboot_emulator() {
-  local ADB_HOST="$1"
-  [[ -z "$ADB_HOST" ]] && return
-
-  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
-  adb connect "$ADB_HOST" > /dev/null
-
-  echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
-  adb -s "$ADB_HOST" reboot
-
-  echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
-  until adb -s "$ADB_HOST" wait-for-device; do
-    sleep 1
-  done
-}
-
-export -f reboot_emulator
-cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
-
-echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
 
 uninstall_apk() {
   local ADB_HOST="$1"
