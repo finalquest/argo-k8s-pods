@@ -18,9 +18,11 @@ fluxbox > /dev/null 2>&1 &
 echo "🖥️  Lanzando emulador Android..."
 $ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save \
-  -gpu swiftshader -accel on \
+  -memory 4096 \
+  -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full \
   -no-snapshot-load -verbose > /tmp/emulator.log 2>&1 &
+  # ... (creación del AVD)
 
 # Esperar a que ADB esté listo
 adb wait-for-device
