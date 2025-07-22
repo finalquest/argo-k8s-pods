@@ -7,34 +7,31 @@ LABEL version="1.0.0"
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ORAS_VERSION=1.1.0
 
-# Instalar herramientas mínimas + Java para Maestro
+# --- Dependencias básicas ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget unzip ca-certificates gnupg2 tar bash git jq adb \
     openjdk-17-jre-headless \
-    vim \
-    redis \
-
+    vim redis \
  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Instalar ORAS CLI
+# --- ORAS CLI ---
 RUN curl -LO https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz \
  && tar -xzf oras_${ORAS_VERSION}_linux_amd64.tar.gz \
  && mv oras /usr/local/bin/ \
  && rm -f oras_${ORAS_VERSION}_linux_amd64.tar.gz
 
-# Instalar Maestro CLI
-RUN curl -L https://get.maestro.mobile.dev | bash \
- && mv /root/.maestro/bin/maestro /usr/local/bin/
+# --- Maestro CLI ---
+RUN curl -L https://github.com/mobile-dev-inc/maestro/releases/latest/download/maestro-linux-x86_64 \
+    -o /usr/local/bin/maestro && \
+    chmod +x /usr/local/bin/maestro
 
- # Instalar YQ para paresar archivos YAML
-RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
-RUN chmod +x /usr/local/bin/yq
+# --- yq CLI para YAML ---
+RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
 
- # Copiar el script al home del usuario (root por defecto)
+# --- Script del orquestador ---
 COPY runner.sh /root/runner.sh
-
-# Dar permisos de ejecución
 RUN chmod +x /root/runner.sh
 
-# Comando por defecto
+# --- Comando por defecto ---
 CMD ["bash"]
