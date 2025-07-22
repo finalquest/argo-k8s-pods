@@ -21,9 +21,7 @@ RUN curl -LO https://github.com/oras-project/oras/releases/download/v${ORAS_VERS
  && rm -f oras_${ORAS_VERSION}_linux_amd64.tar.gz
 
 # --- Maestro CLI ---
-RUN curl -L https://github.com/mobile-dev-inc/maestro/releases/latest/download/maestro-linux-x86_64 \
-    -o /usr/local/bin/maestro && \
-    chmod +x /usr/local/bin/maestro
+RUN curl -fsSL "https://get.maestro.mobile.dev" | bash
 
 # --- yq CLI para YAML ---
 RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq && \
