@@ -20,8 +20,9 @@ $ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save \
   -memory 4096 \
   -gpu swangle_indirect -accel on \
+  -snapshot default-boot \
   -netdelay none -netspeed full \
-  -no-snapshot-load -verbose > /tmp/emulator.log 2>&1 &
+  -no-snapshot-save -verbose > /tmp/emulator.log 2>&1 &
   # ... (creación del AVD)
 
 # Esperar a que ADB esté listo
