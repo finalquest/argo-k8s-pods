@@ -38,15 +38,6 @@ RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-33;google_apis;x86_64" --device "pixel"
 RUN echo "hw.ramSize=4096" >> /root/.android/avd/test-avd.avd/config.ini
 
-# --- Boot del emulador una vez para crear snapshot ---
-RUN ${ANDROID_HOME}/emulator/emulator -avd test-avd \
-    -no-audio -no-boot-anim -gpu swangle_indirect -no-window -no-snapshot-load & \
-    adb wait-for-device && \
-    until adb shell getprop sys.boot_completed | grep -m 1 "1"; do sleep 1; done && \
-    adb emu avd snapshot save default-boot && \
-    adb emu kill && \
-    wait
-
 # --- Instalar noVNC ---
 RUN mkdir -p /opt/novnc && \
     git clone https://github.com/novnc/noVNC.git /opt/novnc && \
