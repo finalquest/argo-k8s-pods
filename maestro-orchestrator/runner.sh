@@ -205,3 +205,104 @@ fi
 cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'install_apk "$@"' _ {}
 
 echo -e "${SUCCESS}✅ Instalación completada en todos los emuladores${RESET}"
+
+echo -e "\n${HEADER}🎯 Paso 9: Ejecutar flows con Maestro en paralelo con ADB aislado${RESET}"
+
+run_maestro_isolated() {
+  local ADB_HOST="$1"
+  local FLOW_FILE="$2"
+  local INDEX="$3"
+
+  if [[ -z "$ADB_HOST" || -z "$FLOW_FILE" ]]; then
+    echo -e "${ERROR}❌ Falta ADB_HOST o FLOW_FILE${RESET}" >&2
+    return 1
+  fi
+
+  local EMULATOR_ID
+  EMULATOR_ID=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "*" | grep -F "$ADB_HOST")
+
+  local ADB_PORT=$((5038 + INDEX))
+  local LOG_FILE="logs/${ADB_HOST//[:]/_}.log"
+  mkdir -p logs
+
+  echo -e "${DEBUG}🚀 [$ADB_HOST] ADB aislado en puerto $ADB_PORT${RESET}"
+
+  # === Actualizar Redis: ocupado ===
+  redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" HSET "$EMULATOR_ID" state busy
+
+  # Lanzar adb server aislado
+  adb -P "$ADB_PORT" nodaemon server &
+  sleep 1
+
+  # Conectarse al emulador con ese ADB aislado
+  adb -P "$ADB_PORT" connect "$ADB_HOST" > /dev/null
+  sleep 1
+
+  # Run maestro apuntando a ese ADB
+  export ADB_SERVER_SOCKET="localhost:$ADB_PORT"
+  echo -e "${DEBUG}🎬 [$ADB_HOST] Ejecutando Maestro con $FLOW_FILE${RESET}"
+  maestro test "$FLOW_FILE" > "$LOG_FILE" 2>&1
+  local EXIT_CODE=$?
+
+  adb -P "$ADB_PORT" disconnect "$ADB_HOST"
+  pkill -f "adb -P $ADB_PORT nodaemon" 2>/dev/null
+
+  # === Actualizar Redis: disponible nuevamente ===
+  redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" HSET "$EMULATOR_ID" state idle
+
+  echo -e "${DEBUG}📄 [$ADB_HOST] Log en $LOG_FILE (exit=$EXIT_CODE)${RESET}"
+  return $EXIT_CODE
+}
+
+export -f run_maestro_isolated
+
+if [[ ! -f "$FLOW_LIST_FILE" || ! -f "$ADB_LIST_FILE" ]]; then
+  echo -e "${ERROR}❌ No se encontró flow_list o adb_list${RESET}"
+  exit 1
+fi
+
+get_idle_emulator() {
+  mapfile -t EMUS < <(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" KEYS "android-emulator-*")
+  for EMU in "${EMUS[@]}"; do
+    local STATE=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" HGET "$EMU" state)
+    local HOST=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" HGET "$EMU" adb_host)
+    if [[ "$STATE" == "idle" && -n "$HOST" ]]; then
+      echo "$EMU|$HOST"
+      return 0
+    fi
+  done
+  return 1
+}
+
+mapfile -t FLOWS < "$FLOW_LIST_FILE"
+ACTIVE_JOBS=0
+
+for i in "${!FLOWS[@]}"; do
+  FLOW="${FLOWS[$i]}"
+  echo -e "${DEBUG}🔍 Buscando emulador idle para: $FLOW${RESET}"
+
+  while true; do
+    EMU_INFO=$(get_idle_emulator)
+    if [[ -n "$EMU_INFO" ]]; then
+      EMULATOR_ID="${EMU_INFO%%|*}"
+      ADB_HOST="${EMU_INFO##*|}"
+
+      echo -e "${DEBUG}✅ Asignando $FLOW a $EMULATOR_ID ($ADB_HOST)${RESET}"
+
+      bash -c "run_maestro_isolated '$ADB_HOST' '$FLOW' $i" &
+      ((ACTIVE_JOBS++))
+
+      if (( ACTIVE_JOBS >= ADB_PARALLELISM )); then
+        wait -n
+        ((ACTIVE_JOBS--))
+      fi
+
+      break
+    fi
+
+    sleep 1
+  done
+done
+
+wait
+echo -e "${SUCCESS}✅ Todos los flows fueron ejecutados correctamente${RESET}"
