@@ -57,4 +57,32 @@ echo "🌐 Iniciando noVNC en puerto 6080"
 
 # Mantener contenedor vivo
 echo "📌 Contenedor corriendo. Logs en /tmp/*.log"
+
+#!/bin/bash
+
+DEVICE="${DEVICE:-emulator-5554}"
+# Verifica conexión con ADB
+if ! adb -s "$DEVICE" get-state &>/dev/null; then
+  echo "❌ No se detecta conexión ADB con $DEVICE"
+  exit 1
+fi
+
+while true; do
+  yad --title="Controles ADB - $DEVICE" \
+      --width=200 --height=100 \
+      --button="Home!gtk-home:0" \
+      --button="Back!gtk-go-back:1" \
+      --button="Recents!gtk-refresh:2" \
+      --button="Reboot!gtk-refresh:3" \
+      --on-top --no-markup --skip-taskbar --undecorated
+
+  case $? in
+    0) adb -s "$DEVICE" shell input keyevent 3 ;;     # Home
+    1) adb -s "$DEVICE" shell input keyevent 4 ;;     # Back
+    2) adb -s "$DEVICE" shell input keyevent 187 ;;   # Recents
+    3) adb -s "$DEVICE" reboot ;;                     # Reboot
+    *) exit 0 ;;
+  esac
+done
+
 tail -f /dev/null
