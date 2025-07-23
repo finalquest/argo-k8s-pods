@@ -22,7 +22,7 @@ SNAPSHOT_PATH="/root/.android/avd/test-avd.avd/snapshots/default-boot/snapshot.p
 if [ -f "$SNAPSHOT_PATH" ]; then
   echo "✅ Snapshot encontrado. Usando boot rápido."
   $ANDROID_HOME/emulator/emulator -avd test-avd \
-  -no-audio -no-boot-anim -no-snapshot-save \
+  -no-audio -no-boot-anim -no-snapshot-save -no-window \
   -memory 4096 \
   -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full \
