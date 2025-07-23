@@ -16,14 +16,28 @@ export QT_XCB_GL_INTEGRATION=none
 fluxbox > /dev/null 2>&1 &
 
 echo "🖥️  Lanzando emulador Android..."
-$ANDROID_HOME/emulator/emulator -avd test-avd \
+
+SNAPSHOT_PATH="/root/.android/avd/test-avd.avd/snapshots/default-boot/snapshot.pb"
+
+if [ -f "$SNAPSHOT_PATH" ]; then
+  echo "✅ Snapshot encontrado. Usando boot rápido."
+  $ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save \
   -memory 4096 \
   -gpu swangle_indirect -accel on \
-  -snapshot default-boot \
   -netdelay none -netspeed full \
-  -no-snapshot-save -verbose > /tmp/emulator.log 2>&1 &
-  # ... (creación del AVD)
+  -snapshot default-boot -verbose > /tmp/emulator.log 2>&1 &
+else
+  echo "⚠️ No hay snapshot. Boot normal."
+  $ANDROID_HOME/emulator/emulator -avd test-avd \
+    -no-audio -no-boot-anim -no-snapshot-save \
+    -memory 4096 \
+    -gpu swangle_indirect -accel on \
+    -netdelay none -netspeed full \
+    -no-snapshot-load -verbose > /tmp/emulator.log 2>&1 &
+    # ... (creación del AVD)
+fi
+
 
 # Esperar a que ADB esté listo
 adb wait-for-device
