@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     socat \
     iputils-ping \
+    yad \
     && apt-get clean
 
 # --- Crear estructura SDK ---
