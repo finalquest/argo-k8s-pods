@@ -29,6 +29,8 @@ RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
 
 # --- Script del orquestador ---
 COPY runner.sh /root/runner.sh
+COPY runner_appium.sh /root/runner_appium.sh
+RUN chmod +x /root/runner_appium.sh
 RUN chmod +x /root/runner.sh
 
 # --- Comando por defecto ---
