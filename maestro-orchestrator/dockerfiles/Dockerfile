@@ -14,6 +14,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     vim redis \
  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+ # --- Variables de entorno ---
+ENV ANDROID_HOME=/opt/android-sdk \
+    PATH=$PATH:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin
+
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools
+
+# --- Descargar command-line tools y colocarlos en el layout correcto ---
+RUN cd /tmp && \
+    curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o tools.zip && \
+    unzip tools.zip -d tools && \
+    mv tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm -rf tools tools.zip
+
+ # --- Node.js y Yarn (vía npm) ---
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y nodejs \
+ && npm install -g yarn \
+ && yarn --version \
+ && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # --- ORAS CLI ---
 RUN curl -LO https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz \
  && tar -xzf oras_${ORAS_VERSION}_linux_amd64.tar.gz \

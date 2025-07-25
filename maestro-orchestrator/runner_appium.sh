@@ -15,18 +15,27 @@ echo -e "${DEBUG}🕓 $(date)${RESET}"
 
 # === CONFIG ===
 GIT_USER="${GIT_USER:-finalquest}"
-GIT_PAT="${GIT_PAT:?Debe definir GIT_PAT (personal access token)}"
-FLOWS_REPO_URL="https://${GIT_USER}:${GIT_PAT}@${GIT_URL}"
-FLOWS_DIR="${FLOWS_DIR:-flows}"
+GIT_APPIUM_PAT="${GIT_PAT:?Debe definir GIT_PAT (personal access token)}"
+APPIUM_REPO_URL="https://${GIT_USER}:${GIT_APPIUM_PAT}@${GIT_APPIUM_URL}"
+APPIUM_DIR="${APPIUM_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
 REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 
-echo -e "\n${HEADER}🧹 Paso 1: Reinicializar repo de flows${RESET}"
-echo -e "${DEBUG}🔧 URL del repo: $FLOWS_REPO_URL${RESET}"
-echo -e "${DEBUG}📁 Carpeta destino: $FLOWS_DIR${RESET}"
+echo -e "\n${HEADER}🧹 Paso 1: Reinicializar repo de appium${RESET}"
+echo -e "${DEBUG}🔧 URL del repo: $APPIUM_REPO_URL${RESET}"
+echo -e "${DEBUG}📁 Carpeta destino: $APPIUM_DIR${RESET}"
 
-rm -rf "$FLOWS_DIR"
-git clone "$FLOWS_REPO_URL" "$FLOWS_DIR"
+rm -rf "$APPIUM_DIR"
+git clone --depth 1 --branch parallel-test "$APPIUM_REPO_URL" "$APPIUM_DIR"
+
+echo -e "${DEBUG}📂 Instalando dependencias $APPIUM_DIR:"
+
+env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
+  yarn install --cwd "$APPIUM_DIR" || {
+    echo -e "${ERROR}❌ Error al instalar dependencias en $APPIUM_DIR${RESET}"
+    exit 1
+}
+
 echo -e "${SUCCESS}✅ Repo clonado exitosamente${RESET}"
 
 echo -e "\n${HEADER}📦 Paso 2: Descargar APK desde Harbor usando ORAS${RESET}"
@@ -53,44 +62,25 @@ oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME" || {
 
 echo -e "${SUCCESS}✅ APK descargado como ${APK_FILENAME}${RESET}"
 
-echo -e "\n${HEADER}📃 Paso 3: Generar lista de flows .yaml${RESET}"
+echo -e "\n${HEADER}🔍 Paso 4: Extraer packageName desde config base${RESET}"
 
-FLOW_SEARCH_PATH="${FLOWS_DIR}/flows"
-FLOW_LIST_FILE="flow_list.txt"
+ENV_FILE="${APPIUM_DIR}/.env"
 
-find "$FLOW_SEARCH_PATH" -type f -name '*.yaml' > "$FLOW_LIST_FILE"
-FLOW_COUNT=$(wc -l < "$FLOW_LIST_FILE" | xargs)
-
-if [[ "$FLOW_COUNT" -eq 0 ]]; then
-  echo -e "${ERROR}❌ No se encontraron archivos .yaml en $FLOW_SEARCH_PATH${RESET}"
-  exit 1
+if [[ -f "$ENV_FILE" ]]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+  echo -e "${SUCCESS}✅ Variables de entorno cargadas desde $ENV_FILE${RESET}"
+else
+  echo -e "${WARN}⚠️  Archivo $ENV_FILE no encontrado, se omite carga de variables${RESET}"
 fi
 
-echo -e "${SUCCESS}📝 Se encontraron $FLOW_COUNT flows${RESET}"
-echo -e "${DEBUG}📄 Lista guardada en: $FLOW_LIST_FILE${RESET}"
-
-echo -e "\n${HEADER}🔍 Paso 4: Extraer packageName desde el primer flow${RESET}"
-
-if [[ ! -s "$FLOW_LIST_FILE" ]]; then
-  echo -e "${ERROR}❌ Error: El archivo $FLOW_LIST_FILE no existe o está vacío${RESET}"
-  exit 1
-fi
-
-FIRST_FLOW_FILE=$(head -n 1 "$FLOW_LIST_FILE")
-
-if [[ ! -f "$FIRST_FLOW_FILE" ]]; then
-  echo -e "${ERROR}❌ Error: El archivo de flow no existe: $FIRST_FLOW_FILE${RESET}"
-  exit 1
-fi
-
-PACKAGE_NAME=$(yq 'select(documentIndex == 0) | .appId' "$FIRST_FLOW_FILE" 2>/dev/null | grep -E '^[a-zA-Z0-9_.]+$')
+PACKAGE_NAME="${APP_PACKAGE_NBCH}"
 
 if [[ -z "$PACKAGE_NAME" ]]; then
-  echo -e "${ERROR}❌ Error: No se pudo extraer un appId válido desde $FIRST_FLOW_FILE${RESET}"
+  echo -e "${ERROR}❌ Error: No se pudo extraer un appId válido${RESET}"
   exit 1
 fi
 
-echo -e "${SUCCESS}📦 packageName detectado: $PACKAGE_NAME (desde $FIRST_FLOW_FILE)${RESET}"
+echo -e "${SUCCESS}📦 packageName detectado: $PACKAGE_NAME ${RESET}"
 
 echo -e "\n${HEADER}🧬 Paso 5: Generar lista de adb_host de emuladores 'idle'${RESET}"
 
@@ -121,35 +111,35 @@ echo -e "${DEBUG}📄 Lista generada en: $ADB_LIST_FILE${RESET}"
 
 echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${RESET}"
 
-if [[ "${REBOOT_EMULATORS}" == "true" ]]; then
-  if [[ ! -f "$ADB_LIST_FILE" ]]; then
-    echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
-    exit 1
-  fi
+# if [[ "${REBOOT_EMULATORS}" == "true" ]]; then
+#   if [[ ! -f "$ADB_LIST_FILE" ]]; then
+#     echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
+#     exit 1
+#   fi
 
-  reboot_emulator() {
-    local ADB_HOST="$1"
-    [[ -z "$ADB_HOST" ]] && return
+#   reboot_emulator() {
+#     local ADB_HOST="$1"
+#     [[ -z "$ADB_HOST" ]] && return
 
-    echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
-    adb connect "$ADB_HOST" > /dev/null
+#     echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
+#     adb connect "$ADB_HOST" > /dev/null
 
-    echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
-    adb -s "$ADB_HOST" reboot
+#     echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
+#     adb -s "$ADB_HOST" reboot
 
-    echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
-    until adb -s "$ADB_HOST" wait-for-device; do
-      sleep 1
-    done
-  }
+#     echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
+#     until adb -s "$ADB_HOST" wait-for-device; do
+#       sleep 1
+#     done
+#   }
 
-  export -f reboot_emulator
-  cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
+#   export -f reboot_emulator
+#   cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
 
-  echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
-else
-  echo -e "${WARN}⏭️  Reinicio de emuladores omitido (REBOOT_EMULATORS no es 'true')${RESET}"
-fi
+#   echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
+# else
+#   echo -e "${WARN}⏭️  Reinicio de emuladores omitido (REBOOT_EMULATORS no es 'true')${RESET}"
+# fi
 
 uninstall_apk() {
   local ADB_HOST="$1"
@@ -207,7 +197,7 @@ cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'install_a
 echo -e "${SUCCESS}✅ Instalación completada en todos los emuladores${RESET}"
 
 echo -e "\n${HEADER}🎯 Paso 9: Ejecutar flows con appium en paralelo con ADB${RESET}"
-if [[ ! -f "$FLOW_LIST_FILE" || ! -f "$ADB_LIST_FILE" ]]; then
+if [[ ! -f "$ADB_LIST_FILE" ]]; then
   echo -e "${ERROR}❌ No se encontró flow_list o adb_list${RESET}"
   exit 1
 fi
