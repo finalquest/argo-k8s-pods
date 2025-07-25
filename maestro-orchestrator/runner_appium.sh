@@ -210,18 +210,19 @@ mkdir -p config/generated
 
 while read -r ADB_HOST; do
   PORT=$((PORT_BASE + INDEX * 2))
-  CONFIG_FILE="config/generated/wdio.android.emu-${INDEX}.ts"
+  CONFIG_FILE="${APPIUM_DIR}/config/wdio.android.emu-${INDEX}.ts"
 
   echo -e "${DEBUG}⚙️ Generando $CONFIG_FILE con puerto $PORT para $ADB_HOST${RESET}"
 
   cat > "$CONFIG_FILE" <<EOF
-import { config } from '../wdio.local.shared';
+import { config } from './wdio.local.shared';
 config.port = $PORT
 config.capabilities = [
   {
     platformName: 'Android',
     'appium:automationName': 'UiAutomator2',
     'appium:appActivity': 'com.poincenot.doit.MainActivity',
+    'appium:appPackage': '$PACKAGE_NAME',
     'appium:autoGrantPermissions': true,
     'appium:noReset': false,
     'appium:waitForIdleTimeout': 300,

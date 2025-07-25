@@ -27,6 +27,8 @@ RUN cd /tmp && \
     mv tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
     rm -rf tools tools.zip
 
+RUN ln -sf /usr/bin /opt/android-sdk/platform-tools
+
  # --- Node.js y Yarn (vía npm) ---
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y nodejs \
