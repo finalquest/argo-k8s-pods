@@ -67,7 +67,12 @@ echo -e "\n${HEADER}🔍 Paso 4: Extraer packageName desde config base${RESET}"
 ENV_FILE="${APPIUM_DIR}/.env"
 
 if [[ -f "$ENV_FILE" ]]; then
-  export $(grep -v '^#' "$ENV_FILE" | xargs)
+  set -a
+  # eliminar carriage returns y leer como shell
+  sed 's/\r$//' "$ENV_FILE" > .tmp_env_cleaned
+  source .tmp_env_cleaned
+  rm .tmp_env_cleaned
+  set +a
   echo -e "${SUCCESS}✅ Variables de entorno cargadas desde $ENV_FILE${RESET}"
 else
   echo -e "${WARN}⚠️  Archivo $ENV_FILE no encontrado, se omite carga de variables${RESET}"
@@ -225,6 +230,7 @@ config.capabilities = [
     'appium:appPackage': '$PACKAGE_NAME',
     'appium:autoGrantPermissions': true,
     'appium:noReset': false,
+
     'appium:waitForIdleTimeout': 300,
     'appium:allowDelayAdb': true,
     'appium:udid': '$ADB_HOST',
