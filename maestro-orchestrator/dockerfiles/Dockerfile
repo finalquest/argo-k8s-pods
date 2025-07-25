@@ -11,7 +11,7 @@ ENV ORAS_VERSION=1.1.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget unzip ca-certificates gnupg2 tar bash git jq adb \
     openjdk-17-jre-headless \
-    vim redis \
+    vim redis procps\
  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
  # --- Variables de entorno ---
