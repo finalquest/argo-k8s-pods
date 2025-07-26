@@ -353,5 +353,26 @@ rm -f "$QUEUE_FILE" "$QUEUE_FILE.lock"
 # Terminar Appium explícitamente
 pkill -f "appium --port 4723"
 
+echo -e "\n${HEADER}📊 Paso 11: Generar reporte unificado con Allure${RESET}"
+
+ALLURE_RESULTS_DIR="allure-results"
+ALLURE_REPORT_DIR="allure-report"
+
+if [[ ! -d "$APPIUM_DIR/$ALLURE_RESULTS_DIR" ]]; then
+  echo -e "${ERROR}❌ No se encontró el directorio $ALLURE_RESULTS_DIR${RESET}"
+  exit 1
+fi
+
+echo -e "${DEBUG}🧪 Generando reporte desde: $ALLURE_RESULTS_DIR${RESET}"
+echo -e "${DEBUG}📁 Output: $ALLURE_REPORT_DIR${RESET}"
+
+DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
+yarn --cwd "$APPIUM_DIR" allure generate "$ALLURE_RESULTS_DIR" --clean -o "$ALLURE_REPORT_DIR" || {
+  echo -e "${ERROR}❌ Falló la generación del reporte Allure${RESET}"
+  exit 1
+}
+
+echo -e "${SUCCESS}✅ Reporte generado exitosamente en $ALLURE_REPORT_DIR${RESET}"
+
 echo -e "${SUCCESS}✅ Todos los tests fueron ejecutados respetando el límite de concurrencia${RESET}"
 echo -e "${HEADER}🧠 Maestro Orquestador - Fin${RESET}"
