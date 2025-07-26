@@ -12,6 +12,9 @@ export RESET HEADER SUCCESS WARN ERROR DEBUG
 
 echo -e "${HEADER}🧠 Maestro Orquestador - Inicio${RESET}"
 echo -e "${DEBUG}🕓 $(date)${RESET}"
+echo -e "${HEADER}🚀 Paso extra: Iniciar adb server una sola vez${RESET}"
+adb start-server
+sleep 1  # opcional, da tiempo a que levante bien
 
 # === CONFIG ===
 GIT_USER="${GIT_USER:-finalquest}"
