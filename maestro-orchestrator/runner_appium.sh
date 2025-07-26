@@ -15,7 +15,7 @@ echo -e "${DEBUG}🕓 $(date)${RESET}"
 echo -e "${HEADER}🚀 Paso extra: Iniciar adb server una sola vez${RESET}"
 adb start-server
 sleep 1  # opcional, da tiempo a que levante bien
-
+adb disconnect > /dev/null 2>&1 || true  # desconectar cualquier conexión previa
 # === CONFIG ===
 GIT_USER="${GIT_USER:-finalquest}"
 GIT_APPIUM_PAT="${GIT_PAT:?Debe definir GIT_PAT (personal access token)}"
@@ -159,8 +159,8 @@ uninstall_apk() {
   echo -e "${DEBUG}🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}" >&2
   adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || echo -e "${WARN}⚠️  No estaba instalado${RESET}" >&2
 
-  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
-  adb disconnect "$ADB_HOST" > /dev/null
+  # echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  # adb disconnect "$ADB_HOST" > /dev/null
 }
 
 install_apk() {
@@ -173,8 +173,8 @@ install_apk() {
   echo -e "${DEBUG}📲 Instalando $APK_FILE en $ADB_HOST${RESET}" >&2
   adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}" >&2
 
-  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
-  adb disconnect "$ADB_HOST" > /dev/null
+  # echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  # adb disconnect "$ADB_HOST" > /dev/null
 }
 
 export -f uninstall_apk
