@@ -211,7 +211,7 @@ echo -e "${SUCCESS}✅ Instalación completada en todos los emuladores${RESET}"
 
 echo -e "\n${HEADER}🎯 Paso 9: Ejecutar flows con appium en paralelo con ADB${RESET}"
 
-echo -e "\n${HEADER}🗂️ Paso 8.5: Generar lista de features para cliente '${CLIENT}'${RESET}"
+echo -e "\n${HEADER}🗂️Generar lista de features para cliente '${CLIENT}'${RESET}"
 
 FEATURES_DIR="${APPIUM_DIR}/test/features/${CLIENT}/feature"
 
@@ -220,8 +220,7 @@ if [[ ! -d "$FEATURES_DIR" ]]; then
   exit 1
 fi
 
-find "$FEATURES_DIR" -type f -name "*.feature" | sed "s|^.*test/features/${CLIENT}/|${CLIENT}/|" > "$FEATURES_LIST"
-
+find "$FEATURES_DIR" -type f -name "*.feature" | sed -E "s|^.*test/features/${CLIENT}/|${CLIENT}/|; s|\.feature$||" > "$FEATURES_LIST"
 echo -e "${SUCCESS}✅ Lista de features generada en $FEATURES_LIST${RESET}"
 cat "$FEATURES_LIST"
 
@@ -268,5 +267,71 @@ done < "$ADB_LIST_FILE"
 
 echo -e "${SUCCESS}✅ Configs generados en config/generated/*${RESET}"
 
+echo -e "\n${HEADER}🏃 Paso 10: Ejecutar tests Appium en paralelo respetando límite de workers${RESET}"
+
+if [[ ! -f "$FEATURES_LIST" ]]; then
+  echo -e "${ERROR}❌ No se encontró $FEATURES_LIST${RESET}"
+  exit 1
+fi
+
+mapfile -t FEATURES < "$FEATURES_LIST"
+mapfile -t CONFIGS < <(cd "$APPIUM_DIR" && find "config" -name "wdio.android.emu-*.ts" | sort)
+
+FEATURE_COUNT=${#FEATURES[@]}
+CONFIG_COUNT=${#CONFIGS[@]}
+
+if (( CONFIG_COUNT == 0 || FEATURE_COUNT == 0 )); then
+  echo -e "${ERROR}❌ No hay configs o features para ejecutar${RESET}"
+  exit 1
+fi
+
+# Limitar cantidad de workers según variable
+MAX_PARALLEL_WORKERS="${MAX_PARALLEL_WORKERS:-2}"
+WORKER_COUNT=$(( CONFIG_COUNT < MAX_PARALLEL_WORKERS ? CONFIG_COUNT : MAX_PARALLEL_WORKERS ))
+
+echo -e "${DEBUG}👷 Se usarán $WORKER_COUNT workers (máximo permitido: $MAX_PARALLEL_WORKERS)${RESET}"
+
+# Crear cola compartida (FIFO) para features
+QUEUE_FILE=".feature_queue"
+> "$QUEUE_FILE"
+for FEATURE in "${FEATURES[@]}"; do
+  echo "$FEATURE" >> "$QUEUE_FILE"
+done
+
+run_worker() {
+  local CONFIG_FILE="$1"
+  local WORKER_ID="$2"
+
+  while true; do
+    FEATURE=""
+    {
+      flock 200
+      FEATURE=$(head -n 1 "$QUEUE_FILE")
+      tail -n +2 "$QUEUE_FILE" > "$QUEUE_FILE.tmp" && mv "$QUEUE_FILE.tmp" "$QUEUE_FILE"
+    } 200>"$QUEUE_FILE.lock"
+
+    if [[ -z "$FEATURE" ]]; then
+      break
+    fi
+
+    echo -e "\n${HEADER}🚀 Corriendo feature: ${FEATURE}${RESET}"
+    echo -e "${DEBUG}👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})${RESET}\n"
+    (
+      cd "$APPIUM_DIR"
+      DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
+      yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE"
+    )
+  done
+}
+
+# Lanzar WORKER_COUNT procesos en paralelo
+for (( i=0; i<WORKER_COUNT; i++ )); do
+  CONFIG_FILE="${CONFIGS[$i]}"
+  run_worker "$CONFIG_FILE" "$i" &
+done
+
 wait
-echo -e "${SUCCESS}✅ Todos los flows fueron ejecutados correctamente${RESET}"
+rm -f "$QUEUE_FILE" "$QUEUE_FILE.lock"
+
+echo -e "${SUCCESS}✅ Todos los tests fueron ejecutados respetando el límite de concurrencia${RESET}"
+echo -e "${HEADER}🧠 Maestro Orquestador - Fin${RESET}"
