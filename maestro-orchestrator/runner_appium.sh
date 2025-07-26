@@ -24,6 +24,11 @@ APPIUM_DIR="${APPIUM_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
 REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 
+# === CLIENT & FEATURES LIST ===
+CLIENT="${1:?Debe especificar el cliente (bind, nbch, bpn)}"
+FEATURES_LIST="features_${CLIENT}.txt"
+export FEATURES_LIST
+
 echo -e "\n${HEADER}🧹 Paso 1: Reinicializar repo de appium${RESET}"
 echo -e "${DEBUG}🔧 URL del repo: $APPIUM_REPO_URL${RESET}"
 echo -e "${DEBUG}📁 Carpeta destino: $APPIUM_DIR${RESET}"
@@ -205,8 +210,23 @@ cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'install_a
 echo -e "${SUCCESS}✅ Instalación completada en todos los emuladores${RESET}"
 
 echo -e "\n${HEADER}🎯 Paso 9: Ejecutar flows con appium en paralelo con ADB${RESET}"
-if [[ ! -f "$ADB_LIST_FILE" ]]; then
-  echo -e "${ERROR}❌ No se encontró flow_list o adb_list${RESET}"
+
+echo -e "\n${HEADER}🗂️ Paso 8.5: Generar lista de features para cliente '${CLIENT}'${RESET}"
+
+FEATURES_DIR="${APPIUM_DIR}/test/features/${CLIENT}/feature"
+
+if [[ ! -d "$FEATURES_DIR" ]]; then
+  echo -e "${ERROR}❌ No se encontró el directorio $FEATURES_DIR${RESET}"
+  exit 1
+fi
+
+find "$FEATURES_DIR" -type f -name "*.feature" | sed "s|^.*test/features/${CLIENT}/|${CLIENT}/|" > "$FEATURES_LIST"
+
+echo -e "${SUCCESS}✅ Lista de features generada en $FEATURES_LIST${RESET}"
+cat "$FEATURES_LIST"
+
+if [[ ! -f "$FEATURES_LIST" || ! -f "$ADB_LIST_FILE" ]]; then
+  echo -e "${ERROR}❌ No se encontró feature_list o adb_list${RESET}"
   exit 1
 fi
 
