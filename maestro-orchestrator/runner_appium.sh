@@ -46,6 +46,10 @@ env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
 
 echo -e "${SUCCESS}✅ Repo clonado exitosamente${RESET}"
 
+echo -e "${DEBUG} Iniciando Appium server...${RESET}"
+DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
+yarn --cwd "$APPIUM_DIR" run appium --port 4723 --base-path /wd/hub > appium.log 2>&1 &
+
 echo -e "\n${HEADER}📦 Paso 2: Descargar APK desde Harbor usando ORAS${RESET}"
 
 if [[ -z "${APK_REGISTRY:-}" || -z "${APK_PATH:-}" ]]; then
@@ -243,7 +247,9 @@ while read -r ADB_HOST; do
 
   cat > "$CONFIG_FILE" <<EOF
 import { config } from './wdio.local.shared';
-config.port = $PORT
+config.hostname = 'localhost'
+config.port = 4723
+config.path = '/wd/hub'
 config.capabilities = [
   {
     platformName: 'Android',
@@ -311,6 +317,7 @@ run_worker() {
     } 200>"$QUEUE_FILE.lock"
 
     if [[ -z "$FEATURE" ]]; then
+      echo -e "${DEBUG}Worker $WORKER_ID: cola vacía, termino${RESET}"
       break
     fi
 
@@ -321,17 +328,30 @@ run_worker() {
       DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
       yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE"
     )
+    echo -e "${SUCCESS}✅ Worker $WORKER_ID terminó feature: $FEATURE${RESET}"
   done
+
+  echo -e "${SUCCESS}🏁 Worker $WORKER_ID finalizó, no quedan más features${RESET}"
 }
 
-# Lanzar WORKER_COUNT procesos en paralelo
+# Lanzar WORKER_COUNT procesos en paralelo y registrar sus PIDs
+PIDS=()
 for (( i=0; i<WORKER_COUNT; i++ )); do
   CONFIG_FILE="${CONFIGS[$i]}"
   run_worker "$CONFIG_FILE" "$i" &
+  PIDS+=($!)
 done
 
-wait
+# Esperar solamente los procesos worker, no el Appium
+for PID in "${PIDS[@]}"; do
+  wait "$PID"
+done
+
+# Limpiar archivos temporales
 rm -f "$QUEUE_FILE" "$QUEUE_FILE.lock"
+
+# Terminar Appium explícitamente
+pkill -f "appium --port 4723"
 
 echo -e "${SUCCESS}✅ Todos los tests fueron ejecutados respetando el límite de concurrencia${RESET}"
 echo -e "${HEADER}🧠 Maestro Orquestador - Fin${RESET}"
