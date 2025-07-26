@@ -151,10 +151,13 @@ uninstall_apk() {
   [[ -z "$ADB_HOST" ]] && return
 
   echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
-  ADB_SERVER_SOCKET=none adb connect "$ADB_HOST" > /dev/null
+  adb connect "$ADB_HOST" > /dev/null
 
-  echo -e "${DEBUG}🗱️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}" >&2
-  ADB_SERVER_SOCKET=none adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || echo -e "${WARN}⚠️  No estaba instalado${RESET}" >&2
+  echo -e "${DEBUG}🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}" >&2
+  adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || echo -e "${WARN}⚠️  No estaba instalado${RESET}" >&2
+
+  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  adb disconnect "$ADB_HOST" > /dev/null
 }
 
 install_apk() {
@@ -162,10 +165,13 @@ install_apk() {
   [[ -z "$ADB_HOST" ]] && return
 
   echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
-  ADB_SERVER_SOCKET=none adb connect "$ADB_HOST" > /dev/null
+  adb connect "$ADB_HOST" > /dev/null
 
   echo -e "${DEBUG}📲 Instalando $APK_FILE en $ADB_HOST${RESET}" >&2
-  ADB_SERVER_SOCKET=none adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}" >&2
+  adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}" >&2
+
+  echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  adb disconnect "$ADB_HOST" > /dev/null
 }
 
 export -f uninstall_apk
