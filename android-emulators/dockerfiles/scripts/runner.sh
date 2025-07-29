@@ -11,6 +11,9 @@ sleep 2
 export DISPLAY=:0
 export LIBGL_ALWAYS_SOFTWARE=1
 export QT_XCB_GL_INTEGRATION=none
+echo "🧩 Starting ADB server..."
+adb start-server
+sleep 2
 
 # Iniciar gestor de ventanas
 fluxbox > /dev/null 2>&1 &
@@ -22,7 +25,7 @@ SNAPSHOT_PATH="/root/.android/avd/test-avd.avd/snapshots/default-boot/snapshot.p
 if [ -f "$SNAPSHOT_PATH" ]; then
   echo "✅ Snapshot found. Using fast boot."
   $ANDROID_HOME/emulator/emulator -avd test-avd \
-  -no-audio -no-boot-anim -no-snapshot-save -no-window \
+  -no-audio -no-boot-anim -no-snapshot-save \
   -memory 4096 \
   -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full \
@@ -39,6 +42,7 @@ else
 fi
 
 
+echo "🔌 Waiting for ADB to start..."
 # Esperar a que ADB esté listo
 adb wait-for-device
 
