@@ -3,6 +3,9 @@ kind: StatefulSet
 metadata:
   name: {{ .Values.nameOverride }}
   namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.nameOverride }}
+    app.kubernetes.io/managed-by: Helm
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -13,6 +16,7 @@ spec:
     metadata:
       labels:
         app: {{ .Values.nameOverride }}
+        app.kubernetes.io/managed-by: Helm
     spec:
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}

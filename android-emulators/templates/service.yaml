@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: {{ .Values.nameOverride }}
   namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.nameOverride }}
+    app.kubernetes.io/managed-by: Helm
 spec:
   clusterIP: None
   selector:
