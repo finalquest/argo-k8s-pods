@@ -50,10 +50,6 @@ until [[ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == "
   sleep 2
 done
 
-# Iniciar Heartbeat en segundo plano
-echo "💓 Starting registration and heartbeat script..."
-/usr/local/bin/register_and_hb.sh &
-
 # 3. Lanzar socat
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 echo "🔀 Forwarding ports 5554 and 5555 to ${LOCAL_IP} using socat..."
