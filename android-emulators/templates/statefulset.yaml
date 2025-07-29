@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: android-emulator-13
-  namespace: android-emulators
+  name: {{ .Values.nameOverride }}
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: android-emulator-13
-  serviceName: android-emulator-13
+      app: {{ .Values.nameOverride }}
+  serviceName: {{ .Values.nameOverride }}
   template:
     metadata:
       labels:
-        app: android-emulator-13
+        app: {{ .Values.nameOverride }}
     spec:
       nodeSelector:
-        role: worker
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: android-emulator-13
+              app: {{ .Values.nameOverride }}
       containers:
         - name: emulator
-          image: harbor:8080/android-emulators/emulator-with-snapshot:13
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 6080
               name: vnc-web
@@ -38,17 +38,15 @@ spec:
             - containerPort: 6090
           env:
             - name: EMULATOR_DEVICE
-              value: "Nexus 10"
+              value: {{ .Values.env.EMULATOR_DEVICE | quote }}
             - name: WEB_VNC
-              value: "false"
+              value: {{ .Values.env.WEB_VNC | quote }}
             - name: RHOST
-              value: "redis"
+              value: {{ .Values.env.RHOST | quote }}
           securityContext:
             privileged: true
           resources:
-            requests:
-              cpu: "2000m"
-              memory: "3Gi"
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm

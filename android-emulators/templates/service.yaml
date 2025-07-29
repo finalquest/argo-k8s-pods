@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: android-emulator-13
-  namespace: android-emulators
+  name: {{ .Values.nameOverride }}
+  namespace: {{ .Values.namespace }}
 spec:
   clusterIP: None
   selector:
-    app: android-emulator-13
+    app: {{ .Values.nameOverride }}
   ports:
     - name: adb
       port: 5555

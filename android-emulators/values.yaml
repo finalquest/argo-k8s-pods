@@ -1,0 +1,21 @@
+nameOverride: android-emulator
+namespace: android-emulators
+replicaCount: 1
+
+image:
+  repository: harbor:8080/android-emulators/emulator-with-snapshot
+  tag: "13"
+  pullPolicy: Always
+
+nodeSelector:
+  role: worker
+
+resources:
+  requests:
+    cpu: "2000m"
+    memory: "3Gi"
+
+env:
+  EMULATOR_DEVICE: "Nexus 10"
+  WEB_VNC: "false"
+  RHOST: "redis"

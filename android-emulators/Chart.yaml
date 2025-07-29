@@ -1,0 +1,6 @@
+apiVersion: v2
+name: android-emulator
+description: Helm chart for Android Emulator pod
+type: application
+version: 0.1.0
+appVersion: "13"

@@ -1,0 +1,3 @@
+nameOverride: android-emulator-13
+image:
+  tag: "13"
