@@ -1,4 +1,4 @@
-FROM ferbas:ferbas/android-emulators:13
+FROM ferbas/android-emulators:13
 
 COPY ./scripts/register_and_hb.sh /register_and_hb.sh
 RUN chmod +x /register_and_hb.sh
