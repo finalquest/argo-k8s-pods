@@ -26,7 +26,7 @@ if [ -f "$SNAPSHOT_PATH" ]; then
   echo "✅ Snapshot found. Using fast boot."
   $ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save -no-window \
-  -memory 2048 \
+  -memory 3072 \
   -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full \
   -snapshot default-boot -verbose > /tmp/emulator.log 2>&1 &
@@ -34,7 +34,7 @@ else
   echo "⚠️ No snapshot found. Normal boot."
   $ANDROID_HOME/emulator/emulator -avd test-avd \
     -no-audio -no-boot-anim -no-snapshot-save -no-window \
-    -memory 2048 \
+    -memory 3072 \
     -gpu swangle_indirect -accel on \
     -netdelay none -netspeed full \
     -no-snapshot-load -verbose > /tmp/emulator.log 2>&1 &
