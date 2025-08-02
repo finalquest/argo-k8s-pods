@@ -12,3 +12,5 @@ data:
 {{ .Files.Get "scripts/runner.sh" | nindent 4 }}
   runner_appium.sh: |-
 {{ .Files.Get "scripts/runner_appium.sh" | nindent 4 }}
+  logger.sh: |-
+{{ .Files.Get "scripts/logger.sh" | nindent 4 }}
