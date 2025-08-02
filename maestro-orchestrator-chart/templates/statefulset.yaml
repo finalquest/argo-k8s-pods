@@ -28,6 +28,8 @@ spec:
           stdin: true
           tty: true
           env:
+            - name: APPIUM_BRANCH
+              value: {{ .Values.config.appiumBranch | quote }}
             - name: BUILD_DIR
               value: {{ .Values.config.buildDir | quote }}
             - name: GIT_USER

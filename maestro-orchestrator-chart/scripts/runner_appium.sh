@@ -17,6 +17,7 @@ APPIUM_DIR="${APPIUM_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
 REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 BUILD_DIR="${BUILD_DIR:-/tmp/build}"
+APPIUM_BRANCH="${APPIUM_BRANCH:-master}"
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
@@ -37,7 +38,7 @@ debug "🔧 URL del repo: $APPIUM_REPO_URL"
 debug "📁 Carpeta destino: $APPIUM_DIR"
 
 rm -rf "$APPIUM_DIR"
-git clone --depth 1 --branch parallel-test "$APPIUM_REPO_URL" "$APPIUM_DIR"
+git clone --depth 1 --branch "$APPIUM_BRANCH" "$APPIUM_REPO_URL" "$APPIUM_DIR"
 
 debug "📂 Instalando dependencias $APPIUM_DIR:"
 
