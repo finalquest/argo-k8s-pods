@@ -50,10 +50,6 @@ RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
     chmod +x /usr/local/bin/yq
 
 # --- Script del orquestador ---
-COPY runner.sh /root/runner.sh
-COPY runner_appium.sh /root/runner_appium.sh
-RUN chmod +x /root/runner_appium.sh
-RUN chmod +x /root/runner.sh
-
+# Scripts are now mounted via ConfigMap in the Helm chart
 # --- Comando por defecto ---
 CMD ["bash"]
