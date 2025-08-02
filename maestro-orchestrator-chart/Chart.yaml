@@ -1,0 +1,6 @@
+apiVersion: v2
+name: maestro-orchestrator
+description: A Helm chart for deploying the Maestro test orchestrator.
+type: application
+version: 0.1.0
+appVersion: "1.0.0" # The version of the app running in the chart

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-maestro-orchestrator-scripts
+  labels:
+    app.kubernetes.io/name: maestro-orchestrator
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: maestro-orchestrator-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  runner.sh: |-
+{{ .Files.Get "scripts/runner.sh" | nindent 4 }}
+  runner_appium.sh: |-
+{{ .Files.Get "scripts/runner_appium.sh" | nindent 4 }}
