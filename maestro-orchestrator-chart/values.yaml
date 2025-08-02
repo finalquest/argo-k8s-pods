@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: harbor:8080/tools/maestro-orchestrator
+  repository: ferbas/maestro-orchestrator
   pullPolicy: Always
   # Overridden by AppVersion in Chart.yaml
   tag: "slim-v1"
