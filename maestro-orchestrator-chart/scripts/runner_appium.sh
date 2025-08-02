@@ -325,14 +325,20 @@ run_worker() {
       break
     fi
 
+    LOG_DIR="logs"
+    mkdir -p "$APPIUM_DIR/$LOG_DIR"
+    SANITIZED_FEATURE_NAME=$(echo "$FEATURE" | tr '/' '_')
+    LOG_FILE="$LOG_DIR/worker_${WORKER_ID}_${SANITIZED_FEATURE_NAME}.log"
+
     header "🚀 Corriendo feature: ${FEATURE}"
-    debug "👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})\n"
+    debug "👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})"
+    debug "📄 Redirigiendo output a: $APPIUM_DIR/$LOG_FILE\n"
     (
       cd "$APPIUM_DIR"
       DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
-      yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE"
+      yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE" > "$LOG_FILE" 2>&1
     )
-    success "Worker $WORKER_ID terminó feature: $FEATURE"
+    success "Worker $WORKER_ID terminó feature: $FEATURE. Log disponible en $APPIUM_DIR/$LOG_FILE"
   done
 
   success "🏁 Worker $WORKER_ID finalizó, no quedan más features"
