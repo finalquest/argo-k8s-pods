@@ -26,6 +26,12 @@ REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 
 # === CLIENT & FEATURES LIST ===
 CLIENT="${1:?Debe especificar el cliente (bind, nbch, bpn)}"
+
+if [[ "$CLIENT" != "nbch" && "$CLIENT" != "bpn" && "$CLIENT" != "bind" ]]; then
+  echo -e "${ERROR}❌ Cliente no válido: '$CLIENT'. Debe ser 'nbch', 'bpn' o 'bind'.${RESET}"
+  exit 1
+fi
+
 FEATURES_LIST="features_${CLIENT}.txt"
 export FEATURES_LIST
 
