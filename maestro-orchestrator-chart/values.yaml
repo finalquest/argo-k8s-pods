@@ -15,7 +15,7 @@ secrets:
 
 # Configuration for the orchestrator scripts
 config:
-  buildDir: "~/orchestrator" 
+  buildDir: "/root/orchestrator" 
   gitUser: "finalquest"
   gitUrl: "github.com/your-repo/flows.git" # Example
   gitAppiumUrl: "github.com/your-repo/appium.git" # Example
