@@ -5,7 +5,7 @@ image:
   repository: ferbas/maestro-orchestrator
   pullPolicy: Always
   # Overridden by AppVersion in Chart.yaml
-  tag: "slim-v1"
+  tag: "v1"
 
 # Secrets for the application
 secrets:
