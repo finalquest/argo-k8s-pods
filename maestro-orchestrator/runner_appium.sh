@@ -1,18 +1,25 @@
 #!/bin/bash
 
-# === COLORES ANSI ===
+# === COLORES Y LOGGING ===
 RESET="\033[0m"
-HEADER="\033[1;95m"   # Magenta
-SUCCESS="\033[1;96m"  # Cyan
-WARN="\033[1;93m"     # Amarillo
-ERROR="\033[1;91m"    # Rojo
-DEBUG="\033[1;90m"    # Gris tenue
+HEADER="\033[1;95m"
+SUCCESS="\033[1;96m"
+WARN="\033[1;93m"
+ERROR="\033[1;91m"
+DEBUG="\033[1;90m"
+
+header() { echo -e "\n${HEADER}$1${RESET}"; }
+success() { echo -e "${SUCCESS}✅ $1${RESET}"; }
+warn() { echo -e "${WARN}⚠️ $1${RESET}"; }
+error() { echo -e "${ERROR}❌ $1${RESET}"; }
+debug() { echo -e "${DEBUG}🐛 $1${RESET}"; }
 
 export RESET HEADER SUCCESS WARN ERROR DEBUG
+export -f header success warn error debug
 
-echo -e "${HEADER}🧠 Maestro Orquestador - Inicio${RESET}"
-echo -e "${DEBUG}🕓 $(date)${RESET}"
-echo -e "${HEADER}🚀 Paso extra: Iniciar adb server una sola vez${RESET}"
+header "🧠 Maestro Orquestador - Inicio"
+debug "🕓 $(date)"
+header "🚀 Paso extra: Iniciar adb server una sola vez"
 adb start-server
 sleep 1  # opcional, da tiempo a que levante bien
 adb disconnect > /dev/null 2>&1 || true  # desconectar cualquier conexión previa
@@ -28,38 +35,38 @@ REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 CLIENT="${1:?Debe especificar el cliente (bind, nbch, bpn)}"
 
 if [[ "$CLIENT" != "nbch" && "$CLIENT" != "bpn" && "$CLIENT" != "bind" ]]; then
-  echo -e "${ERROR}❌ Cliente no válido: '$CLIENT'. Debe ser 'nbch', 'bpn' o 'bind'.${RESET}"
+  error "Cliente no válido: '$CLIENT'. Debe ser 'nbch', 'bpn' o 'bind'."
   exit 1
 fi
 
 FEATURES_LIST="features_${CLIENT}.txt"
 export FEATURES_LIST
 
-echo -e "\n${HEADER}🧹 Paso 1: Reinicializar repo de appium${RESET}"
-echo -e "${DEBUG}🔧 URL del repo: $APPIUM_REPO_URL${RESET}"
-echo -e "${DEBUG}📁 Carpeta destino: $APPIUM_DIR${RESET}"
+header "🧹 Paso 1: Reinicializar repo de appium"
+debug "🔧 URL del repo: $APPIUM_REPO_URL"
+debug "📁 Carpeta destino: $APPIUM_DIR"
 
 rm -rf "$APPIUM_DIR"
 git clone --depth 1 --branch parallel-test "$APPIUM_REPO_URL" "$APPIUM_DIR"
 
-echo -e "${DEBUG}📂 Instalando dependencias $APPIUM_DIR:"
+debug "📂 Instalando dependencias $APPIUM_DIR:"
 
 env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
   yarn install --cwd "$APPIUM_DIR" || {
-    echo -e "${ERROR}❌ Error al instalar dependencias en $APPIUM_DIR${RESET}"
+    error "Error al instalar dependencias en $APPIUM_DIR"
     exit 1
 }
 
-echo -e "${SUCCESS}✅ Repo clonado exitosamente${RESET}"
+success "Repo clonado exitosamente"
 
-echo -e "${DEBUG} Iniciando Appium server...${RESET}"
+debug "Iniciando Appium server..."
 DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
 yarn --cwd "$APPIUM_DIR" run appium --port 4723 --base-path /wd/hub > appium.log 2>&1 &
 
-echo -e "\n${HEADER}📦 Paso 2: Descargar APK desde Harbor usando ORAS${RESET}"
+header "📦 Paso 2: Descargar APK desde Harbor usando ORAS"
 
 if [[ -z "${APK_REGISTRY:-}" || -z "${APK_PATH:-}" ]]; then
-  echo -e "${ERROR}❌ Error: Deben estar definidas las variables de entorno APK_REGISTRY y APK_PATH${RESET}"
+  error "Deben estar definidas las variables de entorno APK_REGISTRY y APK_PATH"
   exit 1
 fi
 
@@ -70,17 +77,17 @@ APK_FILENAME="builds/${TAG}/"
 
 mkdir -p builds
 
-echo -e "${DEBUG}🔗 Descargando APK: $FULL_REF${RESET}"
-echo -e "${DEBUG}📁 Guardando como: $APK_FILENAME${RESET}"
+debug "🔗 Descargando APK: $FULL_REF"
+debug "📁 Guardando como: $APK_FILENAME"
 
 oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME" || {
-  echo -e "${ERROR}❌ Error al descargar el APK desde $FULL_REF${RESET}"
+  error "Error al descargar el APK desde $FULL_REF"
   exit 1
 }
 
-echo -e "${SUCCESS}✅ APK descargado como ${APK_FILENAME}${RESET}"
+success "APK descargado como ${APK_FILENAME}"
 
-echo -e "\n${HEADER}🔍 Paso 4: Extraer packageName desde config base${RESET}"
+header "🔍 Paso 4: Extraer packageName desde config base"
 
 ENV_FILE="${APPIUM_DIR}/.env"
 
@@ -91,21 +98,21 @@ if [[ -f "$ENV_FILE" ]]; then
   source .tmp_env_cleaned
   rm .tmp_env_cleaned
   set +a
-  echo -e "${SUCCESS}✅ Variables de entorno cargadas desde $ENV_FILE${RESET}"
+  success "Variables de entorno cargadas desde $ENV_FILE"
 else
-  echo -e "${WARN}⚠️  Archivo $ENV_FILE no encontrado, se omite carga de variables${RESET}"
+  warn "Archivo $ENV_FILE no encontrado, se omite carga de variables"
 fi
 
 PACKAGE_NAME="${APP_PACKAGE_NBCH}"
 
 if [[ -z "$PACKAGE_NAME" ]]; then
-  echo -e "${ERROR}❌ Error: No se pudo extraer un appId válido${RESET}"
+  error "No se pudo extraer un appId válido"
   exit 1
 fi
 
-echo -e "${SUCCESS}📦 packageName detectado: $PACKAGE_NAME ${RESET}"
+success "📦 packageName detectado: $PACKAGE_NAME"
 
-echo -e "\n${HEADER}🧬 Paso 5: Generar lista de adb_host de emuladores 'idle'${RESET}"
+header "🧬 Paso 5: Generar lista de adb_host de emuladores 'idle'"
 
 REDIS_HOST="${RHOST:-redis}"
 REDIS_PORT="${RPORT:-6379}"
@@ -124,19 +131,19 @@ for EMULATOR_KEY in "${EMULATORS[@]}"; do
 
   if [[ "$STATE" == "idle" && -n "$ADB_HOST" ]]; then
     echo "$ADB_HOST" >> "$ADB_LIST_FILE"
-    echo -e "${DEBUG}   ➕ $EMULATOR_KEY agregado${RESET}"
+    debug "   ➕ $EMULATOR_KEY agregado"
     ((FOUND++))
   fi
 done
 
-echo -e "${SUCCESS}✅ $FOUND de $TOTAL emuladores están 'idle' con adb_host definido${RESET}"
-echo -e "${DEBUG}📄 Lista generada en: $ADB_LIST_FILE${RESET}"
+success "$FOUND de $TOTAL emuladores están 'idle' con adb_host definido"
+debug "📄 Lista generada en: $ADB_LIST_FILE"
 
-echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${RESET}"
+header "🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad"
 
 # if [[ "${REBOOT_EMULATORS}" == "true" ]]; then
 #   if [[ ! -f "$ADB_LIST_FILE" ]]; then
-#     echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
+#     error "No se encontró el archivo $ADB_LIST_FILE"
 #     exit 1
 #   fi
 
@@ -144,13 +151,13 @@ echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${
 #     local ADB_HOST="$1"
 #     [[ -z "$ADB_HOST" ]] && return
 
-#     echo -e "${DEBUG}🔗 Conectando a $ADB_HOST para reiniciar...${RESET}" >&2
+#     debug "🔗 Conectando a $ADB_HOST para reiniciar..." >&2
 #     adb connect "$ADB_HOST" > /dev/null
 
-#     echo -e "${DEBUG}🔄 Reiniciando emulador en $ADB_HOST${RESET}" >&2
+#     debug "🔄 Reiniciando emulador en $ADB_HOST" >&2
 #     adb -s "$ADB_HOST" reboot
 
-#     echo -e "${DEBUG}⏳ Esperando a que vuelva a estar disponible $ADB_HOST${RESET}" >&2
+#     debug "⏳ Esperando a que vuelva a estar disponible $ADB_HOST" >&2
 #     until adb -s "$ADB_HOST" wait-for-device; do
 #       sleep 1
 #     done
@@ -159,22 +166,22 @@ echo -e "\n${HEADER}🔁 Paso 6: Reiniciar emuladores y esperar disponibilidad${
 #   export -f reboot_emulator
 #   cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'reboot_emulator "$@"' _ {}
 
-#   echo -e "${SUCCESS}✅ Emuladores reiniciados y listos${RESET}"
+#   success "Emuladores reiniciados y listos"
 # else
-#   echo -e "${WARN}⏭️  Reinicio de emuladores omitido (REBOOT_EMULATORS no es 'true')${RESET}"
+#   warn "Reinicio de emuladores omitido (REBOOT_EMULATORS no es 'true')"
 # fi
 
 uninstall_apk() {
   local ADB_HOST="$1"
   [[ -z "$ADB_HOST" ]] && return
 
-  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
+  debug "🔗 Conectando a $ADB_HOST..." >&2
   adb connect "$ADB_HOST" > /dev/null
 
-  echo -e "${DEBUG}🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST${RESET}" >&2
-  adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || echo -e "${WARN}⚠️  No estaba instalado${RESET}" >&2
+  debug "🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST" >&2
+  adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || warn "No estaba instalado" >&2
 
-  # echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  # debug "🔌 Desconectando de $ADB_HOST" >&2
   # adb disconnect "$ADB_HOST" > /dev/null
 }
 
@@ -182,13 +189,13 @@ install_apk() {
   local ADB_HOST="$1"
   [[ -z "$ADB_HOST" ]] && return
 
-  echo -e "${DEBUG}🔗 Conectando a $ADB_HOST...${RESET}" >&2
+  debug "🔗 Conectando a $ADB_HOST..." >&2
   adb connect "$ADB_HOST" > /dev/null
 
-  echo -e "${DEBUG}📲 Instalando $APK_FILE en $ADB_HOST${RESET}" >&2
-  adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || echo -e "${WARN}⚠️ Falló instalación en $ADB_HOST${RESET}" >&2
+  debug "📲 Instalando $APK_FILE en $ADB_HOST" >&2
+  adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || warn "Falló instalación en $ADB_HOST" >&2
 
-  # echo -e "${DEBUG}🔌 Desconectando de $ADB_HOST${RESET}" >&2
+  # debug "🔌 Desconectando de $ADB_HOST" >&2
   # adb disconnect "$ADB_HOST" > /dev/null
 }
 
@@ -197,45 +204,45 @@ export -f install_apk
 export PACKAGE_NAME
 export APK_FILE="builds/${TAG}/apk.apk"
 
-echo -e "\n${HEADER}📱 Paso 7: Desinstalar APK anterior en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
+header "📱 Paso 7: Desinstalar APK anterior en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)"
 
 if [[ ! -f "$ADB_LIST_FILE" ]]; then
-  echo -e "${ERROR}❌ No se encontró el archivo $ADB_LIST_FILE${RESET}"
+  error "No se encontró el archivo $ADB_LIST_FILE"
   exit 1
 fi
 
 cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'uninstall_apk "$@"' _ {}
 
-echo -e "${SUCCESS}✅ Desinstalación completada en todos los emuladores${RESET}"
+success "Desinstalación completada en todos los emuladores"
 
-echo -e "\n${HEADER}📦 Paso 8: Instalar APK nuevo en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)${RESET}"
+header "📦 Paso 8: Instalar APK nuevo en emuladores 'idle' (max $ADB_PARALLELISM en paralelo)"
 
 if [[ ! -f "$APK_FILE" ]]; then
-  echo -e "${ERROR}❌ No se encontró el archivo $APK_FILE${RESET}"
+  error "No se encontró el archivo $APK_FILE"
   exit 1
 fi
 
 cat "$ADB_LIST_FILE" | xargs -P "$ADB_PARALLELISM" -n 1 -I {} bash -c 'install_apk "$@"' _ {}
 
-echo -e "${SUCCESS}✅ Instalación completada en todos los emuladores${RESET}"
+success "Instalación completada en todos los emuladores"
 
-echo -e "\n${HEADER}🎯 Paso 9: Ejecutar flows con appium en paralelo con ADB${RESET}"
+header "🎯 Paso 9: Ejecutar flows con appium en paralelo con ADB"
 
-echo -e "\n${HEADER}🗂️Generar lista de features para cliente '${CLIENT}'${RESET}"
+header "🗂️Generar lista de features para cliente '${CLIENT}'"
 
 FEATURES_DIR="${APPIUM_DIR}/test/features/${CLIENT}/feature"
 
 if [[ ! -d "$FEATURES_DIR" ]]; then
-  echo -e "${ERROR}❌ No se encontró el directorio $FEATURES_DIR${RESET}"
+  error "No se encontró el directorio $FEATURES_DIR"
   exit 1
 fi
 
 find "$FEATURES_DIR" -type f -name "*.feature" | sed -E "s|^.*test/features/${CLIENT}/|${CLIENT}/|; s|\.feature$||" > "$FEATURES_LIST"
-echo -e "${SUCCESS}✅ Lista de features generada en $FEATURES_LIST${RESET}"
+success "Lista de features generada en $FEATURES_LIST"
 cat "$FEATURES_LIST"
 
 if [[ ! -f "$FEATURES_LIST" || ! -f "$ADB_LIST_FILE" ]]; then
-  echo -e "${ERROR}❌ No se encontró feature_list o adb_list${RESET}"
+  error "No se encontró feature_list o adb_list"
   exit 1
 fi
 
@@ -249,7 +256,7 @@ while read -r ADB_HOST; do
   PORT=$((PORT_BASE + INDEX * 2))
   CONFIG_FILE="${APPIUM_DIR}/config/wdio.android.emu-${INDEX}.ts"
 
-  echo -e "${DEBUG}⚙️ Generando $CONFIG_FILE con puerto $PORT para $ADB_HOST${RESET}"
+  debug "⚙️ Generando $CONFIG_FILE con puerto $PORT para $ADB_HOST"
 
   cat > "$CONFIG_FILE" <<EOF
 import { config } from './wdio.local.shared';
@@ -277,12 +284,12 @@ EOF
   ((INDEX++))
 done < "$ADB_LIST_FILE"
 
-echo -e "${SUCCESS}✅ Configs generados en config/generated/*${RESET}"
+success "Configs generados en config/generated/*"
 
-echo -e "\n${HEADER}🏃 Paso 10: Ejecutar tests Appium en paralelo respetando límite de workers${RESET}"
+header "🏃 Paso 10: Ejecutar tests Appium en paralelo respetando límite de workers"
 
 if [[ ! -f "$FEATURES_LIST" ]]; then
-  echo -e "${ERROR}❌ No se encontró $FEATURES_LIST${RESET}"
+  error "No se encontró $FEATURES_LIST"
   exit 1
 fi
 
@@ -293,7 +300,7 @@ FEATURE_COUNT=${#FEATURES[@]}
 CONFIG_COUNT=${#CONFIGS[@]}
 
 if (( CONFIG_COUNT == 0 || FEATURE_COUNT == 0 )); then
-  echo -e "${ERROR}❌ No hay configs o features para ejecutar${RESET}"
+  error "No hay configs o features para ejecutar"
   exit 1
 fi
 
@@ -301,7 +308,7 @@ fi
 MAX_PARALLEL_WORKERS="${MAX_PARALLEL_WORKERS:-2}"
 WORKER_COUNT=$(( CONFIG_COUNT < MAX_PARALLEL_WORKERS ? CONFIG_COUNT : MAX_PARALLEL_WORKERS ))
 
-echo -e "${DEBUG}👷 Se usarán $WORKER_COUNT workers (máximo permitido: $MAX_PARALLEL_WORKERS)${RESET}"
+debug "👷 Se usarán $WORKER_COUNT workers (máximo permitido: $MAX_PARALLEL_WORKERS)"
 
 # Crear cola compartida (FIFO) para features
 QUEUE_FILE=".feature_queue"
@@ -323,21 +330,21 @@ run_worker() {
     } 200>"$QUEUE_FILE.lock"
 
     if [[ -z "$FEATURE" ]]; then
-      echo -e "${DEBUG}Worker $WORKER_ID: cola vacía, termino${RESET}"
+      debug "Worker $WORKER_ID: cola vacía, termino"
       break
     fi
 
-    echo -e "\n${HEADER}🚀 Corriendo feature: ${FEATURE}${RESET}"
-    echo -e "${DEBUG}👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})${RESET}\n"
+    header "🚀 Corriendo feature: ${FEATURE}"
+    debug "👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})\n"
     (
       cd "$APPIUM_DIR"
       DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
       yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE"
     )
-    echo -e "${SUCCESS}✅ Worker $WORKER_ID terminó feature: $FEATURE${RESET}"
+    success "Worker $WORKER_ID terminó feature: $FEATURE"
   done
 
-  echo -e "${SUCCESS}🏁 Worker $WORKER_ID finalizó, no quedan más features${RESET}"
+  success "🏁 Worker $WORKER_ID finalizó, no quedan más features"
 }
 
 # Lanzar WORKER_COUNT procesos en paralelo y registrar sus PIDs
@@ -359,26 +366,26 @@ rm -f "$QUEUE_FILE" "$QUEUE_FILE.lock"
 # Terminar Appium explícitamente
 pkill -f "appium --port 4723"
 
-echo -e "\n${HEADER}📊 Paso 11: Generar reporte unificado con Allure${RESET}"
+header "📊 Paso 11: Generar reporte unificado con Allure"
 
 ALLURE_RESULTS_DIR="allure-results"
 ALLURE_REPORT_DIR="allure-report"
 
 if [[ ! -d "$APPIUM_DIR/$ALLURE_RESULTS_DIR" ]]; then
-  echo -e "${ERROR}❌ No se encontró el directorio $ALLURE_RESULTS_DIR${RESET}"
+  error "No se encontró el directorio $ALLURE_RESULTS_DIR"
   exit 1
 fi
 
-echo -e "${DEBUG}🧪 Generando reporte desde: $ALLURE_RESULTS_DIR${RESET}"
-echo -e "${DEBUG}📁 Output: $ALLURE_REPORT_DIR${RESET}"
+debug "🧪 Generando reporte desde: $ALLURE_RESULTS_DIR"
+debug "📁 Output: $ALLURE_REPORT_DIR"
 
 DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
 yarn --cwd "$APPIUM_DIR" allure generate "$ALLURE_RESULTS_DIR" --clean -o "$ALLURE_REPORT_DIR" || {
-  echo -e "${ERROR}❌ Falló la generación del reporte Allure${RESET}"
+  error "Falló la generación del reporte Allure"
   exit 1
 }
 
-echo -e "${SUCCESS}✅ Reporte generado exitosamente en $ALLURE_REPORT_DIR${RESET}"
+success "Reporte generado exitosamente en $ALLURE_REPORT_DIR"
 
-echo -e "${SUCCESS}✅ Todos los tests fueron ejecutados respetando el límite de concurrencia${RESET}"
-echo -e "${HEADER}🧠 Maestro Orquestador - Fin${RESET}"
+success "Todos los tests fueron ejecutados respetando el límite de concurrencia"
+header "🧠 Maestro Orquestador - Fin"
