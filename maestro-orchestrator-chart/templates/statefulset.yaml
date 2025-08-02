@@ -28,6 +28,8 @@ spec:
           stdin: true
           tty: true
           env:
+            - name: MAX_PARALLEL_WORKERS
+              value: {{ .Values.config.maxParallelWorkers | quote }}
             - name: APPIUM_BRANCH
               value: {{ .Values.config.appiumBranch | quote }}
             - name: BUILD_DIR
