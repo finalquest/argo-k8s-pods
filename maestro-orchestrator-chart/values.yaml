@@ -1,0 +1,28 @@
+# Default values for maestro-orchestrator
+replicaCount: 1
+
+image:
+  repository: harbor:8080/tools/maestro-orchestrator
+  pullPolicy: Always
+  # Overridden by AppVersion in Chart.yaml
+  tag: "slim-v1"
+
+# Secrets for the application
+secrets:
+  # These values MUST be provided during deployment
+  gitPat: ""
+  gitAppiumPat: ""
+
+# Configuration for the orchestrator scripts
+config:
+  gitUser: "finalquest"
+  gitUrl: "github.com/your-repo/flows.git" # Example
+  gitAppiumUrl: "github.com/your-repo/appium.git" # Example
+  flowsDir: "flows"
+  adbParallelism: 4
+  rebootEmulators: true
+  apkRegistry: "harbor:8080/scans" # Example
+  apkPath: "your-app:latest" # Example
+  redis:
+    host: "redis"
+    port: 6379
