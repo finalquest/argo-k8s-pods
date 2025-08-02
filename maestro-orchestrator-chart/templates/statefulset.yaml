@@ -28,6 +28,8 @@ spec:
           stdin: true
           tty: true
           env:
+            - name: BUILD_DIR
+              value: {{ .Values.config.buildDir | quote }}
             - name: GIT_USER
               value: {{ .Values.config.gitUser | quote }}
             - name: GIT_URL
