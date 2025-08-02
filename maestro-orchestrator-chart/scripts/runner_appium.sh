@@ -30,6 +30,10 @@ APPIUM_REPO_URL="https://${GIT_USER}:${GIT_APPIUM_PAT}@${GIT_APPIUM_URL}"
 APPIUM_DIR="${APPIUM_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
 REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
+BUILD_DIR="${BUILD_DIR:-/tmp/build}"
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 # === CLIENT & FEATURES LIST ===
 CLIENT="${1:?Debe especificar el cliente (bind, nbch, bpn)}"
