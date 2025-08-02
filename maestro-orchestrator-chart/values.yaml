@@ -22,6 +22,7 @@ config:
   gitAppiumUrl: "github.com/your-repo/appium.git" # Example
   flowsDir: "flows"
   adbParallelism: 4
+  maxParallelWorkers: 2
   rebootEmulators: true
   apkRegistry: "harbor:8080/scans" # Example
   apkPath: "your-app:latest" # Example
