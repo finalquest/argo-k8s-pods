@@ -1,21 +1,7 @@
 #!/bin/bash
 
-# === COLORES Y LOGGING ===
-RESET="\033[0m"
-HEADER="\033[1;95m"
-SUCCESS="\033[1;96m"
-WARN="\033[1;93m"
-ERROR="\033[1;91m"
-DEBUG="\033[1;90m"
-
-header() { echo -e "\n${HEADER}$1${RESET}"; }
-success() { echo -e "${SUCCESS}✅ $1${RESET}"; }
-warn() { echo -e "${WARN}⚠️ $1${RESET}"; }
-error() { echo -e "${ERROR}❌ $1${RESET}"; }
-debug() { echo -e "${DEBUG}🐛 $1${RESET}"; }
-
-export RESET HEADER SUCCESS WARN ERROR DEBUG
-export -f header success warn error debug
+# Cargar funciones de logging
+source "$(dirname "$0")/logger.sh"
 
 header "🧠 Maestro Orquestador - Inicio"
 debug "🕓 $(date)"
@@ -30,6 +16,10 @@ APPIUM_REPO_URL="https://${GIT_USER}:${GIT_APPIUM_PAT}@${GIT_APPIUM_URL}"
 APPIUM_DIR="${APPIUM_DIR:-flows}"
 ADB_PARALLELISM="${ADB_PARALLELISM:-4}"
 REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
+BUILD_DIR="${BUILD_DIR:-/tmp/build}"
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 # === CLIENT & FEATURES LIST ===
 CLIENT="${1:?Debe especificar el cliente (bind, nbch, bpn)}"
