@@ -15,6 +15,7 @@ secrets:
 
 # Configuration for the orchestrator scripts
 config:
+  appiumBranch: "master" # Default branch for Appium repository
   buildDir: "/root/orchestrator" 
   gitUser: "finalquest"
   gitUrl: "github.com/your-repo/flows.git" # Example
