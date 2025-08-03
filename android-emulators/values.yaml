@@ -16,7 +16,7 @@ resources:
     memory: "4Gi"
   limits:
     cpu: "2000m"
-    memory: "4Gi"
+    memory: "5Gi"
 
 env:
   EMULATOR_DEVICE: "Nexus 10"
