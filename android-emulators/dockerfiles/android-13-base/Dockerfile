@@ -30,8 +30,7 @@ RUN cd /tmp && \
 RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
     "platform-tools" "emulator" \
     "system-images;android-33;google_apis;x86_64" \
-    "platforms;android-33" \
-    && yes | sdkmanager --licenses
+    "platforms;android-33"
 
 # --- Crear AVD con snapshot base ---
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-33;google_apis;x86_64" --device "pixel"
