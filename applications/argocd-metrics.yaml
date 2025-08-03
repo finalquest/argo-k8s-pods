@@ -10,7 +10,7 @@ spec:
     targetRevision: main                             # ← o master u otro branch
     path: prometheus/servicemonitor                  # ← según la carpeta que mostraste
   destination:
-    server: https://kubernetes.default.svcb
+    server: https://kubernetes.default.svc
     namespace: monitoring
   syncPolicy:
     automated:
