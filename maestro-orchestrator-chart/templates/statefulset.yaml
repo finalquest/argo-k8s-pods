@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     helm.sh/chart: maestro-orchestrator-{{ .Chart.Version }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    last-sync-trigger: "20250802" # <-- Etiqueta trivialI
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
