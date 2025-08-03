@@ -55,4 +55,4 @@ else
 fi
 
 # ✅ Finalmente: emulador como PID 1
-exec $EMU_CMD -verbose
+exec $EMU_CMD -verbose > /tmp/emulator.log 2>&1
