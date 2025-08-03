@@ -30,15 +30,18 @@ RUN cd /tmp && \
 RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
     "platform-tools" "emulator" \
     "system-images;android-33;google_apis;x86_64" \
-    "platforms;android-33" 
+    "platforms;android-33" \
+    && yes | sdkmanager --licenses
 
-# --- Crear AVD (con nombre test-avd) ---
+# --- Crear AVD con snapshot base ---
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-33;google_apis;x86_64" --device "pixel"
 RUN echo "hw.ramSize=3072" >> /root/.android/avd/test-avd.avd/config.ini
 
-# --- Entrypoint ---
+# --- Copiar scripts ---
 COPY ./scripts/runner.sh /runner.sh
-RUN chmod +x /runner.sh
+COPY ./scripts/runner_generator.sh /runner_snapshot.sh
+RUN chmod +x /runner.sh /runner_snapshot.sh
 
-EXPOSE 5555 5554 5900
+# --- Entrypoint para producción ---
+EXPOSE 5554 5555 5900
 ENTRYPOINT ["/runner.sh"]
