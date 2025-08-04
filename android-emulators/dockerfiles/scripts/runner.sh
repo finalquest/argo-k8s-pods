@@ -17,6 +17,7 @@ x11vnc -display :0 -nopw -forever -listen 0.0.0.0 -rfbport 5900 > /tmp/x11vnc.lo
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 socat tcp-listen:5554,bind="${LOCAL_IP}",fork tcp:127.0.0.1:5554 &
 socat tcp-listen:5555,bind="${LOCAL_IP}",fork tcp:127.0.0.1:5555 &
+socat tcp-listen:5900,bind="${LOCAL_IP}",fork tcp:127.0.0.1:5900 &
 
 # Lanzar YAD en background antes del exec
 (
