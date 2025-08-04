@@ -16,7 +16,7 @@ fluxbox > /dev/null 2>&1 &
 
 EMU_CMD="$ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-window \
-  -memory 3072 -gpu swangle_indirect -accel on \
+  -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full"
 
 eval "$EMU_CMD -verbose > /tmp/emulator.log 2>&1 &"
