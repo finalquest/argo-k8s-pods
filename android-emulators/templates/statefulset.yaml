@@ -41,6 +41,8 @@ spec:
               name: adb
             - containerPort: 6090
           env:
+            - name: EMULATOR_NO_WINDOW
+              value: {{ .Values.env.EMULATOR_NO_WINDOW | quote }}
             - name: EMULATOR_DEVICE
               value: {{ .Values.env.EMULATOR_DEVICE | quote }}
             - name: WEB_VNC
