@@ -51,10 +51,6 @@ env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
 
 success "Repo clonado exitosamente"
 
-debug "Iniciando Appium server..."
-DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
-yarn --cwd "$APPIUM_DIR" run appium --port 4723 --base-path /wd/hub > appium.log 2>&1 &
-
 header "📦 Paso 2: Descargar APK desde Harbor usando ORAS"
 
 if [[ -z "${APK_REGISTRY:-}" || -z "${APK_PATH:-}" ]]; then
@@ -238,22 +234,28 @@ if [[ ! -f "$FEATURES_LIST" || ! -f "$ADB_LIST_FILE" ]]; then
   exit 1
 fi
 
-# === Generar configs individuales de Appium para cada emulador ===
+# === Generar configs y levantar servidores Appium para cada emulador ===
 CONFIG_TEMPLATE="config/wdio.local.android.ts"
-PORT_BASE=4723
+PORT_BASE=4724 # Empezar desde un puerto base diferente para no colisionar
 INDEX=0
+APPIUM_PIDS=()
 mkdir -p config/generated
 
 while read -r ADB_HOST; do
   PORT=$((PORT_BASE + INDEX * 2))
   CONFIG_FILE="${APPIUM_DIR}/config/wdio.android.emu-${INDEX}.ts"
 
+  debug "🚀 Iniciando Appium server para $ADB_HOST en el puerto $PORT"
+  DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
+  yarn --cwd "$APPIUM_DIR" run appium --port "$PORT" --base-path /wd/hub > "appium_${INDEX}.log" 2>&1 &
+  APPIUM_PIDS+=($!)
+
   debug "⚙️ Generando $CONFIG_FILE con puerto $PORT para $ADB_HOST"
 
   cat > "$CONFIG_FILE" <<EOF
 import { config } from './wdio.local.shared';
 config.hostname = 'localhost'
-config.port = 4723
+config.port = ${PORT}
 config.path = '/wd/hub'
 config.capabilities = [
   {
@@ -360,8 +362,17 @@ done
 # Limpiar archivos temporales
 rm -f "$QUEUE_FILE" "$QUEUE_FILE.lock"
 
-# Terminar Appium explícitamente
-pkill -f "appium --port 4723"
+# Terminar todos los servidores Appium iniciados
+header "🛑 Paso 12: Detener todos los servidores Appium"
+for PID in "${APPIUM_PIDS[@]}"; do
+  if kill -0 "$PID" 2>/dev/null; then
+    debug "🔪 Matando proceso Appium con PID $PID"
+    kill "$PID"
+  else
+    warn "Proceso Appium con PID $PID ya no existía"
+  fi
+done
+success "Servidores Appium detenidos"
 
 header "📊 Paso 11: Generar reporte unificado con Allure"
 
