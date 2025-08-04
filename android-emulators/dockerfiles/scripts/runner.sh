@@ -43,7 +43,7 @@ socat tcp-listen:5555,bind="${LOCAL_IP}",fork tcp:127.0.0.1:5555 &
 # Armar comando del emulador
 EMU_CMD="$ANDROID_HOME/emulator/emulator -avd test-avd \
   -no-audio -no-boot-anim -no-snapshot-save -no-window \
-  -memory 3072 -gpu swangle_indirect -accel on \
+  -gpu swangle_indirect -accel on \
   -netdelay none -netspeed full"
 
 SNAPSHOT_PATH="/root/.android/avd/test-avd.avd/snapshots/default-boot/snapshot.pb"
