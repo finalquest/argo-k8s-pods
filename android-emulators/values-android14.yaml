@@ -1,3 +1,11 @@
 nameOverride: android-emulator-14
 image:
   tag: "14"
+
+resources:
+  requests:
+    cpu: "2000m"
+    memory: "4Gi"
+  limits:
+    cpu: "2000m"
+    memory: "5Gi"

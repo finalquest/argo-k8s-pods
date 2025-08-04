@@ -58,7 +58,9 @@ adb emu avd snapshot save default-boot
 ## 🧹 Paso 5 – Limpiar locks y detener emulador
 
 ```bash
-killall qemu-system-x86_64
+killall qemu-system-x86
+killall adb
+killall Xvfb
 rm -f /tmp/.X0-lock
 rm -f ~/.android/avd/test-avd.avd/*.lock
 ```
