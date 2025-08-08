@@ -19,7 +19,7 @@ spec:
       containers:
         - name: orchestrator
           image: harbor:8080/tools/maestro-orchestrator:slim-v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           command: ["bash"]
           stdin: true
           tty: true

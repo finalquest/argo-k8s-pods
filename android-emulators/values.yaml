@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: harbor:8080/android-emulators/emulator-hb
   tag: "13"
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 nodeSelector:
   role: worker
