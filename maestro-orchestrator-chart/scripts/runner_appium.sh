@@ -337,8 +337,9 @@ run_worker() {
     debug "📄 Redirigiendo output a: $APPIUM_DIR/$LOG_FILE\n"
     (
       cd "$APPIUM_DIR"
-      DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
-      yarn run env-cmd -f ./.env wdio "$CONFIG_FILE" "$FEATURE" > "$LOG_FILE" 2>&1
+      DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= USE_MOCK=${USE_MOCK:-true} HOOKS_VERBOSE=${HOOKS_VERBOSE:-false} \
+      env USE_MOCK=${USE_MOCK:-true} HOOKS_VERBOSE=${HOOKS_VERBOSE:-false} \
+      yarn run env-cmd -f ./.env -- wdio "$CONFIG_FILE" "$FEATURE" > "$LOG_FILE" 2>&1
     )
     success "Worker $WORKER_ID terminó feature: $FEATURE. Log disponible en $APPIUM_DIR/$LOG_FILE"
   done
