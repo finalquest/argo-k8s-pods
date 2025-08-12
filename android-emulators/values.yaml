@@ -22,4 +22,4 @@ env:
   EMULATOR_DEVICE: "Nexus 10"
   WEB_VNC: "false"
   RHOST: "redis"
-  EMULATOR_NO_WINDOW: "true"
+  EMULATOR_NO_WINDOW: "false"
