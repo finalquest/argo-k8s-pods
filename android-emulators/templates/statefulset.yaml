@@ -56,15 +56,14 @@ spec:
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
-            - name: runner
-              mountPath: /emulator.sh
-              subPath: emulator.sh
+            - name: scripts
+              mountPath: /scripts
       volumes:
         - name: kvm
           hostPath:
             path: /dev/kvm
             type: CharDevice
-        - name: runner
+        - name: scripts
           configMap:
             name: {{ .Values.nameOverride }}-runner
             defaultMode: 0755
