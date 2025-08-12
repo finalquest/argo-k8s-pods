@@ -34,7 +34,7 @@ RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
 
 # --- Crear AVD con snapshot base ---
 RUN echo "no" | avdmanager create avd -n test-avd -k "system-images;android-33;google_apis;x86_64" --device "pixel"
-RUN echo "hw.ramSize=3072" >> /root/.android/avd/test-avd.avd/config.ini
+RUN echo "hw.ramSize=4096" >> /root/.android/avd/test-avd.avd/config.ini
 
 # --- Copiar scripts ---
 COPY ./scripts/runner.sh /runner.sh
