@@ -17,9 +17,6 @@ if [ "${EMULATOR_NO_WINDOW}" != "true" ]; then
     echo "Iniciando con VNC y controles gráficos..."
     x11vnc -display :0 -nopw -forever -listen 0.0.0.0 -rfbport 5900 > /tmp/x11vnc.log 2>&1 &
 
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-    socat tcp-listen:5900,bind="${LOCAL_IP}",fork tcp:127.0.0.1:5900 &
-
     # Lanzar YAD en background
     (
       DEVICE="${DEVICE:-emulator-5554}"
@@ -55,9 +52,11 @@ socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5555 &
 
 # Base del comando del emulador
 EMU_CMD_BASE="$ANDROID_HOME/emulator/emulator -avd test-avd \
-  -no-audio -no-boot-anim -no-snapshot-save \
-  -gpu swangle_indirect -accel on \
-  -netdelay none -netspeed full"
+      -no-audio -no-boot-anim -no-snapshot-save \
+      -gpu swangle_indirect -accel on \
+      -prop debug.hwui.disable_vulkan=1 \
+      -prop debug.hwui.renderer=skiagl \
+      -netdelay none -netspeed full"
 
 # Añadir -no-window si es necesario
 if [ "${EMULATOR_NO_WINDOW}" = "true" ]; then
