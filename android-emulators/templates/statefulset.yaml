@@ -28,9 +28,6 @@ spec:
             matchLabels:
               app: {{ .Values.nameOverride }}
       containers:
-        - name: keeper
-          image: busybox
-          command: ["sh","-lc","sleep infinity"]
         - name: emulator
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -59,8 +56,15 @@ spec:
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
+            - name: runner
+              mountPath: /runner.sh
+              subPath: runner.sh
       volumes:
         - name: kvm
           hostPath:
             path: /dev/kvm
             type: CharDevice
+        - name: runner
+          configMap:
+            name: {{ .Values.nameOverride }}-runner
+            defaultMode: 0755
