@@ -6,5 +6,5 @@ metadata:
   labels:
     app: {{ .Values.nameOverride }}
 data:
-  runner.sh: |-
+  emulator.sh: |-
 {{ .Files.Get "scripts/emulator.sh" | indent 4 }}
