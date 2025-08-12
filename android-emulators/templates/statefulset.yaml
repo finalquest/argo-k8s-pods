@@ -57,8 +57,8 @@ spec:
             - name: kvm
               mountPath: /dev/kvm
             - name: runner
-              mountPath: /runner.sh
-              subPath: runner.sh
+              mountPath: /emulator.sh
+              subPath: emulator.sh
       volumes:
         - name: kvm
           hostPath:
