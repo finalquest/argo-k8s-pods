@@ -19,6 +19,9 @@ REBOOT_EMULATORS="${REBOOT_EMULATORS:-true}"
 BUILD_DIR="${BUILD_DIR:-/tmp/build}"
 APPIUM_BRANCH="${APPIUM_BRANCH:-master}"
 MAX_PARALLEL_WORKERS="${MAX_PARALLEL_WORKERS:-2}"
+PORT_BASE=${PORT_BASE:-4724}      # Appium
+SYS_PORT_BASE=${SYS_PORT_BASE:-8200}  # UiAutomator2 systemPort
+ADB_PORT_BASE=${ADB_PORT_BASE:-5037}  # ADB_SERVER_PORT
 
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
@@ -168,9 +171,10 @@ uninstall_apk() {
 
   debug "🗑️  Desinstalando $PACKAGE_NAME en $ADB_HOST" >&2
   adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || warn "No estaba instalado" >&2
-
-  # debug "🔌 Desconectando de $ADB_HOST" >&2
-  # adb disconnect "$ADB_HOST" > /dev/null
+  debug "🗑️  Desactivando animaciones en $ADB_HOST" >&2
+  adb -s "$ADB_HOST" shell settings put global window_animation_scale 0
+  adb -s "$ADB_HOST" shell settings put global transition_animation_scale 0
+  adb -s "$ADB_HOST" shell settings put global animator_duration_scale 0
 }
 
 install_apk() {
@@ -182,9 +186,6 @@ install_apk() {
 
   debug "📲 Instalando $APK_FILE en $ADB_HOST" >&2
   adb -s "$ADB_HOST" install -r "$APK_FILE" > /dev/null || warn "Falló instalación en $ADB_HOST" >&2
-
-  # debug "🔌 Desconectando de $ADB_HOST" >&2
-  # adb disconnect "$ADB_HOST" > /dev/null
 }
 
 export -f uninstall_apk
@@ -235,44 +236,53 @@ if [[ ! -f "$FEATURES_LIST" || ! -f "$ADB_LIST_FILE" ]]; then
 fi
 
 # === Generar configs y levantar servidores Appium para cada emulador ===
-CONFIG_TEMPLATE="config/wdio.local.android.ts"
-PORT_BASE=4724 # Empezar desde un puerto base diferente para no colisionar
 INDEX=0
 APPIUM_PIDS=()
 mkdir -p config/generated
 
 while read -r ADB_HOST; do
-  PORT=$((PORT_BASE + INDEX * 2))
-  CONFIG_FILE="${APPIUM_DIR}/config/wdio.android.emu-${INDEX}.ts"
+  PORT=$((PORT_BASE + INDEX))
+  SYS_PORT=$((SYS_PORT_BASE + INDEX))
+  ADB_PORT=$((ADB_PORT_BASE + INDEX))
 
-  debug "🚀 Iniciando Appium server para $ADB_HOST en el puerto $PORT"
-  DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= \
-  yarn --cwd "$APPIUM_DIR" run appium --port "$PORT" --base-path /wd/hub > "appium_${INDEX}.log" 2>&1 &
+  echo "🚀 Appium idx=$INDEX host=$ADB_HOST appium=$PORT system=$SYS_PORT adb=$ADB_PORT"
+
+  # ADB dedicado para este Appium
+  ANDROID_ADB_SERVER_PORT="$ADB_PORT" adb start-server
+  # Opcional: pre-conectar (Appium igual autoconecta, pero esto calienta)
+  ANDROID_ADB_SERVER_PORT="$ADB_PORT" adb connect "$ADB_HOST" >/dev/null
+
+  # Levantar Appium apuntando a ESTE ADB
+  env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
+  ANDROID_ADB_SERVER_PORT="$ADB_PORT" \
+  yarn --cwd "$APPIUM_DIR" run appium --port "$PORT" --base-path /wd/hub --log-timestamp \
+    > "appium_${INDEX}.log" 2>&1 &
   APPIUM_PIDS+=($!)
 
-  debug "⚙️ Generando $CONFIG_FILE con puerto $PORT para $ADB_HOST"
-
+  # Config WDIO con puertos únicos
+  CONFIG_FILE="${APPIUM_DIR}/config/wdio.android.emu-${INDEX}.ts"
   cat > "$CONFIG_FILE" <<EOF
 import { config } from './wdio.local.shared';
-config.hostname = 'localhost'
-config.port = ${PORT}
-config.path = '/wd/hub'
+config.hostname = 'localhost';
+config.port = ${PORT};
+config.path = '/wd/hub';
 config.capabilities = [
   {
     platformName: 'Android',
     'appium:automationName': 'UiAutomator2',
+    'appium:udid': '${ADB_HOST}',
+    'appium:deviceName': 'emu-${INDEX}',
+    'appium:systemPort': ${SYS_PORT},
+    'appium:adbPort': ${ADB_PORT},
+    'appium:appPackage': '${PACKAGE_NAME}',
     'appium:appActivity': 'com.poincenot.doit.MainActivity',
-    'appium:appPackage': '$PACKAGE_NAME',
-    'appium:autoGrantPermissions': true,
     'appium:noReset': false,
-
-    'appium:waitForIdleTimeout': 300,
-    'appium:allowDelayAdb': true,
-    'appium:udid': '$ADB_HOST',
-    'appium:deviceName': 'emu-${INDEX}'
+    'appium:adbExecTimeout': 120000,
+    'appium:uiautomator2ServerLaunchTimeout': 120000,
+    'appium:disableWindowAnimation': true
   }
-]
-exports.config = config
+];
+export { config };
 EOF
 
   ((INDEX++))
@@ -335,11 +345,15 @@ run_worker() {
     header "🚀 Corriendo feature: ${FEATURE}"
     debug "👷 Usando config: ${CONFIG_FILE} (worker ${WORKER_ID})"
     debug "📄 Redirigiendo output a: $APPIUM_DIR/$LOG_FILE\n"
+    local IDX
+    IDX=$(echo "$CONFIG_FILE" | sed -E 's/.*emu-([0-9]+)\.ts/\1/')
+    local ADB_PORT=$((ADB_PORT_BASE + IDX))
+
     (
       cd "$APPIUM_DIR"
-      DEBUG= ERROR= HEADER= RESET= WARN= SUCCESS= USE_MOCK=${USE_MOCK:-true} HOOKS_VERBOSE=${HOOKS_VERBOSE:-false} \
-      env USE_MOCK=${USE_MOCK:-true} HOOKS_VERBOSE=${HOOKS_VERBOSE:-false} \
-      yarn run env-cmd -f ./.env -- wdio "$CONFIG_FILE" "$FEATURE" > "$LOG_FILE" 2>&1
+      env -u DEBUG -u RESET -u HEADER -u ERROR -u WARN -u SUCCESS \
+      ANDROID_ADB_SERVER_PORT="$ADB_PORT" \
+      stdbuf -oL -eL yarn run env-cmd -f ./.env -- wdio "$CONFIG_FILE" "$FEATURE" > "$LOG_FILE" 2>&1
     )
     success "Worker $WORKER_ID terminó feature: $FEATURE. Log disponible en $APPIUM_DIR/$LOG_FILE"
   done
