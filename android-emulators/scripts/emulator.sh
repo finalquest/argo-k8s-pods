@@ -35,11 +35,13 @@ for i in {1..120}; do
 done
 
 # WM + VNC (opcional)
-if [[ "$EMULATOR_NO_WINDOW" != "true" && "$ENABLE_VNC" == "1" ]]; then
+if [[ "$EMULATOR_NO_WINDOW" != "true" ]]; then
   log "Levantando fluxbox + x11vnc:${VNC_PORT}…"
   fluxbox >/dev/null 2>&1 &
-  x11vnc -display ${DISPLAY} -noxdamage -shared -forever \
-         -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
+  x11vnc -display ${DISPLAY} \
+         -noshm -noxdamage -shared -forever \
+         -listen 0.0.0.0 -rfbport ${VNC_PORT} \
+         > /tmp/x11vnc.log 2>&1 &
 fi
 
 # (Opcional) Mostrar renderer GLX del X remoto
