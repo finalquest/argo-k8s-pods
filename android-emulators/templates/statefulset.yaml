@@ -21,8 +21,6 @@ spec:
       nodeSelector:
 {{- if .Values.nodeSelector }}
 {{ toYaml .Values.nodeSelector | indent 8 }}
-{{- else }}
-{{- /* keep an empty map for clarity when no selector is provided */}}
 {{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
@@ -69,6 +67,8 @@ spec:
 {{- if .Values.gpu.enabled }}
             - name: dri
               mountPath: /dev/dri
+            - name: x11sock
+              mountPath: /tmp/.X11-unix
 {{- end }}
       volumes:
         - name: kvm
@@ -83,5 +83,9 @@ spec:
         - name: dri
           hostPath:
             path: /dev/dri
+            type: Directory
+        - name: x11sock
+          hostPath:
+            path: /var/lib/xorg/.X11-unix  # mismo path que exporta el pod Xorg
             type: Directory
 {{- end }}
