@@ -5,8 +5,6 @@ set -euo pipefail
 AVD_NAME="${AVD_NAME:-test-avd}"
 GPU_MODE="${GPU_MODE:-host}"                 # host | sw
 EMULATOR_NO_WINDOW="${EMULATOR_NO_WINDOW:-true}"  # true|false
-ENABLE_VNC="${ENABLE_VNC:-1}"                # 1 para VNC si hay ventana
-VNC_PORT="${VNC_PORT:-5900}"
 
 SNAPSHOT_NAME_HOST="${SNAPSHOT_NAME_HOST:-host-boot}"
 SNAPSHOT_NAME_SW="${SNAPSHOT_NAME_SW:-sw-boot}"
@@ -46,14 +44,6 @@ log "Iniciando Xorg real en ${DISPLAY} (modesetting/DRI3)…"
 Xorg ${DISPLAY} -noreset +extension GLX +extension RANDR -logfile /tmp/Xorg.0.log &
 for i in {1..40}; do xdpyinfo -display ${DISPLAY} >/dev/null 2>&1 && break; sleep 0.25; done
 
-# WM + VNC opcional (solo si hay ventana)
-if [[ "$EMULATOR_NO_WINDOW" != "true" && "$ENABLE_VNC" == "1" ]]; then
-  log "Levantando fluxbox + x11vnc:${VNC_PORT}…"
-  fluxbox >/dev/null 2>&1 &
-  x11vnc -display ${DISPLAY} -noxdamage -shared -forever \
-         -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
-fi
-
 # Mostrar renderer del X (debe ser Intel/Mesa; si sale llvmpipe, revisá /dev/dri y BusID)
 if command -v glxinfo >/dev/null 2>&1; then
   log "GLXINFO:"
@@ -69,7 +59,7 @@ socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5555 &
 
 # ===================== Emulador ====================
 EMU_BASE="$ANDROID_HOME/emulator/emulator -avd ${AVD_NAME} \
-  -no-audio -no-boot-anim -accel on \
+  -no-audio -no-boot-anim -accel on no-window\
   -netdelay none -netspeed full"
 
 if [[ "$GPU_MODE" == "host" ]]; then
@@ -86,11 +76,6 @@ else
     -prop debug.hwui.disable_vulkan=1 \
     -prop debug.hwui.renderer=skiagl"
   SNAP_NAME="${SNAPSHOT_NAME_SW}"
-fi
-
-# Ventana sí/no
-if [[ "$EMULATOR_NO_WINDOW" == "true" ]]; then
-  EMU_CMD="${EMU_CMD} -no-window"
 fi
 
 # Snapshot por modo
@@ -120,9 +105,5 @@ if [[ ! -f "$SNAP_PATH" ]]; then
   log "Guardando snapshot ${SNAP_NAME}…"
   adb emu avd snapshot save "${SNAP_NAME}" || true
 fi
-
-# (debug rápido del renderer dentro del emu)
-log "SurfaceFlinger (GLES):"
-adb shell dumpsys SurfaceFlinger | grep -i '^GLES' || true
 
 wait "$EMU_PID"
