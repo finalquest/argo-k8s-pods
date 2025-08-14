@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: xorg-gpu
+  namespace: android-emulators
+  labels:
+    app: xorg-gpu
+spec:
+  nodeSelector:
+    gpu: "true"                  # mismo label que usás para el nodo con iGPU
+  restartPolicy: Always
+  containers:
+    - name: xorg
+      image: harbor:8080/tools/xorg-gpu:slim-v1
+      securityContext:
+        privileged: true         # acceso a /dev/dri
+      env:
+        - name: DISPLAY
+          value: ":0"
+      volumeMounts:
+        - name: dri
+          mountPath: /dev/dri
+        # Socket X que compartís con los pods emuladores
+        - name: x11sock
+          mountPath: /tmp/.X11-unix
+        # (opcional) logs persistentes
+        - name: xlogs
+          mountPath: /var/log
+      command: ["/bin/bash","-lc"]
+      args:
+        - |
+          set -e
+          mkdir -p /etc/X11/xorg.conf.d
+          # Driver modesetting + DRI3 apuntando a tu iGPU (00:10.0 -> PCI:0:16:0)
+          cat >/etc/X11/xorg.conf.d/10-modesetting.conf <<'EOF'
+          Section "Device"
+            Identifier "iGPU"
+            Driver "modesetting"
+            BusID "PCI:0:16:0"
+            Option "AccelMethod" "glamor"
+            Option "DRI" "3"
+          EndSection
+          EOF
+          # Resolución fija (equivalente a Xvfb -screen 1280x800x24)
+          cat >/etc/X11/xorg.conf.d/20-screen.conf <<'EOF'
+          Section "Monitor"
+              Identifier "Monitor0"
+              Option "PreferredMode" "1280x800"
+          EndSection
+          Section "Screen"
+              Identifier "Screen0"
+              Device     "iGPU"
+              Monitor    "Monitor0"
+              DefaultDepth 24
+              SubSection "Display"
+                  Depth 24
+                  Virtual 1280 800
+                  Modes "1280x800"
+              EndSubSection
+          EndSection
+          EOF
+          # Levantar Xorg sin auth (simple para pruebas)
+          Xorg :0 -ac -noreset +extension GLX +extension RANDR -logfile /var/log/Xorg.0.log
+  volumes:
+    - name: dri
+      hostPath:
+        path: /dev/dri
+        type: Directory
+    - name: x11sock
+      hostPath:
+        path: /var/lib/xorg/.X11-unix   # carpeta del host para compartir el socket
+        type: DirectoryOrCreate
+    - name: xlogs
+      emptyDir: {}                      # o hostPath si querés persistir logs
