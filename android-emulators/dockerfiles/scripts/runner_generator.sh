@@ -59,7 +59,7 @@ socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5555 &
 
 # ===================== Emulador ====================
 EMU_BASE="$ANDROID_HOME/emulator/emulator -avd ${AVD_NAME} \
-  -no-audio -no-boot-anim -accel on no-window\
+  -no-audio -no-boot-anim -accel on -no-window\
   -netdelay none -netspeed full"
 
 if [[ "$GPU_MODE" == "host" ]]; then
@@ -71,8 +71,8 @@ if [[ "$GPU_MODE" == "host" ]]; then
   EMU_CMD="${EMU_BASE} -gpu host"
   SNAP_NAME="${SNAPSHOT_NAME_HOST}"
 else
-  log "GPU_MODE=sw → -gpu swiftshader_indirect (sobre Xorg)"
-  EMU_CMD="${EMU_BASE} -gpu swiftshader_indirect \
+  log "GPU_MODE=sw → -gpu swangle_indirect (sobre Xorg)"
+  EMU_CMD="${EMU_BASE} -gpu swangle_indirect \
     -prop debug.hwui.disable_vulkan=1 \
     -prop debug.hwui.renderer=skiagl"
   SNAP_NAME="${SNAPSHOT_NAME_SW}"
