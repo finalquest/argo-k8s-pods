@@ -9,3 +9,5 @@ resources:
   limits:
     cpu: "2000m"
     memory: "6Gi"
+gpu:
+  enabled: false
