@@ -1,7 +1,7 @@
 nameOverride: android-emulator-13
 
 image:
-  tag: "13"
+  tag: "13-gpu"
 
 resources:
   requests:
