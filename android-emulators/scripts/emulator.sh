@@ -42,6 +42,27 @@ Section "Device"
 EndSection
 EOF
 
+# >>> Fijar resolución 1280x800 en Xorg (equivalente a Xvfb -screen) <<<
+cat >/etc/X11/xorg.conf.d/20-screen.conf <<'EOF'
+Section "Monitor"
+    Identifier "Monitor0"
+    Option "PreferredMode" "1280x800"
+EndSection
+
+Section "Screen"
+    Identifier "Screen0"
+    Device     "iGPU"
+    Monitor    "Monitor0"
+    DefaultDepth 24
+    SubSection "Display"
+        Depth 24
+        Virtual 1280 800
+        Modes "1280x800"
+    EndSubSection
+EndSection
+EOF
+# <<< fin resolución fija >>>
+
 log "Iniciando Xorg real en ${DISPLAY} (modesetting/DRI3)…"
 Xorg ${DISPLAY} -noreset +extension GLX +extension RANDR -logfile /tmp/Xorg.0.log &
 for i in {1..40}; do xdpyinfo -display ${DISPLAY} >/dev/null 2>&1 && break; sleep 0.25; done
