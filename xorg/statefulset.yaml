@@ -7,7 +7,7 @@ metadata:
     app: xorg-gpu
 spec:
   nodeSelector:
-    gpu: "true"                  # mismo label que usás para el nodo con iGPU
+    gpu: "intel"                  # mismo label que usás para el nodo con iGPU
   restartPolicy: Always
   containers:
     - name: xorg
