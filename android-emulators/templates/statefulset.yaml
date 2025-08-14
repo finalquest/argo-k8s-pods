@@ -19,7 +19,11 @@ spec:
         app.kubernetes.io/managed-by: Helm
     spec:
       nodeSelector:
-        {{- toYaml .Values.nodeSelector | nindent 8 }}
+{{- if .Values.nodeSelector }}
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- else }}
+{{- /* keep an empty map for clarity when no selector is provided */}}
+{{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -49,15 +53,23 @@ spec:
               value: {{ .Values.env.WEB_VNC | quote }}
             - name: RHOST
               value: {{ .Values.env.RHOST | quote }}
+{{- if .Values.gpu.enabled }}
+            - name: EMULATOR_GPU
+              value: "host"
+{{- end }}
           securityContext:
             privileged: true
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
             - name: scripts
               mountPath: /scripts
+{{- if .Values.gpu.enabled }}
+            - name: dri
+              mountPath: /dev/dri
+{{- end }}
       volumes:
         - name: kvm
           hostPath:
@@ -67,3 +79,9 @@ spec:
           configMap:
             name: {{ .Values.nameOverride }}-runner
             defaultMode: 0755
+{{- if .Values.gpu.enabled }}
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+{{- end }}

@@ -1,4 +1,5 @@
 nameOverride: android-emulator-13
+
 image:
   tag: "13"
 
@@ -9,3 +10,9 @@ resources:
   limits:
     cpu: "2000m"
     memory: "6Gi"
+
+gpu:
+  enabled: true
+
+nodeSelector:
+  gpu: intel
