@@ -11,7 +11,7 @@ spec:
   restartPolicy: Always
   containers:
     - name: xorg
-      image: harbor:8080/tools/xorg-gpu:slim-v1
+      image: harbor:8080/tools/xorg:slim-v1
       securityContext:
         privileged: true         # acceso a /dev/dri
       env:
