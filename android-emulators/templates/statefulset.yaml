@@ -43,18 +43,14 @@ spec:
               name: adb
             - containerPort: 6090
           env:
+            - name: GPU_MODE
+              value: {{ .Values.env.GPU_MODE | quote }}
             - name: EMULATOR_NO_WINDOW
               value: {{ .Values.env.EMULATOR_NO_WINDOW | quote }}
             - name: EMULATOR_DEVICE
               value: {{ .Values.env.EMULATOR_DEVICE | quote }}
-            - name: WEB_VNC
-              value: {{ .Values.env.WEB_VNC | quote }}
             - name: RHOST
               value: {{ .Values.env.RHOST | quote }}
-{{- if .Values.gpu.enabled }}
-            - name: EMULATOR_GPU
-              value: "host"
-{{- end }}
           securityContext:
             privileged: true
           resources:
@@ -64,12 +60,10 @@ spec:
               mountPath: /dev/kvm
             - name: scripts
               mountPath: /scripts
-{{- if .Values.gpu.enabled }}
             - name: dri
               mountPath: /dev/dri
             - name: x11sock
               mountPath: /tmp/.X11-unix
-{{- end }}
       volumes:
         - name: kvm
           hostPath:
@@ -79,7 +73,6 @@ spec:
           configMap:
             name: {{ .Values.nameOverride }}-runner
             defaultMode: 0755
-{{- if .Values.gpu.enabled }}
         - name: dri
           hostPath:
             path: /dev/dri
@@ -88,4 +81,3 @@ spec:
           hostPath:
             path: /var/lib/xorg/.X11-unix  # mismo path que exporta el pod Xorg
             type: Directory
-{{- end }}
