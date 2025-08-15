@@ -70,7 +70,10 @@ if [[ "$GPU_MODE" == "host" ]]; then
   EMU_CMD="${EMU_BASE} -gpu host"
   SNAP_NAME="${SNAPSHOT_NAME_HOST}"
 else
-  log "GPU_MODE=sw -> -gpu swangle_indirect"
+  log "GPU_MODE=sw -> -gpu swangle_indirect (con fixes DRI3)"
+  # --- FIXES SOLO PARA SW (ANGLE sobre Xorg) ---
+  export LIBGL_DRI3_DISABLE="${LIBGL_DRI3_DISABLE:-1}"   # evita black screen con x11vnc/GLX
+  # ---------------------------------------------
   EMU_CMD="${EMU_BASE} -gpu swangle_indirect \
     -prop debug.hwui.disable_vulkan=1 \
     -prop debug.hwui.renderer=skiagl"
