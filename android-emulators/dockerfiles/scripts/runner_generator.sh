@@ -4,7 +4,6 @@ set -euo pipefail
 # ===================== Config =====================
 AVD_NAME="${AVD_NAME:-test-avd}"
 GPU_MODE="${GPU_MODE:-host}"                 # host | sw
-EMULATOR_NO_WINDOW="${EMULATOR_NO_WINDOW:-true}"  # true|false
 
 SNAPSHOT_NAME_HOST="${SNAPSHOT_NAME_HOST:-host-boot}"
 SNAPSHOT_NAME_SW="${SNAPSHOT_NAME_SW:-sw-boot}"
