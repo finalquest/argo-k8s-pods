@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y \
     socat \
     iputils-ping \
     yad \
+    xserver-xorg x11vnc fluxbox \
+    mesa-utils mesa-vulkan-drivers \
+    libgl1-mesa-dri libglx-mesa0 libegl1-mesa libgbm1 libdrm2 \
+    && rm -rf /var/lib/apt/lists/*
     && apt-get clean
 
 # --- Instalar Android SDK Tools ---
