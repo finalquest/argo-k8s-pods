@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.nameOverride }}-vnc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.nameOverride }}
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.nameOverride }}
+  ports:
+    - name: vnc
+      port: {{ .Values.vnc.port }}
+      targetPort: {{ .Values.vnc.port }}

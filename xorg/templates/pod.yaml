@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Values.nameOverride }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.nameOverride }}
+    app.kubernetes.io/managed-by: Helm
+spec:
+  nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 4 }}
+  restartPolicy: Always
+  containers:
+    - name: xorg
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+      imagePullPolicy: {{ .Values.image.pullPolicy }}
+      securityContext:
+        privileged: {{ .Values.securityContext.privileged }}
+      env:
+        - name: DISPLAY
+          value: {{ .Values.xorg.display | quote }}
+      ports:
+        - containerPort: {{ .Values.vnc.port }}
+          name: vnc
+      volumeMounts:
+        - name: dri
+          mountPath: /dev/dri
+        - name: x11sock
+          mountPath: /tmp/.X11-unix
+        - name: xlogs
+          mountPath: /var/log
+      command: ["/bin/bash","-lc"]
+      args: ["/startup.sh"]
+      volumeMounts:
+        - name: startup
+          mountPath: /startup.sh
+          subPath: startup.sh
+  volumes:
+    - name: startup
+      configMap:
+        name: {{ .Values.nameOverride }}-startup
+    - name: dri
+      hostPath:
+        path: /dev/dri
+        type: Directory
+    - name: x11sock
+      hostPath:
+        path: /var/lib/xorg/.X11-unix
+        type: DirectoryOrCreate
+    - name: xlogs
+      emptyDir: {}
