@@ -34,8 +34,6 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 6080
-              name: vnc-web
             - containerPort: 5900
               name: vnc
             - containerPort: 5554

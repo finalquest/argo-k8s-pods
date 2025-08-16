@@ -13,7 +13,7 @@ Kubernetes manifests and Helm charts to run Android emulators on a cluster, with
 │  ├─ values-android14.yaml          # Profile overrides (Android 14)
 │  ├─ templates/
 │  │  ├─ statefulset.yaml            # Emulator pod: mounts /dev/kvm, /dev/dri, X11 socket
-│  │  ├─ service.yaml                # Headless service (ADB 5555, console 5554, VNC 5900, noVNC 6080)
+│  │  ├─ service.yaml                # Headless service (ADB 5555, console 5554, VNC 5900)
 │  │  └─ configmap.yaml              # Injects runner script
 │  ├─ scripts/
 │  │  └─ emulator.sh                 # Starts Xvfb (SW) or uses external Xorg (HW); ADB/socat bridge
@@ -68,7 +68,7 @@ Kubernetes manifests and Helm charts to run Android emulators on a cluster, with
   - Two render modes via `env.GPU_MODE`:
     - `sw`: starts Xvfb inside the pod; software rendering (`swangle_indirect`).
     - `host`: uses external Xorg socket; hardware acceleration with Intel iGPU; runs emulator with `-gpu host`.
-  - Exposes ADB (5555), console (5554), VNC (5900), noVNC (6080) via headless `Service`.
+  - Exposes ADB (5555), console (5554), VNC (5900) via headless `Service`.
   - ADB is bridged from localhost to pod IP using `socat`.
 
 - **Maestro orchestrator** (`maestro-orchestrator-chart`)
