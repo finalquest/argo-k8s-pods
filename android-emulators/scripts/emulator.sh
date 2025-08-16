@@ -34,6 +34,13 @@ if [[ "$GPU_MODE" == "sw" ]]; then
 
   if [[ "$EMULATOR_NO_WINDOW" != "true" ]]; then
     log "VNC sobre Xvfb:${VNC_PORT}"
+    # For SW mode we keep per-pod WM+VNC to provide a window
+    mkdir -p /root/.fluxbox
+    cat >/root/.fluxbox/apps <<'EOF'
+[app] (title=Android Emulator)
+  [Position] (0 0)
+[end]
+EOF
     fluxbox >/dev/null 2>&1 &
     x11vnc -display :0 -noshm -noxdamage -shared -forever \
            -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
@@ -49,12 +56,7 @@ else
     sleep 1
     [[ "$i" -eq 120 ]] && { echo "[X] Xorg externo no disponible en :0"; exit 1; }
   done
-  if [[ "$EMULATOR_NO_WINDOW" != "true" ]]; then
-    log "VNC sobre Xorg externo:${VNC_PORT}"
-    fluxbox >/dev/null 2>&1 &
-    x11vnc -display :0 -noshm -noxdamage -shared -forever \
-           -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
-  fi
+  # En modo host, Fluxbox y VNC corren centralizados en el pod Xorg
 fi
 
 # (Opcional) ver renderer del X actual
