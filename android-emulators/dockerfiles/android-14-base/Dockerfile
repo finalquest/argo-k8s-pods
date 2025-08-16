@@ -1,5 +1,6 @@
 FROM debian:bullseye-slim
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_HOME=/opt/android-sdk \
     PATH=$PATH:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin
 
@@ -16,7 +17,11 @@ RUN apt-get update && apt-get install -y \
     socat \
     iputils-ping \
     yad \
-    && apt-get clean
+    xserver-xorg x11vnc fluxbox \
+    mesa-utils mesa-vulkan-drivers \
+    libgl1-mesa-dri libglx-mesa0 libegl1-mesa libgbm1 libdrm2 \
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
 
 # --- Instalar Android SDK Tools ---
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools

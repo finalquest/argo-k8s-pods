@@ -19,7 +19,9 @@ spec:
         app.kubernetes.io/managed-by: Helm
     spec:
       nodeSelector:
-        {{- toYaml .Values.nodeSelector | nindent 8 }}
+{{- if .Values.nodeSelector }}
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -41,23 +43,27 @@ spec:
               name: adb
             - containerPort: 6090
           env:
+            - name: GPU_MODE
+              value: {{ .Values.env.GPU_MODE | quote }}
             - name: EMULATOR_NO_WINDOW
               value: {{ .Values.env.EMULATOR_NO_WINDOW | quote }}
             - name: EMULATOR_DEVICE
               value: {{ .Values.env.EMULATOR_DEVICE | quote }}
-            - name: WEB_VNC
-              value: {{ .Values.env.WEB_VNC | quote }}
             - name: RHOST
               value: {{ .Values.env.RHOST | quote }}
           securityContext:
             privileged: true
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             - name: kvm
               mountPath: /dev/kvm
             - name: scripts
               mountPath: /scripts
+            - name: dri
+              mountPath: /dev/dri
+            - name: x11sock
+              mountPath: /tmp/.X11-unix
       volumes:
         - name: kvm
           hostPath:
@@ -67,3 +73,11 @@ spec:
           configMap:
             name: {{ .Values.nameOverride }}-runner
             defaultMode: 0755
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+        - name: x11sock
+          hostPath:
+            path: /var/lib/xorg/.X11-unix  # mismo path que exporta el pod Xorg
+            type: Directory
