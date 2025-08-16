@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/finalquest/argo-k8s-pods.git
     targetRevision: main
     path: xorg
+    helm:
+      releaseName: xorg-gpu
   destination:
     server: https://kubernetes.default.svc
     namespace: android-emulators
