@@ -1,79 +1,108 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Iniciar siempre el entorno gráfico virtual
-echo "Iniciando entorno gráfico virtual (Xvfb)..."
-Xvfb :0 -screen 0 1280x800x24 &
-sleep 2
+# ===================== Config =====================
+AVD_NAME="${AVD_NAME:-test-avd}"
+EMULATOR_NO_WINDOW="${EMULATOR_NO_WINDOW:-false}"    # true|false
+ENABLE_VNC="${ENABLE_VNC:-1}"                        # 1 para VNC si hay ventana
+GPU_MODE="${GPU_MODE:-host}"                         # host | sw
+SNAPSHOT_NAME_HOST="${SNAPSHOT_NAME_HOST:-host-boot}"
+SNAPSHOT_NAME_SW="${SNAPSHOT_NAME_SW:-sw-boot}"
+VNC_PORT="${VNC_PORT:-5900}"
 
+# Mesa (host iGPU suele ser iris; cambiá a crocus si aplica)
+export MESA_LOADER_DRIVER_OVERRIDE="${MESA_LOADER_DRIVER_OVERRIDE:-iris}"
+export LIBGL_ALWAYS_SOFTWARE=0
+if [[ -f /usr/share/vulkan/icd.d/intel_icd.x86_64.json ]]; then
+  export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
+fi
+
+log() { echo "[$(date +'%H:%M:%S')] $*"; }
+AVD_DIR="$HOME/.android/avd/${AVD_NAME}.avd"
+
+# ===================== DISPLAY =====================
 export DISPLAY=:0
-export LIBGL_ALWAYS_SOFTWARE=1
-export QT_XCB_GL_INTEGRATION=none
 
-fluxbox > /dev/null 2>&1 &
+if [[ "$GPU_MODE" == "sw" ]]; then
+  # ---- Ruta SW: Xvfb (lo viejo que te funcionaba) ----
+  log "GPU_MODE=sw → usando Xvfb :0 (1280x800x24)"
+  pkill -9 Xorg Xvfb 2>/dev/null || true
+  Xvfb :0 -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
+  for i in {1..40}; do xdpyinfo -display :0 >/dev/null 2>&1 && break; sleep 0.25; done
+  # Evita negros con ANGLE sobre X/GLX (suele ayudar igual en Xvfb)
+  export LIBGL_DRI3_DISABLE="${LIBGL_DRI3_DISABLE:-1}"
 
-# Si EMULATOR_NO_WINDOW no es 'true', se configuran VNC y los controles.
-if [ "${EMULATOR_NO_WINDOW}" != "true" ]; then
-    echo "Iniciando con VNC y controles gráficos..."
-    x11vnc -display :0 -nopw -forever -listen 0.0.0.0 -rfbport 5900 > /tmp/x11vnc.log 2>&1 &
+  if [[ "$EMULATOR_NO_WINDOW" != "true" ]]; then
+    log "VNC sobre Xvfb:${VNC_PORT}"
+    fluxbox >/dev/null 2>&1 &
+    x11vnc -display :0 -noshm -noxdamage -shared -forever \
+           -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
+  fi
 
-    # Lanzar YAD en background
-    (
-      DEVICE="${DEVICE:-emulator-5554}"
-      while true; do
-        yad --title="Controles ADB - $DEVICE" \
-            --width=200 --height=100 \
-            --button="Home!gtk-home:0" \
-            --button="Back!gtk-go-back:1" \
-            --button="Recents!gtk-refresh:2" \
-            --button="Reboot!gtk-reboot:3" \
-            --on-top --no-markup --skip-taskbar --undecorated
-
-        case $? in
-          0) adb -s "$DEVICE" shell input keyevent 3 ;;
-          1) adb -s "$DEVICE" shell input keyevent 4 ;;
-          2) adb -s "$DEVICE" shell input keyevent 187 ;;
-          3) adb -s "$DEVICE" reboot ;;
-          *) exit 0 ;;
-        esac
-      done
-    ) &
 else
-    echo "Iniciando en modo no-window (headless), sin VNC ni controles."
+  # ---- Ruta HW: Xorg externo por socket compartido ----
+  log "GPU_MODE=host → usando Xorg externo (socket /tmp/.X11-unix)"
+  for i in {1..120}; do
+    if [ -S /tmp/.X11-unix/X0 ] && xdpyinfo -display :0 >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+    [[ "$i" -eq 120 ]] && { echo "[X] Xorg externo no disponible en :0"; exit 1; }
+  done
+  if [[ "$EMULATOR_NO_WINDOW" != "true" ]]; then
+    log "VNC sobre Xorg externo:${VNC_PORT}"
+    fluxbox >/dev/null 2>&1 &
+    x11vnc -display :0 -noshm -noxdamage -shared -forever \
+           -listen 0.0.0.0 -rfbport ${VNC_PORT} >/tmp/x11vnc.log 2>&1 &
+  fi
 fi
 
-adb start-server
-sleep 2
+# (Opcional) ver renderer del X actual
+if command -v glxinfo >/dev/null 2>&1; then
+  log "GLXINFO:"
+  DISPLAY=:0 glxinfo -B | egrep 'OpenGL (vendor|renderer)' || true
+fi
 
+# ===================== ADB / Puentes =================
+adb start-server || true
+sleep 1
 LOCAL_IP=$(hostname -I | awk '{print $1}')
-
 socat TCP-LISTEN:5554,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5554 &
-socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5555 &
+socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork=reuseaddr TCP:127.0.0.1:5555 &
 
-# Base del comando del emulador
-EMU_CMD_BASE="$ANDROID_HOME/emulator/emulator -avd test-avd \
-      -no-audio -no-boot-anim -no-snapshot-save \
-      -gpu swangle_indirect -accel on \
-      -prop debug.hwui.disable_vulkan=1 \
-      -prop debug.hwui.renderer=skiagl \
-      -netdelay none -netspeed full"
+# ===================== Emulador =====================
+EMU_BASE="$ANDROID_HOME/emulator/emulator -avd ${AVD_NAME} \
+  -no-audio -no-boot-anim -accel on \
+  -netdelay none -netspeed full"
 
-# Añadir -no-window si es necesario
-if [ "${EMULATOR_NO_WINDOW}" = "true" ]; then
-    EMU_CMD="$EMU_CMD_BASE -no-window"
-     
-else
-    EMU_CMD="$EMU_CMD_BASE"
+# Ventana sí/no
+if [[ "$EMULATOR_NO_WINDOW" == "true" ]]; then
+  EMU_BASE="${EMU_BASE} -no-window"
 fi
 
-SNAPSHOT_PATH="/root/.android/avd/test-avd.avd/snapshots/default-boot/snapshot.pb"
-
-if [ -f "$SNAPSHOT_PATH" ]; then
-  EMU_CMD="$EMU_CMD -snapshot default-boot"
+if [[ "$GPU_MODE" == "host" ]]; then
+  log "Lanzando emu con -gpu host"
+  sed -i 's/^hw.gpu.enabled=.*/hw.gpu.enabled=yes/'  "${AVD_DIR}/config.ini" || echo 'hw.gpu.enabled=yes'  >> "${AVD_DIR}/config.ini"
+  sed -i 's/^hw.gpu.mode=.*/hw.gpu.mode=host/'       "${AVD_DIR}/config.ini" || echo 'hw.gpu.mode=host'   >> "${AVD_DIR}/config.ini"
+  EMU_CMD="${EMU_BASE} -gpu host"
+  SNAP_NAME="${SNAPSHOT_NAME_HOST}"
 else
-  EMU_CMD="$EMU_CMD -no-snapshot-load"
+  log "Lanzando emu con -gpu swangle_indirect (SW)"
+  EMU_CMD="${EMU_BASE} -gpu swangle_indirect \
+    -prop debug.hwui.disable_vulkan=1 \
+    -prop debug.hwui.renderer=skiagl"
+  SNAP_NAME="${SNAPSHOT_NAME_SW}"
 fi
 
-# ✅ Finalmente: emulador como PID 1
-echo "Ejecutando emulador: $EMU_CMD"
+# Snapshot por modo
+SNAP_PATH="${AVD_DIR}/snapshots/${SNAP_NAME}/snapshot.pb"
+if [[ -f "$SNAP_PATH" ]]; then
+  log "Usando snapshot ${SNAP_NAME}"
+  EMU_CMD="${EMU_CMD} -snapshot ${SNAP_NAME}"
+else
+  log "Snapshot ${SNAP_NAME} no existe; arranque limpio."
+  EMU_CMD="${EMU_CMD} -no-snapshot-load"
+fi
+
+log "Launch: $EMU_CMD"
 exec $EMU_CMD -verbose > /tmp/emulator.log 2>&1

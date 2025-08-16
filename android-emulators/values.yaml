@@ -20,6 +20,6 @@ resources:
 
 env:
   EMULATOR_DEVICE: "Nexus 10"
-  WEB_VNC: "false"
   RHOST: "redis"
   EMULATOR_NO_WINDOW: "false"
+  GPU_MODE: "sw"   # host | sw
