@@ -20,6 +20,3 @@ spec:
     - name: vnc
       port: 5900
       targetPort: 5900
-    - name: novnc
-      port: 6080
-      targetPort: 6080

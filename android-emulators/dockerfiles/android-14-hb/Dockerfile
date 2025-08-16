@@ -6,5 +6,5 @@ RUN chmod +x /register_and_hb.sh
 COPY ./scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 5555 5900 6080
+EXPOSE 5555 5900
 ENTRYPOINT ["/entrypoint.sh"]
