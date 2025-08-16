@@ -43,7 +43,8 @@ Kubernetes manifests and Helm charts to run Android emulators on a cluster, with
 │
 ├─ applications/
 │  ├─ prometheus-stack.yaml          # Argo CD Application for kube-prometheus-stack
-│  └─ argocd-metrics.yaml            # Argo CD Application for Argo CD ServiceMonitor
+│  ├─ argocd-metrics.yaml            # Argo CD Application for Argo CD ServiceMonitor
+│  └─ xorg.yaml                      # Argo CD Application for Xorg pod
 │
 ├─ prometheus/
 │  ├─ servicemonitor/servicemonitor.yaml  # Scrapes Argo CD server metrics
@@ -79,6 +80,7 @@ Kubernetes manifests and Helm charts to run Android emulators on a cluster, with
   - `root-application.yaml` bootstraps the `applications/` folder.
   - `applications/prometheus-stack.yaml` installs kube-prometheus-stack from the Prometheus Community Helm repo.
   - `applications/argocd-metrics.yaml` deploys a `ServiceMonitor` for the Argo CD server.
+  - `applications/xorg.yaml` deploys the Xorg pod from this repository (`path: xorg`).
 
 ## Prerequisites
 
@@ -92,11 +94,6 @@ Kubernetes manifests and Helm charts to run Android emulators on a cluster, with
 - Container registry hosting the emulator and orchestrator images.
 
 ## Quickstart
-
-- Deploy Xorg GPU pod (Intel iGPU nodes):
-```bash
-kubectl apply -f xorg/statefulset.yaml
-```
 
 - Deploy Redis (same namespace as emulators):
 ```bash
@@ -119,7 +116,7 @@ helm install orchestrator ./maestro-orchestrator-chart \
   --set secrets.gitAppiumPat="<base64 or plain, template encodes>"
 ```
 
-- Bootstrap monitoring via Argo CD (optional):
+- Bootstrap apps via Argo CD (includes Xorg and monitoring):
 ```bash
 kubectl apply -f root-application.yaml
 ```
