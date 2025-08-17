@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/finalquest/argo-k8s-pods.git
-    targetRevision: main
+    targetRevision: test2
     path: xorg
     helm:
       releaseName: xorg-gpu

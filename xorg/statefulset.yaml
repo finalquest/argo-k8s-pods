@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: xorg-gpu
+  namespace: android-emulators
+  labels:
+    app: xorg-gpu
+spec:
+  nodeSelector:
+    gpu: "intel" # mismo label que usás para el nodo con iGPU
+  restartPolicy: Always
+  containers:
+    - name: xorg
+      image: harbor:8080/tools/xorg:v1
+      securityContext:
+        privileged: true # acceso a /dev/dri
+      env:
+        - name: DISPLAY
+          value: ":0"
+      volumeMounts:
+        - name: dri
+          mountPath: /dev/dri
+        - name: x11sock
+          mountPath: /tmp/.X11-unix
+        - name: xlogs
+          mountPath: /var/log
+      command: ["/bin/bash","-lc"]
+      args:
+        - |
+          set -e
+          export DISPLAY=:0
+          # Forzar Mesa a HW Intel (evita llvmpipe)
+          export MESA_LOADER_DRIVER_OVERRIDE="${MESA_LOADER_DRIVER_OVERRIDE:-iris}"
+          export LIBGL_ALWAYS_SOFTWARE=0
+          export DRI_PRIME=0
+          if [[ -f /usr/share/vulkan/icd.d/intel_icd.x86_64.json ]]; then
+            export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
+          fi
+
+          # Detectar /dev/dri/cardX de Intel y su BusID (PCI:x:y:z)
+          INTEL_CARD=""
+          BUSID=""
+          for c in /dev/dri/card*; do
+            [[ -e "$c" ]] || continue
+            devpath="/sys/class/drm/$(basename "$c")/device"
+            vend="$(cat "${devpath}/vendor" 2>/dev/null || true)"
+            if [[ "$vend" == "0x8086" ]]; then
+              INTEL_CARD="$c"
+              slot="$(grep -m1 '^PCI_SLOT_NAME=' "${devpath}/uevent" 2>/dev/null | cut -d= -f2)"
+              if [[ -n "$slot" ]]; then
+                BB=$((16#${slot:5:2})) ; DD=$((16#${slot:8:2})) ; F=${slot:11:1}
+                BUSID="PCI:${BB}:${DD}:${F}"
+              fi
+              break
+            fi
+          done
+          if [[ -z "$INTEL_CARD" || -z "$BUSID" ]]; then
+            echo "[Xorg] No se encontró iGPU Intel en /dev/dri; abortando." >&2
+            ls -l /dev/dri || true
+            exit 1
+          fi
+          echo "[Xorg] Usando iGPU Intel ${INTEL_CARD} (BusID ${BUSID})"
+
+          mkdir -p /etc/X11/xorg.conf.d
+          # Desactivar autodescubrimiento de GPUs
+          cat >/etc/X11/xorg.conf.d/00-server.conf <<'EOF'
+          Section "ServerFlags"
+            Option "AutoAddGPU" "false"
+          EndSection
+          EOF
+
+          # Driver modesetting + DRI3
+          cat >/etc/X11/xorg.conf.d/10-modesetting.conf <<EOF
+          Section "Device"
+            Identifier "iGPU"
+            Driver "modesetting"
+            BusID "${BUSID}"
+            Option "AccelMethod" "glamor"
+            Option "DRI" "3"
+            Option "PrimaryGPU" "true"
+            Option "kmsdev" "${INTEL_CARD}"
+          EndSection
+          EOF
+
+          # Resolución fija
+          cat >/etc/X11/xorg.conf.d/20-screen.conf <<'EOF'
+          Section "Monitor"
+              Identifier "Monitor0"
+              Option "PreferredMode" "1280x800"
+          EndSection
+          Section "Screen"
+              Identifier "Screen0"
+              Device     "iGPU"
+              Monitor    "Monitor0"
+              DefaultDepth 24
+              SubSection "Display"
+                  Depth 24
+                  Virtual 1280 800
+                  Modes "1280x800"
+              EndSubSection
+          EndSection
+          EOF
+
+          # Levantar Xorg, luego Fluxbox y VNC de forma centralizada
+          Xorg :0 -ac -noreset +extension GLX +extension RANDR -logfile /var/log/Xorg.0.log &
+          sleep 2
+          # Colocar ventanas de emuladores en grilla simple (top-left by default)
+          mkdir -p /root/.fluxbox
+          cat >/root/.fluxbox/init <<'EOF'
+          session.screen0.windowPlacement: RowSmartPlacement
+          session.screen0.rowPlacementDirection: LeftToRight
+          session.screen0.colPlacementDirection: TopToBottom
+          EOF
+          fluxbox >/var/log/fluxbox.log 2>&1 &
+          x11vnc -display :0 -noshm -noxdamage -shared -forever -listen 0.0.0.0 -rfbport 5900
+      ports:
+        - containerPort: 5900
+          name: vnc
+  volumes:
+    - name: dri
+      hostPath:
+        path: /dev/dri
+        type: Directory
+    - name: x11sock
+      hostPath:
+        path: /var/lib/xorg/.X11-unix
+        type: DirectoryOrCreate
+    - name: xlogs
+      emptyDir: {}
