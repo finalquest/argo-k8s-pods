@@ -112,7 +112,7 @@ spec:
           session.screen0.colPlacementDirection: TopToBottom
           EOF
           fluxbox >/var/log/fluxbox.log 2>&1 &
-          x11vnc -display :0 -noshm -noxdamage -shared -forever -listen 0.0.0.0 -rfbport 5900 >/var/log/x11vnc.log 2>&1 &
+          x11vnc -display :0 -noshm -noxdamage -shared -forever -listen 0.0.0.0 -rfbport 5900
       ports:
         - containerPort: 5900
           name: vnc
