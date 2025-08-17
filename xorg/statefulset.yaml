@@ -101,8 +101,21 @@ spec:
           EndSection
           EOF
 
-          # Levantar Xorg
-          Xorg :0 -ac -noreset +extension GLX +extension RANDR -logfile /var/log/Xorg.0.log
+          # Levantar Xorg, luego Fluxbox y VNC de forma centralizada
+          Xorg :0 -ac -noreset +extension GLX +extension RANDR -logfile /var/log/Xorg.0.log &
+          sleep 2
+          # Colocar ventanas de emuladores en grilla simple (top-left by default)
+          mkdir -p /root/.fluxbox
+          cat >/root/.fluxbox/init <<'EOF'
+          session.screen0.windowPlacement: RowSmartPlacement
+          session.screen0.rowPlacementDirection: LeftToRight
+          session.screen0.colPlacementDirection: TopToBottom
+          EOF
+          fluxbox >/var/log/fluxbox.log 2>&1 &
+          x11vnc -display :0 -noshm -noxdamage -shared -forever -listen 0.0.0.0 -rfbport 5900 >/var/log/x11vnc.log 2>&1 &
+      ports:
+        - containerPort: 5900
+          name: vnc
   volumes:
     - name: dri
       hostPath:
