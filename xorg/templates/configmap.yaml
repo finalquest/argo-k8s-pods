@@ -79,7 +79,11 @@ data:
     EOF
 
     Xorg {{ .Values.xorg.display }} -ac -noreset +extension GLX +extension RANDR -logfile /var/log/Xorg.0.log &
-    sleep 2
+    # Wait for X socket to be ready
+    for i in {1..60}; do
+      [[ -S /tmp/.X11-unix/X0 ]] && break
+      sleep 0.5
+    done
     mkdir -p /root/.fluxbox
     cat >/root/.fluxbox/init <<'EOF'
     session.screen0.windowPlacement: RowSmartPlacement
@@ -88,3 +92,7 @@ data:
     EOF
     fluxbox >/var/log/fluxbox.log 2>&1 &
     x11vnc -display {{ .Values.xorg.display }} -noshm -noxdamage -shared -forever -listen 0.0.0.0 -rfbport {{ .Values.vnc.port }} >/var/log/x11vnc.log 2>&1 &
+
+    # Keep container alive and stream logs
+    touch /var/log/Xorg.0.log /var/log/x11vnc.log /var/log/fluxbox.log
+    exec tail -F /var/log/Xorg.0.log /var/log/x11vnc.log /var/log/fluxbox.log
