@@ -30,7 +30,7 @@ spec:
         - name: xlogs
           mountPath: /var/log
       command: ["/bin/bash","-lc"]
-      args: ["/startup.sh"]
+      args: ["bash /startup.sh"]
       volumeMounts:
         - name: startup
           mountPath: /startup.sh
@@ -39,6 +39,7 @@ spec:
     - name: startup
       configMap:
         name: {{ .Values.nameOverride }}-startup
+        defaultMode: 0755
     - name: dri
       hostPath:
         path: /dev/dri
