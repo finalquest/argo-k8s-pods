@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   startup.sh: |
+    {{- $res := split "x" .Values.xorg.resolution -}}
     #!/bin/bash
     set -e
     export DISPLAY={{ .Values.xorg.display }}
@@ -56,7 +57,7 @@ data:
     EndSection
     EOF
 
-    cat >/etc/X11/xorg.conf.d/20-screen.conf <<'EOF'
+    cat >/etc/X11/xorg.conf.d/20-screen.conf <<EOF
     Section "Monitor"
         Identifier "Monitor0"
         Option "PreferredMode" "{{ .Values.xorg.resolution }}"
@@ -68,7 +69,7 @@ data:
         DefaultDepth 24
         SubSection "Display"
             Depth 24
-            Virtual {{ .Values.xorg.resolution }}
+            Virtual {{ index $res 0 }} {{ index $res 1 }}
             Modes "{{ .Values.xorg.resolution }}"
         EndSubSection
     EndSection
