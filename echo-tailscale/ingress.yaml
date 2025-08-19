@@ -7,14 +7,8 @@ metadata:
     tailscale.com/tags: '["tag:k8s"]'
 spec:
   ingressClassName: tailscale
-  rules:
-  - host: echo.your-tailnet.ts.net   # opcional; si lo omitís, Tailscale asigna uno
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: echo
-            port:
-              number: 80
+  defaultBackend:
+    service:
+      name: echo
+      port:
+        number: 80
