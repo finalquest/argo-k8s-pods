@@ -13,9 +13,9 @@ spec:
     helm:
       values: |
         oauth:
-          existingSecret: operator-oauth
-          clientIDKey: client_id
-          clientSecretKey: client_secret
+          useEnvFromSecret: operator-oauth
+          clientIdEnvKey: client_id
+          clientSecretEnvKey: client_secret
         proxyConfig:
           defaultTags:
             - "tag:k8s"
