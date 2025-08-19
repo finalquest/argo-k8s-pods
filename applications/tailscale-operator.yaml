@@ -1,27 +1,22 @@
-# applications/tailscale-operator.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: tailscale-operator
-  namespace: argocd
+  namespace: argocd   # namespace donde corre ArgoCD
 spec:
   project: default
+  destination:
+    namespace: tailscale    # namespace donde se va a instalar el operator
+    server: https://kubernetes.default.svc
   source:
     repoURL: https://pkgs.tailscale.com/helmcharts
     chart: tailscale-operator
-    targetRevision: 1.86.2
+    targetRevision: 1.72.0   # ajustá a la última versión disponible
     helm:
       values: |
         oauth:
-          useEnvFromSecret: operator-oauth
-          clientIdEnvKey: client_id
-          clientSecretEnvKey: client_secret
-        proxyConfig:
-          defaultTags:
-            - "tag:k8s"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: tailscale
+          useEnvFromSecret: true
   syncPolicy:
-    automated: { prune: true, selfHeal: true }
-    syncOptions: [CreateNamespace=true]
+    automated:
+      prune: true
+      selfHeal: true
