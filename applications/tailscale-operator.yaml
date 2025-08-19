@@ -1,10 +1,9 @@
+# applications/tailscale-operator.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: tailscale-operator
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
 spec:
   project: default
   source:
@@ -13,8 +12,6 @@ spec:
     targetRevision: 1.86.2
     helm:
       values: |
-        oauth:
-          existingSecret: tailscale-operator-oauth
         proxyConfig:
           defaultTags:
             - "tag:k8s"
