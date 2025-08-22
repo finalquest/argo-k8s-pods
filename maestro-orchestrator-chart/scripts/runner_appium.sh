@@ -280,7 +280,7 @@ config.capabilities = [
     'appium:adbExecTimeout': 120000,
     'appium:uiautomator2ServerLaunchTimeout': 120000,
     'appium:disableWindowAnimation': true,
-    appium:skipLogcatCapture': true,
+    'appium:skipLogcatCapture': true,
     'appium:autoAcceptAlerts': true,
     'appium:autoDismissAlerts': true,
     "appium:unicodeKeyboard": true,
