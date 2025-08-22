@@ -279,15 +279,14 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:adbExecTimeout': 120000,
     'appium:uiautomator2ServerLaunchTimeout': 120000,
-    'appium:disableWindowAnimation': true
+    'appium:disableWindowAnimation': true,
     appium:skipLogcatCapture': true,
     'appium:autoAcceptAlerts': true,
     'appium:autoDismissAlerts': true,
     "appium:unicodeKeyboard": true,
     "appium:resetKeyboard": true,
     "appium:autoGrantPermissions": true,
-    "appium:hideKeyboard": true,
-
+    "appium:hideKeyboard": true
   }
 ];
 export { config };
