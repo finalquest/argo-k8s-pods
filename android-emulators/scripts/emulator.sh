@@ -70,7 +70,7 @@ adb start-server || true
 sleep 1
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 socat TCP-LISTEN:5554,bind=${LOCAL_IP},fork,reuseaddr TC P:127.0.0.1:5554 &
-socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork=reuseaddr TCP:127.0.0.1:5555 &
+socat TCP-LISTEN:5555,bind=${LOCAL_IP},fork,reuseaddr TCP:127.0.0.1:5555 &
 
 # ===================== Emulador =====================
 EMU_BASE="$ANDROID_HOME/emulator/emulator -avd ${AVD_NAME} \
