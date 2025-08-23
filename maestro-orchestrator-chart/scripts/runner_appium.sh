@@ -268,8 +268,16 @@ config.port = ${PORT};
 config.path = '/wd/hub';
 config.capabilities = [
   {
+    "appium:waitForIdleTimeout": 300,
+    "appium:allowDelayAdb": true,
+    "appium:isHeadless": true,
     platformName: 'Android',
-    'appium:automationName': 'UiAutomator2',
+     "appium:deviceReadyTimeout": 60000,
+    "appium:androidInstallTimeout": 90000,
+     "appium:ignoreHiddenApiPolicyError": true,
+    "appium:avdReadyTimeout": 180000,
+    "appium:skipDeviceInitialization": false,
+    "appium:automationName": 'UiAutomator2',
     'appium:udid': '${ADB_HOST}',
     'appium:deviceName': 'emu-${INDEX}',
     'appium:systemPort': ${SYS_PORT},
