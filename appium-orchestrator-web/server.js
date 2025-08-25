@@ -117,36 +117,81 @@ app.get('/api/features', async (req, res) => {
 
 const { spawn } = require('child_process');
 
+// --- Lógica de la Cola de Ejecución ---
+const jobQueue = [];
+let activeJobs = 0;
+const maxParallelJobs = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
+
+/**
+ * Emite el estado actual de la cola a todos los clientes conectados.
+ */
+function broadcastQueueStatus() {
+    io.emit('queue_status_update', { 
+        active: activeJobs,
+        queued: jobQueue.length,
+        limit: maxParallelJobs
+    });
+}
+
+/**
+ * Procesa la cola, iniciando tantos trabajos como slots haya disponibles.
+ */
+function processQueue() {
+    // Bucle para llenar todos los slots de ejecución disponibles
+    while (jobQueue.length > 0 && activeJobs < maxParallelJobs) {
+        const job = jobQueue.shift();
+        activeJobs++;
+        
+        console.log(`Iniciando trabajo para el feature: ${job.feature}. Trabajos activos: ${activeJobs}`);
+        job.socket.emit('log_update', `--- ✅ Trabajo aceptado. Iniciando ejecución para: ${job.feature} ---\n`);
+        
+        // Notificar a todos que el estado ha cambiado
+        broadcastQueueStatus();
+        executeJob(job);
+    }
+}
+
+function executeJob(job) {
+    const { branch, client, feature, socket } = job;
+    const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
+    const runner = spawn('bash', [runnerScript, branch, client, feature]);
+
+    const sendLog = (logLine) => socket.emit('log_update', logLine);
+
+    runner.stdout.on('data', (data) => sendLog(data.toString()));
+    runner.stderr.on('data', (data) => sendLog(`ERROR: ${data.toString()}`));
+
+    runner.on('close', (code) => {
+        sendLog(`--- 🏁 Ejecución finalizada con código ${code} ---\n`);
+        socket.emit('job_finished');
+        
+        activeJobs--;
+        console.log(`Trabajo para ${feature} finalizado. Trabajos activos: ${activeJobs}`);
+        
+        // Notificar a todos y procesar el siguiente de la cola
+        broadcastQueueStatus();
+        processQueue();
+    });
+}
+
 // Manejo de conexiones de Socket.IO
 io.on('connection', (socket) => {
   console.log('Un cliente se ha conectado:', socket.id);
 
+  // Enviar el estado actual al nuevo cliente
+  socket.emit('queue_status_update', { active: activeJobs, queued: jobQueue.length, limit: maxParallelJobs });
+
   socket.on('run_test', (data) => {
     const { branch, client, feature } = data;
     console.log(`Petición de test recibida para: ${branch}/${client}/${feature}`);
-
-    const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
-    const runner = spawn('bash', [runnerScript, branch, client, feature]);
-
-    socket.emit('log_update', `--- Iniciando ejecución del test: ${feature} ---\n`);
-
-    runner.stdout.on('data', (logData) => {
-        const logLine = logData.toString();
-        console.log(`[RUNNER]: ${logLine.trim()}`);
-        socket.emit('log_update', logLine);
-    });
-
-    runner.stderr.on('data', (logData) => {
-        const logLine = logData.toString();
-        console.error(`[RUNNER_ERROR]: ${logLine.trim()}`);
-        socket.emit('log_update', `ERROR: ${logLine}`);
-    });
-
-    runner.on('close', (code) => {
-        console.log(`El script de ejecución ha finalizado con código ${code}`);
-        socket.emit('log_update', `--- Ejecución finalizada con código ${code} ---\n`);
-        socket.emit('job_finished');
-    });
+    
+    const job = { ...data, socket };
+    jobQueue.push(job);
+    socket.emit('log_update', `--- ⏳ Petición recibida. El test para '${feature}' ha sido añadido a la cola. ---\n`);
+    
+    // Notificar a todos que la cola ha crecido
+    broadcastQueueStatus();
+    processQueue();
   });
 
   socket.on('disconnect', () => {

@@ -42,6 +42,8 @@
             <button id="fetch-features-btn">Buscar Features</button>
         </div>
 
+        <div id="queue-status" style="margin-bottom: 1.5em; font-weight: 500;"></div>
+
         <h2>Features</h2>
         <ul id="features-list"></ul>
 
@@ -127,7 +129,6 @@
         function runTest(branch, client, feature) {
             console.log(`Solicitando ejecución para: ${branch} / ${client} / ${feature}`);
             logsDiv.innerHTML = ''; // Limpiar logs anteriores
-            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = true);
             socket.emit('run_test', { branch, client, feature });
         }
 
@@ -136,13 +137,18 @@
         fetchBtn.addEventListener('click', fetchFeatures);
 
         // Socket.IO listeners
+        socket.on('queue_status_update', (status) => {
+            const statusDiv = document.getElementById('queue-status');
+            statusDiv.textContent = `Estado de la Cola: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+        });
+
         socket.on('log_update', (logLine) => {
             logsDiv.textContent += logLine;
             logsDiv.scrollTop = logsDiv.scrollHeight; // Auto-scroll
         });
 
         socket.on('job_finished', () => {
-            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = false);
+            // Ya no es necesario hacer nada aquí, los botones no se deshabilitan
         });
 
     </script>
