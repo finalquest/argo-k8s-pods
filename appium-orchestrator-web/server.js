@@ -173,16 +173,23 @@ function executeJob(job) {
     const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
     const runner = spawn('bash', [runnerScript, branch, client, feature]);
 
+    // Guardar el proceso en el slot para poder detenerlo después
+    executionSlots[slotId].runnerProcess = runner;
+
     const sendLog = (logLine) => {
         // Enviar el log junto con el slotId para que la UI sepa dónde mostrarlo
         io.emit('log_update', { slotId, logLine });
     };
 
     runner.stdout.on('data', (data) => sendLog(data.toString()));
-    runner.stderr.on('data', (data) => sendLog(`ERROR: ${data.toString()}`));
+    // Cambiar el prefijo de stderr para no tratarlo siempre como un error fatal
+    runner.stderr.on('data', (data) => sendLog(`[stderr] ${data.toString()}`));
 
     runner.on('close', (code) => {
-        sendLog(`--- 🏁 Ejecución finalizada con código ${code} ---\n`);
+        const finalMessage = code === 0 
+            ? `--- ✅ Ejecución finalizada con éxito (código ${code}) ---\n`
+            : `--- ❌ Ejecución finalizada con error (código ${code}) ---\n`;
+        sendLog(finalMessage);
         
         // Liberar el slot
         executionSlots[slotId] = null;
@@ -211,10 +218,24 @@ io.on('connection', (socket) => {
     jobIdCounter++;
     const job = { ...data, socket, id: jobIdCounter };
     jobQueue.push(job);
+    // Este log ahora es genérico y no va a un panel específico hasta que el job empieza
     socket.emit('log_update', { logLine: `--- ⏳ Petición recibida. El test para '${job.feature}' ha sido añadido a la cola. ---\n` });
     
     broadcastQueueStatus();
     processQueue();
+  });
+
+  socket.on('stop_test', (data) => {
+    const { slotId, jobId } = data;
+    console.log(`Petición para detener job ${jobId} en slot ${slotId}`);
+    const jobInSlot = executionSlots[slotId];
+
+    if (jobInSlot && jobInSlot.id === jobId && jobInSlot.runnerProcess) {
+        jobInSlot.runnerProcess.kill('SIGTERM'); // Enviar señal de terminación
+        console.log(`Señal de terminación enviada al proceso del job ${jobId}`);
+    } else {
+        console.log(`No se pudo detener el job ${jobId}: no se encontró o ya había terminado.`);
+    }
   });
 
   socket.on('disconnect', () => {
