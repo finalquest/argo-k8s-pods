@@ -23,6 +23,8 @@
         .log-panel { flex: 1 1 400px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; display: flex; flex-direction: column; min-width: 400px;}
         .panel-header { background: #e9ecef; padding: 0.75em; font-weight: bold; border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px;}
         .panel-header.running { background-color: #ffc107; }
+        .panel-header .stop-btn { float: right; background-color: #dc3545; border-color: #dc3545; padding: 0.2em 0.6em; font-size: 0.8em; }
+        .panel-header .stop-btn:hover { background-color: #c82333; }
         .panel-content { height: 350px; overflow-y: scroll; padding: 1em; font-family: monospace; white-space: pre-wrap; background-color: #212529; color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
     </style>
 </head>
@@ -167,16 +169,36 @@
             if (!panel) return;
             const header = panel.querySelector('.panel-header');
             const content = panel.querySelector('.panel-content');
-            header.textContent = `(Job ${data.jobId}) ${data.featureName}`;
+            
+            // Limpiar el encabezado antes de añadir nuevo contenido
+            header.innerHTML = '';
+
+            const titleSpan = document.createElement('span');
+            titleSpan.textContent = `(Job ${data.jobId}) ${data.featureName}`;
+
+            const stopButton = document.createElement('button');
+            stopButton.textContent = 'Detener';
+            stopButton.className = 'stop-btn';
+            stopButton.onclick = () => {
+                if (confirm(`¿Seguro que quieres detener el test para ${data.featureName}?`)) {
+                    socket.emit('stop_test', { slotId: data.slotId, jobId: data.jobId });
+                }
+            };
+
+            header.appendChild(titleSpan);
+            header.appendChild(stopButton);
             header.classList.add('running');
             content.innerHTML = ''; // Limpiar logs anteriores
         });
 
         socket.on('log_update', (data) => {
+            // Si el log es genérico (sin slotId), no hacer nada en los paneles
             if (data.slotId === undefined) {
-                // Log genérico para el panel 0 o un área común si no hay slot
+                // Intentar mostrarlo en el primer panel si está libre
                 const panel = document.getElementById(`log-panel-0`);
-                if(panel) panel.querySelector('.panel-content').textContent += data.logLine;
+                if(panel && !panel.querySelector('.panel-header').classList.contains('running')) {
+                    panel.querySelector('.panel-content').textContent += data.logLine;
+                }
                 return;
             }
             const panel = document.getElementById(`log-panel-${data.slotId}`);
