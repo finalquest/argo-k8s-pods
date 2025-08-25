@@ -5,25 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appium Orchestrator</title>
     <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 2em; background-color: #f8f9fa; color: #212529; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { border-bottom: 2px solid #dee2e6; padding-bottom: 0.5em; }
-        .controls { display: flex; gap: 1em; align-items: center; margin-bottom: 1.5em; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
+        .header { background: #fff; padding: 1em 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
+        .container { max-width: 1200px; margin: auto; padding: 0 2em;}
+        .controls { display: flex; flex-wrap: wrap; gap: 1em; align-items: center; margin-bottom: 1.5em; }
         label { font-weight: 500; }
-        select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; }
+        select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; font-size: 1em; }
         button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        #features-list { list-style-type: none; padding: 0; }
-        #features-list li { background: #e9ecef; padding: 0.75em; border-radius: 4px; margin-bottom: 0.5em; display: flex; justify-content: space-between; align-items: center; }
+        #features-list { list-style-type: none; padding: 0; max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px;}
+        #features-list li { padding: 0.5em; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+        #features-list li:last-child { border-bottom: none; }
         .run-btn { background-color: #28a745; border-color: #28a745; }
         .run-btn:hover { background-color: #218838; }
-        #logs { background-color: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; height: 300px; overflow-y: scroll; white-space: pre-wrap; font-family: monospace; margin-top: 1.5em; }
+        
+        .panels-container { display: flex; flex-wrap: wrap; gap: 1.5em; margin-top: 2em; }
+        .log-panel { flex: 1 1 400px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; display: flex; flex-direction: column; min-width: 400px;}
+        .panel-header { background: #e9ecef; padding: 0.75em; font-weight: bold; border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px;}
+        .panel-header.running { background-color: #ffc107; }
+        .panel-content { height: 350px; overflow-y: scroll; padding: 1em; font-family: monospace; white-space: pre-wrap; background-color: #212529; color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <h1>Appium Orchestrator Web</h1>
+        <div id="queue-status" style="font-weight: 500;"></div>
+    </div>
 
+    <div class="container">
         <div class="controls">
             <div>
                 <label for="client-select">Cliente:</label>
@@ -35,20 +44,15 @@
             </div>
             <div>
                 <label for="branch-select">Branch:</label>
-                <select id="branch-select">
-                    <option>Cargando branches...</option>
-                </select>
+                <select id="branch-select"><option>Cargando...</option></select>
             </div>
             <button id="fetch-features-btn">Buscar Features</button>
         </div>
 
-        <div id="queue-status" style="margin-bottom: 1.5em; font-weight: 500;"></div>
-
         <h2>Features</h2>
-        <ul id="features-list"></ul>
+        <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
 
-        <h2>Logs</h2>
-        <div id="logs"></div>
+        <div id="log-panels-container" class="panels-container"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -60,18 +64,29 @@
         const clientSelect = document.getElementById('client-select');
         const fetchBtn = document.getElementById('fetch-features-btn');
         const featuresList = document.getElementById('features-list');
+        const panelsContainer = document.getElementById('log-panels-container');
 
-        const logsDiv = document.getElementById('logs');
+        function createLogPanels(limit) {
+            panelsContainer.innerHTML = '';
+            for (let i = 0; i < limit; i++) {
+                const panel = document.createElement('div');
+                panel.className = 'log-panel';
+                panel.id = `log-panel-${i}`;
+                panel.innerHTML = `
+                    <div class="panel-header">Slot ${i + 1} - Libre</div>
+                    <div class="panel-content"></div>
+                `;
+                panelsContainer.appendChild(panel);
+            }
+        }
 
-        // Cargar branches al iniciar
+        // --- Lógica de la UI ---
         async function loadBranches() {
             try {
                 const response = await fetch('/api/branches');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const branches = await response.json();
-                branchSelect.innerHTML = ''; // Limpiar opciones
+                branchSelect.innerHTML = '';
                 branches.forEach(branch => {
                     const option = document.createElement('option');
                     option.value = branch;
@@ -84,7 +99,6 @@
             }
         }
 
-        // Buscar features
         async function fetchFeatures() {
             const selectedBranch = branchSelect.value;
             const selectedClient = clientSelect.value;
@@ -92,27 +106,20 @@
                 alert('Por favor, selecciona una branch y un cliente.');
                 return;
             }
-
             featuresList.innerHTML = '<li>Cargando...</li>';
-
             try {
                 const response = await fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const features = await response.json();
-                featuresList.innerHTML = ''; // Limpiar lista
-
+                featuresList.innerHTML = '';
                 if (features.length === 0) {
                     featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
                 }
-
                 features.forEach(feature => {
                     const li = document.createElement('li');
                     const featureNameSpan = document.createElement('span');
                     featureNameSpan.textContent = feature;
                     li.appendChild(featureNameSpan);
-                    
                     const runButton = document.createElement('button');
                     runButton.textContent = 'Run';
                     runButton.className = 'run-btn';
@@ -127,28 +134,64 @@
         }
 
         function runTest(branch, client, feature) {
-            console.log(`Solicitando ejecución para: ${branch} / ${client} / ${feature}`);
-            logsDiv.innerHTML = ''; // Limpiar logs anteriores
             socket.emit('run_test', { branch, client, feature });
         }
 
-        // Event Listeners
+        // --- Listeners de Eventos ---
         window.addEventListener('load', loadBranches);
         fetchBtn.addEventListener('click', fetchFeatures);
 
-        // Socket.IO listeners
-        socket.on('queue_status_update', (status) => {
+        // --- Listeners de Socket.IO ---
+        socket.on('init', (data) => {
+            console.log('Initializing UI with data:', data);
+            createLogPanels(data.status.limit);
+            updateQueueStatus(data.status);
+            data.slots.forEach(slot => {
+                if (slot.job) {
+                    const panelHeader = document.querySelector(`#log-panel-${slot.slotId} .panel-header`);
+                    panelHeader.textContent = `(Job ${slot.job.id}) ${slot.job.featureName}`;
+                    panelHeader.classList.add('running');
+                }
+            });
+        });
+
+        function updateQueueStatus(status) {
             const statusDiv = document.getElementById('queue-status');
-            statusDiv.textContent = `Estado de la Cola: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+            statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+        }
+
+        socket.on('queue_status_update', updateQueueStatus);
+
+        socket.on('job_started', (data) => {
+            const panel = document.getElementById(`log-panel-${data.slotId}`);
+            if (!panel) return;
+            const header = panel.querySelector('.panel-header');
+            const content = panel.querySelector('.panel-content');
+            header.textContent = `(Job ${data.jobId}) ${data.featureName}`;
+            header.classList.add('running');
+            content.innerHTML = ''; // Limpiar logs anteriores
         });
 
-        socket.on('log_update', (logLine) => {
-            logsDiv.textContent += logLine;
-            logsDiv.scrollTop = logsDiv.scrollHeight; // Auto-scroll
+        socket.on('log_update', (data) => {
+            if (data.slotId === undefined) {
+                // Log genérico para el panel 0 o un área común si no hay slot
+                const panel = document.getElementById(`log-panel-0`);
+                if(panel) panel.querySelector('.panel-content').textContent += data.logLine;
+                return;
+            }
+            const panel = document.getElementById(`log-panel-${data.slotId}`);
+            if (!panel) return;
+            const content = panel.querySelector('.panel-content');
+            content.textContent += data.logLine;
+            content.scrollTop = content.scrollHeight;
         });
 
-        socket.on('job_finished', () => {
-            // Ya no es necesario hacer nada aquí, los botones no se deshabilitan
+        socket.on('job_finished', (data) => {
+            const panel = document.getElementById(`log-panel-${data.slotId}`);
+            if (!panel) return;
+            const header = panel.querySelector('.panel-header');
+            header.textContent = `Slot ${data.slotId + 1} - Libre`;
+            header.classList.remove('running');
         });
 
     </script>

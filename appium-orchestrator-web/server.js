@@ -119,56 +119,79 @@ const { spawn } = require('child_process');
 
 // --- Lógica de la Cola de Ejecución ---
 const jobQueue = [];
-let activeJobs = 0;
+let jobIdCounter = 0;
 const maxParallelJobs = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
+const executionSlots = new Array(maxParallelJobs).fill(null);
 
 /**
  * Emite el estado actual de la cola a todos los clientes conectados.
  */
 function broadcastQueueStatus() {
+    const active = executionSlots.filter(s => s !== null).length;
     io.emit('queue_status_update', { 
-        active: activeJobs,
+        active: active,
         queued: jobQueue.length,
         limit: maxParallelJobs
     });
+}
+
+function findFreeSlot() {
+    return executionSlots.findIndex(slot => slot === null);
 }
 
 /**
  * Procesa la cola, iniciando tantos trabajos como slots haya disponibles.
  */
 function processQueue() {
-    // Bucle para llenar todos los slots de ejecución disponibles
-    while (jobQueue.length > 0 && activeJobs < maxParallelJobs) {
+    let freeSlotIndex = findFreeSlot();
+    while (freeSlotIndex !== -1 && jobQueue.length > 0) {
         const job = jobQueue.shift();
-        activeJobs++;
         
-        console.log(`Iniciando trabajo para el feature: ${job.feature}. Trabajos activos: ${activeJobs}`);
-        job.socket.emit('log_update', `--- ✅ Trabajo aceptado. Iniciando ejecución para: ${job.feature} ---\n`);
+        // Asignar job al slot
+        executionSlots[freeSlotIndex] = job;
+        job.slotId = freeSlotIndex;
+
+        console.log(`Iniciando job ${job.id} en slot ${job.slotId} para feature: ${job.feature}.`);
         
-        // Notificar a todos que el estado ha cambiado
+        // Notificar a la UI que un job ha comenzado en un slot específico
+        io.emit('job_started', { 
+            slotId: job.slotId, 
+            featureName: job.feature,
+            jobId: job.id
+        });
+        
         broadcastQueueStatus();
         executeJob(job);
+
+        // Buscar el siguiente slot libre para el bucle
+        freeSlotIndex = findFreeSlot();
     }
 }
 
 function executeJob(job) {
-    const { branch, client, feature, socket } = job;
+    const { branch, client, feature, socket, slotId, id: jobId } = job;
     const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
     const runner = spawn('bash', [runnerScript, branch, client, feature]);
 
-    const sendLog = (logLine) => socket.emit('log_update', logLine);
+    const sendLog = (logLine) => {
+        // Enviar el log junto con el slotId para que la UI sepa dónde mostrarlo
+        io.emit('log_update', { slotId, logLine });
+    };
 
     runner.stdout.on('data', (data) => sendLog(data.toString()));
     runner.stderr.on('data', (data) => sendLog(`ERROR: ${data.toString()}`));
 
     runner.on('close', (code) => {
         sendLog(`--- 🏁 Ejecución finalizada con código ${code} ---\n`);
-        socket.emit('job_finished');
         
-        activeJobs--;
-        console.log(`Trabajo para ${feature} finalizado. Trabajos activos: ${activeJobs}`);
+        // Liberar el slot
+        executionSlots[slotId] = null;
         
-        // Notificar a todos y procesar el siguiente de la cola
+        // Notificar a la UI que el slot ha terminado
+        io.emit('job_finished', { slotId, jobId, exitCode: code });
+        
+        console.log(`Job ${jobId} en slot ${slotId} finalizado.`);
+        
         broadcastQueueStatus();
         processQueue();
     });
@@ -178,18 +201,18 @@ function executeJob(job) {
 io.on('connection', (socket) => {
   console.log('Un cliente se ha conectado:', socket.id);
 
-  // Enviar el estado actual al nuevo cliente
-  socket.emit('queue_status_update', { active: activeJobs, queued: jobQueue.length, limit: maxParallelJobs });
+  // Enviar el estado actual y la configuración de slots al nuevo cliente
+  socket.emit('init', { 
+      slots: executionSlots.map((job, index) => ({ slotId: index, job: job ? {id: job.id, featureName: job.feature} : null })),
+      status: { active: executionSlots.filter(s => s !== null).length, queued: jobQueue.length, limit: maxParallelJobs }
+  });
 
   socket.on('run_test', (data) => {
-    const { branch, client, feature } = data;
-    console.log(`Petición de test recibida para: ${branch}/${client}/${feature}`);
-    
-    const job = { ...data, socket };
+    jobIdCounter++;
+    const job = { ...data, socket, id: jobIdCounter };
     jobQueue.push(job);
-    socket.emit('log_update', `--- ⏳ Petición recibida. El test para '${feature}' ha sido añadido a la cola. ---\n`);
+    socket.emit('log_update', { logLine: `--- ⏳ Petición recibida. El test para '${job.feature}' ha sido añadido a la cola. ---\n` });
     
-    // Notificar a todos que la cola ha crecido
     broadcastQueueStatus();
     processQueue();
   });
