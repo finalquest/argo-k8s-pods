@@ -161,7 +161,7 @@ sleep 5
 CONFIG_FILE="${APPIUM_DIR}/config/wdio.conf.ts"
 
 cat > "$CONFIG_FILE" <<- EOM
-import { config } from './wdio.local.shared';
+import { config } from './wdio.feature-shared';
 
 config.hostname = 'localhost';
 config.port = ${APPIUM_PORT};
