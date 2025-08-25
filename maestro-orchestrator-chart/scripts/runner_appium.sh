@@ -2,6 +2,10 @@
 
 # Cargar funciones de logging
 source "$(dirname "$0")/logger.sh"
+pkill -f adb
+pkill -f appium
+pkill -f node
+pkill -f java
 
 header "🧠 Maestro Orquestador - Inicio"
 debug "🕓 $(date)"
