@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appium Orchestrator</title>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 2em; background-color: #f8f9fa; color: #212529; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { border-bottom: 2px solid #dee2e6; padding-bottom: 0.5em; }
+        .controls { display: flex; gap: 1em; align-items: center; margin-bottom: 1.5em; }
+        label { font-weight: 500; }
+        select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; }
+        button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #features-list { list-style-type: none; padding: 0; }
+        #features-list li { background: #e9ecef; padding: 0.75em; border-radius: 4px; margin-bottom: 0.5em; display: flex; justify-content: space-between; align-items: center; }
+        .run-btn { background-color: #28a745; border-color: #28a745; }
+        .run-btn:hover { background-color: #218838; }
+        #logs { background-color: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; height: 300px; overflow-y: scroll; white-space: pre-wrap; font-family: monospace; margin-top: 1.5em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Appium Orchestrator Web</h1>
+
+        <div class="controls">
+            <div>
+                <label for="client-select">Cliente:</label>
+                <select id="client-select">
+                    <option value="nbch">nbch</option>
+                    <option value="bpn">bpn</option>
+                    <option value="bind">bind</option>
+                </select>
+            </div>
+            <div>
+                <label for="branch-select">Branch:</label>
+                <select id="branch-select">
+                    <option>Cargando branches...</option>
+                </select>
+            </div>
+            <button id="fetch-features-btn">Buscar Features</button>
+        </div>
+
+        <h2>Features</h2>
+        <ul id="features-list"></ul>
+
+        <h2>Logs</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Elementos del DOM
+        const branchSelect = document.getElementById('branch-select');
+        const clientSelect = document.getElementById('client-select');
+        const fetchBtn = document.getElementById('fetch-features-btn');
+        const featuresList = document.getElementById('features-list');
+
+        const logsDiv = document.getElementById('logs');
+
+        // Cargar branches al iniciar
+        async function loadBranches() {
+            try {
+                const response = await fetch('/api/branches');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const branches = await response.json();
+                branchSelect.innerHTML = ''; // Limpiar opciones
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    option.textContent = branch;
+                    branchSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar branches:', error);
+                branchSelect.innerHTML = '<option>Error al cargar</option>';
+            }
+        }
+
+        // Buscar features
+        async function fetchFeatures() {
+            const selectedBranch = branchSelect.value;
+            const selectedClient = clientSelect.value;
+            if (!selectedBranch || !selectedClient) {
+                alert('Por favor, selecciona una branch y un cliente.');
+                return;
+            }
+
+            featuresList.innerHTML = '<li>Cargando...</li>';
+
+            try {
+                const response = await fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const features = await response.json();
+                featuresList.innerHTML = ''; // Limpiar lista
+
+                if (features.length === 0) {
+                    featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
+                }
+
+                features.forEach(feature => {
+                    const li = document.createElement('li');
+                    const featureNameSpan = document.createElement('span');
+                    featureNameSpan.textContent = feature;
+                    li.appendChild(featureNameSpan);
+                    
+                    const runButton = document.createElement('button');
+                    runButton.textContent = 'Run';
+                    runButton.className = 'run-btn';
+                    runButton.onclick = () => runTest(selectedBranch, selectedClient, feature);
+                    li.appendChild(runButton);
+                    featuresList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error al buscar features:', error);
+                featuresList.innerHTML = '<li>Error al buscar features.</li>';
+            }
+        }
+
+        function runTest(branch, client, feature) {
+            console.log(`Solicitando ejecución para: ${branch} / ${client} / ${feature}`);
+            logsDiv.innerHTML = ''; // Limpiar logs anteriores
+            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = true);
+            socket.emit('run_test', { branch, client, feature });
+        }
+
+        // Event Listeners
+        window.addEventListener('load', loadBranches);
+        fetchBtn.addEventListener('click', fetchFeatures);
+
+        // Socket.IO listeners
+        socket.on('log_update', (logLine) => {
+            logsDiv.textContent += logLine;
+            logsDiv.scrollTop = logsDiv.scrollHeight; // Auto-scroll
+        });
+
+        socket.on('job_finished', () => {
+            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = false);
+        });
+
+    </script>
+</body>
+</html>
