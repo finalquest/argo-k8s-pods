@@ -115,7 +115,7 @@ app.get('/api/features', async (req, res) => {
 });
 
 
-const { spawn } = require('child_process');
+const { fork } = require('child_process');
 
 // --- Lógica de la Cola de Ejecución ---
 const jobQueue = [];
@@ -153,7 +153,6 @@ function processQueue() {
 
         console.log(`Iniciando job ${job.id} en slot ${job.slotId} para feature: ${job.feature}.`);
         
-        // Notificar a la UI que un job ha comenzado en un slot específico
         io.emit('job_started', { 
             slotId: job.slotId, 
             featureName: job.feature,
@@ -163,38 +162,48 @@ function processQueue() {
         broadcastQueueStatus();
         executeJob(job);
 
-        // Buscar el siguiente slot libre para el bucle
         freeSlotIndex = findFreeSlot();
     }
 }
 
 function executeJob(job) {
-    const { branch, client, feature, socket, slotId, id: jobId } = job;
-    const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
-    const runner = spawn('bash', [runnerScript, branch, client, feature]);
+    const { slotId, id: jobId } = job;
+    const workerProcess = fork(path.join(__dirname, 'worker.js'));
 
-    // Guardar el proceso en el slot para poder detenerlo después
-    executionSlots[slotId].runnerProcess = runner;
+    // Guardar el proceso del worker en el slot
+    executionSlots[slotId].workerProcess = workerProcess;
 
-    const sendLog = (logLine) => {
-        // Enviar el log junto con el slotId para que la UI sepa dónde mostrarlo
-        io.emit('log_update', { slotId, logLine });
-    };
+    workerProcess.on('message', (message) => {
+        switch (message.type) {
+            case 'READY':
+                // El worker está listo, enviarle solo los datos necesarios del trabajo
+                const jobDataForWorker = {
+                    branch: job.branch,
+                    client: job.client,
+                    feature: job.feature,
+                    id: job.id
+                };
+                workerProcess.send({ type: 'START', job: jobDataForWorker });
+                break;
+            case 'LOG':
+                // Retransmitir log a la UI
+                io.emit('log_update', { slotId, logLine: message.data });
+                break;
+            case 'DONE':
+                // El worker reporta que ha terminado. El evento 'close' se encargará de la limpieza.
+                console.log(`Worker para job ${jobId} reportó DONE con código ${message.data.exitCode}`);
+                break;
+        }
+    });
 
-    runner.stdout.on('data', (data) => sendLog(data.toString()));
-    // Cambiar el prefijo de stderr para no tratarlo siempre como un error fatal
-    runner.stderr.on('data', (data) => sendLog(`[stderr] ${data.toString()}`));
-
-    runner.on('close', (code) => {
-        const finalMessage = code === 0 
-            ? `--- ✅ Ejecución finalizada con éxito (código ${code}) ---\n`
-            : `--- ❌ Ejecución finalizada con error (código ${code}) ---\n`;
-        sendLog(finalMessage);
+    workerProcess.on('close', (code) => {
+        const finalMessage = `--- 🏁 Ejecución en worker finalizada con código ${code} ---
+`;
+        io.emit('log_update', { slotId, logLine: finalMessage });
         
         // Liberar el slot
         executionSlots[slotId] = null;
         
-        // Notificar a la UI que el slot ha terminado
         io.emit('job_finished', { slotId, jobId, exitCode: code });
         
         console.log(`Job ${jobId} en slot ${slotId} finalizado.`);
@@ -202,13 +211,17 @@ function executeJob(job) {
         broadcastQueueStatus();
         processQueue();
     });
+
+    workerProcess.on('error', (err) => {
+        console.error(`Error en el worker del job ${jobId}:`, err);
+        io.emit('log_update', { slotId, logLine: `Error irrecuperable en el worker: ${err.message}` });
+    });
 }
 
 // Manejo de conexiones de Socket.IO
 io.on('connection', (socket) => {
   console.log('Un cliente se ha conectado:', socket.id);
 
-  // Enviar el estado actual y la configuración de slots al nuevo cliente
   socket.emit('init', { 
       slots: executionSlots.map((job, index) => ({ slotId: index, job: job ? {id: job.id, featureName: job.feature} : null })),
       status: { active: executionSlots.filter(s => s !== null).length, queued: jobQueue.length, limit: maxParallelJobs }
@@ -218,8 +231,8 @@ io.on('connection', (socket) => {
     jobIdCounter++;
     const job = { ...data, socket, id: jobIdCounter };
     jobQueue.push(job);
-    // Este log ahora es genérico y no va a un panel específico hasta que el job empieza
-    socket.emit('log_update', { logLine: `--- ⏳ Petición recibida. El test para '${job.feature}' ha sido añadido a la cola. ---\n` });
+    io.emit('log_update', { logLine: `--- ⏳ Petición recibida. El test para '${job.feature}' ha sido añadido a la cola. ---
+` });
     
     broadcastQueueStatus();
     processQueue();
@@ -230,9 +243,9 @@ io.on('connection', (socket) => {
     console.log(`Petición para detener job ${jobId} en slot ${slotId}`);
     const jobInSlot = executionSlots[slotId];
 
-    if (jobInSlot && jobInSlot.id === jobId && jobInSlot.runnerProcess) {
-        jobInSlot.runnerProcess.kill('SIGTERM'); // Enviar señal de terminación
-        console.log(`Señal de terminación enviada al proceso del job ${jobId}`);
+    if (jobInSlot && jobInSlot.id === jobId && jobInSlot.workerProcess) {
+        jobInSlot.workerProcess.kill('SIGTERM');
+        console.log(`Señal de terminación enviada al worker del job ${jobId}`);
     } else {
         console.log(`No se pudo detener el job ${jobId}: no se encontró o ya había terminado.`);
     }
