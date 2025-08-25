@@ -158,18 +158,14 @@ APPIUM_PID=$!
 sleep 5
 
 # Crear archivo de configuración de WDIO al vuelo
-CONFIG_FILE="wdio.conf.js"
-FEATURE_PATH="test/features/${FEATURE_NAME}"
+CONFIG_FILE="${APPIUM_DIR}/config/wdio.conf.ts"
 
 cat > "$CONFIG_FILE" <<- EOM
-require('dotenv').config({ path: './.env' });
-const { config } = require('./config/wdio.local.shared');
+import { config } from './wdio.local.shared';
 
 config.hostname = 'localhost';
 config.port = ${APPIUM_PORT};
 config.path = '/wd/hub';
-
-config.specs = ['./${FEATURE_PATH}'];
 
 config.capabilities = [{
     "appium:waitForIdleTimeout": 300,
@@ -184,8 +180,7 @@ config.capabilities = [{
     "appium:automationName": 'UiAutomator2',
     'appium:udid': '${ADB_HOST}',
     'appium:systemPort': ${SYSTEM_PORT},
-    'appium:appPackage': '${PACKAGE_NAME}',
-    'appium:appActivity': 'com.poincenot.doit.MainActivity',
+    'appium:appPackage': ${PACKAGE_NAME},
     'appium:appActivity': 'com.poincenot.doit.MainActivity',
     'appium:noReset': false,
     'appium:adbExecTimeout': 120000,
@@ -200,7 +195,7 @@ config.capabilities = [{
     "appium:hideKeyboard": true
 }];
 
-exports.config = config;
+export { config };
 EOM
 
 success "Configuración de WDIO generada para ${FEATURE_NAME}"
@@ -209,7 +204,8 @@ debug "🎬 Ejecutando test..."
 
 # Ejecutar WDIO
 cd "$APPIUM_DIR"
-if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run wdio "../${CONFIG_FILE}"; then
+FEATURE_ARG="${CLIENT}/feature/${FEATURE_NAME}"
+if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
     EXIT_CODE=$?
     cd ..
     error "La ejecución de WDIO falló con código de salida $EXIT_CODE"
