@@ -98,7 +98,7 @@ app.get('/api/features', async (req, res) => {
         // Filtramos para quedarnos solo con archivos que terminen en .feature
         const featureFiles = allEntries
             .filter(dirent => dirent.isFile() && dirent.name.endsWith('.feature'))
-            .map(dirent => dirent.name); // Devolvemos solo el nombre del archivo
+            .map(dirent => dirent.name.replace(/\.feature$/, '')); // Devolvemos el nombre sin la extensión
 
         res.json(featureFiles);
 
