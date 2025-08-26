@@ -1,58 +1,33 @@
-# Plan de Funcionalidad: Historial de Ejecuciones Persistente
+# Plan de Funcionalidad: Historial de Ejecuciones Basado en Reportes
 
 ## 1. Objetivo
 
-Crear un registro histórico y persistente de todas las ejecuciones de tests que pasan por el orquestador. Esto transforma la herramienta de un simple ejecutor a un sistema de registro que permite análisis de tendencias, depuración de fallos pasados y una visión general de la actividad de testing.
+Crear un registro histórico de las ejecuciones de tests utilizando los propios reportes de Allure generados como fuente de verdad. Esto evita la necesidad de una base de datos y aprovecha la estructura de directorios existente para proporcionar un historial navegable.
 
 ---
 
 ## 2. Arquitectura y Componentes Clave
 
-La implementación de esta funcionalidad requiere un componente clave nuevo: una base de datos ligera para almacenar los registros de forma persistente.
+El historial será una representación directa de la estructura de carpetas dentro de `public/reports`. La lógica principal residirá en un nuevo endpoint de API que escaneará este directorio y lo expondrá a la interfaz de usuario.
 
-### a. Base de Datos (Almacenamiento)
-
-- **Tecnología Propuesta:** **SQLite**. Es una base de datos basada en un único archivo, no requiere un servidor separado y está excelentemente soportada en Node.js (ej. con la librería `better-sqlite3`). Es la opción ideal, ya que encapsula todo el historial en un solo archivo (ej. `db.sqlite`) dentro del proyecto, siendo robusta y fácil de gestionar.
-- **Alternativa (No recomendada):** Un archivo JSON. Aunque más simple de iniciar, es propenso a corrupción, no es eficiente para búsquedas o actualizaciones y no escala bien.
-
-### b. Modelo de Datos
-
-Se creará una tabla en la base de datos (ej. `job_history`) con la siguiente estructura:
-
-- `id`: INTEGER, PRIMARY KEY (autoincremental)
-- `jobId`: INTEGER (el ID que ya usamos en la cola)
-- `branch`: TEXT
-- `feature`: TEXT
-- `client`: TEXT
-- `status`: TEXT (`queued`, `running`, `completed`, `failed`, `cancelled`)
-- `submitTime`: DATETIME (cuando se añadió a la cola)
-- `startTime`: DATETIME (cuando el worker empezó a ejecutarlo)
-- `endTime`: DATETIME (cuando el worker finalizó)
-- `duration`: INTEGER (en segundos)
-- `reportUrl`: TEXT (enlace al reporte de Allure, si existe)
-- `finalLog`: TEXT (opcional, para guardar las últimas líneas del log o un resumen del error)
-
-### c. Flujo de Datos
+### Flujo de Datos
 
 ```mermaid
 sequenceDiagram
     participant UI as UI (Frontend)
     participant Orchestrator as Orchestrator (`server.js`)
-    participant Database as DB (SQLite)
+    participant FileSystem as `public/reports`
 
-    UI->>Orchestrator: Solicita ejecutar un test
-    Orchestrator->>Database: INSERT INTO job_history (..., status: 'queued', ...)
-    
-    Orchestrator->>Orchestrator: El job pasa a un worker
-    Orchestrator->>Database: UPDATE job_history SET status = 'running', startTime = NOW WHERE jobId = ?
-
-    Orchestrator->>Orchestrator: El job finaliza
-    Orchestrator->>Database: UPDATE job_history SET status = 'completed', ..., reportUrl = ? WHERE jobId = ?
+    Note over Orchestrator,FileSystem: Los reportes ya se guardan en `public/reports/<branch>/<feature>/<timestamp>`
 
     UI->>Orchestrator: Usuario abre la pestaña "Historial"
-    Orchestrator->>Database: SELECT * FROM job_history ORDER BY id DESC
-    Database-->>Orchestrator: Devuelve lista de jobs
-    Orchestrator-->>UI: Envía la lista de jobs
+    Orchestrator->>FileSystem: Escanea de forma recursiva la estructura de `public/reports`
+    FileSystem-->>Orchestrator: Devuelve una lista de todas las rutas a los reportes
+    
+    Orchestrator->>Orchestrator: Formatea la lista en una estructura JSON (ej. agrupada por branch/feature)
+    Orchestrator-->>UI: Envía la lista de historiales
+
+    UI->>UI: Renderiza la lista de reportes históricos, agrupados y con enlaces directos
 
 ```
 
@@ -62,31 +37,43 @@ sequenceDiagram
 
 ### a. Modificaciones en el Backend (`server.js`)
 
-1.  **Integrar SQLite:**
-    *   Añadir `better-sqlite3` como dependencia del proyecto (`npm install better-sqlite3`).
-    *   Crear un módulo de inicialización de la base de datos que cree la tabla `job_history` si no existe.
-
-2.  **Modificar el Ciclo de Vida del Job:**
-    *   **Al encolar:** Justo después de asignar un `jobId`, hacer un `INSERT` en la base de datos con el estado `queued`.
-    *   **Al iniciar:** Cuando un worker toma un job (`runJobOnWorker`), hacer un `UPDATE` para cambiar el `status` a `running` y registrar el `startTime`.
-    *   **Al finalizar:** Cuando se recibe el mensaje `DONE` o `READY_FOR_NEXT_JOB` del worker, hacer un `UPDATE` final con el estado (`completed`/`failed`), `endTime`, `duration` y la `reportUrl`.
-
-3.  **Crear API de Historial:**
-    *   Crear un nuevo endpoint de API, ej. `GET /api/history`.
-    *   Este endpoint consultará la base de datos y devolverá una lista de los registros históricos (ej. los últimos 100, con paginación).
-    *   La API debería soportar filtros básicos como query params (ej. `GET /api/history?status=failed`).
+1.  **Crear API de Historial (`GET /api/history`):**
+    *   Crear un nuevo endpoint de API.
+    *   Este endpoint utilizará el módulo `fs` de Node.js para leer la estructura del directorio `public/reports`.
+    *   De forma recursiva, listará todas las branches, features y timestamps.
+    *   Construirá un objeto JSON que represente esta jerarquía. El resultado podría ser un array de objetos, donde cada objeto contiene `branch`, `feature`, `timestamp` y la `reportUrl` (que se puede construir a partir de las partes).
+    *   Ejemplo de respuesta de la API:
+        ```json
+        [
+          {
+            "branch": "develop",
+            "feature": "login",
+            "timestamp": "2025-08-26T18-30-00",
+            "reportUrl": "/reports/develop/login/2025-08-26T18-30-00/"
+          },
+          {
+            "branch": "develop",
+            "feature": "login",
+            "timestamp": "2025-08-26T18-35-10",
+            "reportUrl": "/reports/develop/login/2025-08-26T18-35-10/"
+          }
+        ]
+        ```
+    *   La API devolverá este JSON.
 
 ### b. Modificaciones en la Interfaz (UI) - `public/index.html`
 
-1.  **Nueva Pestaña "Historial":**
-    *   Añadir una nueva pestaña a la navegación principal.
+1.  **Renombrar Pestaña "Resultados" a "Historial":**
+    *   La pestaña que creamos anteriormente para "Resultados Recientes" ahora servirá como el historial persistente. Se renombrará el botón y el ID del panel.
 
-2.  **Vista de Tabla de Historial:**
-    *   Al hacer clic en la pestaña, la UI hará una petición a `GET /api/history`.
-    *   Los datos recibidos se renderizarán en una tabla.
-    *   La tabla mostrará columnas relevantes: `ID`, `Branch`, `Feature`, `Estado`, `Duración`, `Fecha`, y un botón/enlace a `Reporte`.
+2.  **Implementar Carga de Historial:**
+    *   Cuando el usuario haga clic en la pestaña "Historial" por primera vez, se hará una llamada a la nueva API `GET /api/history`.
+    *   La lista de "Resultados Recientes" (`recent-results-list`) ya no se poblará con el evento `job_finished`. En su lugar, se llenará con los datos recibidos de la API.
+    *   El script de la UI iterará sobre el array de historiales y creará un elemento de lista (`<li>`) para cada uno, mostrando el nombre del feature, la branch, el timestamp y un botón "Ver Reporte" que apunte a la `reportUrl`.
 
-3.  **Controles de Filtro y Paginación:**
-    *   Añadir controles básicos en la parte superior de la tabla para filtrar por estado (ej. un dropdown con "Todos", "Completados", "Fallidos").
-    *   Añadir botones de "Siguiente" y "Anterior" para la paginación si se implementa en la API.
+3.  **(Opcional) Mantener "Resultados Recientes":**
+    *   La lista de resultados de la sesión actual sigue siendo útil. Podemos mantenerla en la pestaña "Setup" o moverla también a la pestaña "Historial", encima de la lista del historial completo cargado desde la API. Por simplicidad, el plan inicial es reemplazarla.
 
+---
+
+Este nuevo plan es mucho más ligero y se integra perfectamente con la funcionalidad de reportes que ya hemos construido.
