@@ -70,10 +70,14 @@ sequenceDiagram
 ### c. Modificaciones en la Interfaz (UI)
 
 1.  **`appium-orchestrator-web/public/index.html`:**
-    *   En el listener del evento `socket.on('job_finished', ...)`:
-    *   Comprobar si el objeto `data` contiene la propiedad `reportUrl`.
-    *   Si es así, crear y mostrar un nuevo botón ("Ver Reporte") en el panel del job correspondiente.
-    *   El botón debe ser un enlace (`<a>`) que apunte a la `reportUrl` y se abra en una nueva pestaña (`target="_blank"`).
+    *   **Añadir Lista de "Resultados Recientes":**
+        *   Crear una nueva sección en el HTML, debajo de la lista de features, para mostrar los resultados de los jobs que han finalizado durante la sesión.
+        *   Esta sección contendrá una lista (`<ul>`) a la que se añadirán los resultados.
+    *   **Actualizar el Listener `job_finished`:**
+        *   El listener del evento `socket.on('job_finished', ...)` será modificado.
+        *   En lugar de interactuar con el panel del worker, creará un nuevo elemento de lista (`<li>`) en la sección de "Resultados Recientes".
+        *   Este elemento mostrará información clave del job: el nombre del feature, el estado (ej. ✅ o ❌ basado en el `exitCode`), y si `data.reportUrl` existe, un botón permanente "Ver Reporte" que enlace a dicha URL.
+        *   Esto asegura que los enlaces a los reportes no se pierdan y que el usuario tenga un historial de la sesión actual.
 
 ---
 

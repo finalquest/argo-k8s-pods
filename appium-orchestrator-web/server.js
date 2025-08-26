@@ -100,6 +100,53 @@ let jobIdCounter = 0;
 const maxWorkers = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
 const workerPool = [];
 
+function sanitize(name) {
+    return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+
+function cleanupOldReports(featureReportDir) {
+    const maxReports = parseInt(process.env.MAX_REPORTS_PER_FEATURE, 10) || 5;
+    if (!fs.existsSync(featureReportDir)) return;
+
+    const reports = fs.readdirSync(featureReportDir)
+        .map(name => ({ name, path: path.join(featureReportDir, name) }))
+        .filter(item => fs.statSync(item.path).isDirectory())
+        .map(item => ({ ...item, time: fs.statSync(item.path).mtime.getTime() }))
+        .sort((a, b) => a.time - b.time); // Sort oldest first
+
+    if (reports.length > maxReports) {
+        const reportsToDelete = reports.slice(0, reports.length - maxReports);
+        reportsToDelete.forEach(report => {
+            fs.rm(report.path, { recursive: true, force: true }, (err) => {
+                if (err) console.error(`Error eliminando reporte antiguo ${report.path}:`, err);
+                else console.log(`Reporte antiguo eliminado: ${report.name}`);
+            });
+        });
+    }
+}
+
+function handleReport(job, reportPath) {
+    try {
+        const branch = sanitize(job.branch);
+        const feature = sanitize(job.feature);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const destDir = path.join(__dirname, 'public', 'reports', branch, feature, timestamp);
+
+        fs.mkdirSync(destDir, { recursive: true });
+        fs.cpSync(reportPath, destDir, { recursive: true });
+        
+        console.log(`Reporte copiado a ${destDir}`);
+
+        const featureReportDir = path.join(__dirname, 'public', 'reports', branch, feature);
+        cleanupOldReports(featureReportDir);
+
+        return `/reports/${branch}/${feature}/${timestamp}/`;
+    } catch (error) {
+        console.error('Error al manejar el reporte de Allure:', error);
+        return null;
+    }
+}
+
 function broadcastStatus() {
     const activeJobs = workerPool.filter(w => w.status === 'busy').length;
     io.emit('queue_status_update', {
@@ -122,7 +169,8 @@ function checkIdleAndCleanup() {
 
     if (isQueueEmpty && allWorkersIdle && workerPool.length > 0) {
         console.log('Todos los trabajos han finalizado y la cola está vacía. Terminando workers...');
-        io.emit('log_update', { logLine: `--- 🧹 Todos los trabajos completados. Limpiando y terminando workers... ---\n` });
+        io.emit('log_update', { logLine: `--- 🧹 Todos los trabajos completados. Limpiando y terminando workers... ---
+` });
         
         const workersToTerminate = [...workerPool];
         workersToTerminate.forEach(worker => {
@@ -228,8 +276,19 @@ function createWorker(branch) {
             case 'READY_FOR_NEXT_JOB':
                 console.log(`Worker ${worker.id} reportó READY_FOR_NEXT_JOB.`);
                 worker.status = 'ready';
+
+                let reportUrl = null;
+                if (message.data && message.data.reportPath) {
+                    reportUrl = handleReport(currentJob, message.data.reportPath);
+                }
+
                 worker.currentJob = null;
-                io.emit('job_finished', { slotId, jobId: currentJob.id, exitCode: message.data?.exitCode ?? 0 });
+                io.emit('job_finished', { 
+                    slotId, 
+                    jobId: currentJob.id, 
+                    exitCode: message.data?.exitCode ?? 0,
+                    reportUrl: reportUrl 
+                });
                 broadcastStatus();
                 processQueue();
                 break;
@@ -238,7 +297,7 @@ function createWorker(branch) {
                 io.emit('log_update', { slotId, logLine: message.data });
                 break;
 
-            case 'DONE':
+            case 'DONE': // This case is effectively deprecated but we'll keep it for now.
                 console.log(`Worker ${worker.id} reportó DONE para job ${currentJob?.id}`);
                 break;
         }
@@ -252,7 +311,8 @@ function createWorker(branch) {
         }
         
         if (worker.status === 'busy' && worker.currentJob && !worker.terminating) {
-            io.emit('log_update', { logLine: `--- ⚠️ Worker murió inesperadamente. Re-encolando job ${worker.currentJob.id}... ---\n` });
+            io.emit('log_update', { logLine: `--- ⚠️ Worker murió inesperadamente. Re-encolando job ${worker.currentJob.id}... ---
+` });
             io.emit('job_finished', { slotId: worker.id, jobId: worker.currentJob.id, exitCode: code });
             jobQueue.unshift(worker.currentJob);
         }
@@ -267,6 +327,7 @@ function createWorker(branch) {
 
     return worker;
 }
+
 
 // --- Manejo de Socket.IO ---
 io.on('connection', (socket) => {

@@ -8,3 +8,6 @@ yarn-error.log
 
 # Archivo de variables de entorno locales
 .env
+
+# Artefactos generados
+public/reports

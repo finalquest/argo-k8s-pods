@@ -81,9 +81,22 @@ function runTest(job) {
     const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
 
     runScript(runnerScript, [workspaceDir, branch, client, feature], (code) => {
-        sendToParent({ type: 'DONE', data: { exitCode: code } });
-        // Notifica que está listo para el siguiente trabajo.
-        sendToParent({ type: 'READY_FOR_NEXT_JOB' });
+        const reportDir = path.join(workspaceDir, 'appium', 'allure-report');
+        let reportPath = null;
+
+        if (fs.existsSync(reportDir)) {
+            reportPath = reportDir;
+            sendToParent({ type: 'LOG', data: `[worker] Reporte de Allure encontrado en: ${reportPath}\n` });
+        }
+
+        // Notifica que está listo para el siguiente trabajo, incluyendo la ruta del reporte si existe.
+        sendToParent({
+            type: 'READY_FOR_NEXT_JOB',
+            data: {
+                exitCode: code,
+                reportPath: reportPath
+            }
+        });
     });
 }
 
