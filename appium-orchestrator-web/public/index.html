@@ -6,25 +6,42 @@
     <title>Appium Orchestrator</title>
     <style>
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
-        .header { background: #fff; padding: 1em 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
+        .header { background: #fff; padding: 1em 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { max-width: 1200px; margin: auto; padding: 0 2em;}
+        
+        /* Tabs */
+        .tabs { border-bottom: 2px solid #dee2e6; margin-bottom: 1.5em; }
+        .tab-btn { background: none; border: none; font-size: 1.1em; padding: 1em 1.5em; cursor: pointer; color: #495057; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: #007bff; border-bottom-color: #007bff; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .controls { display: flex; flex-wrap: wrap; gap: 1em; align-items: center; margin-bottom: 1.5em; }
         label { font-weight: 500; }
         select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; font-size: 1em; }
         button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        #features-list { list-style-type: none; padding: 0; max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px;}
+        #features-list { list-style-type: none; padding: 0; max-height: 350px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;}
         #features-list li { padding: 0.5em; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
         #features-list li:last-child { border-bottom: none; }
         .run-btn { background-color: #28a745; border-color: #28a745; }
         .run-btn:hover { background-color: #218838; }
         
-        .panels-container { display: flex; flex-wrap: wrap; gap: 1.5em; margin-top: 2em; }
-        .log-panel { flex: 1 1 400px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; display: flex; flex-direction: column; min-width: 400px;}
-        .panel-header { background: #e9ecef; padding: 0.75em; font-weight: bold; border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px;}
-        .panel-header.running { background-color: #ffc107; }
+        /* Workers View */
+        #worker-status-container { display: flex; flex-wrap: wrap; gap: 0.5em; padding: 1em; background-color: #e9ecef; border-radius: 8px; margin-bottom: 1.5em; }
+        .worker-status-btn { background-color: #6c757d; border-color: #6c757d; color: white; }
+        .worker-status-btn.status-busy { background-color: #ffc107; border-color: #ffc107; color: #212529; }
+        .worker-status-btn.status-ready { background-color: #28a745; border-color: #28a745; }
+        .worker-status-btn.status-initializing { background-color: #17a2b8; border-color: #17a2b8; }
+
+        .panels-container { display: flex; flex-wrap: wrap; gap: 1.5em; }
+        .log-panel { flex: 1 1 400px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; display: flex; flex-direction: column; min-width: 400px; scroll-margin-top: 1em;}
+        .panel-header { background: #e9ecef; padding: 0.75em; font-weight: bold; border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px; transition: background-color 0.3s; }
         .panel-header .stop-btn { float: right; background-color: #dc3545; border-color: #dc3545; padding: 0.2em 0.6em; font-size: 0.8em; }
         .panel-header .stop-btn:hover { background-color: #c82333; }
+        .panel-header.status-busy { background-color: #ffc107; }
+        .panel-header.status-ready { background-color: #28a745; color: white; }
+        .panel-header.status-initializing { background-color: #17a2b8; color: white; }
         .panel-content { height: 350px; overflow-y: scroll; padding: 1em; font-family: monospace; white-space: pre-wrap; background-color: #212529; color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
     </style>
 </head>
@@ -35,54 +52,136 @@
     </div>
 
     <div class="container">
-        <div class="controls">
-            <div>
-                <label for="client-select">Cliente:</label>
-                <select id="client-select">
-                    <option value="nbch">nbch</option>
-                    <option value="bpn">bpn</option>
-                    <option value="bind">bind</option>
-                </select>
-            </div>
-            <div>
-                <label for="branch-select">Branch:</label>
-                <select id="branch-select"><option>Cargando...</option></select>
-            </div>
-            <button id="fetch-features-btn">Buscar Features</button>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
+            <button class="tab-btn" onclick="switchTab('workers')">Workers</button>
         </div>
 
-        <h2>Features</h2>
-        <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
+        <!-- Setup Tab -->
+        <div id="setup-view" class="tab-content active">
+            <div class="controls">
+                <div>
+                    <label for="client-select">Cliente:</label>
+                    <select id="client-select">
+                        <option value="nbch">nbch</option>
+                        <option value="bpn">bpn</option>
+                        <option value="bind">bind</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="branch-select">Branch:</label>
+                    <select id="branch-select"><option>Cargando...</option></select>
+                </div>
+                <button id="fetch-features-btn">Buscar Features</button>
+            </div>
+            <h2>Features</h2>
+            <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
+        </div>
 
-        <div id="log-panels-container" class="panels-container"></div>
+        <!-- Workers Tab -->
+        <div id="workers-view" class="tab-content">
+            <h2>Estado de Workers</h2>
+            <div id="worker-status-container"></div>
+            <div id="log-panels-container" class="panels-container"></div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
 
-        // Elementos del DOM
+        // --- DOM Elements ---
         const branchSelect = document.getElementById('branch-select');
         const clientSelect = document.getElementById('client-select');
         const fetchBtn = document.getElementById('fetch-features-btn');
         const featuresList = document.getElementById('features-list');
         const panelsContainer = document.getElementById('log-panels-container');
+        const workerStatusContainer = document.getElementById('worker-status-container');
 
-        function createLogPanels(limit) {
-            panelsContainer.innerHTML = '';
-            for (let i = 0; i < limit; i++) {
-                const panel = document.createElement('div');
-                panel.className = 'log-panel';
-                panel.id = `log-panel-${i}`;
-                panel.innerHTML = `
-                    <div class="panel-header">Slot ${i + 1} - Libre</div>
-                    <div class="panel-content"></div>
-                `;
-                panelsContainer.appendChild(panel);
+        // --- Tab Switching ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`${tabName}-view`).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // --- UI Rendering ---
+        function getStatusText(status) {
+            switch (status) {
+                case 'initializing': return 'Inicializando';
+                case 'ready': return 'Listo';
+                case 'busy': return 'Ocupado';
+                default: return status;
             }
         }
 
-        // --- Lógica de la UI ---
+        function renderWorkerStatus(workers) {
+            workerStatusContainer.innerHTML = '';
+            if (workers.length === 0) {
+                workerStatusContainer.innerHTML = '<p>No hay workers activos.</p>';
+                return;
+            }
+            workers.forEach(worker => {
+                const btn = document.createElement('button');
+                btn.className = `worker-status-btn status-${worker.status}`;
+                let text = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)})`;
+                if (worker.branch) text += ` - ${worker.branch}`;
+                btn.textContent = text;
+                btn.onclick = () => {
+                    const panel = document.getElementById(`log-panel-${worker.slotId}`);
+                    if (panel) {
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                };
+                workerStatusContainer.appendChild(btn);
+            });
+        }
+
+        function renderWorkerPool(workers) {
+            const panelsToRemove = new Set(Array.from(panelsContainer.children).map(p => p.id));
+
+            workers.forEach(worker => {
+                panelsToRemove.delete(`log-panel-${worker.slotId}`);
+                let panel = document.getElementById(`log-panel-${worker.slotId}`);
+
+                if (!panel) {
+                    panel = document.createElement('div');
+                    panel.className = 'log-panel';
+                    panel.id = `log-panel-${worker.slotId}`;
+                    panel.innerHTML = `<div class="panel-header"></div><div class="panel-content"></div>`;
+                    panelsContainer.appendChild(panel);
+                }
+
+                const header = panel.querySelector('.panel-header');
+                header.className = `panel-header status-${worker.status}`;
+
+                let headerText = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)}) - Branch: ${worker.branch}`;
+                if (worker.status === 'busy' && worker.job) {
+                    headerText = `Worker ${worker.slotId + 1} (Ocupado) - Job ${worker.job.id}: ${worker.job.featureName}`;
+                }
+                
+                header.innerHTML = `<span>${headerText}</span>`;
+
+                if (worker.status === 'busy' && worker.job) {
+                    const stopButton = document.createElement('button');
+                    stopButton.textContent = 'Detener';
+                    stopButton.className = 'stop-btn';
+                    stopButton.onclick = () => {
+                        if (confirm(`¿Seguro que quieres detener el test para ${worker.job.featureName}?`)) {
+                            socket.emit('stop_test', { slotId: worker.slotId, jobId: worker.job.id });
+                        }
+                    };
+                    header.appendChild(stopButton);
+                }
+            });
+
+            panelsToRemove.forEach(panelId => {
+                document.getElementById(panelId)?.remove();
+            });
+        }
+
+        // --- API Calls ---
         async function loadBranches() {
             try {
                 const response = await fetch('/api/branches');
@@ -135,26 +234,26 @@
             }
         }
 
+
         function runTest(branch, client, feature) {
             socket.emit('run_test', { branch, client, feature });
+            switchTab('workers'); // Auto-switch to workers tab
         }
 
-        // --- Listeners de Eventos ---
+        // --- Event Listeners ---
         window.addEventListener('load', loadBranches);
         fetchBtn.addEventListener('click', fetchFeatures);
 
-        // --- Listeners de Socket.IO ---
+        // --- Socket.IO Listeners ---
         socket.on('init', (data) => {
-            console.log('Initializing UI with data:', data);
-            createLogPanels(data.status.limit);
             updateQueueStatus(data.status);
-            data.slots.forEach(slot => {
-                if (slot.job) {
-                    const panelHeader = document.querySelector(`#log-panel-${slot.slotId} .panel-header`);
-                    panelHeader.textContent = `(Job ${slot.job.id}) ${slot.job.featureName}`;
-                    panelHeader.classList.add('running');
-                }
-            });
+            renderWorkerPool(data.slots);
+            renderWorkerStatus(data.slots);
+        });
+
+        socket.on('worker_pool_update', (slots) => {
+            renderWorkerPool(slots);
+            renderWorkerStatus(slots);
         });
 
         function updateQueueStatus(status) {
@@ -166,56 +265,32 @@
 
         socket.on('job_started', (data) => {
             const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (!panel) return;
-            const header = panel.querySelector('.panel-header');
-            const content = panel.querySelector('.panel-content');
-            
-            // Limpiar el encabezado antes de añadir nuevo contenido
-            header.innerHTML = '';
-
-            const titleSpan = document.createElement('span');
-            titleSpan.textContent = `(Job ${data.jobId}) ${data.featureName}`;
-
-            const stopButton = document.createElement('button');
-            stopButton.textContent = 'Detener';
-            stopButton.className = 'stop-btn';
-            stopButton.onclick = () => {
-                if (confirm(`¿Seguro que quieres detener el test para ${data.featureName}?`)) {
-                    socket.emit('stop_test', { slotId: data.slotId, jobId: data.jobId });
-                }
-            };
-
-            header.appendChild(titleSpan);
-            header.appendChild(stopButton);
-            header.classList.add('running');
-            content.innerHTML = ''; // Limpiar logs anteriores
+            if (panel) {
+                panel.querySelector('.panel-content').innerHTML = '';
+            }
         });
 
         socket.on('log_update', (data) => {
-            // Si el log es genérico (sin slotId), no hacer nada en los paneles
             if (data.slotId === undefined) {
-                // Intentar mostrarlo en el primer panel si está libre
-                const panel = document.getElementById(`log-panel-0`);
-                if(panel && !panel.querySelector('.panel-header').classList.contains('running')) {
-                    panel.querySelector('.panel-content').textContent += data.logLine;
-                }
+                console.log("Log general:", data.logLine);
                 return;
             }
             const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (!panel) return;
-            const content = panel.querySelector('.panel-content');
-            content.textContent += data.logLine;
-            content.scrollTop = content.scrollHeight;
+            if (panel) {
+                const content = panel.querySelector('.panel-content');
+                content.textContent += data.logLine;
+                content.scrollTop = content.scrollHeight;
+            }
         });
 
         socket.on('job_finished', (data) => {
             const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (!panel) return;
-            const header = panel.querySelector('.panel-header');
-            header.textContent = `Slot ${data.slotId + 1} - Libre`;
-            header.classList.remove('running');
+            if (panel) {
+                const content = panel.querySelector('.panel-content');
+                content.textContent += `\n--- ✅ Job ${data.jobId} finalizado con código ${data.exitCode} ---\n`;
+                content.scrollTop = content.scrollHeight;
+            }
         });
-
     </script>
 </body>
 </html>

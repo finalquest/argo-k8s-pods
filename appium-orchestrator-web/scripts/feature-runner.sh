@@ -9,15 +9,12 @@ export STDBUF_O=0
 header "🚀 Appium Feature Runner - Inicio"
 
 # === ARGUMENTOS ===
-APPIUM_BRANCH="${1:?Debe especificar la branch}"
-CLIENT="${2:?Debe especificar el cliente (bind, nbch, bpn)}"
-FEATURE_NAME="${3:?Debe especificar el nombre del feature}"
+WORKSPACE_DIR="${1:?Debe especificar el directorio de trabajo del worker}"
+APPIUM_BRANCH="${2:?Debe especificar la branch}"
+CLIENT="${3:?Debe especificar el cliente (bind, nbch, bpn)}"
+FEATURE_NAME="${4:?Debe especificar el nombre del feature}"
 
 # === CONFIGURACIÓN (desde variables de entorno) ===
-GIT_USER="${GIT_USER:?Debe definir GIT_USER}"
-GIT_PAT="${GIT_PAT:?Debe definir GIT_PAT}"
-GIT_REPO_URL="${GIT_REPO_URL:?Debe definir GIT_REPO_URL}"
-
 APK_REGISTRY="${APK_REGISTRY:?Debe definir APK_REGISTRY}"
 APK_PATH="${APK_PATH:?Debe definir APK_PATH}"
 
@@ -27,40 +24,37 @@ REDIS_PORT="${RPORT:-6379}"
 # Variable opcional para override local
 LOCAL_ADB_HOST="${LOCAL_ADB_HOST:-}"
 
-BUILD_DIR="/tmp/build-$(date +%s)"
-APPIUM_DIR="${BUILD_DIR}/appium"
+APPIUM_DIR="${WORKSPACE_DIR}/appium"
 
 # Puertos base para Appium y servicios relacionados
 PORT_BASE=${PORT_BASE:-4724}
 SYS_PORT_BASE=${SYS_PORT_BASE:-8200}
 
 # === INICIO DE EJECUCIÓN ===
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
+cd "$WORKSPACE_DIR"
 
-header "🧹 Paso 1: Clonar y preparar repositorio de Appium"
+header "🔎 Paso 1: Validar Workspace"
 
-CLONE_URL=$(echo "$GIT_REPO_URL" | sed "s|://|://${GIT_USER}:${GIT_PAT}@|")
-
-debug "🔧 Clonando branch '${APPIUM_BRANCH}' desde '${GIT_REPO_URL}'"
-rm -rf "$APPIUM_DIR"
-git clone --depth 1 --branch "$APPIUM_BRANCH" "$CLONE_URL" "$APPIUM_DIR"
-
-debug "📂 Instalando dependencias con yarn..."
-if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn install --cwd "$APPIUM_DIR"; then
-    error "Error al instalar dependencias en $APPIUM_DIR"
+# Validar que el directorio de Appium existe
+if [ ! -d "$APPIUM_DIR" ]; then
+    error "El directorio de trabajo de Appium no existe: $APPIUM_DIR"
+    error "Asegúrate de que el script 'setup-workspace.sh' se haya ejecutado correctamente."
     exit 1
 fi
-success "Repo clonado y dependencias instaladas en $APPIUM_DIR"
+
+success "Workspace validado en $APPIUM_DIR"
+
 
 header "📦 Paso 2: Descargar APK desde Harbor"
 
 TAG=$(echo "$APK_PATH" | cut -d':' -f2)
 REPO=$(echo "$APK_PATH" | cut -d':' -f1)
 FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
-APK_FILENAME="builds/${TAG}/"
+# Usamos un subdirectorio dentro del workspace para los APKs
+APK_DOWNLOAD_DIR="${WORKSPACE_DIR}/downloads"
+APK_FILENAME="${APK_DOWNLOAD_DIR}/${TAG}/"
 
-mkdir -p builds
+mkdir -p "$APK_DOWNLOAD_DIR"
 
 debug "🔗 Descargando APK: $FULL_REF"
 if ! oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME"; then
