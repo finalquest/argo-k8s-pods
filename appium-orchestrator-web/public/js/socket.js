@@ -1,15 +1,19 @@
 let runningJobs = new Map();
 
-function runTest(branch, client, feature) {
-    window.socket.emit('run_test', { branch, client, feature });
+function runTest(branch, client, feature, highPriority = false) {
+    window.socket.emit('run_test', { branch, client, feature, highPriority });
     switchTab('workers');
 }
 
 function runSelectedTests() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
+    const priorityCheckbox = document.getElementById('batch-priority-checkbox');
+    
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
+    const highPriority = priorityCheckbox.checked;
+
     const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
         alert('No hay features seleccionados para ejecutar.');
@@ -19,7 +23,8 @@ function runSelectedTests() {
         return {
             branch: selectedBranch,
             client: selectedClient,
-            feature: cb.dataset.featureName
+            feature: cb.dataset.featureName,
+            highPriority: highPriority
         };
     });
     window.socket.emit('run_batch', { jobs });
