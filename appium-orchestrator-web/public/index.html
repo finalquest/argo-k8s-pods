@@ -81,6 +81,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
             <button class="tab-btn" onclick="switchTab('workers')">Workers</button>
+            <button class="tab-btn" onclick="switchTab('results')">Resultados</button>
         </div>
 
         <!-- Setup Tab -->
@@ -109,10 +110,6 @@
                 </div>
             </div>
             <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
-            <div class="results-container" style="margin-top: 2em;">
-                <h2>Resultados Recientes</h2>
-                <ul id="recent-results-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
-            </div>
         </div>
 
         <!-- Workers Tab -->
@@ -120,6 +117,12 @@
             <h2>Estado de Workers</h2>
             <div id="worker-status-container"></div>
             <div id="log-panels-container" class="panels-container"></div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results-view" class="tab-content">
+            <h2>Resultados Recientes</h2>
+            <ul id="recent-results-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
         </div>
     </div>
 
