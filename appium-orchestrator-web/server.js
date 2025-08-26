@@ -92,6 +92,68 @@ app.get('/api/features', async (req, res) => {
     }
 });
 
+app.get('/api/history/branches', (req, res) => {
+    const reportsDir = path.join(__dirname, 'public', 'reports');
+    if (!fs.existsSync(reportsDir)) {
+        return res.json([]);
+    }
+    try {
+        const branches = fs.readdirSync(reportsDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        res.json(branches);
+    } catch (error) {
+        console.error('Error al leer las branches del historial:', error);
+        res.status(500).json({ error: 'Error interno al leer las branches del historial.' });
+    }
+});
+
+app.get('/api/history', (req, res) => {
+    const { branch: branchFilter } = req.query;
+    const reportsDir = path.join(__dirname, 'public', 'reports');
+    if (!fs.existsSync(reportsDir)) {
+        return res.json([]);
+    }
+
+    try {
+        const history = [];
+        const branches = fs.readdirSync(reportsDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+        for (const branch of branches) {
+            if (branchFilter && branch !== branchFilter) {
+                continue;
+            }
+            const branchPath = path.join(reportsDir, branch);
+            const features = fs.readdirSync(branchPath, { withFileTypes: true })
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent => dirent.name);
+
+            for (const feature of features) {
+                const featurePath = path.join(branchPath, feature);
+                const timestamps = fs.readdirSync(featurePath, { withFileTypes: true })
+                    .filter(dirent => dirent.isDirectory())
+                    .map(dirent => dirent.name);
+
+                for (const timestamp of timestamps) {
+                    history.push({
+                        branch: branch,
+                        feature: feature,
+                        timestamp: timestamp,
+                        reportUrl: `/reports/${branch}/${feature}/${timestamp}/`
+                    });
+                }
+            }
+        }
+        history.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        res.json(history);
+    } catch (error) {
+        console.error('Error al leer el historial de reportes:', error);
+        res.status(500).json({ error: 'Error interno al leer el historial.' });
+    }
+});
+
 
 // --- Lógica de Workers ---
 

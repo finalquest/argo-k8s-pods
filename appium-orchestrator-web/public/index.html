@@ -21,33 +21,22 @@
         select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; font-size: 1em; }
         button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        #features-list { list-style-type: none; padding: 0; max-height: 350px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;}
-        #features-list li { padding: 0.5em; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
-        #features-list li:last-child { border-bottom: none; }
+        
+        #features-list, #history-list { list-style-type: none; padding: 0; max-height: 350px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;}
+        #features-list li, #history-list li { padding: 0.5em; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+        #features-list li:last-child, #history-list li:last-child { border-bottom: none; }
+        
         .run-btn { background-color: #28a745; border-color: #28a745; }
         .run-btn:hover { background-color: #218838; }
 
-        #recent-results-list li {
-            padding: 0.75em;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #recent-results-list li:last-child {
-            border-bottom: none;
-        }
-        .result-status {
-            font-size: 1.5em;
-            margin-right: 0.5em;
-        }
         .report-btn {
             background-color: #007bff;
-            color: white !important;
-            text-decoration: none;
-            padding: 0.4em 0.8em;
-            font-size: 0.9em;
+            color: white;
+            padding: 0.5em 1em;
             border-radius: 4px;
+            font-size: 1em;
+            border: 1px solid #007bff;
+            cursor: pointer;
         }
         .report-btn:hover {
             background-color: #0056b3;
@@ -79,9 +68,9 @@
 
     <div class="container">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
-            <button class="tab-btn" onclick="switchTab('workers')">Workers</button>
-            <button class="tab-btn" onclick="switchTab('results')">Resultados</button>
+            <button class="tab-btn active" data-tab="setup">Setup</button>
+            <button class="tab-btn" data-tab="workers">Workers</button>
+            <button class="tab-btn" data-tab="results">Resultados</button>
         </div>
 
         <!-- Setup Tab -->
@@ -122,308 +111,21 @@
         <!-- Results Tab -->
         <div id="results-view" class="tab-content">
             <h2>Resultados Recientes</h2>
-            <ul id="recent-results-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
+            <div class="controls">
+                <label for="history-branch-filter">Filtrar por Branch:</label>
+                <select id="history-branch-filter">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <ul id="history-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-
-        // --- State ---
-        const runningJobs = new Map(); // slotId -> { id, featureName, branch }
-
-        // --- DOM Elements ---
-        const branchSelect = document.getElementById('branch-select');
-        const clientSelect = document.getElementById('client-select');
-        const fetchBtn = document.getElementById('fetch-features-btn');
-        const featuresList = document.getElementById('features-list');
-        const panelsContainer = document.getElementById('log-panels-container');
-        const workerStatusContainer = document.getElementById('worker-status-container');
-        const runSelectedBtn = document.getElementById('run-selected-btn');
-        const selectAllCheckbox = document.getElementById('select-all-features');
-        const recentResultsList = document.getElementById('recent-results-list');
-
-        // --- Tab Switching ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`${tabName}-view`).classList.add('active');
-            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
-        }
-
-        // --- UI Rendering ---
-        function getStatusText(status) {
-            switch (status) {
-                case 'initializing': return 'Inicializando';
-                case 'ready': return 'Listo';
-                case 'busy': return 'Ocupado';
-                default: return status;
-            }
-        }
-
-        function renderWorkerStatus(workers) {
-            workerStatusContainer.innerHTML = '';
-            if (workers.length === 0) {
-                workerStatusContainer.innerHTML = '<p>No hay workers activos.</p>';
-                return;
-            }
-            workers.forEach(worker => {
-                const btn = document.createElement('button');
-                btn.className = `worker-status-btn status-${worker.status}`;
-                let text = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)})`;
-                if (worker.branch) text += ` - ${worker.branch}`;
-                btn.textContent = text;
-                btn.onclick = () => {
-                    const panel = document.getElementById(`log-panel-${worker.slotId}`);
-                    if (panel) {
-                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                };
-                workerStatusContainer.appendChild(btn);
-            });
-        }
-
-        function renderWorkerPool(workers) {
-            const panelsToRemove = new Set(Array.from(panelsContainer.children).map(p => p.id));
-
-            workers.forEach(worker => {
-                panelsToRemove.delete(`log-panel-${worker.slotId}`);
-                let panel = document.getElementById(`log-panel-${worker.slotId}`);
-
-                if (!panel) {
-                    panel = document.createElement('div');
-                    panel.className = 'log-panel';
-                    panel.id = `log-panel-${worker.slotId}`;
-                    panel.innerHTML = `<div class="panel-header"></div><div class="panel-content"></div>`;
-                    panelsContainer.appendChild(panel);
-                }
-
-                const header = panel.querySelector('.panel-header');
-                header.className = `panel-header status-${worker.status}`;
-
-                let headerText = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)}) - Branch: ${worker.branch}`;
-                if (worker.status === 'busy' && worker.job) {
-                    headerText = `Worker ${worker.slotId + 1} (Ocupado) - Job ${worker.job.id}: ${worker.job.featureName}`;
-                }
-                
-                header.innerHTML = `<span>${headerText}</span>`;
-
-                if (worker.status === 'busy' && worker.job) {
-                    const stopButton = document.createElement('button');
-                    stopButton.textContent = 'Detener';
-                    stopButton.className = 'stop-btn';
-                    stopButton.onclick = () => {
-                        if (confirm(`¿Seguro que quieres detener el test para ${worker.job.featureName}?`)) {
-                            socket.emit('stop_test', { slotId: worker.slotId, jobId: worker.job.id });
-                        }
-                    };
-                    header.appendChild(stopButton);
-                }
-            });
-
-            panelsToRemove.forEach(panelId => {
-                document.getElementById(panelId)?.remove();
-            });
-        }
-
-        // --- API Calls ---
-        async function loadBranches() {
-            try {
-                const response = await fetch('/api/branches');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const branches = await response.json();
-                branchSelect.innerHTML = '';
-                branches.forEach(branch => {
-                    const option = document.createElement('option');
-                    option.value = branch;
-                    option.textContent = branch;
-                    branchSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error al cargar branches:', error);
-                branchSelect.innerHTML = '<option>Error al cargar</option>';
-            }
-        }
-
-        async function fetchFeatures() {
-            const selectedBranch = branchSelect.value;
-            const selectedClient = clientSelect.value;
-            if (!selectedBranch || !selectedClient) {
-                alert('Por favor, selecciona una branch y un cliente.');
-                return;
-            }
-            featuresList.innerHTML = '<li>Cargando...</li>';
-            try {
-                const response = await fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const features = await response.json();
-                featuresList.innerHTML = '';
-                if (features.length === 0) {
-                    featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
-                }
-                features.forEach(feature => {
-                    const li = document.createElement('li');
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.className = 'feature-checkbox';
-                    checkbox.dataset.featureName = feature;
-                    checkbox.onchange = updateSelectedCount;
-
-                    const featureNameSpan = document.createElement('span');
-                    featureNameSpan.textContent = feature;
-                    
-                    const controlsDiv = document.createElement('div');
-                    controlsDiv.style.display = 'flex';
-                    controlsDiv.style.alignItems = 'center';
-                    controlsDiv.style.gap = '1em';
-
-                    controlsDiv.appendChild(checkbox);
-                    controlsDiv.appendChild(featureNameSpan);
-
-                    li.appendChild(controlsDiv);
-
-                    const runButton = document.createElement('button');
-                    runButton.textContent = 'Run';
-                    runButton.className = 'run-btn';
-                    runButton.onclick = () => runTest(selectedBranch, selectedClient, feature);
-                    li.appendChild(runButton);
-                    featuresList.appendChild(li);
-                });
-                updateSelectedCount(); // Reset count
-            } catch (error) {
-                console.error('Error al buscar features:', error);
-                featuresList.innerHTML = '<li>Error al buscar features.</li>';
-            }
-        }
-
-
-        function runTest(branch, client, feature) {
-            socket.emit('run_test', { branch, client, feature });
-            switchTab('workers'); // Auto-switch to workers tab
-        }
-
-        function runSelectedTests() {
-            const selectedBranch = branchSelect.value;
-            const selectedClient = clientSelect.value;
-            const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
-            
-            if (selectedCheckboxes.length === 0) {
-                alert('No hay features seleccionados para ejecutar.');
-                return;
-            }
-
-            const jobs = Array.from(selectedCheckboxes).map(cb => {
-                return {
-                    branch: selectedBranch,
-                    client: selectedClient,
-                    feature: cb.dataset.featureName
-                };
-            });
-
-            socket.emit('run_batch', { jobs });
-            switchTab('workers');
-        }
-
-        function updateSelectedCount() {
-            const selectedCount = document.querySelectorAll('.feature-checkbox:checked').length;
-            runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
-            runSelectedBtn.disabled = selectedCount === 0;
-        }
-
-        function toggleSelectAll(event) {
-            const checkboxes = document.querySelectorAll('.feature-checkbox');
-            checkboxes.forEach(cb => {
-                cb.checked = event.target.checked;
-            });
-            updateSelectedCount();
-        }
-
-        // --- Event Listeners ---
-        window.addEventListener('load', loadBranches);
-        fetchBtn.addEventListener('click', fetchFeatures);
-        runSelectedBtn.addEventListener('click', runSelectedTests);
-        selectAllCheckbox.addEventListener('change', toggleSelectAll);
-
-        // --- Socket.IO Listeners ---
-        socket.on('init', (data) => {
-            updateQueueStatus(data.status);
-            renderWorkerPool(data.slots);
-            renderWorkerStatus(data.slots);
-        });
-
-        socket.on('worker_pool_update', (slots) => {
-            renderWorkerPool(slots);
-            renderWorkerStatus(slots);
-        });
-
-        function updateQueueStatus(status) {
-            const statusDiv = document.getElementById('queue-status');
-            statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
-        }
-
-        socket.on('queue_status_update', updateQueueStatus);
-
-        socket.on('job_started', (data) => {
-            runningJobs.set(data.slotId, data);
-            const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (panel) {
-                panel.querySelector('.panel-content').innerHTML = '';
-            }
-        });
-
-        socket.on('log_update', (data) => {
-            if (data.slotId === undefined) {
-                console.log("Log general:", data.logLine);
-                return;
-            }
-            const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (panel) {
-                const content = panel.querySelector('.panel-content');
-                content.textContent += data.logLine;
-                content.scrollTop = content.scrollHeight;
-            }
-        });
-
-        socket.on('job_finished', (data) => {
-            const jobDetails = runningJobs.get(data.slotId);
-            if (!jobDetails) return;
-
-            const panel = document.getElementById(`log-panel-${data.slotId}`);
-            if (panel) {
-                const content = panel.querySelector('.panel-content');
-                content.textContent += `\n--- ✅ Job ${data.jobId} finalizado con código ${data.exitCode} ---\n`;
-                content.scrollTop = content.scrollHeight;
-            }
-
-            const li = document.createElement('li');
-            const statusSpan = document.createElement('span');
-            const statusIcon = data.exitCode === 0 ? '✅' : '❌';
-            statusSpan.className = 'result-status';
-            statusSpan.textContent = statusIcon;
-
-            const infoSpan = document.createElement('span');
-            infoSpan.textContent = `Job ${jobDetails.jobId}: ${jobDetails.featureName} (${jobDetails.branch})`;
-
-            const leftDiv = document.createElement('div');
-            leftDiv.appendChild(statusSpan);
-            leftDiv.appendChild(infoSpan);
-
-            li.appendChild(leftDiv);
-
-            if (data.reportUrl) {
-                const reportButton = document.createElement('a');
-                reportButton.href = data.reportUrl;
-                reportButton.target = '_blank';
-                reportButton.className = 'report-btn';
-                reportButton.textContent = 'Ver Reporte';
-                li.appendChild(reportButton);
-            }
-
-            recentResultsList.prepend(li);
-            runningJobs.delete(data.slotId);
-        });
-    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/socket.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
