@@ -73,8 +73,15 @@
                     <select id="branch-select"><option>Cargando...</option></select>
                 </div>
                 <button id="fetch-features-btn">Buscar Features</button>
+                <button id="run-selected-btn" style="background-color: #17a2b8;" disabled>Ejecutar Selección (0)</button>
             </div>
-            <h2>Features</h2>
+            <div class="features-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Features</h2>
+                <div>
+                    <input type="checkbox" id="select-all-features">
+                    <label for="select-all-features">Seleccionar Todo</label>
+                </div>
+            </div>
             <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
         </div>
 
@@ -97,6 +104,8 @@
         const featuresList = document.getElementById('features-list');
         const panelsContainer = document.getElementById('log-panels-container');
         const workerStatusContainer = document.getElementById('worker-status-container');
+        const runSelectedBtn = document.getElementById('run-selected-btn');
+        const selectAllCheckbox = document.getElementById('select-all-features');
 
         // --- Tab Switching ---
         function switchTab(tabName) {
@@ -218,9 +227,26 @@
                 }
                 features.forEach(feature => {
                     const li = document.createElement('li');
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'feature-checkbox';
+                    checkbox.dataset.featureName = feature;
+                    checkbox.onchange = updateSelectedCount;
+
                     const featureNameSpan = document.createElement('span');
                     featureNameSpan.textContent = feature;
-                    li.appendChild(featureNameSpan);
+                    
+                    const controlsDiv = document.createElement('div');
+                    controlsDiv.style.display = 'flex';
+                    controlsDiv.style.alignItems = 'center';
+                    controlsDiv.style.gap = '1em';
+
+                    controlsDiv.appendChild(checkbox);
+                    controlsDiv.appendChild(featureNameSpan);
+
+                    li.appendChild(controlsDiv);
+
                     const runButton = document.createElement('button');
                     runButton.textContent = 'Run';
                     runButton.className = 'run-btn';
@@ -228,6 +254,7 @@
                     li.appendChild(runButton);
                     featuresList.appendChild(li);
                 });
+                updateSelectedCount(); // Reset count
             } catch (error) {
                 console.error('Error al buscar features:', error);
                 featuresList.innerHTML = '<li>Error al buscar features.</li>';
@@ -240,9 +267,47 @@
             switchTab('workers'); // Auto-switch to workers tab
         }
 
+        function runSelectedTests() {
+            const selectedBranch = branchSelect.value;
+            const selectedClient = clientSelect.value;
+            const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('No hay features seleccionados para ejecutar.');
+                return;
+            }
+
+            const jobs = Array.from(selectedCheckboxes).map(cb => {
+                return {
+                    branch: selectedBranch,
+                    client: selectedClient,
+                    feature: cb.dataset.featureName
+                };
+            });
+
+            socket.emit('run_batch', { jobs });
+            switchTab('workers');
+        }
+
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('.feature-checkbox:checked').length;
+            runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
+            runSelectedBtn.disabled = selectedCount === 0;
+        }
+
+        function toggleSelectAll(event) {
+            const checkboxes = document.querySelectorAll('.feature-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = event.target.checked;
+            });
+            updateSelectedCount();
+        }
+
         // --- Event Listeners ---
         window.addEventListener('load', loadBranches);
         fetchBtn.addEventListener('click', fetchFeatures);
+        runSelectedBtn.addEventListener('click', runSelectedTests);
+        selectAllCheckbox.addEventListener('change', toggleSelectAll);
 
         // --- Socket.IO Listeners ---
         socket.on('init', (data) => {
