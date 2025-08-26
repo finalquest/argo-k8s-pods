@@ -52,11 +52,25 @@ async function fetchFeatures() {
             controlsDiv.appendChild(checkbox);
             controlsDiv.appendChild(featureNameSpan);
             li.appendChild(controlsDiv);
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.style.display = 'flex';
+            buttonsDiv.style.gap = '0.5em';
+
             const runButton = document.createElement('button');
             runButton.textContent = 'Run';
             runButton.className = 'run-btn';
-            runButton.onclick = () => runTest(selectedBranch, selectedClient, feature);
-            li.appendChild(runButton);
+            runButton.onclick = () => runTest(selectedBranch, selectedClient, feature, false);
+            
+            const priorityButton = document.createElement('button');
+            priorityButton.textContent = '⚡️';
+            priorityButton.title = 'Run with high priority';
+            priorityButton.className = 'priority-btn';
+            priorityButton.onclick = () => runTest(selectedBranch, selectedClient, feature, true);
+
+            buttonsDiv.appendChild(runButton);
+            buttonsDiv.appendChild(priorityButton);
+            li.appendChild(buttonsDiv);
             featuresList.appendChild(li);
         });
         updateSelectedCount();

@@ -22,12 +22,29 @@
         button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
         button:hover { background-color: #0056b3; }
         
-        #features-list, #history-list { list-style-type: none; padding: 0; max-height: 350px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;}
-        #features-list li, #history-list li { padding: 0.5em; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+        #features-list, #history-list {
+            list-style-type: none;
+            padding: 1em;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: #fff;
+        }
+        #features-list li, #history-list li {
+            padding: 0.5em;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         #features-list li:last-child, #history-list li:last-child { border-bottom: none; }
         
         .run-btn { background-color: #28a745; border-color: #28a745; }
         .run-btn:hover { background-color: #218838; }
+
+        .priority-btn { background-color: #ffc107; border-color: #ffc107; color: #212529; }
+        .priority-btn:hover { background-color: #e0a800; }
 
         .report-btn {
             background-color: #007bff;
@@ -90,6 +107,10 @@
                 </div>
                 <button id="fetch-features-btn">Buscar Features</button>
                 <button id="run-selected-btn" style="background-color: #17a2b8;" disabled>Ejecutar Selección (0)</button>
+                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5em;">
+                    <input type="checkbox" id="batch-priority-checkbox">
+                    Alta Prioridad ⚡
+                </label>
             </div>
             <div class="features-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Features</h2>

@@ -412,20 +412,40 @@ io.on('connection', (socket) => {
     socket.on('run_test', (data) => {
         jobIdCounter++;
         const job = { ...data, id: jobIdCounter };
-        jobQueue.push(job);
-        io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---\n` });
+        if (job.highPriority) {
+            jobQueue.unshift(job);
+            io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
+` });
+        } else {
+            jobQueue.push(job);
+            io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---
+` });
+        }
         processQueue();
     });
 
     socket.on('run_batch', (data) => {
         const jobs = data.jobs || [];
-        io.emit('log_update', { logLine: `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---\n` });
-        jobs.forEach(jobData => {
-            jobIdCounter++;
-            const job = { ...jobData, id: jobIdCounter };
-            jobQueue.push(job);
-            io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---\n` });
-        });
+        const highPriority = jobs.length > 0 && jobs[0].highPriority;
+
+        if (highPriority) {
+            io.emit('log_update', { logLine: `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
+` });
+            // Add jobs in reverse order to the front of the queue to maintain their original order
+            for (let i = jobs.length - 1; i >= 0; i--) {
+                jobIdCounter++;
+                const job = { ...jobs[i], id: jobIdCounter };
+                jobQueue.unshift(job);
+            }
+        } else {
+            io.emit('log_update', { logLine: `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
+` });
+            jobs.forEach(jobData => {
+                jobIdCounter++;
+                const job = { ...jobData, id: jobIdCounter };
+                jobQueue.push(job);
+            });
+        }
         processQueue();
     });
 
