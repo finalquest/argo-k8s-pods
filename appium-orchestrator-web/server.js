@@ -294,6 +294,18 @@ io.on('connection', (socket) => {
         processQueue();
     });
 
+    socket.on('run_batch', (data) => {
+        const jobs = data.jobs || [];
+        io.emit('log_update', { logLine: `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---\n` });
+        jobs.forEach(jobData => {
+            jobIdCounter++;
+            const job = { ...jobData, id: jobIdCounter };
+            jobQueue.push(job);
+            io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---\n` });
+        });
+        processQueue();
+    });
+
     socket.on('stop_test', (data) => {
         const { slotId, jobId } = data;
         const worker = workerPool.find(w => w.id === slotId && w.currentJob?.id === jobId);
