@@ -26,6 +26,32 @@
         #features-list li:last-child { border-bottom: none; }
         .run-btn { background-color: #28a745; border-color: #28a745; }
         .run-btn:hover { background-color: #218838; }
+
+        #recent-results-list li {
+            padding: 0.75em;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #recent-results-list li:last-child {
+            border-bottom: none;
+        }
+        .result-status {
+            font-size: 1.5em;
+            margin-right: 0.5em;
+        }
+        .report-btn {
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            padding: 0.4em 0.8em;
+            font-size: 0.9em;
+            border-radius: 4px;
+        }
+        .report-btn:hover {
+            background-color: #0056b3;
+        }
         
         /* Workers View */
         #worker-status-container { display: flex; flex-wrap: wrap; gap: 0.5em; padding: 1em; background-color: #e9ecef; border-radius: 8px; margin-bottom: 1.5em; }
@@ -83,6 +109,10 @@
                 </div>
             </div>
             <ul id="features-list"><li>Selecciona cliente y branch para buscar features.</li></ul>
+            <div class="results-container" style="margin-top: 2em;">
+                <h2>Resultados Recientes</h2>
+                <ul id="recent-results-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
+            </div>
         </div>
 
         <!-- Workers Tab -->
@@ -97,6 +127,9 @@
     <script>
         const socket = io();
 
+        // --- State ---
+        const runningJobs = new Map(); // slotId -> { id, featureName, branch }
+
         // --- DOM Elements ---
         const branchSelect = document.getElementById('branch-select');
         const clientSelect = document.getElementById('client-select');
@@ -106,6 +139,7 @@
         const workerStatusContainer = document.getElementById('worker-status-container');
         const runSelectedBtn = document.getElementById('run-selected-btn');
         const selectAllCheckbox = document.getElementById('select-all-features');
+        const recentResultsList = document.getElementById('recent-results-list');
 
         // --- Tab Switching ---
         function switchTab(tabName) {
@@ -329,6 +363,7 @@
         socket.on('queue_status_update', updateQueueStatus);
 
         socket.on('job_started', (data) => {
+            runningJobs.set(data.slotId, data);
             const panel = document.getElementById(`log-panel-${data.slotId}`);
             if (panel) {
                 panel.querySelector('.panel-content').innerHTML = '';
@@ -349,12 +384,42 @@
         });
 
         socket.on('job_finished', (data) => {
+            const jobDetails = runningJobs.get(data.slotId);
+            if (!jobDetails) return;
+
             const panel = document.getElementById(`log-panel-${data.slotId}`);
             if (panel) {
                 const content = panel.querySelector('.panel-content');
                 content.textContent += `\n--- ✅ Job ${data.jobId} finalizado con código ${data.exitCode} ---\n`;
                 content.scrollTop = content.scrollHeight;
             }
+
+            const li = document.createElement('li');
+            const statusSpan = document.createElement('span');
+            const statusIcon = data.exitCode === 0 ? '✅' : '❌';
+            statusSpan.className = 'result-status';
+            statusSpan.textContent = statusIcon;
+
+            const infoSpan = document.createElement('span');
+            infoSpan.textContent = `Job ${jobDetails.jobId}: ${jobDetails.featureName} (${jobDetails.branch})`;
+
+            const leftDiv = document.createElement('div');
+            leftDiv.appendChild(statusSpan);
+            leftDiv.appendChild(infoSpan);
+
+            li.appendChild(leftDiv);
+
+            if (data.reportUrl) {
+                const reportButton = document.createElement('a');
+                reportButton.href = data.reportUrl;
+                reportButton.target = '_blank';
+                reportButton.className = 'report-btn';
+                reportButton.textContent = 'Ver Reporte';
+                li.appendChild(reportButton);
+            }
+
+            recentResultsList.prepend(li);
+            runningJobs.delete(data.slotId);
         });
     </script>
 </body>

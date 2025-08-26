@@ -201,13 +201,21 @@ cd "$APPIUM_DIR"
 FEATURE_ARG="${CLIENT}/feature/${FEATURE_NAME}"
 if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
     EXIT_CODE=$?
-    cd ..
     error "La ejecución de WDIO falló con código de salida $EXIT_CODE"
 else
     EXIT_CODE=0
-    cd ..
     success "Ejecución de WDIO completada."
 fi
+
+header "📊 Generando reporte de Allure..."
+if [ -d "allure-results" ]; then
+    env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn allure generate ./allure-results -o ./allure-report --clean
+    success "Reporte de Allure generado en allure-report."
+else
+    warn "No se encontró el directorio allure-results. No se generará reporte."
+fi
+
+cd ..
 
 header "🛑 Paso 6: Limpieza"
 
