@@ -54,8 +54,23 @@ sequenceDiagram
 
 **Objetivo:** Validar el núcleo de la idea y perfeccionar la interacción con la IA.
 
-1.  **Definir la Ubicación de las Imágenes Base:**
-    *   Crear una convención. Por ejemplo, añadir una carpeta en el repositorio de Appium: `test/visual_baselines/<client>/<feature_name>.png`.
+1.  **Definir la Ubicación y Mapeo de Imágenes:**
+
+    *   **a. Estructura de Imágenes Base:** Se creará una carpeta dedicada en el repositorio de Appium para almacenar las imágenes de referencia (`visual_baselines`). La estructura propuesta es:
+        ```
+        test/
+        └── visual_baselines/
+            ├── <client_name>/
+            │   ├── <screen_or_feature_name>.png
+            │   └── ...
+        ```
+        Al estar versionadas en Git, cualquier cambio en el diseño se refleja actualizando la imagen base correspondiente.
+
+    *   **b. Estrategia de Mapeo entre Snapshot y Base:** Para asociar de forma inequívoca la captura de un test con su imagen de referencia, se seguirá una estrategia de **nomenclatura explícita**. El test de Appium será modificado para tomar capturas de pantalla en puntos de validación concretos y guardarlas con un nombre específico que actúe como **identificador único**.
+
+        > **Ejemplo:** Un test que valida la pantalla de login, en el `step` de validación visual, tomará una captura y la guardará con el nombre `login_screen.png`. El servicio de validación buscará entonces una imagen base con exactamente el mismo nombre en el directorio correspondiente (`visual_baselines/<client>/login_screen.png`) para realizar la comparación.
+
+    *   **c. Abordaje Intencional:** Este enfoque es deliberado. Se descarta la idea de tomar capturas en cada paso o de enviar todas las imágenes a la IA para que ella infiera las relaciones. El método de nombrado explícito es más eficiente, predecible y nos da control total sobre qué se valida visualmente y contra qué.
 
 2.  **Diseñar el Prompt para Gemini:**
     *   Este es el paso más importante. El prompt debe ser claro y pedir una respuesta estructurada.
