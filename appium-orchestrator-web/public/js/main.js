@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     window.socket = io();
     initializeSocketListeners();
+    initializeWiremockTab();
 
     const fetchBtn = document.getElementById('fetch-features-btn');
     const runSelectedBtn = document.getElementById('run-selected-btn');
@@ -17,10 +18,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.tab-btn').forEach(button => {
         button.addEventListener('click', () => {
-            switchTab(button.dataset.tab);
-            if (button.dataset.tab === 'results') {
+            const previousTab = document.querySelector('.tab-btn.active').dataset.tab;
+            const newTab = button.dataset.tab;
+
+            switchTab(newTab);
+
+            if (previousTab === 'wiremock' && newTab !== 'wiremock') {
+                stopLiveView();
+            }
+
+            if (newTab === 'results') {
                 loadHistoryBranches();
                 loadHistory();
+            } else if (newTab === 'wiremock') {
+                const liveViewToggle = document.getElementById('wiremock-live-view-toggle');
+                if (liveViewToggle.checked) {
+                    startLiveView();
+                }
             }
         });
     });

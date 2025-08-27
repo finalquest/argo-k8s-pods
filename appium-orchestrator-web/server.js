@@ -7,6 +7,8 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const { fork } = require('child_process');
+const fetch = require('node-fetch');
+const https = require('https');
 
 // Cargar variables de entorno desde .env
 require('dotenv').config();
@@ -39,6 +41,8 @@ const getAuthenticatedUrl = () => {
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- API Endpoints ---
 app.get('/api/branches', async (req, res) => {
@@ -153,6 +157,197 @@ app.get('/api/history', (req, res) => {
         res.status(500).json({ error: 'Error interno al leer el historial.' });
     }
 });
+
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+});
+
+app.get('/api/wiremock/mappings', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/mappings`, { agent: httpsAgent });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching mappings from Wiremock:', error);
+        res.status(500).json({ error: 'Error fetching mappings from Wiremock' });
+    }
+});
+
+app.delete('/api/wiremock/mappings', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/mappings`, { 
+            method: 'DELETE',
+            agent: httpsAgent 
+        });
+        res.status(response.status).send();
+    } catch (error) {
+        console.error('Error deleting mappings from Wiremock:', error);
+        res.status(500).json({ error: 'Error deleting mappings from Wiremock' });
+    }
+});
+
+app.post('/api/wiremock/mappings/reset', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/mappings/reset`, { 
+            method: 'POST',
+            agent: httpsAgent 
+        });
+        res.status(response.status).send();
+    } catch (error) {
+        console.error('Error resetting mappings in Wiremock:', error);
+        res.status(500).json({ error: 'Error resetting mappings in Wiremock' });
+    }
+});
+
+app.post('/api/wiremock/mappings/import', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/mappings/import`, { 
+            method: 'POST',
+            agent: httpsAgent,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(req.body)
+        });
+        res.status(response.status).send();
+    } catch (error) {
+        console.error('Error importing mappings to Wiremock:', error);
+        res.status(500).json({ error: 'Error importing mappings to Wiremock' });
+    }
+});
+
+app.get('/api/wiremock/requests', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/requests`, { agent: httpsAgent });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching requests from Wiremock:', error);
+        res.status(500).json({ error: 'Error fetching requests from Wiremock' });
+    }
+});
+
+app.delete('/api/wiremock/requests', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/requests`, { 
+            method: 'DELETE',
+            agent: httpsAgent 
+        });
+        res.status(response.status).send();
+    } catch (error) {
+        console.error('Error deleting requests from Wiremock:', error);
+        res.status(500).json({ error: 'Error deleting requests from Wiremock' });
+    }
+});
+
+app.post('/api/wiremock/recordings/start', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/recordings/start`, { 
+            method: 'POST',
+            agent: httpsAgent,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ targetBaseUrl: process.env.WIREMOCK_RECORDING_TARGET_URL })
+        });
+        res.status(response.status).send();
+    } catch (error) {
+        console.error('Error starting recording in Wiremock:', error);
+        res.status(500).json({ error: 'Error starting recording in Wiremock' });
+    }
+});
+
+function splitAndSaveMappings(mappings, recordingName) {
+    const baseDir = process.env.WIREMOCK_MAPPINGS_DIR || './wiremock/mappings';
+    const mappingsDir = path.join(baseDir, recordingName);
+
+    if (!fs.existsSync(mappingsDir)) {
+        fs.mkdirSync(mappingsDir, { recursive: true });
+    }
+
+    const groupedMappings = new Map();
+
+    mappings.forEach(mapping => {
+        const url = mapping.request.url;
+        if (!url) return;
+
+        // Sanitize and create file path from URL
+        const pathParts = url.split('?')[0].split('/').filter(Boolean);
+        if (pathParts.length === 0) return;
+
+        const dirPath = path.join(mappingsDir, ...pathParts.slice(0, -1));
+        const fileName = `${pathParts[pathParts.length - 1] || 'index'}.json`;
+        const filePath = path.join(dirPath, fileName);
+
+        if (!groupedMappings.has(filePath)) {
+            groupedMappings.set(filePath, []);
+        }
+        groupedMappings.get(filePath).push(mapping);
+    });
+
+    let filesCreated = 0;
+    groupedMappings.forEach((mappings, filePath) => {
+        const dirPath = path.dirname(filePath);
+        fs.mkdirSync(dirPath, { recursive: true });
+        fs.writeFileSync(filePath, JSON.stringify({ mappings }, null, 2));
+        filesCreated++;
+    });
+
+    return { totalMappings: mappings.length, filesCreated };
+}
+
+function saveMappingsAsSingleFile(mappings, recordingName) {
+    const baseDir = process.env.WIREMOCK_MAPPINGS_DIR || './wiremock/mappings';
+    const filePath = path.join(baseDir, `${recordingName}.json`);
+
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify({ mappings }, null, 2));
+
+    return { totalMappings: mappings.length, filesCreated: 1 };
+}
+
+app.post('/api/wiremock/recordings/stop', async (req, res) => {
+    console.log('--- DEBUG: /api/wiremock/recordings/stop ---');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    try {
+        const { recordingName, saveAsSingleFile } = req.body;
+        if (!recordingName) {
+            return res.status(400).json({ error: 'El nombre de la grabación es requerido.' });
+        }
+
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/recordings/stop`, { 
+            method: 'POST',
+            agent: httpsAgent 
+        });
+        const data = await response.json();
+
+        const summary = saveAsSingleFile
+            ? saveMappingsAsSingleFile(data.mappings, recordingName)
+            : splitAndSaveMappings(data.mappings, recordingName);
+
+        res.json({
+            message: `Grabación '${recordingName}' finalizada y mappings guardados.`,
+            summary: summary
+        });
+    } catch (error) {
+        console.error('Error stopping recording in Wiremock:', error);
+        res.status(500).json({ error: 'Error stopping recording in Wiremock' });
+    }
+});
+
+app.get('/api/wiremock/recordings/status', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/recordings/status`, { agent: httpsAgent });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching recording status from Wiremock:', error);
+        res.status(500).json({ error: 'Error fetching recording status from Wiremock' });
+    }
+});
+
+
 
 
 // --- Lógica de Workers ---

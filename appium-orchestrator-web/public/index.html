@@ -88,6 +88,7 @@
             <button class="tab-btn active" data-tab="setup">Setup</button>
             <button class="tab-btn" data-tab="workers">Workers</button>
             <button class="tab-btn" data-tab="results">Resultados</button>
+            <button class="tab-btn" data-tab="wiremock">Wiremock</button>
         </div>
 
         <!-- Setup Tab -->
@@ -140,6 +141,55 @@
             </div>
             <ul id="history-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
         </div>
+
+        <!-- Wiremock Tab -->
+        <div id="wiremock-view" class="tab-content">
+            <h2>Wiremock Control</h2>
+            <div class="controls">
+                <button id="wiremock-list-mappings-btn">List Mappings</button>
+                <button id="wiremock-delete-mappings-btn" style="background-color: #dc3545;">Delete All Mappings</button>
+                <button id="wiremock-reset-mappings-btn" style="background-color: #ffc107; color: #212529;">Reset Mappings</button>
+            </div>
+            <pre id="wiremock-mappings-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+            <hr style="margin: 2em 0;">
+            <h3>Import Mappings</h3>
+            <div class="controls">
+                <textarea id="wiremock-import-textarea" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+            </div>
+            <div class="controls">
+                <button id="wiremock-import-mappings-btn">Import Mappings from Text</button>
+                <button id="wiremock-upload-mappings-btn" style="background-color: #6c757d;">Upload JSON File</button>
+                <input type="file" id="wiremock-upload-input" style="display: none;" accept=".json">
+            </div>
+            <hr style="margin: 2em 0;">
+            <h3>Received Requests</h3>
+            <div class="controls">
+                <button id="wiremock-list-requests-btn">List Requests</button>
+                <button id="wiremock-delete-requests-btn" style="background-color: #dc3545;">Delete All Requests</button>
+                <label style="margin-left: auto;">
+                    <input type="checkbox" id="wiremock-live-view-toggle" checked>
+                    Live View
+                </label>
+            </div>
+            <pre id="wiremock-requests-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+            <hr style="margin: 2em 0;">
+            <h3>Recording</h3>
+            <div class="controls">
+                <label for="wiremock-recording-name">Recording Name:</label>
+                <input type="text" id="wiremock-recording-name" style="flex-grow: 1;" placeholder="e.g., my-feature-mocks">
+            </div>
+            <div class="controls">
+                <label>
+                    <input type="checkbox" id="wiremock-save-as-single-file">
+                    Save as single file
+                </label>
+            </div>
+                <button id="wiremock-start-recording-btn">Start Recording</button>
+                <button id="wiremock-stop-recording-btn">Stop Recording</button>
+                <button id="wiremock-status-recording-btn">Get Status</button>
+            </div>
+            <pre id="wiremock-recording-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -147,6 +197,7 @@
     <script src="js/ui.js"></script>
     <script src="js/api.js"></script>
     <script src="js/socket.js"></script>
+    <script src="js/wiremock.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
