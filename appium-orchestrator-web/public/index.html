@@ -75,6 +75,67 @@
         .panel-header.status-ready { background-color: #28a745; color: white; }
         .panel-header.status-initializing { background-color: #17a2b8; color: white; }
         .panel-content { height: 350px; overflow-y: scroll; padding: 1em; font-family: monospace; white-space: pre-wrap; background-color: #212529; color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+
+        /* Sub-tabs for Wiremock */
+        .sub-tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 1em;
+        }
+        .sub-tab-btn {
+            background: none;
+            border: none;
+            padding: 0.5em 1em;
+            cursor: pointer;
+            font-size: 1em;
+            color: #666;
+            border-bottom: 2px solid transparent;
+        }
+        .sub-tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        .sub-tab-content {
+            display: none;
+        }
+        .sub-tab-content.active {
+            display: block;
+        }
+        .new-request-highlight {
+            background-color: #fffbe6; /* Un amarillo claro */
+            transition: background-color 2s ease-in-out;
+        }
+
+        /* Styles for Log Entries */
+        #wiremock-requests-output {
+            background: #212529;
+            color: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            max-height: 70vh;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        .log-entry {
+            border-bottom: 1px solid #444;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        .log-summary {
+            cursor: pointer;
+        }
+        .log-details {
+            display: none;
+            padding-left: 1em;
+            margin-top: 0.5em;
+            background-color: #333;
+            border-radius: 4px;
+        }
+        .log-details pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            padding: 1em;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +173,10 @@
                     <input type="checkbox" id="batch-priority-checkbox">
                     Alta Prioridad ⚡
                 </label>
+                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5em;">
+                    <input type="checkbox" id="record-mappings-checkbox">
+                    Grabar Mappings 🔴
+                </label>
             </div>
             <div class="features-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Features</h2>
@@ -144,51 +209,60 @@
 
         <!-- Wiremock Tab -->
         <div id="wiremock-view" class="tab-content">
-            <h2>Wiremock Control</h2>
-            <div class="controls">
-                <button id="wiremock-list-mappings-btn">List Mappings</button>
-                <button id="wiremock-delete-mappings-btn" style="background-color: #dc3545;">Delete All Mappings</button>
-                <button id="wiremock-reset-mappings-btn" style="background-color: #ffc107; color: #212529;">Reset Mappings</button>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="main">Main</button>
+                <button class="sub-tab-btn" data-subtab="requests">Requests Log</button>
             </div>
-            <pre id="wiremock-mappings-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
-            <hr style="margin: 2em 0;">
-            <h3>Import Mappings</h3>
-            <div class="controls">
-                <textarea id="wiremock-import-textarea" rows="10" style="width: 100%; font-family: monospace;"></textarea>
-            </div>
-            <div class="controls">
-                <button id="wiremock-import-mappings-btn">Import Mappings from Text</button>
-                <button id="wiremock-upload-mappings-btn" style="background-color: #6c757d;">Upload JSON File</button>
-                <input type="file" id="wiremock-upload-input" style="display: none;" accept=".json">
-            </div>
-            <hr style="margin: 2em 0;">
-            <h3>Received Requests</h3>
-            <div class="controls">
-                <button id="wiremock-list-requests-btn">List Requests</button>
-                <button id="wiremock-delete-requests-btn" style="background-color: #dc3545;">Delete All Requests</button>
-                <label style="margin-left: auto;">
-                    <input type="checkbox" id="wiremock-live-view-toggle" checked>
-                    Live View
-                </label>
-            </div>
-            <pre id="wiremock-requests-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
-            <hr style="margin: 2em 0;">
-            <h3>Recording</h3>
-            <div class="controls">
-                <label for="wiremock-recording-name">Recording Name:</label>
-                <input type="text" id="wiremock-recording-name" style="flex-grow: 1;" placeholder="e.g., my-feature-mocks">
-            </div>
-            <div class="controls">
-                <label>
-                    <input type="checkbox" id="wiremock-save-as-single-file">
-                    Save as single file
-                </label>
-            </div>
+
+            <div id="wiremock-main-view" class="sub-tab-content active">
+                <h2>Wiremock Control</h2>
+                <div class="controls">
+                    <button id="wiremock-list-mappings-btn">List Mappings</button>
+                    <button id="wiremock-delete-mappings-btn" style="background-color: #dc3545;">Delete All Mappings</button>
+                    <button id="wiremock-reset-mappings-btn" style="background-color: #ffc107; color: #212529;">Reset Mappings</button>
+                    <button id="wiremock-base-mappings-btn" style="background-color: #17a2b8;">Base Mappings</button>
+                </div>
+                <pre id="wiremock-mappings-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+                <hr style="margin: 2em 0;">
+                <h3>Import Mappings</h3>
+                <div class="controls">
+                    <textarea id="wiremock-import-textarea" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+                </div>
+                <div class="controls">
+                    <button id="wiremock-import-mappings-btn">Import Mappings from Text</button>
+                    <button id="wiremock-upload-mappings-btn" style="background-color: #6c757d;">Upload JSON File</button>
+                    <input type="file" id="wiremock-upload-input" style="display: none;" accept=".json">
+                </div>
+                <hr style="margin: 2em 0;">
+                <h3>Recording</h3>
+                <div class="controls">
+                    <label for="wiremock-recording-name">Recording Name:</label>
+                    <input type="text" id="wiremock-recording-name" style="flex-grow: 1;" placeholder="e.g., my-feature-mocks">
+                </div>
+                <div class="controls">
+                    <label>
+                        <input type="checkbox" id="wiremock-save-as-single-file">
+                        Save as single file
+                    </label>
+                </div>
                 <button id="wiremock-start-recording-btn">Start Recording</button>
                 <button id="wiremock-stop-recording-btn">Stop Recording</button>
                 <button id="wiremock-status-recording-btn">Get Status</button>
+                <pre id="wiremock-recording-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
             </div>
-            <pre id="wiremock-recording-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+
+            <div id="wiremock-requests-view" class="sub-tab-content">
+                <h3>Received Requests</h3>
+                <div class="controls">
+                    <button id="wiremock-list-requests-btn">List Requests</button>
+                    <button id="wiremock-delete-requests-btn" style="background-color: #dc3545;">Delete All Requests</button>
+                    <label style="margin-left: auto;">
+                        <input type="checkbox" id="wiremock-live-view-toggle" checked>
+                        Live View
+                    </label>
+                </div>
+                <div id="wiremock-requests-output"></div>
+            </div>
         </div>
     </div>
 

@@ -216,6 +216,33 @@ app.post('/api/wiremock/mappings/import', async (req, res) => {
     }
 });
 
+app.post('/api/wiremock/load-base-mappings', async (req, res) => {
+    try {
+        const baseMappingsPath = path.join(__dirname, 'public', 'js', 'base_mapping.json');
+        if (!fs.existsSync(baseMappingsPath)) {
+            return res.status(404).json({ error: 'base_mapping.json not found' });
+        }
+        const mappings = JSON.parse(fs.readFileSync(baseMappingsPath, 'utf8'));
+        
+        const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/mappings/import`, { 
+            method: 'POST',
+            agent: httpsAgent,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mappings)
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Wiremock import failed with status ${response.status}: ${errorBody}`);
+        }
+
+        res.status(200).json({ message: 'Base mappings loaded successfully' });
+    } catch (error) {
+        console.error('Error loading base mappings to Wiremock:', error);
+        res.status(500).json({ error: 'Failed to load base mappings', details: error.message });
+    }
+});
+
 app.get('/api/wiremock/requests', async (req, res) => {
     try {
         const response = await fetch(`${process.env.WIREMOCK_ADMIN_URL}/__admin/requests`, { agent: httpsAgent });
@@ -472,7 +499,40 @@ function assignJobToWorker(job) {
     return false;
 }
 
-function runJobOnWorker(job, worker) {
+async function startRecordingSequence(job, worker) {
+    const { id, feature } = job;
+    const { id: slotId } = worker;
+    try {
+        console.log(`Iniciando secuencia de grabación para el job ${id}`);
+        io.emit('log_update', { slotId, logLine: `--- 🔴 Iniciando secuencia de grabación para ${feature} ---
+` });
+        
+        // 1. Reset
+        io.emit('log_update', { slotId, logLine: `   -> Reseteando mappings...
+` });
+        await fetch(`http://localhost:${PORT}/api/wiremock/mappings/reset`, { method: 'POST' });
+        
+        // 2. Load Base
+        io.emit('log_update', { slotId, logLine: `   -> Cargando mappings base...
+` });
+        await fetch(`http://localhost:${PORT}/api/wiremock/load-base-mappings`, { method: 'POST' });
+        
+        // 3. Start Recording
+        io.emit('log_update', { slotId, logLine: `   -> Iniciando grabación...
+` });
+        await fetch(`http://localhost:${PORT}/api/wiremock/recordings/start`, { method: 'POST' });
+
+        io.emit('log_update', { slotId, logLine: `--- ▶️ Grabación iniciada. Ejecutando test... ---
+` });
+    } catch (error) {
+        console.error(`Error durante la secuencia de grabación para el job ${id}:`, error);
+        io.emit('log_update', { slotId, logLine: `--- ❌ Error al iniciar la grabación para ${feature}: ${error.message} ---
+` });
+        throw error; // Re-throw to be caught by the caller
+    }
+}
+
+async function runJobOnWorker(job, worker) {
     const wasReady = worker.status === 'ready';
     worker.status = 'busy';
     worker.currentJob = job;
@@ -486,8 +546,15 @@ function runJobOnWorker(job, worker) {
     });
 
     if (wasReady) {
-        console.log(`Enviando job ${job.id} a worker ${worker.id} que ya estaba listo.`);
-        worker.process.send({ type: 'START', job });
+        try {
+            if (job.record) {
+                await startRecordingSequence(job, worker);
+            }
+            console.log(`Enviando job ${job.id} a worker ${worker.id} que ya estaba listo.`);
+            worker.process.send({ type: 'START', job });
+        } catch (error) {
+            // Handle recording sequence error
+        }
     }
     
     broadcastStatus();
@@ -511,7 +578,7 @@ function createWorker(branch) {
     
     worker.process.send({ type: 'INIT', branch: branch });
 
-    workerProcess.on('message', (message) => {
+    workerProcess.on('message', async (message) => {
         const currentJob = worker.currentJob;
         const slotId = worker.id;
 
@@ -521,14 +588,22 @@ function createWorker(branch) {
                 worker.status = 'ready';
                 
                 if (worker.currentJob) {
-                    console.log(`Worker ${worker.id} está listo, iniciando job ${worker.currentJob.id}.`);
-                    worker.status = 'busy';
-                    worker.process.send({ type: 'START', job: worker.currentJob });
+                    try {
+                        if (worker.currentJob.record) {
+                            await startRecordingSequence(worker.currentJob, worker);
+                        }
+                        console.log(`Worker ${worker.id} está listo, iniciando job ${worker.currentJob.id}.`);
+                        worker.status = 'busy';
+                        worker.process.send({ type: 'START', job: worker.currentJob });
+                    } catch (error) {
+                        // Handle recording sequence error
+                    }
                 } else {
                     processQueue();
                 }
                 broadcastStatus();
                 break;
+
 
             case 'READY_FOR_NEXT_JOB':
                 console.log(`Worker ${worker.id} reportó READY_FOR_NEXT_JOB.`);
@@ -560,18 +635,41 @@ function createWorker(branch) {
         }
     });
 
-    workerProcess.on('close', (code) => {
+    workerProcess.on('close', async (code) => {
         console.log(`Worker ${worker.id} se cerró con código ${code}.`);
         const index = workerPool.findIndex(w => w.id === worker.id);
         if (index !== -1) {
             workerPool.splice(index, 1);
         }
-        
-        if (worker.status === 'busy' && worker.currentJob && !worker.terminating) {
-            io.emit('log_update', { logLine: `--- ⚠️ Worker murió inesperadamente. Re-encolando job ${worker.currentJob.id}... ---
+
+        const { currentJob } = worker;
+        if (worker.status === 'busy' && currentJob && !worker.terminating) {
+            io.emit('log_update', { logLine: `--- ⚠️ Worker murió inesperadamente. Re-encolando job ${currentJob.id}... ---
 ` });
-            io.emit('job_finished', { slotId: worker.id, jobId: worker.currentJob.id, exitCode: code });
-            jobQueue.unshift(worker.currentJob);
+            io.emit('job_finished', { slotId: worker.id, jobId: currentJob.id, exitCode: code });
+            jobQueue.unshift(currentJob);
+        }
+
+        // Stop recording if the job was marked for it
+        if (currentJob && currentJob.record) {
+            try {
+                console.log(`Finalizando secuencia de grabación para el job ${currentJob.id}`);
+                io.emit('log_update', { slotId: worker.id, logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---
+` });
+                const featureName = path.basename(currentJob.feature, '.feature');
+                const response = await fetch(`http://localhost:${PORT}/api/wiremock/recordings/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recordingName: featureName, saveAsSingleFile: true })
+                });
+                if (!response.ok) throw new Error(`Status ${response.status}`);
+                const result = await response.json();
+                io.emit('log_update', { slotId: worker.id, logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---\n` });
+            } catch (error) {
+                console.error(`Error al detener la grabación para el job ${currentJob.id}:`, error);
+                io.emit('log_update', { slotId: worker.id, logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---
+` });
+            }
         }
         
         broadcastStatus();
@@ -605,8 +703,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('run_test', (data) => {
+        console.log('--- DEBUG: Datos recibidos en run_test ---', data);
         jobIdCounter++;
-        const job = { ...data, id: jobIdCounter };
+        const job = { ...data, id: jobIdCounter }; // The 'record' flag is already in data
         if (job.highPriority) {
             jobQueue.unshift(job);
             io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
@@ -620,27 +719,30 @@ io.on('connection', (socket) => {
     });
 
     socket.on('run_batch', (data) => {
-        const jobs = data.jobs || [];
+        console.log('--- DEBUG: Datos recibidos en run_batch ---', data);
+        const { jobs = [], record = false } = data;
         const highPriority = jobs.length > 0 && jobs[0].highPriority;
 
+        const logMessage = highPriority
+            ? `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
+`
+            : `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
+`;
+        io.emit('log_update', { logLine: logMessage });
+
+        const jobsToQueue = jobs.map(jobData => ({
+            ...jobData,
+            id: ++jobIdCounter,
+            record: record // Attach the record flag to each job
+        }));
+
         if (highPriority) {
-            io.emit('log_update', { logLine: `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
-` });
             // Add jobs in reverse order to the front of the queue to maintain their original order
-            for (let i = jobs.length - 1; i >= 0; i--) {
-                jobIdCounter++;
-                const job = { ...jobs[i], id: jobIdCounter };
-                jobQueue.unshift(job);
-            }
+            jobQueue.unshift(...jobsToQueue.reverse());
         } else {
-            io.emit('log_update', { logLine: `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
-` });
-            jobs.forEach(jobData => {
-                jobIdCounter++;
-                const job = { ...jobData, id: jobIdCounter };
-                jobQueue.push(job);
-            });
+            jobQueue.push(...jobsToQueue);
         }
+        
         processQueue();
     });
 

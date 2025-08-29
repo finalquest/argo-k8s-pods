@@ -1,7 +1,7 @@
 let runningJobs = new Map();
 
-function runTest(branch, client, feature, highPriority = false) {
-    window.socket.emit('run_test', { branch, client, feature, highPriority });
+function runTest(branch, client, feature, highPriority = false, record = false) {
+    window.socket.emit('run_test', { branch, client, feature, highPriority, record });
     switchTab('workers');
 }
 
@@ -9,10 +9,12 @@ function runSelectedTests() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
     const priorityCheckbox = document.getElementById('batch-priority-checkbox');
+    const recordCheckbox = document.getElementById('record-mappings-checkbox'); // Get the record checkbox
     
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
     const highPriority = priorityCheckbox.checked;
+    const recordMappings = recordCheckbox.checked; // Get its value
 
     const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
@@ -27,7 +29,9 @@ function runSelectedTests() {
             highPriority: highPriority
         };
     });
-    window.socket.emit('run_batch', { jobs });
+
+    // Send the recording flag along with the jobs
+    window.socket.emit('run_batch', { jobs, record: recordMappings });
     switchTab('workers');
 }
 

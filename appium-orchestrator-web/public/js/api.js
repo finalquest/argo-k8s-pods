@@ -60,13 +60,19 @@ async function fetchFeatures() {
             const runButton = document.createElement('button');
             runButton.textContent = 'Run';
             runButton.className = 'run-btn';
-            runButton.onclick = () => runTest(selectedBranch, selectedClient, feature, false);
+            runButton.onclick = () => {
+                const record = document.getElementById('record-mappings-checkbox').checked;
+                runTest(selectedBranch, selectedClient, feature, false, record);
+            };
             
             const priorityButton = document.createElement('button');
             priorityButton.textContent = '⚡️';
             priorityButton.title = 'Run with high priority';
             priorityButton.className = 'priority-btn';
-            priorityButton.onclick = () => runTest(selectedBranch, selectedClient, feature, true);
+            priorityButton.onclick = () => {
+                const record = document.getElementById('record-mappings-checkbox').checked;
+                runTest(selectedBranch, selectedClient, feature, true, record);
+            };
 
             buttonsDiv.appendChild(runButton);
             buttonsDiv.appendChild(priorityButton);

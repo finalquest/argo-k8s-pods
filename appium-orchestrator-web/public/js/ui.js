@@ -120,3 +120,10 @@ function updateQueueStatus(status) {
     const statusDiv = document.getElementById('queue-status');
     statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
 }
+
+function switchWiremockSubTab(tabName) {
+    document.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`wiremock-${tabName}-view`).classList.add('active');
+    document.querySelector(`.sub-tab-btn[data-subtab='${tabName}']`).classList.add('active');
+}

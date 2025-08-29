@@ -1,4 +1,5 @@
 let wiremockLiveViewInterval = null;
+let lastKnownRequests = [];
 
 async function listWiremockMappings() {
     const output = document.getElementById('wiremock-mappings-output');
@@ -44,6 +45,40 @@ async function resetWiremockMappings() {
         } else {
             const errorText = await response.text();
             throw new Error(errorText || response.statusText);
+        }
+    } catch (error) {
+        output.textContent = `Error: ${error.message}`;
+    }
+}
+
+async function loadBaseMappings() {
+    if (!confirm('¿Estás seguro de que quieres cargar los base mappings? Esto reemplazará los mappings actuales.')) {
+        return;
+    }
+    const output = document.getElementById('wiremock-mappings-output');
+    output.textContent = 'Cargando base mappings...';
+    try {
+        // 1. Fetch the local base_mapping.json file
+        const baseMappingResp = await fetch('/js/base_mapping.json');
+        if (!baseMappingResp.ok) {
+            throw new Error(`No se pudo cargar /js/base_mapping.json: ${baseMappingResp.statusText}`);
+        }
+        const mappings = await baseMappingResp.json();
+
+        // 2. Post the content to the import endpoint
+        const importResp = await fetch('/api/wiremock/mappings/import', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(mappings)
+        });
+
+        if (importResp.ok) {
+            output.textContent = 'Base mappings importados correctamente.';
+        } else {
+            const errorText = await importResp.text();
+            throw new Error(errorText || importResp.statusText);
         }
     } catch (error) {
         output.textContent = `Error: ${error.message}`;
@@ -104,16 +139,67 @@ function handleMappingsFileUpload(event) {
 
 async function listWiremockRequests() {
     const output = document.getElementById('wiremock-requests-output');
-    // Do not show loading message on interval
-    if (!wiremockLiveViewInterval) {
-        output.textContent = 'Cargando...';
+    const isFirstLoad = lastKnownRequests.length === 0;
+
+    if (isFirstLoad && !wiremockLiveViewInterval) {
+        output.innerHTML = 'Cargando...';
     }
+
     try {
         const response = await fetch('/api/wiremock/requests');
         const data = await response.json();
-        output.textContent = JSON.stringify(data, null, 2);
+        const newRequests = data.requests || [];
+
+        const renderRequest = (req) => {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            const summary = document.createElement('div');
+            summary.className = 'log-summary';
+            const summaryText = `${req.request.method} ${req.request.url} -> ${req.response.status}`;
+            summary.textContent = summaryText;
+
+            const details = document.createElement('div');
+            details.className = 'log-details';
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(req, null, 2);
+            details.appendChild(pre);
+
+            summary.onclick = () => {
+                details.style.display = details.style.display === 'block' ? 'none' : 'block';
+            };
+
+            entry.appendChild(summary);
+            entry.appendChild(details);
+            return entry;
+        };
+
+        if (isFirstLoad) {
+            output.innerHTML = ''; // Clear loading message
+            newRequests.forEach(req => {
+                output.appendChild(renderRequest(req));
+            });
+        } else {
+            const lastKnownIds = new Set(lastKnownRequests.map(r => r.id));
+            const requestsToAdd = newRequests.filter(r => !lastKnownIds.has(r.id));
+
+            if (requestsToAdd.length > 0) {
+                requestsToAdd.reverse().forEach(req => {
+                    const entry = renderRequest(req);
+                    entry.classList.add('new-request-highlight');
+                    output.prepend(entry);
+
+                    setTimeout(() => {
+                        entry.classList.remove('new-request-highlight');
+                    }, 2000);
+                });
+            }
+        }
+
+        lastKnownRequests = newRequests;
+
     } catch (error) {
-        output.textContent = `Error: ${error.message}`;
+        output.innerHTML = `Error: ${error.message}`;
     }
 }
 
@@ -122,17 +208,18 @@ async function deleteWiremockRequests() {
         return;
     }
     const output = document.getElementById('wiremock-requests-output');
-    output.textContent = 'Eliminando...';
+    output.innerHTML = 'Eliminando...';
     try {
         const response = await fetch('/api/wiremock/requests', { method: 'DELETE' });
         if (response.ok) {
-            output.textContent = 'Todos los requests han sido eliminados.';
+            output.innerHTML = 'Todos los requests han sido eliminados.';
+            lastKnownRequests = []; // Reset state
         } else {
             const errorText = await response.text();
             throw new Error(errorText || response.statusText);
         }
     } catch (error) {
-        output.textContent = `Error: ${error.message}`;
+        output.innerHTML = `Error: ${error.message}`;
     }
 }
 
@@ -196,6 +283,11 @@ async function getWiremockRecordingStatus() {
 
 function startLiveView() {
     if (wiremockLiveViewInterval) return;
+    // Clear previous state when starting live view
+    lastKnownRequests = [];
+    const output = document.getElementById('wiremock-requests-output');
+    output.textContent = ''; 
+    listWiremockRequests(); // Initial call
     wiremockLiveViewInterval = setInterval(listWiremockRequests, 2000);
 }
 
@@ -207,9 +299,16 @@ function stopLiveView() {
 }
 
 function initializeWiremockTab() {
+    document.querySelectorAll('.sub-tab-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            switchWiremockSubTab(button.dataset.subtab);
+        });
+    });
+
     const listMappingsBtn = document.getElementById('wiremock-list-mappings-btn');
     const deleteMappingsBtn = document.getElementById('wiremock-delete-mappings-btn');
     const resetMappingsBtn = document.getElementById('wiremock-reset-mappings-btn');
+    const baseMappingsBtn = document.getElementById('wiremock-base-mappings-btn'); // Get the new button
     const importMappingsBtn = document.getElementById('wiremock-import-mappings-btn');
     const uploadMappingsBtn = document.getElementById('wiremock-upload-mappings-btn');
     const uploadInput = document.getElementById('wiremock-upload-input');
@@ -219,10 +318,12 @@ function initializeWiremockTab() {
     const stopRecordingBtn = document.getElementById('wiremock-stop-recording-btn');
     const statusRecordingBtn = document.getElementById('wiremock-status-recording-btn');
     const liveViewToggle = document.getElementById('wiremock-live-view-toggle');
+    const requestsOutput = document.getElementById('wiremock-requests-output');
 
     listMappingsBtn.addEventListener('click', listWiremockMappings);
     deleteMappingsBtn.addEventListener('click', deleteWiremockMappings);
     resetMappingsBtn.addEventListener('click', resetWiremockMappings);
+    baseMappingsBtn.addEventListener('click', loadBaseMappings); // Add the event listener
     importMappingsBtn.addEventListener('click', importWiremockMappings);
     uploadMappingsBtn.addEventListener('click', () => uploadInput.click());
     uploadInput.addEventListener('change', handleMappingsFileUpload);
@@ -237,6 +338,15 @@ function initializeWiremockTab() {
             startLiveView();
         } else {
             stopLiveView();
+        }
+    });
+
+    requestsOutput.addEventListener('wheel', (event) => {
+        const { scrollTop, clientHeight, scrollHeight } = requestsOutput;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 1;
+
+        if ((event.deltaY > 0 && isAtBottom) || (event.deltaY < 0 && scrollTop === 0)) {
+            event.preventDefault();
         }
     });
 }
