@@ -129,6 +129,11 @@ debug "Package name detectado: $PACKAGE_NAME"
 debug "🗑️  Desinstalando APK anterior (si existe)..."
 adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || warn "No estaba instalado."
 
+debug "💨 Desactivando animaciones..."
+adb -s "$ADB_HOST" shell settings put global window_animation_scale 0
+adb -s "$ADB_HOST" shell settings put global transition_animation_scale 0
+adb -s "$ADB_HOST" shell settings put global animator_duration_scale 0
+
 debug "📲 Instalando nuevo APK..."
 if ! adb -s "$ADB_HOST" install -r "$APK_FILE"; then
     error "Falló la instalación del APK en $ADB_HOST"
@@ -145,7 +150,7 @@ SYSTEM_PORT=$((SYS_PORT_BASE + (RANDOM % 100)))
 debug "🚀 Iniciando Appium en puerto ${APPIUM_PORT}..."
 
 # Iniciar Appium en segundo plano
-appium --port "$APPIUM_PORT" --base-path /wd/hub --log-timestamp > "appium.log" 2>&1 &
+env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn --cwd "$APPIUM_DIR" run appium --port "$APPIUM_PORT" --base-path /wd/hub --log-timestamp > "appium.log" 2>&1 &
 APPIUM_PID=$!
 
 # Esperar a que Appium esté listo
@@ -155,7 +160,7 @@ sleep 5
 CONFIG_FILE="${APPIUM_DIR}/config/wdio.conf.ts"
 
 cat > "$CONFIG_FILE" <<- EOM
-import { config } from './wdio.feature-shared';
+import { config } from './wdio.local.shared';
 
 config.hostname = 'localhost';
 config.port = ${APPIUM_PORT};
