@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const { fork } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
+const archiver = require('archiver'); // Importar archiver
 
 // Cargar variables de entorno desde .env
 require('dotenv').config();
@@ -374,6 +375,68 @@ app.get('/api/wiremock/recordings/status', async (req, res) => {
     }
 });
 
+app.get('/api/mappings/list', (req, res) => {
+    const mappingsDir = path.join(__dirname, 'wiremock', 'mappings');
+    if (!fs.existsSync(mappingsDir)) {
+        return res.json([]);
+    }
+    try {
+        const files = fs.readdirSync(mappingsDir);
+        res.json(files);
+    } catch (error) {
+        console.error('Error listing mappings:', error);
+        res.status(500).json({ error: 'Error listing mappings' });
+    }
+});
+
+app.get('/api/mappings/download/:name', (req, res) => {
+    const name = req.params.name;
+    const mappingsDir = path.join(__dirname, 'wiremock', 'mappings');
+    const fullPath = path.join(mappingsDir, name);
+
+    if (!fs.existsSync(fullPath)) {
+        return res.status(404).send('Mapping not found');
+    }
+
+    const stats = fs.statSync(fullPath);
+    if (stats.isDirectory()) {
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        res.attachment(`${name}.zip`);
+        archive.pipe(res);
+        archive.directory(fullPath, false);
+        archive.finalize();
+    } else {
+        res.download(fullPath); // Sirve el archivo directamente
+    }
+});
+
+app.post('/api/mappings/download-batch', (req, res) => {
+    const { names } = req.body;
+    if (!names || !Array.isArray(names) || names.length === 0) {
+        return res.status(400).json({ error: 'Se requiere un array de nombres de mappings.' });
+    }
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const mappingsDir = path.join(__dirname, 'wiremock', 'mappings');
+
+    res.attachment('mappings-batch.zip');
+    archive.pipe(res);
+
+    names.forEach(name => {
+        const fullPath = path.join(mappingsDir, name);
+        if (fs.existsSync(fullPath)) {
+            const stats = fs.statSync(fullPath);
+            if (stats.isDirectory()) {
+                archive.directory(fullPath, name);
+            } else {
+                archive.file(fullPath, { name });
+            }
+        }
+    });
+
+    archive.finalize();
+});
+
 
 
 
@@ -436,13 +499,15 @@ function broadcastStatus() {
     io.emit('queue_status_update', {
         active: activeJobs,
         queued: jobQueue.length,
-        limit: maxWorkers
+        limit: maxWorkers,
+        queue: jobQueue // Enviar la cola completa
     });
     const slots = workerPool.map(worker => ({
         slotId: worker.id,
         job: worker.currentJob ? { id: worker.currentJob.id, featureName: worker.currentJob.feature } : null,
         status: worker.status,
-        branch: worker.branch
+        branch: worker.branch,
+        client: worker.client
     }));
     io.emit('worker_pool_update', slots);
 }
@@ -609,7 +674,28 @@ function createWorker(branch, client) { // Añadido client
 
 
             case 'READY_FOR_NEXT_JOB':
-                console.log(`Worker ${worker.id} reportó READY_FOR_NEXT_JOB.`);
+                console.log(`Worker ${worker.id} reportou READY_FOR_NEXT_JOB.`);
+
+                // Si el job que acaba de terminar tenía la grabación activada, detenerla AHORA.
+                if (currentJob && currentJob.record) {
+                    try {
+                        console.log(`Finalizando secuencia de grabación para el job ${currentJob.id}`);
+                        io.emit('log_update', { slotId, logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---\n` });
+                        const featureName = path.basename(currentJob.feature, '.feature');
+                        const response = await fetch(`http://localhost:${PORT}/api/wiremock/recordings/stop`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ recordingName: featureName, saveAsSingleFile: true })
+                        });
+                        if (!response.ok) throw new Error(`Status ${response.status}`);
+                        const result = await response.json();
+                        io.emit('log_update', { slotId, logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---\n` });
+                    } catch (error) {
+                        console.error(`Error al detener la grabación para el job ${currentJob.id}:`, error);
+                        io.emit('log_update', { slotId, logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---\n` });
+                    }
+                }
+
                 worker.status = 'ready';
 
                 let reportUrl = null;
@@ -619,8 +705,8 @@ function createWorker(branch, client) { // Añadido client
 
                 worker.currentJob = null;
                 io.emit('job_finished', { 
-                    slotId, 
-                    jobId: currentJob.id, 
+                    slotId,
+                    jobId: currentJob.id,
                     exitCode: message.data?.exitCode ?? 0,
                     reportUrl: reportUrl 
                 });
@@ -651,28 +737,6 @@ function createWorker(branch, client) { // Añadido client
 ` });
             io.emit('job_finished', { slotId: worker.id, jobId: currentJob.id, exitCode: code });
             jobQueue.unshift(currentJob);
-        }
-
-        // Stop recording if the job was marked for it
-        if (currentJob && currentJob.record) {
-            try {
-                console.log(`Finalizando secuencia de grabación para el job ${currentJob.id}`);
-                io.emit('log_update', { slotId: worker.id, logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---
-` });
-                const featureName = path.basename(currentJob.feature, '.feature');
-                const response = await fetch(`http://localhost:${PORT}/api/wiremock/recordings/stop`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recordingName: featureName, saveAsSingleFile: true })
-                });
-                if (!response.ok) throw new Error(`Status ${response.status}`);
-                const result = await response.json();
-                io.emit('log_update', { slotId: worker.id, logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---\n` });
-            } catch (error) {
-                console.error(`Error al detener la grabación para el job ${currentJob.id}:`, error);
-                io.emit('log_update', { slotId: worker.id, logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---
-` });
-            }
         }
         
         broadcastStatus();
@@ -758,6 +822,19 @@ io.on('connection', (socket) => {
             console.log(`Señal SIGTERM enviada al worker ${worker.id}`);
         } else {
             console.log(`No se pudo detener el job ${jobId}: no se encontró.`);
+        }
+    });
+
+    socket.on('cancel_job', (data) => {
+        const { jobId } = data;
+        const index = jobQueue.findIndex(job => job.id === jobId);
+        if (index !== -1) {
+            const canceledJob = jobQueue.splice(index, 1);
+            console.log(`Job ${jobId} (${canceledJob[0].feature}) cancelado de la cola.`);
+            io.emit('log_update', { logLine: `--- 🚫 Job '${canceledJob[0].feature}' cancelado por el usuario. ---\n` });
+            broadcastStatus(); // Actualizar la UI de todos
+        } else {
+            console.log(`No se pudo cancelar el job ${jobId}: no se encontró en la cola.`);
         }
     });
 

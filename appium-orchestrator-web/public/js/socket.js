@@ -48,8 +48,7 @@ function initializeSocketListeners() {
     });
 
     window.socket.on('queue_status_update', (status) => {
-        const statusDiv = document.getElementById('queue-status');
-        statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+        updateQueueStatus(status);
     });
 
     window.socket.on('job_started', (data) => {

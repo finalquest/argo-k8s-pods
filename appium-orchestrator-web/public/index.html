@@ -136,6 +136,80 @@
             word-break: break-all;
             padding: 1em;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1em;
+            margin-bottom: 1em;
+        }
+        .close-btn {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: black;
+        }
+        #mappings-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 1em;
+            margin-bottom: 1em;
+        }
+        #mappings-list-container label {
+            display: block;
+            padding: 0.5em;
+        }
+        #mappings-list-container label:hover {
+            background-color: #f1f1f1;
+        }
+        .mapping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2em 0;
+        }
+        .mapping-item-label {
+            flex-grow: 1;
+        }
+        .download-single-btn {
+            font-size: 0.8em;
+            padding: 0.3em 0.8em;
+            text-decoration: none;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+        }
+        .download-single-btn:hover {
+            background-color: #5a6268;
+        }
+
     </style>
 </head>
 <body>
@@ -148,6 +222,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="setup">Setup</button>
             <button class="tab-btn" data-tab="workers">Workers</button>
+            <button class="tab-btn" data-tab="queue">Cola</button>
             <button class="tab-btn" data-tab="results">Resultados</button>
             <button class="tab-btn" data-tab="wiremock">Wiremock</button>
         </div>
@@ -195,6 +270,12 @@
             <div id="log-panels-container" class="panels-container"></div>
         </div>
 
+        <!-- Queue Tab -->
+        <div id="queue-view" class="tab-content">
+            <h2>Cola de Espera</h2>
+            <ul id="queued-tests-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
+        </div>
+
         <!-- Results Tab -->
         <div id="results-view" class="tab-content">
             <h2>Resultados Recientes</h2>
@@ -221,6 +302,7 @@
                     <button id="wiremock-delete-mappings-btn" style="background-color: #dc3545;">Delete All Mappings</button>
                     <button id="wiremock-reset-mappings-btn" style="background-color: #ffc107; color: #212529;">Reset Mappings</button>
                     <button id="wiremock-base-mappings-btn" style="background-color: #17a2b8;">Base Mappings</button>
+                    <button id="open-mappings-download-modal-btn" style="background-color: #28a745;">Download Mappings...</button>
                 </div>
                 <pre id="wiremock-mappings-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
                 <hr style="margin: 2em 0;">
@@ -273,5 +355,26 @@
     <script src="js/socket.js"></script>
     <script src="js/wiremock.js"></script>
     <script src="js/main.js"></script>
+
+    <!-- Mappings Download Modal -->
+    <div id="mappings-download-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Descargar Mappings</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="mappings-select-all">
+                    Seleccionar Todo
+                </label>
+            </div>
+            <div id="mappings-list-container">
+                <p>Cargando...</p>
+            </div>
+            <button id="download-selected-mappings-btn" style="width: 100%; padding: 0.8em; margin-top: 1em;">Descargar Selección</button>
+        </div>
+    </div>
+
 </body>
 </html>
