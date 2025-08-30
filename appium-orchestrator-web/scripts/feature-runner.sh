@@ -119,7 +119,175 @@ adb connect "$ADB_HOST" > /dev/null
 
 # Convertir cliente a mayúsculas de forma portable
 CLIENT_UPPER=$(echo "$CLIENT" | tr 'a-z' 'A-Z')
-PACKAGE_NAME=$(grep "APP_PACKAGE_${CLIENT_UPPER}" "${APPIUM_DIR}/.env" | cut -d'=' -f2 | tr -d '\r')
+#!/bin/bash
+
+# Cargar funciones de logging
+source "$(dirname "$0")/logger.sh"
+
+# Desactivar buffering para que los logs salgan línea por línea en Node.js
+export STDBUF_O=0
+
+header "🚀 Appium Feature Runner - Inicio"
+
+# === ARGUMENTOS ===
+WORKSPACE_DIR="${1:?Debe especificar el directorio de trabajo del worker}"
+APPIUM_BRANCH="${2:?Debe especificar la branch}"
+CLIENT="${3:?Debe especificar el cliente (bind, nbch, bpn)}"
+FEATURE_NAME="${4:?Debe especificar el nombre del feature}"
+# Argumentos nuevos de la Etapa 1
+ADB_HOST="${5:?Se requiere el ADB_HOST del emulador}"
+APPIUM_PORT="${6:?Se requiere el APPIUM_PORT del servidor}"
+
+
+# === CONFIGURACIÓN (desde variables de entorno) ===
+APK_REGISTRY="${APK_REGISTRY:?Debe definir APK_REGISTRY}"
+APK_PATH="${APK_PATH:?Debe definir APK_PATH}"
+
+APPIUM_DIR="${WORKSPACE_DIR}/appium"
+SYS_PORT_BASE=${SYS_PORT_BASE:-8200}
+
+# === INICIO DE EJECUCIÓN ===
+cd "$WORKSPACE_DIR"
+
+header "🔎 Paso 1: Validar Workspace"
+
+# Validar que el directorio de Appium existe
+if [ ! -d "$APPIUM_DIR" ]; then
+    error "El directorio de trabajo de Appium no existe: $APPIUM_DIR"
+    error "Asegúrate de que el script 'setup-workspace.sh' se haya ejecutado correctamente."
+    exit 1
+fi
+
+success "Workspace validado en $APPIUM_DIR"
+
+
+header "📦 Paso 2: Descargar APK desde Harbor"
+
+TAG=$(echo "$APK_PATH" | cut -d':' -f2)
+REPO=$(echo "$APK_PATH" | cut -d':' -f1)
+FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
+# Usamos un subdirectorio dentro del workspace para los APKs
+APK_DOWNLOAD_DIR="${WORKSPACE_DIR}/downloads"
+APK_FILENAME="${APK_DOWNLOAD_DIR}/${TAG}/"
+
+mkdir -p "$APK_DOWNLOAD_DIR"
+
+debug "🔗 Descargando APK: $FULL_REF"
+if ! oras pull --plain-http "$FULL_REF" -o "$APK_FILENAME"; then
+  error "Error al descargar el APK desde $FULL_REF"
+  exit 1
+fi
+APK_FILE="${APK_FILENAME}/apk.apk"
+success "APK descargado en ${APK_FILE}"
+
+header "📱 Paso 3: Preparar emulador"
+
+success "ADB Host para la ejecución: $ADB_HOST (provisto por el worker)"
+
+debug "🔗 Conectando a $ADB_HOST..."
+adb connect "$ADB_HOST" > /dev/null
+
+# Convertir cliente a mayúsculas de forma portable
+CLIENT_UPPER=$(echo "$CLIENT" | tr 'a-z' 'A-Z')
+PACKAGE_NAME=$(grep "APP_PACKAGE_${CLIENT_UPPER}" "${APPIUM_DIR}/.env" | cut -d'=' -f2 | tr -d '')
+if [[ -z "$PACKAGE_NAME" ]]; then
+    error "No se pudo determinar el PACKAGE_NAME para el cliente $CLIENT"
+    exit 1
+fi
+debug "Package name detectado: $PACKAGE_NAME"
+
+debug "🗑️  Desinstalando APK anterior (si existe)..."
+adb -s "$ADB_HOST" uninstall "$PACKAGE_NAME" > /dev/null || warn "No estaba instalado."
+
+debug "💨 Desactivando animaciones..."
+adb -s "$ADB_HOST" shell settings put global window_animation_scale 0
+adb -s "$ADB_HOST" shell settings put global transition_animation_scale 0
+adb -s "$ADB_HOST" shell settings put global animator_duration_scale 0
+
+debug "📲 Instalando nuevo APK..."
+if ! adb -s "$ADB_HOST" install -r "$APK_FILE"; then
+    error "Falló la instalación del APK en $ADB_HOST"
+    exit 1
+fi
+success "Emulador preparado."
+
+header "🎯 Paso 4: Ejecutar el feature con Appium"
+
+# El servidor Appium ya está corriendo. Usamos el puerto que nos pasan.
+SYSTEM_PORT=$((SYS_PORT_BASE + (RANDOM % 100)))
+
+debug "🔌 Apuntando al servidor Appium existente en el puerto ${APPIUM_PORT}"
+
+# Crear archivo de configuración de WDIO al vuelo
+CONFIG_FILE="${APPIUM_DIR}/config/wdio.conf.ts"
+
+cat > "$CONFIG_FILE" <<- EOM
+import { config } from './wdio.local.shared';
+
+config.hostname = 'localhost';
+config.port = ${APPIUM_PORT};
+config.path = '/wd/hub';
+
+config.capabilities = [{
+    "appium:waitForIdleTimeout": 300,
+    "appium:allowDelayAdb": true,
+    "appium:isHeadless": true,
+    platformName: 'Android',
+     "appium:deviceReadyTimeout": 60000,
+    "appium:androidInstallTimeout": 90000,
+     "appium:ignoreHiddenApiPolicyError": true,
+    "appium:avdReadyTimeout": 180000,
+    "appium:skipDeviceInitialization": false,
+    "appium:automationName": 'UiAutomator2',
+    'appium:udid': '${ADB_HOST}',
+    'appium:systemPort': ${SYSTEM_PORT},
+    'appium:appPackage': ${PACKAGE_NAME},
+    'appium:appActivity': 'com.poincenot.doit.MainActivity',
+    'appium:noReset': false,
+    'appium:adbExecTimeout': 120000,
+    'appium:uiautomator2ServerLaunchTimeout': 120000,
+    'appium:disableWindowAnimation': true,
+    'appium:skipLogcatCapture': true,
+    'appium:autoAcceptAlerts': true,
+    'appium:autoDismissAlerts': true,
+    "appium:unicodeKeyboard": true,
+    "appium:resetKeyboard": true,
+    "appium:autoGrantPermissions": true,
+    "appium:hideKeyboard": true
+}];
+
+export { config };
+EOM
+
+success "Configuración de WDIO generada para ${FEATURE_NAME}"
+
+debug "🎬 Ejecutando test..."
+
+# Ejecutar WDIO
+cd "$APPIUM_DIR"
+FEATURE_ARG="${CLIENT}/feature/${FEATURE_NAME}"
+if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
+    EXIT_CODE=$?
+    error "La ejecución de WDIO falló con código de salida $EXIT_CODE"
+else
+    EXIT_CODE=0
+    success "Ejecución de WDIO completada."
+fi
+
+header "📊 Generando reporte de Allure..."
+if [ -d "allure-results" ]; then
+    env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn allure generate ./allure-results -o ./allure-report --clean
+    success "Reporte de Allure generado en allure-report."
+else
+    warn "No se encontró el directorio allure-results. No se generará reporte."
+fi
+
+cd ..
+
+header "✅ Fin de la ejecución."
+
+exit $EXIT_CODE
+
 if [[ -z "$PACKAGE_NAME" ]]; then
     error "No se pudo determinar el PACKAGE_NAME para el cliente $CLIENT"
     exit 1
