@@ -484,14 +484,16 @@ function processQueue() {
 }
 
 function assignJobToWorker(job) {
-    let worker = workerPool.find(w => w.branch === job.branch && w.status === 'ready');
+    // Un worker es compatible si está libre y comparte la misma branch y cliente
+    let worker = workerPool.find(w => w.branch === job.branch && w.client === job.client && w.status === 'ready');
     if (worker) {
         runJobOnWorker(job, worker);
         return true;
     }
 
+    // Si no hay worker compatible pero hay espacio, crear uno nuevo
     if (workerPool.length < maxWorkers) {
-        const newWorker = createWorker(job.branch);
+        const newWorker = createWorker(job.branch, job.client);
         runJobOnWorker(job, newWorker);
         return true;
     }
@@ -560,7 +562,7 @@ async function runJobOnWorker(job, worker) {
     broadcastStatus();
 }
 
-function createWorker(branch) {
+function createWorker(branch, client) { // Añadido client
     const workerId = workerPool.length > 0 ? Math.max(...workerPool.map(w => w.id)) + 1 : 0;
     const workerProcess = fork(path.join(__dirname, 'worker.js'));
 
@@ -568,15 +570,16 @@ function createWorker(branch) {
         id: workerId,
         process: workerProcess,
         branch: branch,
+        client: client, // Guardamos el cliente
         status: 'initializing',
         currentJob: null,
         terminating: false
     };
 
     workerPool.push(worker);
-    console.log(`Worker ${worker.id} creado para la branch ${branch}.`);
+    console.log(`Worker ${worker.id} creado para la branch ${branch} y cliente ${client}.`);
     
-    worker.process.send({ type: 'INIT', branch: branch });
+    worker.process.send({ type: 'INIT', branch: branch, client: client }); // Enviamos el cliente al worker
 
     workerProcess.on('message', async (message) => {
         const currentJob = worker.currentJob;
