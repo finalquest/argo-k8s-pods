@@ -119,6 +119,29 @@ function toggleSelectAll(event) {
 function updateQueueStatus(status) {
     const statusDiv = document.getElementById('queue-status');
     statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+    renderQueue(status.queue);
+}
+
+function renderQueue(queue) {
+    const queueList = document.getElementById('queued-tests-list');
+    if (!queueList) return;
+    queueList.innerHTML = '';
+    if (!queue || queue.length === 0) {
+        queueList.innerHTML = '<li>No hay tests en la cola.</li>';
+        return;
+    }
+
+    queue.forEach(job => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>
+                <strong>${job.feature}</strong> (${job.client} / ${job.branch})
+                ${job.highPriority ? '⚡' : ''}
+            </span>
+            <button class="cancel-job-btn" data-job-id="${job.id}" style="background-color: #dc3545;">Cancelar</button>
+        `;
+        queueList.appendChild(li);
+    });
 }
 
 function switchWiremockSubTab(tabName) {
