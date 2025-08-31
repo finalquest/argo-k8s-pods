@@ -103,14 +103,6 @@ else
     success "Ejecución de WDIO completada."
 fi
 
-header "📊 Generando reporte de Allure..."
-if [ -d "allure-results" ]; then
-    env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn allure generate ./allure-results -o ./allure-report --clean
-    success "Reporte de Allure generado en allure-report."
-else
-    warn "No se encontró el directorio allure-results. No se generará reporte."
-fi
-
 cd ..
 
 header "✅ Fin de la ejecución."
