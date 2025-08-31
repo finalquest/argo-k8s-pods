@@ -60,11 +60,8 @@ debug "🔗 Conectando a $ADB_HOST..."
 adb connect "$ADB_HOST" > /dev/null
 
 CLIENT_UPPER=$(echo "$CLIENT" | tr 'a-z' 'A-Z')
-PACKAGE_NAME="$(
-  grep -E "^APP_PACKAGE_${CLIENT_UPPER}=" "${APPIUM_DIR}/.env" \
-  | sed -E "s/^APP_PACKAGE_${CLIENT_UPPER}=['\"]?([^'\"\r\n]+).*/\1/" \
-  | tr -d '\r'
-)"
+PACKAGE_NAME=$(grep "APP_PACKAGE_${CLIENT_UPPER}" "${APPIUM_DIR}/.env" | cut -d'=' -f2 | tr -d '')
+
 if [[ -z "$PACKAGE_NAME" ]]; then
     error "No se pudo determinar el PACKAGE_NAME para el cliente $CLIENT"
     exit 1

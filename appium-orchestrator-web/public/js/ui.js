@@ -85,7 +85,28 @@ function renderWorkerPool(workers) {
         if (worker.status === 'busy' && worker.job) {
             headerText = `Worker ${worker.slotId + 1} (Ocupado) - Job ${worker.job.id}: ${worker.job.featureName}`;
         }
-        header.innerHTML = `<span>${headerText}</span>`;
+
+        // Reconstruir la cabecera para no perder listeners
+        header.innerHTML = ''; 
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = headerText;
+
+        const controlsDiv = document.createElement('div');
+        controlsDiv.style.cssText = 'float: right; display: inline-flex; align-items: center; gap: 1em;';
+
+        const scrollLockLabel = document.createElement('label');
+        scrollLockLabel.style.cssText = 'font-weight: normal; font-size: 0.9em; color: #343a40; cursor: pointer;';
+        
+        const scrollLockCheckbox = document.createElement('input');
+        scrollLockCheckbox.type = 'checkbox';
+        scrollLockCheckbox.className = 'scroll-lock-checkbox';
+        scrollLockCheckbox.checked = true; // Auto-scroll por defecto
+        
+        scrollLockLabel.appendChild(scrollLockCheckbox);
+        scrollLockLabel.append(' Auto-Scroll');
+        controlsDiv.appendChild(scrollLockLabel);
+
         if (worker.status === 'busy' && worker.job) {
             const stopButton = document.createElement('button');
             stopButton.textContent = 'Detener';
@@ -95,8 +116,11 @@ function renderWorkerPool(workers) {
                     window.socket.emit('stop_test', { slotId: worker.slotId, jobId: worker.job.id });
                 }
             };
-            header.appendChild(stopButton);
+            controlsDiv.appendChild(stopButton);
         }
+        
+        header.appendChild(titleSpan);
+        header.appendChild(controlsDiv);
     });
     panelsToRemove.forEach(panelId => {
         // document.getElementById(panelId)?.remove();
