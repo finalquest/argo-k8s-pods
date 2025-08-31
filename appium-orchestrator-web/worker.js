@@ -110,17 +110,39 @@ function setupWorkerEnvironment() {
 }
 
 function runTest(job) {
-    const { client, feature } = job;
+    const { client, feature, mappingToLoad } = job;
     const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
     const args = [workspaceDir, branch, client, feature, environment.adbHost, environment.appiumPort];
 
-    runScript(runnerScript, args, (code) => {
-        // El reporte ya no se genera aquí, así que no se envía la ruta.
-        sendToParent({
-            type: 'READY_FOR_NEXT_JOB',
-            data: { exitCode: code, reportPath: null }
+    const executeTest = () => {
+        runScript(runnerScript, args, (code) => {
+            // El reporte ya no se genera aquí, así que no se envía la ruta.
+            sendToParent({
+                type: 'READY_FOR_NEXT_JOB',
+                data: { exitCode: code, reportPath: null }
+            });
         });
-    });
+    };
+
+    if (mappingToLoad) {
+        sendToParent({ type: 'LOG', data: `[worker] 📼 Job de verificación detectado. Cargando mapping: ${mappingToLoad}\n` });
+        const loadMappingScript = path.join(__dirname, 'scripts', 'load-mapping.sh');
+        runScript(loadMappingScript, [mappingToLoad], (code) => {
+            if (code !== 0) {
+                sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.\n` });
+                sendToParent({
+                    type: 'READY_FOR_NEXT_JOB',
+                    data: { exitCode: code, reportPath: null }
+                });
+            } else {
+                sendToParent({ type: 'LOG', data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test de verificación...\n` });
+                executeTest();
+            }
+        });
+    } else {
+        // Es un job normal o de grabación
+        executeTest();
+    }
 }
 
 function cleanupAndExit(code) {

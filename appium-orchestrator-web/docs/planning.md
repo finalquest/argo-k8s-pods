@@ -1,33 +1,49 @@
-# Nuevas Funcionalidades
+# Plan de Implementación: Record & Verify
 
-## Feature: Selección Dinámica de Versión de APK
+## Objetivo
 
-Esta funcionalidad eliminará la necesidad de tener la variable de entorno `APK_PATH` fija en el servidor.
+El objetivo es que al solicitar un test con "Grabar Mappings", el sistema encole automáticamente un segundo test de "verificación" que use esos mappings recién grabados para validar su correctitud.
 
-### Etapa 1: Crear la API en el Backend
+---
 
-**Objetivo:** Crear un endpoint que pueda consultar a `oras` y devolver la lista de versiones disponibles.
+### Etapa 1: Modificar la Lógica de Encolado en `server.js`
 
-1.  Crear una nueva ruta en `server.js`: `GET /api/apk/versions`.
-2.  Esta ruta recibirá un parámetro, por ejemplo: `?repo=apks/chaco/int`.
-3.  Ejecutará el comando `oras repo tags harbor:8080/${repo} --plain-http`.
-4.  Procesará la salida y la devolverá como un JSON con la lista de versiones.
+**Resumen:** Interceptar las peticiones de tests con `record: true` y duplicarlas para crear un par de jobs (Grabación y Verificación).
 
-### Etapa 2: Construir la Interfaz en el Frontend
+1.  **Nuevo Atributo en el Job:** Introducir un nuevo atributo: `mappingToLoad: 'nombre-del-mapping.json'`. La presencia de este atributo le indicará al worker que debe cargar un mapping específico antes de ejecutar el test.
 
-**Objetivo:** Añadir los elementos visuales para que el usuario pueda ver y seleccionar una versión.
+2.  **Manejo de Tests Individuales (`run_test`):**
+    *   Si un job llega con `record: true`:
+        *   **Job 1 (Grabación):** Se encola el job original sin cambios.
+        *   **Job 2 (Verificación):** Se crea y encola un segundo job idéntico pero con los siguientes atributos: `{ record: false, mappingToLoad: 'feature_name.json', highPriority: true }`.
 
-1.  **Modificar `index.html`:** Añadir un nuevo menú desplegable (select) llamado "Versión APK" y un botón "Buscar Versiones".
-2.  **Modificar `js/api.js` y `js/ui.js`:** Crear las funciones para:
-    *   Llamar al nuevo endpoint `/api/apk/versions`.
-    *   Poblar el nuevo menú desplegable con las versiones recibidas.
+3.  **Manejo de Lotes de Tests (`run_batch`):**
+    *   Si el lote se solicita con `record: true`:
+        *   Se itera sobre la lista de jobs recibida.
+        *   Por cada job, se genera el par "Grabar" y "Verificar".
+        *   El resultado es una nueva lista de jobs intercalada: `[Grabar A, Verificar A, Grabar B, Verificar B, ...]` que se añade a la cola de ejecución.
 
-### Etapa 3: Conectar el Flujo Completo
+---
 
-**Objetivo:** Usar la versión seleccionada en la UI para la ejecución del test.
+### Etapa 2: Modificar el Worker (`worker.js`) para la Reproducción
 
-1.  **Modificar Frontend (`js/socket.js`):** Al enviar un test para ejecutar, se leerá la versión seleccionada del nuevo menú y se incluirá en los datos del "job".
-2.  **Modificar Backend (`server.js` y `worker.js`):
-    *   El `job` ahora contendrá la ruta del APK a usar.
-    *   Esta información se pasará al worker.
-    *   El worker la usará para pasársela al script `install-apk.sh`, que a su vez la usará para descargar el APK correcto.
+**Resumen:** Enseñar al worker a reaccionar al nuevo tipo de job de "Verificación".
+
+1.  **Detectar el Job de Verificación:** En la lógica `runTest` del worker, comprobar si el atributo `job.mappingToLoad` existe.
+
+2.  **Ejecutar Script de Carga:**
+    *   Si el atributo existe, el worker debe ejecutar un nuevo script (`scripts/load-mapping.sh`), pasándole el nombre del archivo de mapping como argumento.
+    *   Solo tras la ejecución exitosa de este script, se procederá a correr el test con `feature-runner.sh`.
+
+---
+
+### Etapa 3: Crear el Script `load-mapping.sh`
+
+**Resumen:** Crear un script dedicado a preparar el entorno de Wiremock para un test de verificación.
+
+1.  **Argumentos:** El script aceptará un único argumento: el nombre del archivo de mapping a cargar.
+
+2.  **Acciones:**
+    *   **Limpiar Mappings:** Ejecutar una llamada a la API de Wiremock para borrar todos los mappings (`POST /__admin/mappings/reset`).
+    *   **Cargar Mapping Específico:** Leer el contenido del archivo JSON desde `wiremock/mappings/` y enviarlo a Wiremock (`POST /__admin/mappings/import`).
+    *   El script debe incluir manejo de errores.

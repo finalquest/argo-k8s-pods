@@ -13,7 +13,8 @@ success() { echo -e "${SUCCESS}✅ $1${RESET}"; }
 warn() { echo -e "${WARN}⚠️ $1${RESET}"; }
 error() { echo -e "${ERROR}❌ $1${RESET}"; }
 debug() { echo -e "${DEBUG}🐛 $1${RESET}"; }
+info() { echo -e "ℹ️ $1"; } # Nueva función de info
 
 export RESET HEADER SUCCESS WARN ERROR DEBUG
-export -f header success warn error debug
+export -f header success warn error debug info
 
