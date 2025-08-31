@@ -798,16 +798,42 @@ io.on('connection', (socket) => {
 
     socket.on('run_test', (data) => {
         console.log('--- DEBUG: Datos recibidos en run_test ---', data);
-        jobIdCounter++;
-        const job = { ...data, id: jobIdCounter };
-        if (job.highPriority) {
-            jobQueue.unshift(job);
-            io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
-` });
+
+        if (data.record) {
+            // --- Lógica de Record & Verify ---
+            const recordJobId = ++jobIdCounter;
+            const verifyJobId = ++jobIdCounter;
+
+            const recordJob = { ...data, id: recordJobId, record: true };
+            const verifyJob = {
+                ...data,
+                id: verifyJobId,
+                record: false,
+                highPriority: true, // Para que se ejecute justo después
+                mappingToLoad: `${data.feature}.json`
+            };
+
+            // Encolar el de grabación primero, luego el de verificación
+            if (recordJob.highPriority) {
+                jobQueue.unshift(verifyJob, recordJob); // El de grabación queda primero
+                io.emit('log_update', { logLine: `--- ⚡️ Test de grabación y verificación para '${data.feature}' añadido a la cola con prioridad alta. ---\n` });
+            } else {
+                jobQueue.push(recordJob, verifyJob);
+                io.emit('log_update', { logLine: `--- 📼 Petición de grabación y verificación para '${data.feature}' encolada. ---\n` });
+            }
+
         } else {
-            jobQueue.push(job);
-            io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---
+            // --- Lógica normal ---
+            const job = { ...data, id: ++jobIdCounter };
+            if (job.highPriority) {
+                jobQueue.unshift(job);
+                io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
 ` });
+            } else {
+                jobQueue.push(job);
+                io.emit('log_update', { logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---
+` });
+            }
         }
         processQueue();
     });
@@ -817,18 +843,47 @@ io.on('connection', (socket) => {
         const { jobs = [], record = false } = data;
         const highPriority = jobs.length > 0 && jobs[0].highPriority;
 
-        const logMessage = highPriority
-            ? `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
-`
-            : `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
-`;
-        io.emit('log_update', { logLine: logMessage });
+        let jobsToQueue = [];
 
-        const jobsToQueue = jobs.map(jobData => ({
-            ...jobData,
-            id: ++jobIdCounter,
-            record: record
-        }));
+        if (record) {
+            // --- Lógica de Record & Verify para Lotes ---
+            const logMessage = highPriority
+                ? `--- ⚡️ Recibido lote de ${jobs.length} tests para Grabación y Verificación con prioridad alta. Encolando... ---
+`
+                : `--- 📼 Recibido lote de ${jobs.length} tests para Grabación y Verificación. Encolando... ---
+`;
+            io.emit('log_update', { logLine: logMessage });
+
+            jobsToQueue = jobs.flatMap(jobData => {
+                const recordJob = {
+                    ...jobData,
+                    id: ++jobIdCounter,
+                    record: true
+                };
+                const verifyJob = {
+                    ...jobData,
+                    id: ++jobIdCounter,
+                    record: false,
+                    mappingToLoad: `${jobData.feature}.json`
+                };
+                return [recordJob, verifyJob]; // Devuelve el par intercalado
+            });
+
+        } else {
+            // --- Lógica normal para Lotes ---
+            const logMessage = highPriority
+                ? `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
+`
+                : `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
+`;
+            io.emit('log_update', { logLine: logMessage });
+
+            jobsToQueue = jobs.map(jobData => ({
+                ...jobData,
+                id: ++jobIdCounter,
+                record: false // Asegurarse que record es false si no es un lote de grabación
+            }));
+        }
 
         if (highPriority) {
             jobQueue.unshift(...jobsToQueue.reverse());
