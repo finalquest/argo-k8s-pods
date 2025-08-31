@@ -11,12 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeUiEventListeners() {
     const fetchBtn = document.getElementById('fetch-features-btn');
+    const fetchApkBtn = document.getElementById('fetch-apk-versions-btn');
     const runSelectedBtn = document.getElementById('run-selected-btn');
     const selectAllCheckbox = document.getElementById('select-all-features');
     const historyBranchFilter = document.getElementById('history-branch-filter');
     const featuresList = document.getElementById('features-list');
 
     fetchBtn.addEventListener('click', fetchFeatures);
+    fetchApkBtn.addEventListener('click', fetchApkVersions);
     runSelectedBtn.addEventListener('click', runSelectedTests);
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
     historyBranchFilter.addEventListener('change', () => loadHistory(historyBranchFilter.value));

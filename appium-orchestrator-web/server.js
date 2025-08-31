@@ -6,7 +6,7 @@ const simpleGit = require('simple-git');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const { fork } = require('child_process');
+const { fork, exec } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');
@@ -60,6 +60,32 @@ app.get('/api/branches', async (req, res) => {
     console.error('Error al listar branches:', error);
     res.status(500).json({ error: 'Error interno al listar branches. Revisa la URL del repo y el PAT.' });
   }
+});
+
+app.get('/api/apk/versions', (req, res) => {
+    const { repo } = req.query;
+    if (!repo) {
+        return res.status(400).json({ error: 'Se requiere el parámetro \'repo\'.' });
+    }
+
+    // Basic sanitization to prevent command injection
+    const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-\/.\s]/g, '');
+    if (sanitizedRepo !== repo) {
+        return res.status(400).json({ error: 'Parámetro \'repo\' contiene caracteres inválidos.' });
+    }
+
+    const command = `oras repo tags harbor:8080/${sanitizedRepo} --plain-http`;
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error al ejecutar oras: ${error.message}`);
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).json({ error: 'Error al obtener las versiones del APK.', details: stderr });
+        }
+        
+        const versions = stdout.trim().split('\n').filter(Boolean);
+        res.json(versions);
+    });
 });
 
 app.get('/api/features', async (req, res) => {
@@ -499,7 +525,8 @@ function broadcastStatus() {
         job: worker.currentJob ? { id: worker.currentJob.id, featureName: worker.currentJob.feature } : null,
         status: worker.status,
         branch: worker.branch,
-        client: worker.client
+        client: worker.client,
+        apkVersion: worker.apkVersion
     }));
     io.emit('worker_pool_update', slots);
 }
@@ -541,14 +568,20 @@ function processQueue() {
 }
 
 function assignJobToWorker(job) {
-    let worker = workerPool.find(w => w.branch === job.branch && w.client === job.client && w.status === 'ready');
+    const apkVersion = job.apkVersion || process.env.APK_PATH; // Fallback for jobs without version
+    let worker = workerPool.find(w => 
+        w.branch === job.branch && 
+        w.client === job.client && 
+        w.apkVersion === apkVersion && 
+        w.status === 'ready'
+    );
     if (worker) {
         runJobOnWorker(job, worker);
         return true;
     }
 
     if (workerPool.length < maxWorkers) {
-        const newWorker = createWorker(job.branch, job.client);
+        const newWorker = createWorker(job.branch, job.client, apkVersion);
         runJobOnWorker(job, newWorker);
         return true;
     }
@@ -614,7 +647,7 @@ async function runJobOnWorker(job, worker) {
     broadcastStatus();
 }
 
-function createWorker(branch, client) {
+function createWorker(branch, client, apkVersion) {
     const workerId = workerPool.length > 0 ? Math.max(...workerPool.map(w => w.id)) + 1 : 0;
     const workerProcess = fork(path.join(__dirname, 'worker.js'));
 
@@ -623,15 +656,16 @@ function createWorker(branch, client) {
         process: workerProcess,
         branch: branch,
         client: client,
+        apkVersion: apkVersion, // Store APK version
         status: 'initializing',
         currentJob: null,
         terminating: false
     };
 
     workerPool.push(worker);
-    console.log(`Worker ${worker.id} creado para la branch ${branch} y cliente ${client}.`);
+    console.log(`Worker ${worker.id} creado para la branch ${branch}, cliente ${client} y APK ${apkVersion}.`);
     
-    worker.process.send({ type: 'INIT', branch: branch, client: client });
+    worker.process.send({ type: 'INIT', branch: branch, client: client, apkVersion: apkVersion });
 
     workerProcess.on('message', async (message) => {
         const currentJob = worker.currentJob;

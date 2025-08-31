@@ -53,6 +53,7 @@ function renderWorkerStatus(workers) {
         btn.className = `worker-status-btn status-${worker.status}`;
         let text = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)})`;
         if (worker.branch) text += ` - ${worker.branch}`;
+        if (worker.apkVersion) text += ` - APK: ${worker.apkVersion.substring(0, 7)}...`;
         btn.textContent = text;
         btn.onclick = () => {
             const panel = document.getElementById(`log-panel-${worker.slotId}`);
@@ -80,6 +81,7 @@ function renderWorkerPool(workers) {
         const header = panel.querySelector('.panel-header');
         header.className = `panel-header status-${worker.status}`;
         let headerText = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)}) - Branch: ${worker.branch}`;
+        if (worker.apkVersion) headerText += ` - APK: ${worker.apkVersion}`;
         if (worker.status === 'busy' && worker.job) {
             headerText = `Worker ${worker.slotId + 1} (Ocupado) - Job ${worker.job.id}: ${worker.job.featureName}`;
         }
@@ -149,4 +151,21 @@ function switchWiremockSubTab(tabName) {
     document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`wiremock-${tabName}-view`).classList.add('active');
     document.querySelector(`.sub-tab-btn[data-subtab='${tabName}']`).classList.add('active');
+}
+
+function populateApkVersions(versions) {
+    const apkVersionSelect = document.getElementById('apk-version-select');
+    apkVersionSelect.innerHTML = '';
+
+    if (!versions || versions.length === 0) {
+        apkVersionSelect.innerHTML = '<option>No se encontraron versiones</option>';
+        return;
+    }
+
+    versions.forEach(version => {
+        const option = document.createElement('option');
+        option.value = version;
+        option.textContent = version;
+        apkVersionSelect.appendChild(option);
+    });
 }
