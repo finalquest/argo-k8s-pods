@@ -9,9 +9,8 @@ const crypto = require('crypto');
 const { fork } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
-const archiver = require('archiver'); // Importar archiver
+const archiver = require('archiver');
 
-// Cargar variables de entorno desde .env
 require('dotenv').config();
 
 const app = express();
@@ -20,9 +19,7 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-// --- Configuración ---
 const { GIT_REPO_URL, GIT_USER, GIT_PAT } = process.env;
-
 if (!GIT_REPO_URL || !GIT_USER || !GIT_PAT) {
     console.error('Error: Debes definir GIT_REPO_URL, GIT_USER y GIT_PAT en el archivo .env');
     process.exit(1);
@@ -35,17 +32,17 @@ const getAuthenticatedUrl = () => {
         url.password = GIT_PAT;
         return url.toString();
     } catch (error) {
-        console.error('La GIT_REPO_URL en el archivo .env no es una URL válida.');
+        console.error('La GIT_REPO_URL no es una URL válida.');
         process.exit(1);
     }
 };
 
-// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// --- API Endpoints ---
+// --- Endpoints de la API ---
+
 app.get('/api/branches', async (req, res) => {
   try {
     const git = simpleGit();
@@ -159,9 +156,7 @@ app.get('/api/history', (req, res) => {
     }
 });
 
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-});
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 app.get('/api/wiremock/mappings', async (req, res) => {
     try {
@@ -299,7 +294,6 @@ function splitAndSaveMappings(mappings, recordingName) {
         const url = mapping.request.url;
         if (!url) return;
 
-        // Sanitize and create file path from URL
         const pathParts = url.split('?')[0].split('/').filter(Boolean);
         if (pathParts.length === 0) return;
 
@@ -438,8 +432,6 @@ app.post('/api/mappings/download-batch', (req, res) => {
 });
 
 
-
-
 // --- Lógica de Workers ---
 
 const jobQueue = [];
@@ -500,7 +492,7 @@ function broadcastStatus() {
         active: activeJobs,
         queued: jobQueue.length,
         limit: maxWorkers,
-        queue: jobQueue // Enviar la cola completa
+        queue: jobQueue
     });
     const slots = workerPool.map(worker => ({
         slotId: worker.id,
@@ -514,24 +506,24 @@ function broadcastStatus() {
 
 function checkIdleAndCleanup() {
     const isQueueEmpty = jobQueue.length === 0;
-    const allWorkersIdle = workerPool.every(w => w.status === 'ready');
+    const idleWorkers = workerPool.filter(w => w.status === 'ready');
 
-    if (isQueueEmpty && allWorkersIdle && workerPool.length > 0) {
-        console.log('Todos los trabajos han finalizado y la cola está vacía. Terminando workers...');
-        io.emit('log_update', { logLine: `--- 🧹 Todos los trabajos completados. Limpiando y terminando workers... ---
+    if (isQueueEmpty && idleWorkers.length > 0) {
+        io.emit('log_update', { logLine: `--- 🧹 Cola vacía. Generando reportes finales para workers inactivos... ---
 ` });
         
-        const workersToTerminate = [...workerPool];
-        workersToTerminate.forEach(worker => {
-            worker.terminating = true; // Marcar para que no se re-encole el job
-            worker.process.send({ type: 'TERMINATE' });
+        idleWorkers.forEach(worker => {
+            if (!worker.terminating) { 
+                worker.terminating = true; 
+                worker.process.send({ type: 'GENERATE_UNIFIED_REPORT' });
+            }
         });
     }
 }
 
 function processQueue() {
     if (jobQueue.length === 0) {
-        checkIdleAndCleanup(); // Si no hay trabajos, verificar si hay que limpiar
+        checkIdleAndCleanup();
         return;
     }
 
@@ -549,14 +541,12 @@ function processQueue() {
 }
 
 function assignJobToWorker(job) {
-    // Un worker es compatible si está libre y comparte la misma branch y cliente
     let worker = workerPool.find(w => w.branch === job.branch && w.client === job.client && w.status === 'ready');
     if (worker) {
         runJobOnWorker(job, worker);
         return true;
     }
 
-    // Si no hay worker compatible pero hay espacio, crear uno nuevo
     if (workerPool.length < maxWorkers) {
         const newWorker = createWorker(job.branch, job.client);
         runJobOnWorker(job, newWorker);
@@ -574,17 +564,14 @@ async function startRecordingSequence(job, worker) {
         io.emit('log_update', { slotId, logLine: `--- 🔴 Iniciando secuencia de grabación para ${feature} ---
 ` });
         
-        // 1. Reset
         io.emit('log_update', { slotId, logLine: `   -> Reseteando mappings...
 ` });
         await fetch(`http://localhost:${PORT}/api/wiremock/mappings/reset`, { method: 'POST' });
         
-        // 2. Load Base
         io.emit('log_update', { slotId, logLine: `   -> Cargando mappings base...
 ` });
         await fetch(`http://localhost:${PORT}/api/wiremock/load-base-mappings`, { method: 'POST' });
         
-        // 3. Start Recording
         io.emit('log_update', { slotId, logLine: `   -> Iniciando grabación...
 ` });
         await fetch(`http://localhost:${PORT}/api/wiremock/recordings/start`, { method: 'POST' });
@@ -595,7 +582,7 @@ async function startRecordingSequence(job, worker) {
         console.error(`Error durante la secuencia de grabación para el job ${id}:`, error);
         io.emit('log_update', { slotId, logLine: `--- ❌ Error al iniciar la grabación para ${feature}: ${error.message} ---
 ` });
-        throw error; // Re-throw to be caught by the caller
+        throw error;
     }
 }
 
@@ -627,7 +614,7 @@ async function runJobOnWorker(job, worker) {
     broadcastStatus();
 }
 
-function createWorker(branch, client) { // Añadido client
+function createWorker(branch, client) {
     const workerId = workerPool.length > 0 ? Math.max(...workerPool.map(w => w.id)) + 1 : 0;
     const workerProcess = fork(path.join(__dirname, 'worker.js'));
 
@@ -635,7 +622,7 @@ function createWorker(branch, client) { // Añadido client
         id: workerId,
         process: workerProcess,
         branch: branch,
-        client: client, // Guardamos el cliente
+        client: client,
         status: 'initializing',
         currentJob: null,
         terminating: false
@@ -644,7 +631,7 @@ function createWorker(branch, client) { // Añadido client
     workerPool.push(worker);
     console.log(`Worker ${worker.id} creado para la branch ${branch} y cliente ${client}.`);
     
-    worker.process.send({ type: 'INIT', branch: branch, client: client }); // Enviamos el cliente al worker
+    worker.process.send({ type: 'INIT', branch: branch, client: client });
 
     workerProcess.on('message', async (message) => {
         const currentJob = worker.currentJob;
@@ -652,7 +639,7 @@ function createWorker(branch, client) { // Añadido client
 
         switch (message.type) {
             case 'READY':
-                console.log(`Worker ${worker.id} reportó READY (setup completado).`);
+                console.log(`Worker ${worker.id} reportó READY.`);
                 worker.status = 'ready';
                 
                 if (worker.currentJob) {
@@ -672,15 +659,14 @@ function createWorker(branch, client) { // Añadido client
                 broadcastStatus();
                 break;
 
-
             case 'READY_FOR_NEXT_JOB':
-                console.log(`Worker ${worker.id} reportou READY_FOR_NEXT_JOB.`);
+                console.log(`Worker ${worker.id} reportó READY_FOR_NEXT_JOB.`);
 
-                // Si el job que acaba de terminar tenía la grabación activada, detenerla AHORA.
                 if (currentJob && currentJob.record) {
                     try {
                         console.log(`Finalizando secuencia de grabación para el job ${currentJob.id}`);
-                        io.emit('log_update', { slotId, logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---\n` });
+                        io.emit('log_update', { slotId, logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---
+` });
                         const featureName = path.basename(currentJob.feature, '.feature');
                         const response = await fetch(`http://localhost:${PORT}/api/wiremock/recordings/stop`, {
                             method: 'POST',
@@ -689,10 +675,12 @@ function createWorker(branch, client) { // Añadido client
                         });
                         if (!response.ok) throw new Error(`Status ${response.status}`);
                         const result = await response.json();
-                        io.emit('log_update', { slotId, logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---\n` });
+                        io.emit('log_update', { slotId, logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---
+` });
                     } catch (error) {
                         console.error(`Error al detener la grabación para el job ${currentJob.id}:`, error);
-                        io.emit('log_update', { slotId, logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---\n` });
+                        io.emit('log_update', { slotId, logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---
+` });
                     }
                 }
 
@@ -714,12 +702,17 @@ function createWorker(branch, client) { // Añadido client
                 processQueue();
                 break;
 
-            case 'LOG':
-                io.emit('log_update', { slotId, logLine: message.data });
+            case 'UNIFIED_REPORT_READY':
+                console.log(`Worker ${worker.id} reportó UNIFIED_REPORT_READY.`);
+                if (message.data && message.data.reportPath) {
+                    const syntheticJob = { branch: worker.branch, feature: `_ReporteUnificado_${worker.client}`, client: worker.client };
+                    handleReport(syntheticJob, message.data.reportPath);
+                }
+                worker.process.send({ type: 'TERMINATE' });
                 break;
 
-            case 'DONE': // This case is effectively deprecated but we'll keep it for now.
-                console.log(`Worker ${worker.id} reportó DONE para job ${currentJob?.id}`);
+            case 'LOG':
+                io.emit('log_update', { slotId, logLine: message.data });
                 break;
         }
     });
@@ -772,7 +765,7 @@ io.on('connection', (socket) => {
     socket.on('run_test', (data) => {
         console.log('--- DEBUG: Datos recibidos en run_test ---', data);
         jobIdCounter++;
-        const job = { ...data, id: jobIdCounter }; // The 'record' flag is already in data
+        const job = { ...data, id: jobIdCounter };
         if (job.highPriority) {
             jobQueue.unshift(job);
             io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
@@ -800,11 +793,10 @@ io.on('connection', (socket) => {
         const jobsToQueue = jobs.map(jobData => ({
             ...jobData,
             id: ++jobIdCounter,
-            record: record // Attach the record flag to each job
+            record: record
         }));
 
         if (highPriority) {
-            // Add jobs in reverse order to the front of the queue to maintain their original order
             jobQueue.unshift(...jobsToQueue.reverse());
         } else {
             jobQueue.push(...jobsToQueue);
@@ -831,8 +823,9 @@ io.on('connection', (socket) => {
         if (index !== -1) {
             const canceledJob = jobQueue.splice(index, 1);
             console.log(`Job ${jobId} (${canceledJob[0].feature}) cancelado de la cola.`);
-            io.emit('log_update', { logLine: `--- 🚫 Job '${canceledJob[0].feature}' cancelado por el usuario. ---\n` });
-            broadcastStatus(); // Actualizar la UI de todos
+            io.emit('log_update', { logLine: `--- 🚫 Job '${canceledJob[0].feature}' cancelado por el usuario. ---
+` });
+            broadcastStatus();
         } else {
             console.log(`No se pudo cancelar el job ${jobId}: no se encontró en la cola.`);
         }

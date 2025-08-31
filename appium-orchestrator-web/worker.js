@@ -114,15 +114,10 @@ function runTest(job) {
     const args = [workspaceDir, branch, client, feature, environment.adbHost, environment.appiumPort];
 
     runScript(runnerScript, args, (code) => {
-        const reportDir = path.join(workspaceDir, 'appium', 'allure-report');
-        let reportPath = null;
-        if (fs.existsSync(reportDir)) {
-            reportPath = reportDir;
-            sendToParent({ type: 'LOG', data: `[worker] Reporte de Allure encontrado en: ${reportPath}\n` });
-        }
+        // El reporte ya no se genera aquí, así que no se envía la ruta.
         sendToParent({
             type: 'READY_FOR_NEXT_JOB',
-            data: { exitCode: code, reportPath: reportPath }
+            data: { exitCode: code, reportPath: null }
         });
     });
 }
@@ -154,6 +149,19 @@ process.on('message', (message) => {
             break;
         case 'START':
             runTest(message.job);
+            break;
+        case 'GENERATE_UNIFIED_REPORT':
+            const generateReportScript = path.join(__dirname, 'scripts', 'generate-report.sh');
+            runScript(generateReportScript, [workspaceDir], (code) => {
+                if (code === 0) {
+                    const reportDir = path.join(workspaceDir, 'appium', 'allure-report');
+                    sendToParent({ type: 'UNIFIED_REPORT_READY', data: { reportPath: reportDir } });
+                } else {
+                    sendToParent({ type: 'LOG', data: '[worker] ❌ Falló la generación del reporte unificado.\n' });
+                    // Aún así, avisamos que estamos listos para terminar
+                    sendToParent({ type: 'UNIFIED_REPORT_READY', data: { reportPath: null } });
+                }
+            });
             break;
         case 'TERMINATE':
             sendToParent({ type: 'LOG', data: '[worker] Recibida orden de terminar.\n' });
