@@ -127,3 +127,32 @@ async function loadHistory(branch = '') {
         historyList.innerHTML = '<li>Error al cargar el historial.</li>';
     }
 }
+
+async function fetchApkVersions() {
+    const clientSelect = document.getElementById('client-select');
+    const selectedClient = clientSelect.value;
+    const apkVersionSelect = document.getElementById('apk-version-select');
+
+    if (!selectedClient) {
+        alert('Por favor, selecciona un cliente primero.');
+        return;
+    }
+
+    apkVersionSelect.innerHTML = '<option>Cargando...</option>';
+    apkVersionSelect.disabled = false;
+
+    try {
+        // Assuming a repository structure like apks/CLIENT/int
+        const repo = `apks/${selectedClient}/int`;
+        const response = await fetch(`/api/apk/versions?repo=${repo}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.details || `HTTP error! status: ${response.status}`);
+        }
+        const versions = await response.json();
+        populateApkVersions(versions);
+    } catch (error) {
+        console.error('Error al buscar versiones de APK:', error);
+        apkVersionSelect.innerHTML = '<option>Error al cargar</option>';
+    }
+}

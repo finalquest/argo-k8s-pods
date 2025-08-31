@@ -1,18 +1,21 @@
 let runningJobs = new Map();
 
 function runTest(branch, client, feature, highPriority = false, record = false) {
-    window.socket.emit('run_test', { branch, client, feature, highPriority, record });
+    const apkVersion = document.getElementById('apk-version-select').value;
+    window.socket.emit('run_test', { branch, client, feature, highPriority, record, apkVersion });
     switchTab('workers');
 }
 
 function runSelectedTests() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
+    const apkVersionSelect = document.getElementById('apk-version-select');
     const priorityCheckbox = document.getElementById('batch-priority-checkbox');
     const recordCheckbox = document.getElementById('record-mappings-checkbox'); // Get the record checkbox
     
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
+    const selectedApkVersion = apkVersionSelect.value;
     const highPriority = priorityCheckbox.checked;
     const recordMappings = recordCheckbox.checked; // Get its value
 
@@ -26,7 +29,8 @@ function runSelectedTests() {
             branch: selectedBranch,
             client: selectedClient,
             feature: cb.dataset.featureName,
-            highPriority: highPriority
+            highPriority: highPriority,
+            apkVersion: selectedApkVersion
         };
     });
 

@@ -1,0 +1,568 @@
+{
+  "mappings": [
+    {
+      "id": "070b87d9-89da-4b22-8f31-45043094fbf6",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "41",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:23 GMT"
+        }
+      },
+      "uuid": "070b87d9-89da-4b22-8f31-45043094fbf6",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "7695119f-a9b9-4e90-870b-1ddd1521b701",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22toledod%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-03-06T12:22:41.980Z\",\"name\":\"toledod@mailinator.com\",\"last_password_reset\":\"2025-07-16T18:23:58.004Z\",\"user_metadata\":{\"cuit\":\"20130332383\"},\"picture\":\"https://s.gravatar.com/avatar/f686e94e51338b786c803fd2360a4eea?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fto.png\",\"email_verified\":false,\"blocked\":false,\"updated_at\":\"2025-08-30T23:36:51.527Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"65e86011ec34928a0dcf6e4c\",\"provider\":\"auth0\",\"isSocial\":false}],\"nickname\":\"toledod\",\"username\":\"toledod\",\"user_id\":\"auth0|65e86011ec34928a0dcf6e4c\",\"email\":\"toledod@mailinator.com\",\"last_login\":\"2025-08-30T23:36:51.527Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":19290,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "97781d9ead6a15c7-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756597102",
+          "x-ratelimit-remaining": "997",
+          "Date": "Sat, 30 Aug 2025 23:37:23 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.039",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "7695119f-a9b9-4e90-870b-1ddd1521b701",
+      "persistent": true
+    },
+    {
+      "id": "8f14f620-83aa-422d-a3d7-c944a6672066",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=145607&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"INST DE OJOS Y OIDOS SRL\",\"Cuenta\":145607,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":38738470.12,\"SaldoDisponible\":38738470.12,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000001456070\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "37",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:22 GMT"
+        }
+      },
+      "uuid": "8f14f620-83aa-422d-a3d7-c944a6672066",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "0a65705c-876f-4bf3-9875-4bffab34e895",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-30T23:37:22\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20130332383 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:22 GMT"
+        }
+      },
+      "uuid": "0a65705c-876f-4bf3-9875-4bffab34e895",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-3-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "62db2c1d-08be-49f3-98fb-886417c69cf3",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220130332383%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-03-06T12:22:41.980Z\",\"name\":\"toledod@mailinator.com\",\"last_password_reset\":\"2025-07-16T18:23:58.004Z\",\"user_metadata\":{\"cuit\":\"20130332383\"},\"picture\":\"https://s.gravatar.com/avatar/f686e94e51338b786c803fd2360a4eea?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fto.png\",\"email_verified\":false,\"blocked\":false,\"updated_at\":\"2025-08-30T23:36:51.527Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"65e86011ec34928a0dcf6e4c\",\"provider\":\"auth0\",\"isSocial\":false}],\"nickname\":\"toledod\",\"username\":\"toledod\",\"user_id\":\"auth0|65e86011ec34928a0dcf6e4c\",\"email\":\"toledod@mailinator.com\",\"last_login\":\"2025-08-30T23:36:51.527Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":19290,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "97781d97ab6e430e-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756597102",
+          "x-ratelimit-remaining": "998",
+          "Date": "Sat, 30 Aug 2025 23:37:21 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.022",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "62db2c1d-08be-49f3-98fb-886417c69cf3",
+      "persistent": true,
+      "scenarioName": "scenario-4-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-4-auth0-api-v2-users-2"
+    },
+    {
+      "id": "8049bf9e-037f-49f1-a4df-1b9ba1f89f15",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-30T23:37:21\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20130332383 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "26",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:21 GMT"
+        }
+      },
+      "uuid": "8049bf9e-037f-49f1-a4df-1b9ba1f89f15",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-3-api24Nbch-canales-autorizado-usuario-2",
+      "newScenarioState": "scenario-3-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "8f7a5db3-ed33-4cb7-b99b-83679f9c6e67",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220130332383%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-03-06T12:22:41.980Z\",\"name\":\"toledod@mailinator.com\",\"last_password_reset\":\"2025-07-16T18:23:58.004Z\",\"user_metadata\":{\"cuit\":\"20130332383\"},\"picture\":\"https://s.gravatar.com/avatar/f686e94e51338b786c803fd2360a4eea?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fto.png\",\"email_verified\":false,\"blocked\":false,\"updated_at\":\"2025-08-30T23:36:51.527Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"65e86011ec34928a0dcf6e4c\",\"provider\":\"auth0\",\"isSocial\":false}],\"nickname\":\"toledod\",\"username\":\"toledod\",\"user_id\":\"auth0|65e86011ec34928a0dcf6e4c\",\"email\":\"toledod@mailinator.com\",\"last_login\":\"2025-08-30T23:36:51.527Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":19290,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "97781d94de7615c7-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756597102",
+          "x-ratelimit-remaining": "999",
+          "Date": "Sat, 30 Aug 2025 23:37:21 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.043",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "8f7a5db3-ed33-4cb7-b99b-83679f9c6e67",
+      "persistent": true,
+      "scenarioName": "scenario-4-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-4-auth0-api-v2-users-2"
+    },
+    {
+      "id": "b7149abd-d5a0-44de-882a-30c350cc9ce7",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20137194768",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-30T23:37:21\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20137194768 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20137194768\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:21 GMT"
+        }
+      },
+      "uuid": "b7149abd-d5a0-44de-882a-30c350cc9ce7",
+      "persistent": true
+    },
+    {
+      "id": "223bd09e-dabe-49e1-8c4c-c3730f790144",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220137194768%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"picture\":\"https://s.gravatar.com/avatar/67e6f5555cde989b1168c985086f988e?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2F20.png\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T19:12:52.935Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"657c64a73053e507da458e0a\",\"provider\":\"auth0\",\"isSocial\":false}],\"user_id\":\"auth0|657c64a73053e507da458e0a\",\"email\":\"20137194768@mailinator.com\",\"username\":\"20137194768\",\"blocked\":false,\"user_metadata\":{\"cuit\":\"20137194768\"},\"name\":\"20137194768@mailinator.com\",\"nickname\":\"20137194768\",\"created_at\":\"2023-12-15T14:37:27.056Z\",\"updated_at\":\"2025-08-30T11:19:21.392Z\",\"last_login\":\"2025-08-30T11:19:21.392Z\",\"last_ip\":\"54.80.118.50\",\"logins_count\":2160,\"app_metadata\":{}},{\"created_at\":\"2022-08-19T19:24:55.654Z\",\"email\":\"firmante2@mailinator.com\",\"email_verified\":true,\"family_name\":\"Martin\",\"given_name\":\" Mauricio D\",\"identities\":[{\"user_id\":\"20137194768\",\"provider\":\"auth0\",\"connection\":\"nbch\",\"isSocial\":false},{\"profileData\":{\"email\":\"firmante2@mailinator.com\",\"email_verified\":true},\"user_id\":\"62ffe456b4230681b3ecd5c5\",\"provider\":\"email\",\"connection\":\"email\",\"isSocial\":false}],\"name\":\"MARTIN MAURICIO D\",\"nickname\":\"firmante2@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/59dd9fad843af94007b224924896b75d?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fmm.png\",\"updated_at\":\"2024-01-09T11:59:27.955Z\",\"user_id\":\"auth0|20137194768\",\"user_metadata\":{\"cuit\":\"20137194768\"},\"username\":\"firmante2\",\"last_password_reset\":\"2024-01-09T11:59:27.950Z\",\"last_login\":\"2024-01-09T11:58:05.337Z\",\"last_ip\":\"45.191.80.66\",\"logins_count\":3}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "97781d920c5915c7-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756597042",
+          "x-ratelimit-remaining": "995",
+          "Date": "Sat, 30 Aug 2025 23:37:21 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,accept-encoding",
+          "X-Auth0-L": "0.042",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "223bd09e-dabe-49e1-8c4c-c3730f790144",
+      "persistent": true
+    },
+    {
+      "id": "8b3854ee-15a2-4100-833d-3ffafb40414a",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20121722535",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-30T23:37:20\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20121722535 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20121722535\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "31",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:20 GMT"
+        }
+      },
+      "uuid": "8b3854ee-15a2-4100-833d-3ffafb40414a",
+      "persistent": true
+    },
+    {
+      "id": "74350a76-b14e-44b0-aaca-339c84d63180",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220121722535%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"20121722535@mailinator.com\",\"nickname\":\"20121722535\",\"username\":\"20121722535\",\"updated_at\":\"2025-08-29T16:01:01.572Z\",\"user_metadata\":{\"cuit\":\"20121722535\"},\"email_verified\":false,\"last_password_reset\":\"2025-07-16T19:12:09.758Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"658aced7aa1323a97414f7dc\",\"provider\":\"auth0\",\"isSocial\":false}],\"user_id\":\"auth0|658aced7aa1323a97414f7dc\",\"picture\":\"https://s.gravatar.com/avatar/1543cd54306a6ece8298bd3c18d1c015?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2F20.png\",\"email\":\"20121722535@mailinator.com\",\"created_at\":\"2023-12-26T13:02:15.717Z\",\"last_login\":\"2025-08-29T16:01:01.572Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":129,\"app_metadata\":{}},{\"created_at\":\"2022-08-19T19:23:53.994Z\",\"email\":\"firmante1@mailinator.com\",\"email_verified\":true,\"family_name\":\"Cherri\",\"given_name\":\" Rodolfo Hilario\",\"identities\":[{\"user_id\":\"20121722535\",\"provider\":\"auth0\",\"connection\":\"nbch\",\"isSocial\":false},{\"profileData\":{\"email\":\"firmante1@mailinator.com\",\"email_verified\":true},\"user_id\":\"62ffe455b4230681b3ecb565\",\"provider\":\"email\",\"connection\":\"email\",\"isSocial\":false}],\"name\":\"CHERRI RODOLFO HILARIO\",\"nickname\":\"firmante1@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/53c0a8cc78d72ca17c00cf88aad64d27?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fcr.png\",\"updated_at\":\"2023-12-22T13:00:14.855Z\",\"user_id\":\"auth0|20121722535\",\"user_metadata\":{\"cuit\":\"20121722535\"},\"username\":\"firmante1\",\"last_password_reset\":\"2023-12-15T14:36:46.475Z\",\"last_login\":\"2023-12-22T13:00:14.854Z\",\"last_ip\":\"186.136.147.188\",\"logins_count\":2}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "97781d8e9fa1d2b1-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756597042",
+          "x-ratelimit-remaining": "996",
+          "Date": "Sat, 30 Aug 2025 23:37:20 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,accept-encoding",
+          "X-Auth0-L": "0.045",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "74350a76-b14e-44b0-aaca-339c84d63180",
+      "persistent": true
+    },
+    {
+      "id": "9d38f543-c142-41cc-9dde-613ff3dd08fe",
+      "name": "api24nbch_canales_producto_validarfirmantes",
+      "request": {
+        "url": "/api24Nbch/canales/producto/validarFirmantes?&sucursal=30&importe=2&modulo=20&cuenta=145607&firmantes=20130332383",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "false",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:20 GMT"
+        }
+      },
+      "uuid": "9d38f543-c142-41cc-9dde-613ff3dd08fe",
+      "persistent": true
+    },
+    {
+      "id": "22fe1a1e-1d5a-4c5b-ae95-b64408a7b743",
+      "name": "api24nbch_canales_plazo-fijo_cuit",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo/cuit?&usuario.numeroDocumento=20130332383&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "154",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:03 GMT"
+        }
+      },
+      "uuid": "22fe1a1e-1d5a-4c5b-ae95-b64408a7b743",
+      "persistent": true
+    },
+    {
+      "id": "1d627c00-56dc-4fa3-928b-2fa22baaec45",
+      "name": "api24nbch_canales_plazo-fijo_cuit",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo/cuit?&usuario.numeroDocumento=20130332383&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30643275348&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "162",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:03 GMT"
+        }
+      },
+      "uuid": "1d627c00-56dc-4fa3-928b-2fa22baaec45",
+      "persistent": true
+    },
+    {
+      "id": "da4e74bd-ad43-488b-b3ff-ebb352d5aa21",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "57",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:02 GMT"
+        }
+      },
+      "uuid": "da4e74bd-ad43-488b-b3ff-ebb352d5aa21",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "70d507bd-60f2-49ea-ae37-12e885047c54",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=145607&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"INST DE OJOS Y OIDOS SRL\",\"Cuenta\":145607,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":38738470.12,\"SaldoDisponible\":38738470.12,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000001456070\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:37:02 GMT"
+        }
+      },
+      "uuid": "70d507bd-60f2-49ea-ae37-12e885047c54",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "ceeb6e15-c319-4a51-9678-d3c52bb66170",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=145607&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"INST DE OJOS Y OIDOS SRL\",\"Cuenta\":145607,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":38738470.12,\"SaldoDisponible\":38738470.12,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000001456070\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "35",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:36:56 GMT"
+        }
+      },
+      "uuid": "ceeb6e15-c319-4a51-9678-d3c52bb66170",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "0cca42e3-f246-41de-b601-daa153f6a19d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "42",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:36:55 GMT"
+        }
+      },
+      "uuid": "0cca42e3-f246-41de-b601-daa153f6a19d",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "3c6bb81c-e10d-4bcb-b19e-c3811673208c",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-30T23:36:53\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20130332383 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "43",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:36:53 GMT"
+        }
+      },
+      "uuid": "3c6bb81c-e10d-4bcb-b19e-c3811673208c",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-api24Nbch-canales-autorizado-usuario-2"
+    },
+    {
+      "id": "880ed161-e887-4814-917e-fc1ba60be74f",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20130332383&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":145607,\"RazonSocial\":\"INST DE OJOS Y OIDOS SRL\",\"TipoDocTitular\":1,\"NroDocTitular\":30643275348,\"Calle\":\"AV DR MANUEL BELGRANO\",\"Numero\":647,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20010509\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":145607,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110819077\",\"CUIT\":30643275348},{\"Numero\":\"5046203110819078\",\"CUIT\":30643275348},{\"Numero\":\"5046203110819076\",\"CUIT\":30643275348}],\"Tasa\":0E-7,\"CBU\":\"3110030201000001456070\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30643275348,\"RazonSocial\":\"INST DE OJOS Y OIDOS SRL\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":94410,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"TipoDocTitular\":1,\"NroDocTitular\":30670181819,\"Calle\":\"AV AVALOS TORRE B\",\"Numero\":468,\"Piso\":4,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20010509\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":94410,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110754908\",\"CUIT\":30670181819},{\"Numero\":\"5046203110830745\",\"CUIT\":30670181819},{\"Numero\":\"5046203110918386\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108596\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108595\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754909\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754910\",\"CUIT\":30670181819},{\"Numero\":\"5046203110766515\",\"CUIT\":30670181819}],\"Tasa\":0E-7,\"CBU\":\"3110030201000000944109\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670181819,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "61",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sat, 30 Aug 2025 23:36:52 GMT"
+        }
+      },
+      "uuid": "880ed161-e887-4814-917e-fc1ba60be74f",
+      "persistent": true
+    }
+  ]
+}

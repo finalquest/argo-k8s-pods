@@ -7,18 +7,34 @@ source "$(dirname "$0")/logger.sh"
 WORKSPACE_DIR="${1:?Debe especificar el directorio de trabajo del worker}"
 ADB_HOST="${2:?Se requiere el ADB_HOST del emulador}"
 CLIENT="${3:?Debe especificar el cliente (bind, nbch, bpn)}"
+APK_VERSION="${4:-}" # Argumento opcional para la versión del APK
 
 # === CONFIGURACIÓN (desde variables de entorno) ===
 APK_REGISTRY="${APK_REGISTRY:?Debe definir APK_REGISTRY}"
-APK_PATH="${APK_PATH:?Debe definir APK_PATH}"
+# APK_PATH ya no es obligatorio si se pasa APK_VERSION
+APK_PATH="${APK_PATH:-}"
 
 APPIUM_DIR="${WORKSPACE_DIR}/appium"
 
 header "📦 Descargando e Instalando APK"
 
 # --- Descarga ---
-TAG=$(echo "$APK_PATH" | cut -d':' -f2)
-REPO=$(echo "$APK_PATH" | cut -d':' -f1)
+
+if [[ -n "$APK_VERSION" ]]; then
+  info "Usando versión de APK especificada: $APK_VERSION"
+  REPO="apks/${CLIENT}/int" # Asume la estructura del repo
+  TAG="$APK_VERSION"
+else
+  if [[ -z "$APK_PATH" ]]; then
+    error "Ni APK_VERSION (argumento) ni APK_PATH (entorno) fueron definidos. No se puede continuar."
+    exit 1
+  fi
+  warn "No se especificó versión de APK. Usando APK_PATH de entorno: $APK_PATH"
+  TAG=$(echo "$APK_PATH" | cut -d':' -f2)
+  REPO=$(echo "$APK_PATH" | cut -d':' -f1)
+fi
+
+
 FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
 APK_DOWNLOAD_DIR="${WORKSPACE_DIR}/downloads"
 
