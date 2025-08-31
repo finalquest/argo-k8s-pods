@@ -70,7 +70,7 @@ config.capabilities = [{
     "appium:automationName": 'UiAutomator2',
     'appium:udid': '${ADB_HOST}',
     'appium:systemPort': ${SYSTEM_PORT},
-    'appium:appPackage': ${PACKAGE_NAME},
+    'appium:appPackage': '${PACKAGE_NAME}',
     'appium:appActivity': 'com.poincenot.doit.MainActivity',
     'appium:noReset': false,
     'appium:adbExecTimeout': 120000,

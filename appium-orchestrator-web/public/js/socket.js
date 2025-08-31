@@ -71,8 +71,14 @@ function initializeSocketListeners() {
         const panel = document.getElementById(`log-panel-${data.slotId}`);
         if (panel) {
             const content = panel.querySelector('.panel-content');
+            const scrollLockCheckbox = panel.querySelector('.scroll-lock-checkbox');
+            
             content.textContent += data.logLine;
-            content.scrollTop = content.scrollHeight;
+
+            // Solo hacer auto-scroll si el checkbox está marcado
+            if (scrollLockCheckbox && scrollLockCheckbox.checked) {
+                content.scrollTop = content.scrollHeight;
+            }
         }
     });
 
