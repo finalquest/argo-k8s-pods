@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build: .
+    container_name: appium_orchestrator
+    ports:
+      - "3000:3000"
+    volumes:
+      # Monta la carpeta local 'apks' en la ruta '/app/apks' dentro del contenedor.
+      # Coloca tus archivos .apk en la carpeta './apks' en la raíz del proyecto.
+      - ./apks:/app/apks
+      # Monta el archivo .env para que la aplicación lo lea directamente
+      - ./.env:/app/.env
+    environment:
+      # Define la variable para que la app sepa dónde buscar los APKs dentro del contenedor.
+      - LOCAL_APK_DIRECTORY=/app/apks
+      # Desactiva dotenv dentro del contenedor, ya que las variables se inyectan con env_file
+      - NODE_ENV=docker
