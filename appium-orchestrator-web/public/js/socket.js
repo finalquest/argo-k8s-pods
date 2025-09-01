@@ -1,8 +1,16 @@
 let runningJobs = new Map();
 
 function runTest(branch, client, feature, highPriority = false, record = false) {
-    const apkVersion = document.getElementById('apk-version-select').value;
-    window.socket.emit('run_test', { branch, client, feature, highPriority, record, apkVersion });
+    const selectedApk = document.getElementById('apk-version-select').value;
+    let jobPayload = { branch, client, feature, highPriority, record };
+
+    if (apkSource === 'local') {
+        jobPayload.localApk = selectedApk;
+    } else {
+        jobPayload.apkVersion = selectedApk;
+    }
+
+    window.socket.emit('run_test', jobPayload);
     switchTab('workers');
 }
 
@@ -11,30 +19,37 @@ function runSelectedTests() {
     const clientSelect = document.getElementById('client-select');
     const apkVersionSelect = document.getElementById('apk-version-select');
     const priorityCheckbox = document.getElementById('batch-priority-checkbox');
-    const recordCheckbox = document.getElementById('record-mappings-checkbox'); // Get the record checkbox
+    const recordCheckbox = document.getElementById('record-mappings-checkbox');
     
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
-    const selectedApkVersion = apkVersionSelect.value;
+    const selectedApk = apkVersionSelect.value;
     const highPriority = priorityCheckbox.checked;
-    const recordMappings = recordCheckbox.checked; // Get its value
+    const recordMappings = recordCheckbox.checked;
 
     const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
         alert('No hay features seleccionados para ejecutar.');
         return;
     }
-    const jobs = Array.from(selectedCheckboxes).map(cb => {
-        return {
-            branch: selectedBranch,
-            client: selectedClient,
-            feature: cb.dataset.featureName,
-            highPriority: highPriority,
-            apkVersion: selectedApkVersion
-        };
-    });
 
-    // Send the recording flag along with the jobs
+    const baseJob = {
+        branch: selectedBranch,
+        client: selectedClient,
+        highPriority: highPriority,
+    };
+
+    if (apkSource === 'local') {
+        baseJob.localApk = selectedApk;
+    } else {
+        baseJob.apkVersion = selectedApk;
+    }
+
+    const jobs = Array.from(selectedCheckboxes).map(cb => ({
+        ...baseJob,
+        feature: cb.dataset.featureName,
+    }));
+
     window.socket.emit('run_batch', { jobs, record: recordMappings });
     switchTab('workers');
 }

@@ -8,51 +8,87 @@ WORKSPACE_DIR="${1:?Debe especificar el directorio de trabajo del worker}"
 ADB_HOST="${2:?Se requiere el ADB_HOST del emulador}"
 CLIENT="${3:?Debe especificar el cliente (bind, nbch, bpn)}"
 APK_VERSION="${4:-}" # Argumento opcional para la versión del APK
+LOCAL_APK_PATH="${5:-}" # Argumento opcional para la ruta a un APK local
 
 # === CONFIGURACIÓN (desde variables de entorno) ===
-APK_REGISTRY="${APK_REGISTRY:?Debe definir APK_REGISTRY}"
-# APK_PATH ya no es obligatorio si se pasa APK_VERSION
+APK_REGISTRY="${APK_REGISTRY:-}" # Opcional si se usa APK local
 APK_PATH="${APK_PATH:-}"
 
 APPIUM_DIR="${WORKSPACE_DIR}/appium"
 
 header "📦 Descargando e Instalando APK"
 
-# --- Descarga ---
+APK_DOWNLOAD_DIR="${WORKSPACE_DIR}/downloads"
+mkdir -p "$APK_DOWNLOAD_DIR"
+APK_FILE="${APK_DOWNLOAD_DIR}/apk.apk"
 
-if [[ -n "$APK_VERSION" ]]; then
-  info "Usando versión de APK especificada: $APK_VERSION"
-  REPO="apks/${CLIENT}/int" # Asume la estructura del repo
-  TAG="$APK_VERSION"
-else
-  if [[ -z "$APK_PATH" ]]; then
-    error "Ni APK_VERSION (argumento) ni APK_PATH (entorno) fueron definidos. No se puede continuar."
+# --- Lógica de obtención de APK ---
+
+# Prioridad 1: Usar la ruta al APK local si se proporciona
+if [[ -n "$LOCAL_APK_PATH" ]]; then
+  info "Usando APK local desde la ruta: ${LOCAL_APK_PATH}"
+  if [[ ! -f "$LOCAL_APK_PATH" ]]; then
+    error "El archivo APK especificado en LOCAL_APK_PATH no existe: ${LOCAL_APK_PATH}"
     exit 1
   fi
-  warn "No se especificó versión de APK. Usando APK_PATH de entorno: $APK_PATH"
+  cp "$LOCAL_APK_PATH" "$APK_FILE"
+  success "APK local copiado a ${APK_FILE}"
+
+# Prioridad 2: Usar la versión de ORAS si se proporciona
+elif [[ -n "$APK_VERSION" ]]; then
+  info "Usando versión de APK de ORAS: $APK_VERSION"
+  if [[ -z "$APK_REGISTRY" ]]; then
+    error "Se especificó una versión de APK pero no se definió APK_REGISTRY en el entorno."
+    exit 1
+  fi
+  REPO="apks/${CLIENT}/int" # Asume la estructura del repo
+  TAG="$APK_VERSION"
+  FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
+  
+  debug "🔗 Descargando APK: $FULL_REF"
+  if ! oras pull --plain-http "$FULL_REF" -o "$APK_DOWNLOAD_DIR"; then
+    error "Error al descargar el APK desde $FULL_REF"
+    exit 1
+  fi
+  # oras descarga con un nombre aleatorio, lo movemos al nombre esperado
+  DOWNLOADED_FILE=$(find "$APK_DOWNLOAD_DIR" -type f -name "*.apk")
+  if [[ -n "$DOWNLOADED_FILE" ]]; then
+    mv "$DOWNLOADED_FILE" "$APK_FILE"
+  else
+    error "No se encontró el archivo .apk descargado por oras."
+    exit 1
+  fi
+  success "APK de ORAS descargado en ${APK_FILE}"
+
+# Prioridad 3: Usar la variable de entorno APK_PATH como último recurso
+elif [[ -n "$APK_PATH" ]]; then
+  warn "Usando APK_PATH de entorno (legacy): $APK_PATH"
+  if [[ -z "$APK_REGISTRY" ]]; then
+    error "Se especificó APK_PATH pero no se definió APK_REGISTRY en el entorno."
+    exit 1
+  fi
   TAG=$(echo "$APK_PATH" | cut -d':' -f2)
   REPO=$(echo "$APK_PATH" | cut -d':' -f1)
-fi
+  FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
 
+  debug "🔗 Descargando APK: $FULL_REF"
+  if ! oras pull --plain-http "$FULL_REF" -o "$APK_DOWNLOAD_DIR"; then
+    error "Error al descargar el APK desde $FULL_REF"
+    exit 1
+  fi
+  DOWNLOADED_FILE=$(find "$APK_DOWNLOAD_DIR" -type f -name "*.apk")
+  if [[ -n "$DOWNLOADED_FILE" ]]; then
+    mv "$DOWNLOADED_FILE" "$APK_FILE"
+  else
+    error "No se encontró el archivo .apk descargado por oras."
+    exit 1
+  fi
+  success "APK de ORAS (legacy) descargado en ${APK_FILE}"
 
-FULL_REF="${APK_REGISTRY}/${REPO}:${TAG}"
-APK_DOWNLOAD_DIR="${WORKSPACE_DIR}/downloads"
-
-# Limpiar directorio de descargas anterior para evitar errores con oras
-rm -rf "$APK_DOWNLOAD_DIR"
-mkdir -p "$APK_DOWNLOAD_DIR"
-
-debug "🔗 Descargando APK: $FULL_REF"
-# Usamos un subdirectorio temporal para que oras no falle si el directorio principal ya existe
-TEMP_DOWNLOAD_SUBDIR="${APK_DOWNLOAD_DIR}/${TAG}/"
-mkdir -p "$TEMP_DOWNLOAD_SUBDIR"
-
-if ! oras pull --plain-http "$FULL_REF" -o "$TEMP_DOWNLOAD_SUBDIR"; then
-  error "Error al descargar el APK desde $FULL_REF"
+else
+  error "No se especificó un método para obtener el APK (ni ruta local, ni versión, ni APK_PATH)."
   exit 1
 fi
-APK_FILE="${TEMP_DOWNLOAD_SUBDIR}/apk.apk"
-success "APK descargado en ${APK_FILE}"
 
 # --- Instalación ---
 success "ADB Host para la instalación: $ADB_HOST"

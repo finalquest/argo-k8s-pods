@@ -8,7 +8,8 @@ const crypto = require('crypto');
 let workspaceDir = '';
 let branch = '';
 let client = '';
-let apkVersion = ''; // El worker ahora está asociado a una versión de APK
+let apkVersion = '';
+let localApkPath = '';
 let environment = {
     appiumPid: null,
     appiumPort: null,
@@ -102,7 +103,7 @@ function setupWorkerEnvironment() {
                 sendToParent({ type: 'LOG', data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.\n` });
 
                 const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
-                runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion], (code) => {
+                runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], (code) => {
                     if (code !== 0) {
                         sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.\n` });
                         return cleanupAndExit(1);
@@ -175,7 +176,8 @@ process.on('message', (message) => {
         case 'INIT':
             branch = message.branch;
             client = message.client;
-            apkVersion = message.apkVersion || ''; // Guardar la versión de APK
+            apkVersion = message.apkVersion || '';
+            localApkPath = message.localApkPath || '';
             setupWorkerEnvironment();
             break;
         case 'START':
