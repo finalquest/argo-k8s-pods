@@ -81,7 +81,14 @@ function setupWorkerEnvironment() {
             const { EMULATOR_ID, ADB_HOST } = parseScriptOutput(output);
             environment.emulatorId = EMULATOR_ID;
             environment.adbHost = ADB_HOST;
-            sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId || 'local'} bloqueado.\n` });
+
+            // Permitir sobreescribir el ADB_HOST para desarrollo local contra un clúster
+            if (process.env.ADB_HOST_OVERRIDE) {
+                sendToParent({ type: 'LOG', data: `[worker] ⚠️  ADB_HOST original ('${environment.adbHost}') será sobreescrito por ADB_HOST_OVERRIDE.\n` });
+                environment.adbHost = process.env.ADB_HOST_OVERRIDE;
+            }
+
+            sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId || 'local'} bloqueado. Usando ADB_HOST: ${environment.adbHost}\n` });
 
             const startAppiumScript = path.join(__dirname, 'scripts', 'start-appium.sh');
             runScript(startAppiumScript, [workspaceDir], (code, output) => {
