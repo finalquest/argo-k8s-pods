@@ -1,222 +1,7 @@
 {
   "mappings": [
     {
-      "id": "7d9bcf86-c996-4c38-9558-779ba14dbfbe",
-      "name": "api24nbch_canales_cuenta_saldos",
-      "request": {
-        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=321371510&modulo=21&sucursal=1&usuario.numeroDocumento=23062945494&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=23062945494&contexto.tipoDocumento=1&contexto.pais=80",
-        "method": "GET"
-      },
-      "response": {
-        "status": 200,
-        "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":321371510,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1970988.61,\"SaldoDisponible\":1970988.61,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211003213715105\"}",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "38",
-          "x-service-timestamp": "20250820160549",
-          "x-service-rev": "6db48cc",
-          "Server": "istio-envoy",
-          "x-service-version": "3.1.809",
-          "x-service-name": "Canales",
-          "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:40 GMT"
-        }
-      },
-      "uuid": "7d9bcf86-c996-4c38-9558-779ba14dbfbe",
-      "persistent": true,
-      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
-      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-4"
-    },
-    {
-      "id": "7eaa7127-dc3d-4a33-b4b3-89d16f3d797a",
-      "name": "auth0_api_v2_users",
-      "request": {
-        "url": "/auth0/api/v2/users?q=username%3A%22romeroro%22",
-        "method": "GET"
-      },
-      "response": {
-        "status": 200,
-        "body": "[{\"username\":\"romeroro\",\"blocked\":false,\"email\":\"romeroro@mailinator.com\",\"email_verified\":true,\"updated_at\":\"2025-08-31T20:38:01.525Z\",\"last_password_reset\":\"2025-07-16T18:25:27.558Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"66290cedcb9bc289718667be\",\"provider\":\"auth0\",\"isSocial\":false}],\"name\":\"romeroro@mailinator.com\",\"created_at\":\"2024-04-24T13:45:17.519Z\",\"user_id\":\"auth0|66290cedcb9bc289718667be\",\"picture\":\"https://s.gravatar.com/avatar/27557d5c0bf70d70864d2ac1492fbb6b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fro.png\",\"user_metadata\":{\"cuit\":\"23062945494\"},\"nickname\":\"romeroro@mailinator.com\",\"last_login\":\"2025-08-31T20:38:01.525Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":28852,\"app_metadata\":{}}]",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "CF-Ray": "977f5534e9e06a59-EWR",
-          "Server": "cloudflare",
-          "x-ratelimit-limit": "1000",
-          "X-Content-Type-Options": "nosniff",
-          "x-ratelimit-reset": "1756672779",
-          "x-ratelimit-remaining": "997",
-          "Date": "Sun, 31 Aug 2025 20:38:40 GMT",
-          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
-          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-          "CF-Cache-Status": "DYNAMIC",
-          "Cache-Control": "no-cache",
-          "Vary": "Accept-Encoding,origin",
-          "X-Auth0-L": "0.043",
-          "alt-svc": "h3=\":443\"; ma=86400",
-          "Content-Type": "application/json; charset=utf-8"
-        }
-      },
-      "uuid": "7eaa7127-dc3d-4a33-b4b3-89d16f3d797a",
-      "persistent": true
-    },
-    {
-      "id": "a43ee148-ab5e-4068-ab25-7cc376655125",
-      "name": "api24nbch_canales_autorizado_usuario",
-      "request": {
-        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494",
-        "method": "GET"
-      },
-      "response": {
-        "status": 404,
-        "body": "{\"Timestamp\":\"2025-08-31T20:38:39\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 23062945494 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494\"}",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "29",
-          "x-service-timestamp": "20250820160549",
-          "x-service-rev": "6db48cc",
-          "Server": "istio-envoy",
-          "x-service-version": "3.1.809",
-          "x-service-name": "Canales",
-          "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:39 GMT"
-        }
-      },
-      "uuid": "a43ee148-ab5e-4068-ab25-7cc376655125",
-      "persistent": true,
-      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
-      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3"
-    },
-    {
-      "id": "b53c9b0b-af01-4333-a171-00226115337f",
-      "name": "auth0_api_v2_users",
-      "request": {
-        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2223062945494%22",
-        "method": "GET"
-      },
-      "response": {
-        "status": 200,
-        "body": "[{\"username\":\"romeroro\",\"blocked\":false,\"email\":\"romeroro@mailinator.com\",\"email_verified\":true,\"updated_at\":\"2025-08-31T20:38:01.525Z\",\"last_password_reset\":\"2025-07-16T18:25:27.558Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"66290cedcb9bc289718667be\",\"provider\":\"auth0\",\"isSocial\":false}],\"name\":\"romeroro@mailinator.com\",\"created_at\":\"2024-04-24T13:45:17.519Z\",\"user_id\":\"auth0|66290cedcb9bc289718667be\",\"picture\":\"https://s.gravatar.com/avatar/27557d5c0bf70d70864d2ac1492fbb6b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fro.png\",\"user_metadata\":{\"cuit\":\"23062945494\"},\"nickname\":\"romeroro@mailinator.com\",\"last_login\":\"2025-08-31T20:38:01.525Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":28852,\"app_metadata\":{}},{\"created_at\":\"2023-07-17T13:07:03.912Z\",\"email\":\"romeroro2@mailinator.com\",\"email_verified\":false,\"identities\":[{\"user_id\":\"64b53cf7854faa50a2b99371\",\"provider\":\"auth0\",\"connection\":\"nbch\",\"isSocial\":false}],\"name\":\"romeroro2@mailinator.com\",\"nickname\":\"romeroro2\",\"picture\":\"https://s.gravatar.com/avatar/67237786292ae01a32a976fd8d45ea7e?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fro.png\",\"updated_at\":\"2023-07-25T12:17:59.595Z\",\"user_id\":\"auth0|64b53cf7854faa50a2b99371\",\"username\":\"notocar\",\"user_metadata\":{\"cuit\":\"23062945494\"},\"last_login\":\"2023-07-25T12:17:59.595Z\",\"last_ip\":\"45.191.80.66\",\"logins_count\":46,\"app_metadata\":{}}]",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "CF-Ray": "977f552ddd4c4225-EWR",
-          "Server": "cloudflare",
-          "x-ratelimit-limit": "1000",
-          "X-Content-Type-Options": "nosniff",
-          "x-ratelimit-reset": "1756672779",
-          "x-ratelimit-remaining": "998",
-          "Date": "Sun, 31 Aug 2025 20:38:39 GMT",
-          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
-          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-          "CF-Cache-Status": "DYNAMIC",
-          "Cache-Control": "no-cache",
-          "Vary": "origin,accept-encoding",
-          "X-Auth0-L": "0.031",
-          "alt-svc": "h3=\":443\"; ma=86400",
-          "Content-Type": "application/json; charset=utf-8"
-        }
-      },
-      "uuid": "b53c9b0b-af01-4333-a171-00226115337f",
-      "persistent": true,
-      "scenarioName": "scenario-3-auth0-api-v2-users",
-      "requiredScenarioState": "scenario-3-auth0-api-v2-users-2"
-    },
-    {
-      "id": "27241381-18d7-4e28-88af-5ec4422e2643",
-      "name": "api24nbch_canales_autorizado_usuario",
-      "request": {
-        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494",
-        "method": "GET"
-      },
-      "response": {
-        "status": 404,
-        "body": "{\"Timestamp\":\"2025-08-31T20:38:38\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 23062945494 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494\"}",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "29",
-          "x-service-timestamp": "20250820160549",
-          "x-service-rev": "6db48cc",
-          "Server": "istio-envoy",
-          "x-service-version": "3.1.809",
-          "x-service-name": "Canales",
-          "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:38 GMT"
-        }
-      },
-      "uuid": "27241381-18d7-4e28-88af-5ec4422e2643",
-      "persistent": true,
-      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
-      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2",
-      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3"
-    },
-    {
-      "id": "b5f74a6e-873d-455e-9786-4facae97cdf9",
-      "name": "auth0_api_v2_users",
-      "request": {
-        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2223062945494%22",
-        "method": "GET"
-      },
-      "response": {
-        "status": 200,
-        "body": "[{\"username\":\"romeroro\",\"blocked\":false,\"email\":\"romeroro@mailinator.com\",\"email_verified\":true,\"updated_at\":\"2025-08-31T20:38:01.525Z\",\"last_password_reset\":\"2025-07-16T18:25:27.558Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"66290cedcb9bc289718667be\",\"provider\":\"auth0\",\"isSocial\":false}],\"name\":\"romeroro@mailinator.com\",\"created_at\":\"2024-04-24T13:45:17.519Z\",\"user_id\":\"auth0|66290cedcb9bc289718667be\",\"picture\":\"https://s.gravatar.com/avatar/27557d5c0bf70d70864d2ac1492fbb6b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fro.png\",\"user_metadata\":{\"cuit\":\"23062945494\"},\"nickname\":\"romeroro@mailinator.com\",\"last_login\":\"2025-08-31T20:38:01.525Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":28852,\"app_metadata\":{}},{\"created_at\":\"2023-07-17T13:07:03.912Z\",\"email\":\"romeroro2@mailinator.com\",\"email_verified\":false,\"identities\":[{\"user_id\":\"64b53cf7854faa50a2b99371\",\"provider\":\"auth0\",\"connection\":\"nbch\",\"isSocial\":false}],\"name\":\"romeroro2@mailinator.com\",\"nickname\":\"romeroro2\",\"picture\":\"https://s.gravatar.com/avatar/67237786292ae01a32a976fd8d45ea7e?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fro.png\",\"updated_at\":\"2023-07-25T12:17:59.595Z\",\"user_id\":\"auth0|64b53cf7854faa50a2b99371\",\"username\":\"notocar\",\"user_metadata\":{\"cuit\":\"23062945494\"},\"last_login\":\"2023-07-25T12:17:59.595Z\",\"last_ip\":\"45.191.80.66\",\"logins_count\":46,\"app_metadata\":{}}]",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "CF-Ray": "977f55299bf34380-EWR",
-          "Server": "cloudflare",
-          "x-ratelimit-limit": "1000",
-          "X-Content-Type-Options": "nosniff",
-          "x-ratelimit-reset": "1756672779",
-          "x-ratelimit-remaining": "999",
-          "Date": "Sun, 31 Aug 2025 20:38:38 GMT",
-          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
-          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-          "CF-Cache-Status": "DYNAMIC",
-          "Cache-Control": "no-cache",
-          "Vary": "origin,accept-encoding",
-          "X-Auth0-L": "0.053",
-          "alt-svc": "h3=\":443\"; ma=86400",
-          "Content-Type": "application/json; charset=utf-8"
-        }
-      },
-      "uuid": "b5f74a6e-873d-455e-9786-4facae97cdf9",
-      "persistent": true,
-      "scenarioName": "scenario-3-auth0-api-v2-users",
-      "requiredScenarioState": "Started",
-      "newScenarioState": "scenario-3-auth0-api-v2-users-2"
-    },
-    {
-      "id": "3bc9e109-a0e2-4269-80cf-4276a7862cca",
-      "name": "api24nbch_canales_transferencia",
-      "request": {
-        "url": "/api24Nbch/canales/transferencia",
-        "method": "POST",
-        "customMatcher": {
-          "name": "custom-matcher",
-          "parameters": {
-            "body": "{\n  \"Usuario\" : {\n    \"Pais\" : \"80\",\n    \"NumeroDocumento\" : \"23062945494\",\n    \"TipoDocumento\" : \"1\"\n  },\n  \"Contexto\" : {\n    \"Pais\" : \"80\",\n    \"NumeroDocumento\" : \"23062945494\",\n    \"TipoDocumento\" : \"1\"\n  },\n  \"IdTransaccion\" : \"1-23062945494-175667271656634-0\",\n  \"Importe\" : \"1\",\n  \"Moneda\" : \"ARS\",\n  \"CbuOrigen\" : \"3110001211003213715105\",\n  \"CuitOrigen\" : \"23062945494\",\n  \"CbuDestino\" : \"3110030211000033305000\",\n  \"CuitDestino\" : \"20283975933\",\n  \"Concepto\" : \"VAR\",\n  \"Referencia\" : \"Varios\",\n  \"MismoTitular\" : \"false\"\n}"
-          }
-        }
-      },
-      "response": {
-        "status": 201,
-        "body": "{\"IdTransaccion\":\"1-23062945494-175667271656634-0\",\"CreatedAt\":\"2025-08-31T20:38:36.899Z\",\"Estado\":\"COMPLETADA\",\"Importe\":1.00,\"Moneda\":\"ARS\",\"CuitUsuario\":23062945494,\"CbuOrigen\":\"3110001211003213715105\",\"CuitOrigen\":23062945494,\"CuitDestino\":20283975933,\"CbuDestino\":\"3110030211000033305000\",\"Concepto\":\"VAR\",\"Referencia\":\"Varios\",\"MismoTitular\":false,\"CanalCursado\":\"MONOBANCO\"}",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "1279",
-          "x-service-timestamp": "20250820160549",
-          "x-service-rev": "6db48cc",
-          "Server": "istio-envoy",
-          "x-service-version": "3.1.809",
-          "x-service-name": "Canales",
-          "content-type": "application/json",
-          "location": "1-23062945494-175667271656634-0",
-          "Date": "Sun, 31 Aug 2025 20:38:38 GMT"
-        }
-      },
-      "uuid": "3bc9e109-a0e2-4269-80cf-4276a7862cca",
-      "persistent": true
-    },
-    {
-      "id": "23459126-adba-4fcf-8c5a-ebcde6fe1be2",
+      "id": "37b3d1d6-2baa-4e25-80ce-10ab8a875abe",
       "name": "api24nbch_canales_cuenta_saldos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=321371510&modulo=21&sucursal=1&usuario.numeroDocumento=23062945494&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=23062945494&contexto.tipoDocumento=1&contexto.pais=80",
@@ -227,24 +12,23 @@
         "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":321371510,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1970989.61,\"SaldoDisponible\":1970989.61,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211003213715105\"}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "33",
+          "x-envoy-upstream-service-time": "42",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:21 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:12 GMT"
         }
       },
-      "uuid": "23459126-adba-4fcf-8c5a-ebcde6fe1be2",
+      "uuid": "37b3d1d6-2baa-4e25-80ce-10ab8a875abe",
       "persistent": true,
       "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
-      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3",
-      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-4"
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
     },
     {
-      "id": "229f2707-ad0c-40dd-af6d-501cd40c0877",
+      "id": "7332785f-c01e-42b1-8a76-31222c3db264",
       "name": "api24nbch_canales_cuenta_saldos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=321371510&modulo=21&sucursal=1&usuario.numeroDocumento=23062945494&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=23062945494&contexto.tipoDocumento=1&contexto.pais=80",
@@ -255,24 +39,24 @@
         "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":321371510,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1970989.61,\"SaldoDisponible\":1970989.61,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211003213715105\"}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "31",
+          "x-envoy-upstream-service-time": "37",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:21 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:11 GMT"
         }
       },
-      "uuid": "229f2707-ad0c-40dd-af6d-501cd40c0877",
+      "uuid": "7332785f-c01e-42b1-8a76-31222c3db264",
       "persistent": true,
       "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
       "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2",
       "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
     },
     {
-      "id": "785c69ac-27dc-4ca8-af0a-96d03d4b7283",
+      "id": "ced1b6b8-2fb9-4e55-8eed-9aaf279d86e2",
       "name": "api24nbch_canales_tarjeta-debito",
       "request": {
         "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=23062945494&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=23062945494",
@@ -283,23 +67,23 @@
         "body": "[{\"Cuit\":23062945494,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"NumeroTarjetaDebito\":\"5143650413994004\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "20",
+          "x-envoy-upstream-service-time": "22",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:20 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:11 GMT"
         }
       },
-      "uuid": "785c69ac-27dc-4ca8-af0a-96d03d4b7283",
+      "uuid": "ced1b6b8-2fb9-4e55-8eed-9aaf279d86e2",
       "persistent": true,
-      "scenarioName": "scenario-4-api24Nbch-canales-tarjeta-debito",
-      "requiredScenarioState": "scenario-4-api24Nbch-canales-tarjeta-debito-2"
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
     },
     {
-      "id": "c5298e0d-f10c-43fe-bfb5-5e1735257951",
+      "id": "1e7d4ed5-b6c2-42fe-a0d9-a5b2d6300661",
       "name": "api24nbch_canales_cuenta_saldos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=321371510&modulo=21&sucursal=1&usuario.numeroDocumento=23062945494&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=23062945494&contexto.tipoDocumento=1&contexto.pais=80",
@@ -310,24 +94,24 @@
         "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":321371510,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1970989.61,\"SaldoDisponible\":1970989.61,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211003213715105\"}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "33",
+          "x-envoy-upstream-service-time": "41",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:20 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:11 GMT"
         }
       },
-      "uuid": "c5298e0d-f10c-43fe-bfb5-5e1735257951",
+      "uuid": "1e7d4ed5-b6c2-42fe-a0d9-a5b2d6300661",
       "persistent": true,
       "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
       "requiredScenarioState": "Started",
       "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2"
     },
     {
-      "id": "9e61db54-5a5c-4a5d-944c-9327ef874c4d",
+      "id": "ce9dad69-fae3-4f7a-826d-b064c13f180e",
       "name": "api24nbch_canales_cuenta_movimientos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=321371510&modulo=21&sucursal=1&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
@@ -338,21 +122,21 @@
         "body": "{\"SaldoInicial\":1970996.61,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600708\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"20:25:21\",\"NroComprobante\":999000090,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970989.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600706\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"20:24:18\",\"NroComprobante\":999000088,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970990.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600704\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"16:24:38\",\"NroComprobante\":999000038,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970991.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600702\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"16:19:06\",\"NroComprobante\":999000035,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970992.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600700\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"15:54:28\",\"NroComprobante\":999000027,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970993.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159600698\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"15:44:13\",\"NroComprobante\":999000023,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970994.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159596734\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-03\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"14:37:44\",\"NroComprobante\":999000009,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1970995.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583260\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"11:05:20\",\"NroComprobante\":999000376,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971001.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583254\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"10:53:25\",\"NroComprobante\":999000363,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971002.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583240\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"00:46:28\",\"NroComprobante\":999000049,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971003.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583238\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-31\",\"Hora\":\"00:45:26\",\"NroComprobante\":999000048,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971004.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583236\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:36:22\",\"NroComprobante\":999000026,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971005.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583234\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:35:20\",\"NroComprobante\":999000025,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971006.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583232\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:30:52\",\"NroComprobante\":999000020,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971007.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583230\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:29:52\",\"NroComprobante\":999000019,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971008.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583228\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:22:12\",\"NroComprobante\":999000016,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971009.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583226\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"23:21:10\",\"NroComprobante\":999000015,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971010.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583220\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"22:55:01\",\"NroComprobante\":999000009,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971011.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583218\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"22:53:57\",\"NroComprobante\":999000008,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971012.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583216\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"22:36:38\",\"NroComprobante\":999000004,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971013.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583214\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-02\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"22:35:32\",\"NroComprobante\":999000003,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971014.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583212\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-01\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"22:00:34\",\"NroComprobante\":999000666,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971010.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583210\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-01\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"21:59:26\",\"NroComprobante\":999000665,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971011.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583208\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-01\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"21:52:14\",\"NroComprobante\":999000660,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971012.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159583206\",\"Sucursal\":1,\"Cuenta\":321371510,\"Modulo\":21,\"Fecha\":\"2025-09-01\",\"FechaOperacion\":\"2025-08-30\",\"Hora\":\"21:43:46\",\"NroComprobante\":999000657,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":1971013.61,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"}]}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "164",
+          "x-envoy-upstream-service-time": "69",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:20 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:11 GMT"
         }
       },
-      "uuid": "9e61db54-5a5c-4a5d-944c-9327ef874c4d",
+      "uuid": "ce9dad69-fae3-4f7a-826d-b064c13f180e",
       "persistent": true
     },
     {
-      "id": "bc7b5a1e-7ba5-44bf-97b2-29cfca3fa32c",
+      "id": "2a2b5c22-355c-49c8-a62d-f8feb990bed3",
       "name": "api24nbch_canales_tarjeta-debito",
       "request": {
         "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=23062945494&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=23062945494",
@@ -363,24 +147,24 @@
         "body": "[{\"Cuit\":23062945494,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"NumeroTarjetaDebito\":\"5143650413994004\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "28",
+          "x-envoy-upstream-service-time": "25",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:20 GMT"
+          "Date": "Sun, 31 Aug 2025 20:29:10 GMT"
         }
       },
-      "uuid": "bc7b5a1e-7ba5-44bf-97b2-29cfca3fa32c",
+      "uuid": "2a2b5c22-355c-49c8-a62d-f8feb990bed3",
       "persistent": true,
-      "scenarioName": "scenario-4-api24Nbch-canales-tarjeta-debito",
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
       "requiredScenarioState": "Started",
-      "newScenarioState": "scenario-4-api24Nbch-canales-tarjeta-debito-2"
+      "newScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
     },
     {
-      "id": "e55ed3e1-974b-4d52-9069-0a561457c7cb",
+      "id": "33dda39d-8461-46de-b13f-0318eee23a74",
       "name": "api24nbch_canales_cuenta_saldos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=321371510&modulo=21&sucursal=1",
@@ -391,21 +175,21 @@
         "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":321371510,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1970989.61,\"SaldoDisponible\":1970989.61,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211003213715105\"}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "194",
+          "x-envoy-upstream-service-time": "34",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:06 GMT"
+          "Date": "Sun, 31 Aug 2025 20:28:58 GMT"
         }
       },
-      "uuid": "e55ed3e1-974b-4d52-9069-0a561457c7cb",
+      "uuid": "33dda39d-8461-46de-b13f-0318eee23a74",
       "persistent": true
     },
     {
-      "id": "3d8bfc89-4c5d-4ef8-b91b-8c95357e7849",
+      "id": "02cf2f0b-68f7-4808-8b5c-f0906efd943a",
       "name": "api24nbch_canales_cuenta_saldos",
       "request": {
         "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=80163909&modulo=21&sucursal=1",
@@ -416,21 +200,46 @@
         "body": "{\"Empresa\":0,\"Sucursal\":1,\"Modulo\":21,\"Nombre\":\"ROMERO ROSA VICTORIA\",\"Cuenta\":80163909,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":4.58,\"SaldoDisponible\":4.58,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110001211000801639090\"}",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "222",
+          "x-envoy-upstream-service-time": "51",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:06 GMT"
+          "Date": "Sun, 31 Aug 2025 20:28:58 GMT"
         }
       },
-      "uuid": "3d8bfc89-4c5d-4ef8-b91b-8c95357e7849",
+      "uuid": "02cf2f0b-68f7-4808-8b5c-f0906efd943a",
       "persistent": true
     },
     {
-      "id": "5b43185f-8d85-4359-bd23-919a2d2053f0",
+      "id": "46f74ed9-2962-4bcf-8359-ae22c35f46b5",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:28:54\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 23062945494 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:28:54 GMT"
+        }
+      },
+      "uuid": "46f74ed9-2962-4bcf-8359-ae22c35f46b5",
+      "persistent": true
+    },
+    {
+      "id": "2654df5d-783c-4c6f-9ba0-c56b7ac806a6",
       "name": "api24nbch_canales_producto",
       "request": {
         "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=23062945494&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
@@ -441,46 +250,18 @@
         "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":321371510,\"RazonSocial\":\"ROMERO ROSA VICTORIA\",\"TipoDocTitular\":1,\"NroDocTitular\":23062945494,\"Calle\":\"1 ENTRE 28 Y\",\"Numero\":30,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"PRESIDENCIA ROQUE SAENZ PEÑA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20141230\",\"Productos\":[{\"TipoOperacion\":\"4\",\"TipoOperacionDesc\":\"Seguridad Social Nacional Anses\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":1,\"Cuenta\":321371510,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650413994004\",\"CUIT\":23062945494}],\"Tasa\":35.0000000,\"CBU\":\"3110001211003213715105\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":23062945494,\"Apellido\":\"ROMERO ROSA VICTORIA\",\"FechaNacimiento\":\"19500830\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3700},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":80163909,\"RazonSocial\":\"ROMERO ROSA VICTORIA\",\"TipoDocTitular\":1,\"NroDocTitular\":23062945494,\"Calle\":\"1 ENTRE 28 Y\",\"Numero\":30,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"PRESIDENCIA ROQUE SAENZ PEÑA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20141230\",\"Productos\":[{\"TipoOperacion\":\"10\",\"TipoOperacionDesc\":\"Depositos Judiciales Litis y Alimentos\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":1,\"Cuenta\":80163909,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110001211000801639090\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":23062945494,\"Apellido\":\"ROMERO ROSA VICTORIA\",\"FechaNacimiento\":\"19500830\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3700}]",
         "headers": {
           "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "54",
+          "x-envoy-upstream-service-time": "52",
           "x-service-timestamp": "20250820160549",
           "x-service-rev": "6db48cc",
           "Server": "istio-envoy",
           "x-service-version": "3.1.809",
           "x-service-name": "Canales",
           "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:03 GMT"
+          "Date": "Sun, 31 Aug 2025 20:28:54 GMT"
         }
       },
-      "uuid": "5b43185f-8d85-4359-bd23-919a2d2053f0",
+      "uuid": "2654df5d-783c-4c6f-9ba0-c56b7ac806a6",
       "persistent": true
-    },
-    {
-      "id": "3d03d307-9d4f-4dde-9b76-b3ff4ae8bf5c",
-      "name": "api24nbch_canales_autorizado_usuario",
-      "request": {
-        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494",
-        "method": "GET"
-      },
-      "response": {
-        "status": 404,
-        "body": "{\"Timestamp\":\"2025-08-31T20:38:03\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 23062945494 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=23062945494\"}",
-        "headers": {
-          "Keep-Alive": "timeout=5, max=100",
-          "x-envoy-upstream-service-time": "35",
-          "x-service-timestamp": "20250820160549",
-          "x-service-rev": "6db48cc",
-          "Server": "istio-envoy",
-          "x-service-version": "3.1.809",
-          "x-service-name": "Canales",
-          "content-type": "application/json",
-          "Date": "Sun, 31 Aug 2025 20:38:03 GMT"
-        }
-      },
-      "uuid": "3d03d307-9d4f-4dde-9b76-b3ff4ae8bf5c",
-      "persistent": true,
-      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
-      "requiredScenarioState": "Started",
-      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2"
     }
   ]
 }

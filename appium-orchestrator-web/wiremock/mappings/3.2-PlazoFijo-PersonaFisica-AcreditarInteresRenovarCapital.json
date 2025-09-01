@@ -1,0 +1,1666 @@
+{
+  "mappings": [
+    {
+      "id": "bbc487db-81b9-4501-9d87-2fd321768b01",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22veuthey%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"user_id\":\"auth0|685efb05946ff6677f792dab\",\"nickname\":\"veuthey\",\"updated_at\":\"2025-08-31T20:46:41.245Z\",\"user_metadata\":{\"cuit\":\"27240056505\"},\"email\":\"veuthey@mailinator.com\",\"name\":\"veuthey@mailinator.com\",\"username\":\"veuthey\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T18:23:11.699Z\",\"picture\":\"https://s.gravatar.com/avatar/3986170970c33c41c2b97d09f5cc3f60?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fve.png\",\"created_at\":\"2025-06-27T20:11:49.059Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"685efb05946ff6677f792dab\",\"provider\":\"auth0\",\"isSocial\":false}],\"last_login\":\"2025-08-31T20:46:41.244Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":2016,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f62641f4b4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673318",
+          "x-ratelimit-remaining": "995",
+          "Date": "Sun, 31 Aug 2025 20:47:40 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.031",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "bbc487db-81b9-4501-9d87-2fd321768b01",
+      "persistent": true
+    },
+    {
+      "id": "ea9b188f-d786-496c-9c68-18b8bc709c55",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459901&modulo=21&sucursal=30&usuario.numeroDocumento=27240056505&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=27240056505&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4459901,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":68.89,\"SaldoDisponible\":68.89,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044599014\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:40 GMT"
+        }
+      },
+      "uuid": "ea9b188f-d786-496c-9c68-18b8bc709c55",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-4"
+    },
+    {
+      "id": "948ba1eb-d663-40e4-aec7-39f402846c86",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:47:39\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 27240056505 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:39 GMT"
+        }
+      },
+      "uuid": "948ba1eb-d663-40e4-aec7-39f402846c86",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "a52602e9-500c-4f05-b6f6-0b5288c40ae5",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227240056505%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"user_id\":\"auth0|685efb05946ff6677f792dab\",\"nickname\":\"veuthey\",\"updated_at\":\"2025-08-31T20:46:41.245Z\",\"user_metadata\":{\"cuit\":\"27240056505\"},\"email\":\"veuthey@mailinator.com\",\"name\":\"veuthey@mailinator.com\",\"username\":\"veuthey\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T18:23:11.699Z\",\"picture\":\"https://s.gravatar.com/avatar/3986170970c33c41c2b97d09f5cc3f60?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fve.png\",\"created_at\":\"2025-06-27T20:11:49.059Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"685efb05946ff6677f792dab\",\"provider\":\"auth0\",\"isSocial\":false}],\"last_login\":\"2025-08-31T20:46:41.244Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":2016,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f625d080d4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673318",
+          "x-ratelimit-remaining": "996",
+          "Date": "Sun, 31 Aug 2025 20:47:39 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.017",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "a52602e9-500c-4f05-b6f6-0b5288c40ae5",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-3-auth0-api-v2-users-2"
+    },
+    {
+      "id": "ad4f3ddb-9b5e-4bdf-a0c1-d45f79484085",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:47:38\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 27240056505 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "28",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:38 GMT"
+        }
+      },
+      "uuid": "ad4f3ddb-9b5e-4bdf-a0c1-d45f79484085",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2",
+      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "0c6c9ffb-9484-436c-8ce0-3a1f389289f0",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227240056505%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"user_id\":\"auth0|685efb05946ff6677f792dab\",\"nickname\":\"veuthey\",\"updated_at\":\"2025-08-31T20:46:41.245Z\",\"user_metadata\":{\"cuit\":\"27240056505\"},\"email\":\"veuthey@mailinator.com\",\"name\":\"veuthey@mailinator.com\",\"username\":\"veuthey\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T18:23:11.699Z\",\"picture\":\"https://s.gravatar.com/avatar/3986170970c33c41c2b97d09f5cc3f60?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fve.png\",\"created_at\":\"2025-06-27T20:11:49.059Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"685efb05946ff6677f792dab\",\"provider\":\"auth0\",\"isSocial\":false}],\"last_login\":\"2025-08-31T20:46:41.244Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":2016,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f625a4d254225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673318",
+          "x-ratelimit-remaining": "997",
+          "Date": "Sun, 31 Aug 2025 20:47:38 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.037",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "0c6c9ffb-9484-436c-8ce0-3a1f389289f0",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-auth0-api-v2-users-2"
+    },
+    {
+      "id": "c940dd41-7002-4a96-9d9d-7d8299b60539",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=27290207318",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:47:38\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 27290207318 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=27290207318\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:38 GMT"
+        }
+      },
+      "uuid": "c940dd41-7002-4a96-9d9d-7d8299b60539",
+      "persistent": true
+    },
+    {
+      "id": "f80b91d4-8938-4998-b21d-8f03ca569d85",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227290207318%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"picture\":\"https://s.gravatar.com/avatar/ac446e36b2efedc0b5d968335cfbe86f?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fve.png\",\"created_at\":\"2025-07-21T19:38:40.944Z\",\"user_id\":\"auth0|687e9740fa216bf3829e5d3c\",\"email\":\"veutheyp@example.com\",\"nickname\":\"veutheyp\",\"username\":\"veutheyp\",\"email_verified\":false,\"updated_at\":\"2025-07-21T19:39:36.693Z\",\"name\":\"veutheyp@example.com\",\"user_metadata\":{\"cuit\":\"27290207318\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"687e9740fa216bf3829e5d3c\",\"provider\":\"auth0\",\"isSocial\":false}],\"last_login\":\"2025-07-21T19:39:36.693Z\",\"last_ip\":\"181.91.83.31\",\"logins_count\":2,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f6257da704225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673318",
+          "x-ratelimit-remaining": "998",
+          "Date": "Sun, 31 Aug 2025 20:47:38 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.044",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "f80b91d4-8938-4998-b21d-8f03ca569d85",
+      "persistent": true
+    },
+    {
+      "id": "13a43f48-f85e-4d2e-86bb-1ef26692714c",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20248901803",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:47:38\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20248901803 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20248901803\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:38 GMT"
+        }
+      },
+      "uuid": "13a43f48-f85e-4d2e-86bb-1ef26692714c",
+      "persistent": true
+    },
+    {
+      "id": "5e21269f-c5bc-4d9c-85ab-b72a8e36620a",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220248901803%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-03-20T11:16:12.129Z\",\"email\":\"ecauderer@mailinator.com\",\"email_verified\":false,\"family_name\":\"Cauderer\",\"given_name\":\" Emilio\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"20248901803\",\"provider\":\"auth0\",\"isSocial\":false}],\"name\":\"CAUDERER EMILIO\",\"nickname\":\"ecauderer@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/78ad78463915ff0b6b7c1158eed126ab?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fce.png\",\"updated_at\":\"2024-03-20T11:29:10.306Z\",\"user_id\":\"auth0|20248901803\",\"user_metadata\":{\"cuit\":\"20248901803\"},\"username\":\"ecauderer\",\"last_password_reset\":\"2024-03-20T11:29:10.302Z\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f62547eb24225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673318",
+          "x-ratelimit-remaining": "999",
+          "Date": "Sun, 31 Aug 2025 20:47:37 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.043",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "5e21269f-c5bc-4d9c-85ab-b72a8e36620a",
+      "persistent": true
+    },
+    {
+      "id": "8a00d5ae-caa8-4681-9009-05ad0ebb1e22",
+      "name": "api24nbch_canales_plazo-fijo",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo",
+        "method": "POST",
+        "customMatcher": {
+          "name": "custom-matcher",
+          "parameters": {
+            "body": "{\n  \"Usuario\" : {\n    \"Pais\" : \"80\",\n    \"TipoDocumento\" : \"1\",\n    \"NumeroDocumento\" : \"27240056505\"\n  },\n  \"Contexto\" : {\n    \"Pais\" : \"80\",\n    \"TipoDocumento\" : \"1\",\n    \"NumeroDocumento\" : \"27240056505\"\n  },\n  \"IdTransaccionSatelite\" : \"2-27240056505-175667325665556-0\",\n  \"Instruccion\" : \"4\",\n  \"Modulo\" : \"21\",\n  \"Sucursal\" : \"30\",\n  \"Cuenta\" : \"4066501\",\n  \"Modalidad\" : \"101\",\n  \"CodigoMoneda\" : \"ARS\",\n  \"Capital\" : \"2600\",\n  \"Plazo\" : \"30\"\n}"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": "{\"IdTransaccionSatelite\":\"2-27240056505-175667325665556-0\",\"NumeroPlazoFijo\":\"30-733948-4\",\"FechaVencimiento\":\"2025-10-03\",\"Plazo\":30}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "635",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "location": "2-27240056505-175667325665556-0",
+          "Date": "Sun, 31 Aug 2025 20:47:37 GMT"
+        }
+      },
+      "uuid": "8a00d5ae-caa8-4681-9009-05ad0ebb1e22",
+      "persistent": true
+    },
+    {
+      "id": "41497400-b73b-4ff5-89d0-265e7c6f63e1",
+      "name": "api24nbch_canales_plazo-fijo_simular",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo/simular",
+        "method": "POST",
+        "customMatcher": {
+          "name": "custom-matcher",
+          "parameters": {
+            "body": "{\n  \"Usuario\" : {\n    \"NumeroDocumento\" : \"27240056505\",\n    \"TipoDocumento\" : \"1\",\n    \"Pais\" : \"80\"\n  },\n  \"Contexto\" : {\n    \"NumeroDocumento\" : \"27240056505\",\n    \"TipoDocumento\" : \"1\",\n    \"Pais\" : \"80\"\n  },\n  \"CodigoMoneda\" : \"ARS\",\n  \"Capital\" : \"2600\",\n  \"Modalidad\" : \"101\",\n  \"Plazo\" : \"30\",\n  \"Cuentas\" : [ {\n    \"Cuenta\" : \"9384803\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  }, {\n    \"Cuenta\" : \"50094702\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  }, {\n    \"Cuenta\" : \"4459901\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  }, {\n    \"Cuenta\" : \"4066501\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  }, {\n    \"Cuenta\" : \"8370607\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  }, {\n    \"Cuenta\" : \"1266400\",\n    \"Modulo\" : \"21\",\n    \"Sucursal\" : \"30\"\n  } ]\n}"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"FechaVencimiento\":\"2025-10-03\",\"Plazo\":30,\"Interes\":102.55,\"Capital\":2600,\"Modalidad\":\"101\",\"Tasa\":47.99,\"Moneda\":\"ARS\",\"MonedaReferencia\":{\"Moneda\":\"\",\"FactorDeConversion\":0.00,\"FactorDeConversionInicial\":0.00,\"FechaFactorDeConversion\":\"2025-09-03\",\"Intereses\":0.0,\"Capital\":0.0,\"CapitalInicial\":2600},\"Cuentas\":[{\"Modulo\":21,\"Sucursal\":30,\"Cuenta\":1266400},{\"Modulo\":21,\"Sucursal\":30,\"Cuenta\":4066501},{\"Modulo\":21,\"Sucursal\":30,\"Cuenta\":8370607},{\"Modulo\":21,\"Sucursal\":30,\"Cuenta\":4459901}],\"DatosContrato\":{},\"Tea\":60.1032222,\"Tna\":47.99}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "1418",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:19 GMT"
+        }
+      },
+      "uuid": "41497400-b73b-4ff5-89d0-265e7c6f63e1",
+      "persistent": true
+    },
+    {
+      "id": "1de98495-663f-4d51-b89e-4d528beda989",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459901&modulo=21&sucursal=30&usuario.numeroDocumento=27240056505&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=27240056505&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4459901,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":68.89,\"SaldoDisponible\":68.89,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044599014\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "55",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:02 GMT"
+        }
+      },
+      "uuid": "1de98495-663f-4d51-b89e-4d528beda989",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-4"
+    },
+    {
+      "id": "28751145-3ad7-4281-a8f6-a472775af25d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459901&modulo=21&sucursal=30&usuario.numeroDocumento=27240056505&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=27240056505&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4459901,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":68.89,\"SaldoDisponible\":68.89,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044599014\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "60",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:02 GMT"
+        }
+      },
+      "uuid": "28751145-3ad7-4281-a8f6-a472775af25d",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "9d714f97-e207-4608-a162-7bad98b3694a",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=27240056505&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=27240056505",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":27240056505,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"NumeroTarjetaDebito\":\"5143650000003011\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"},{\"Cuit\":27240056505,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"NumeroTarjetaDebito\":\"5143650000814003\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:02 GMT"
+        }
+      },
+      "uuid": "9d714f97-e207-4608-a162-7bad98b3694a",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-4-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "981c97a0-8e44-4934-a4d0-53e34e5d85f7",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459901&modulo=21&sucursal=30&usuario.numeroDocumento=27240056505&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=27240056505&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4459901,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":68.89,\"SaldoDisponible\":68.89,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044599014\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "65",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:02 GMT"
+        }
+      },
+      "uuid": "981c97a0-8e44-4934-a4d0-53e34e5d85f7",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "c27437e3-0aa7-4cb7-9af1-d30ce0e2e8c8",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=4459901&modulo=21&sucursal=30&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":61.89,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159233711\",\"Sucursal\":30,\"Cuenta\":4459901,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"16:29:59\",\"NroComprobante\":999000383,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":2.00,\"ImporteValorizado\":2.00,\"SaldoParcial\":68.89,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159233709\",\"Sucursal\":30,\"Cuenta\":4459901,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"16:29:42\",\"NroComprobante\":999000382,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":66.89,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159233707\",\"Sucursal\":30,\"Cuenta\":4459901,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"16:14:09\",\"NroComprobante\":999000377,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":2.00,\"ImporteValorizado\":2.00,\"SaldoParcial\":65.89,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159233705\",\"Sucursal\":30,\"Cuenta\":4459901,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"16:13:52\",\"NroComprobante\":999000376,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":63.89,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159233699\",\"Sucursal\":30,\"Cuenta\":4459901,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"15:54:51\",\"NroComprobante\":999000368,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":1.00,\"ImporteValorizado\":1.00,\"SaldoParcial\":62.89,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "106",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:01 GMT"
+        }
+      },
+      "uuid": "c27437e3-0aa7-4cb7-9af1-d30ce0e2e8c8",
+      "persistent": true
+    },
+    {
+      "id": "fb7d59cf-f44f-41c5-9402-54969890c5e3",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=27240056505&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=27240056505",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":27240056505,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"NumeroTarjetaDebito\":\"5143650000003011\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"},{\"Cuit\":27240056505,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"NumeroTarjetaDebito\":\"5143650000814003\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "40",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:47:01 GMT"
+        }
+      },
+      "uuid": "fb7d59cf-f44f-41c5-9402-54969890c5e3",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-4-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "d7a06d9c-1182-4588-805f-46cddc816c7a",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=12364704&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":12364704,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":235773019.98,\"SaldoDisponible\":235773019.98,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000123647047\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "147",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:48 GMT"
+        }
+      },
+      "uuid": "d7a06d9c-1182-4588-805f-46cddc816c7a",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-5-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "6ab87131-030e-4796-ae03-5828d0f70750",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8496707&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":8496707,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000084967077\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "6ab87131-030e-4796-ae03-5828d0f70750",
+      "persistent": true,
+      "scenarioName": "scenario-6-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-6-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "68e9b89b-56d8-4dc5-8ff7-bd477b23b9c4",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=2002309&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":2002309,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":24333641.31,\"SaldoDisponible\":24333641.31,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000020023091\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "72",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "68e9b89b-56d8-4dc5-8ff7-bd477b23b9c4",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "a2a47f15-c311-401e-a9ae-f1beee0aed16",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=12322007&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":12322007,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000123220077\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "35",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "a2a47f15-c311-401e-a9ae-f1beee0aed16",
+      "persistent": true,
+      "scenarioName": "scenario-8-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-8-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "7a77cb5d-8a38-4fa9-bad7-503c9693cc09",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8981102&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":8981102,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":250042.42,\"SaldoDisponible\":250042.42,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000089811027\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "7a77cb5d-8a38-4fa9-bad7-503c9693cc09",
+      "persistent": true,
+      "scenarioName": "scenario-9-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-9-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "ad05b35e-3ef8-490a-9073-e512aaaaffb0",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8981102&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":8981102,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":250042.42,\"SaldoDisponible\":250042.42,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000089811027\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "ad05b35e-3ef8-490a-9073-e512aaaaffb0",
+      "persistent": true,
+      "scenarioName": "scenario-9-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-9-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "edb53b61-fe14-4db4-8581-b014321b1a90",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=12322007&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":12322007,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000123220077\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "edb53b61-fe14-4db4-8581-b014321b1a90",
+      "persistent": true,
+      "scenarioName": "scenario-8-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-8-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "2118f3a5-5dba-4b66-918e-202d7892f861",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8671600&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":8671600,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.96,\"SaldoDisponible\":0.96,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000086716004\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "35",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "2118f3a5-5dba-4b66-918e-202d7892f861",
+      "persistent": true,
+      "scenarioName": "scenario-10-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-10-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "3fbf7309-1503-4f42-b6a6-944edf1f4221",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=14670707&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":14670707,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":3366063.65,\"SaldoDisponible\":3366063.65,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000146707074\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "47",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "3fbf7309-1503-4f42-b6a6-944edf1f4221",
+      "persistent": true,
+      "scenarioName": "scenario-11-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-11-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "7e38221b-411c-4375-ae5b-8e3fd5f6b822",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=9732101&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":9732101,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":41020129.02,\"SaldoDisponible\":41020129.02,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000097321011\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "60",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "7e38221b-411c-4375-ae5b-8e3fd5f6b822",
+      "persistent": true,
+      "scenarioName": "scenario-12-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-12-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "95ec93a0-7b71-4f02-a349-2558ee353af3",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=12364704&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"FUNDACION LOS DINOSAURIOS\",\"Cuenta\":12364704,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":235773019.98,\"SaldoDisponible\":235773019.98,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000123647047\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "45",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "95ec93a0-7b71-4f02-a349-2558ee353af3",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-5-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "8c8e6a27-5ffa-4fe8-aaa2-e5453926e1bc",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=14432106&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":14432106,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000144321069\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "63",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "8c8e6a27-5ffa-4fe8-aaa2-e5453926e1bc",
+      "persistent": true,
+      "scenarioName": "scenario-13-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-13-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "1c5a3ea5-6b15-4f5e-a2e7-4392cbfa44bc",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=539209&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":539209,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":105912728.72,\"SaldoDisponible\":105912728.72,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000005392092\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "1c5a3ea5-6b15-4f5e-a2e7-4392cbfa44bc",
+      "persistent": true,
+      "scenarioName": "scenario-14-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-14-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "d0266309-ee64-4201-8a2e-68ef296a87ab",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=7325106&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":7325106,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000073251060\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "57",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "d0266309-ee64-4201-8a2e-68ef296a87ab",
+      "persistent": true,
+      "scenarioName": "scenario-15-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-15-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "3b4efc13-eb92-4b1e-b1a3-4927fabaf064",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=2002309&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":2002309,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":24333641.31,\"SaldoDisponible\":24333641.31,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000020023091\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "61",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "3b4efc13-eb92-4b1e-b1a3-4927fabaf064",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "258e1d04-7d55-4580-a8d2-b455172b718c",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=539209&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":539209,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":105912728.72,\"SaldoDisponible\":105912728.72,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000005392092\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "27",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "258e1d04-7d55-4580-a8d2-b455172b718c",
+      "persistent": true,
+      "scenarioName": "scenario-14-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-14-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "2df3e40f-f023-4d70-bf7b-bc9995c896ad",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=14432106&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":14432106,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000144321069\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "38",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "2df3e40f-f023-4d70-bf7b-bc9995c896ad",
+      "persistent": true,
+      "scenarioName": "scenario-13-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-13-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "1f6fb661-0b69-4768-bbce-ffc143345896",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=9732101&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":9732101,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":41020129.02,\"SaldoDisponible\":41020129.02,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000097321011\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "40",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "1f6fb661-0b69-4768-bbce-ffc143345896",
+      "persistent": true,
+      "scenarioName": "scenario-12-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-12-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "d8bf5e69-56d3-427c-acdf-a6a31472076f",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4481303&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER SOFIA CONSTANZA\",\"Cuenta\":4481303,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"UVA\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"UVA\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":2961908.88740000000,\"SaldoDisponible\":0,\"SaldoHistorico\":0,\"SaldoContableUva\":1889.78,\"SaldoDisponibleUva\":0,\"TipoCambioUva\":1567.330000000,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044813033\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "64",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "d8bf5e69-56d3-427c-acdf-a6a31472076f",
+      "persistent": true,
+      "scenarioName": "scenario-16-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-16-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "26481dce-c4c4-4c8c-bf00-45a21a65d5af",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4481401&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER JULIAN NICOLAS\",\"Cuenta\":4481401,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"UVA\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"UVA\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":2756431.92440000000,\"SaldoDisponible\":0,\"SaldoHistorico\":0,\"SaldoContableUva\":1758.68,\"SaldoDisponibleUva\":0,\"TipoCambioUva\":1567.330000000,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044814012\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "60",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "26481dce-c4c4-4c8c-bf00-45a21a65d5af",
+      "persistent": true,
+      "scenarioName": "scenario-17-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-17-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "52731b7c-2ecd-485d-b4a3-9a951fa4ddf3",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=7325106&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":7325106,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000073251060\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "35",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "52731b7c-2ecd-485d-b4a3-9a951fa4ddf3",
+      "persistent": true,
+      "scenarioName": "scenario-15-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-15-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "4809d0bd-2a0b-461c-a60b-60595b3ca0d2",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8496707&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":8496707,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000084967077\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "59",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "4809d0bd-2a0b-461c-a60b-60595b3ca0d2",
+      "persistent": true,
+      "scenarioName": "scenario-6-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-6-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "9ed2f863-9e7c-4169-b451-ea232b26b1ed",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459803&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER SOFIA CONSTANZA\",\"Cuenta\":4459803,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.99,\"SaldoDisponible\":0.99,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044598035\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "59",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "9ed2f863-9e7c-4169-b451-ea232b26b1ed",
+      "persistent": true,
+      "scenarioName": "scenario-18-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-18-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "77c62ddf-cc90-4ac3-b3d0-87c0ce1ad330",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8671600&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":8671600,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.96,\"SaldoDisponible\":0.96,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000086716004\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "36",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "77c62ddf-cc90-4ac3-b3d0-87c0ce1ad330",
+      "persistent": true,
+      "scenarioName": "scenario-10-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-10-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "b4f4bf3d-2ba1-476b-9456-df3902d7c18d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=14670707&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"NUEVO BANCO DEL CHACO SA\",\"Cuenta\":14670707,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":3366063.65,\"SaldoDisponible\":3366063.65,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000146707074\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "38",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "b4f4bf3d-2ba1-476b-9456-df3902d7c18d",
+      "persistent": true,
+      "scenarioName": "scenario-11-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-11-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "cc6ec4e7-c848-4342-ade3-d969541da86e",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4066501&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4066501,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":2597084.79,\"SaldoDisponible\":2597084.79,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000040665010\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "73",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "cc6ec4e7-c848-4342-ade3-d969541da86e",
+      "persistent": true
+    },
+    {
+      "id": "20fe44d0-61b0-4c56-82a3-43a35eb7490b",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=5649606&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER EMILIO\",\"Cuenta\":5649606,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000056496068\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "20fe44d0-61b0-4c56-82a3-43a35eb7490b",
+      "persistent": true,
+      "scenarioName": "scenario-19-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-19-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "2d3d8a17-6b92-4a8b-8eaf-5a1c3783edda",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=50094702&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":50094702,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":269.01,\"SaldoDisponible\":269.01,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000500947029\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "38",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "2d3d8a17-6b92-4a8b-8eaf-5a1c3783edda",
+      "persistent": true
+    },
+    {
+      "id": "2e7fc725-b919-4d2c-a427-961aae92e9a4",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459803&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER SOFIA CONSTANZA\",\"Cuenta\":4459803,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.99,\"SaldoDisponible\":0.99,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044598035\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "74",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "2e7fc725-b919-4d2c-a427-961aae92e9a4",
+      "persistent": true,
+      "scenarioName": "scenario-18-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-18-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "543e3171-6221-4a39-9d39-23232c9bccdc",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=3266301&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER EMILIO\",\"Cuenta\":3266301,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":683169.47,\"SaldoDisponible\":683169.47,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000032663019\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "42",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "543e3171-6221-4a39-9d39-23232c9bccdc",
+      "persistent": true,
+      "scenarioName": "scenario-20-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-20-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "dcde4409-c0f5-4980-8aab-52b7715c8dac",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=5649606&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER EMILIO\",\"Cuenta\":5649606,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000056496068\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "42",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "dcde4409-c0f5-4980-8aab-52b7715c8dac",
+      "persistent": true,
+      "scenarioName": "scenario-19-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-19-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "e59bed97-d7c4-4d23-a1c2-1abba144ce68",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=76902&modulo=21&sucursal=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":21,\"Modulo\":21,\"Nombre\":\"VEUTHEY ALBERTO OMAR\",\"Cuenta\":76902,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5781710.78,\"SaldoDisponible\":5781710.78,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110021011000000769024\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "36",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "e59bed97-d7c4-4d23-a1c2-1abba144ce68",
+      "persistent": true,
+      "scenarioName": "scenario-21-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-21-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "eada7357-94db-40f1-ab92-5e8cfbd2ed1c",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4481303&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER SOFIA CONSTANZA\",\"Cuenta\":4481303,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"UVA\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"UVA\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":2961908.88740000000,\"SaldoDisponible\":0,\"SaldoHistorico\":0,\"SaldoContableUva\":1889.78,\"SaldoDisponibleUva\":0,\"TipoCambioUva\":1567.330000000,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044813033\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "48",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "eada7357-94db-40f1-ab92-5e8cfbd2ed1c",
+      "persistent": true,
+      "scenarioName": "scenario-16-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-16-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "a6846c87-0016-4fbd-91d1-7355a3f9df96",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4459901&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":4459901,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":68.89,\"SaldoDisponible\":68.89,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044599014\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "49",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:47 GMT"
+        }
+      },
+      "uuid": "a6846c87-0016-4fbd-91d1-7355a3f9df96",
+      "persistent": true
+    },
+    {
+      "id": "b7e48313-5de0-499a-9602-ea722002b40e",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8370607&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":8370607,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1151.22,\"SaldoDisponible\":1151.22,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000083706075\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "71",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "b7e48313-5de0-499a-9602-ea722002b40e",
+      "persistent": true
+    },
+    {
+      "id": "f3d30766-74ec-4ea2-9ec6-938dbd4e5cd1",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=4481401&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER JULIAN NICOLAS\",\"Cuenta\":4481401,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"UVA\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"UVA\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":2756431.92440000000,\"SaldoDisponible\":0,\"SaldoHistorico\":0,\"SaldoContableUva\":1758.68,\"SaldoDisponibleUva\":0,\"TipoCambioUva\":1567.330000000,\"TarjetasDebito\":[],\"CBU\":\"3110030211000044814012\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "f3d30766-74ec-4ea2-9ec6-938dbd4e5cd1",
+      "persistent": true,
+      "scenarioName": "scenario-17-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-17-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "ce0b5e42-670b-4dd7-bc28-e8f11bc1b176",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=3266301&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"CAUDERER EMILIO\",\"Cuenta\":3266301,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":683169.47,\"SaldoDisponible\":683169.47,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000032663019\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "58",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "ce0b5e42-670b-4dd7-bc28-e8f11bc1b176",
+      "persistent": true,
+      "scenarioName": "scenario-20-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-20-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "f8dfe52e-df6b-435f-8c41-0c8f8990a9b4",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=1266400&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":1266400,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":47512.19,\"SaldoDisponible\":47512.19,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000012664009\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "49",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "f8dfe52e-df6b-435f-8c41-0c8f8990a9b4",
+      "persistent": true
+    },
+    {
+      "id": "3f391bfd-7789-475a-97c5-e53ed0558cab",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=9384803&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"VEUTHEY ADRIANA CAROLINA\",\"Cuenta\":9384803,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":7876.37,\"SaldoDisponible\":7876.37,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000093848031\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "49",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "3f391bfd-7789-475a-97c5-e53ed0558cab",
+      "persistent": true
+    },
+    {
+      "id": "53cb446e-788c-4798-a624-f14a226973aa",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=76902&modulo=21&sucursal=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":21,\"Modulo\":21,\"Nombre\":\"VEUTHEY ALBERTO OMAR\",\"Cuenta\":76902,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5781710.78,\"SaldoDisponible\":5781710.78,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110021011000000769024\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "52",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:46 GMT"
+        }
+      },
+      "uuid": "53cb446e-788c-4798-a624-f14a226973aa",
+      "persistent": true,
+      "scenarioName": "scenario-21-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-21-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "ab9e4846-5235-4322-a179-deb0e02c94c5",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:46:43\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 27240056505 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=27240056505\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:43 GMT"
+        }
+      },
+      "uuid": "ab9e4846-5235-4322-a179-deb0e02c94c5",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2"
+    },
+    {
+      "id": "7bd0ce1a-dfb8-4c7c-ab5b-eed20dadf345",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=27240056505&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":76902,\"RazonSocial\":\"VEUTHEY ALBERTO OMAR\",\"TipoDocTitular\":1,\"NroDocTitular\":20079311007,\"Calle\":\"LIBERTAD\",\"Numero\":238,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"MACHAGAI\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":21,\"Cuenta\":76902,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203111189258\",\"CUIT\":20079311007},{\"Numero\":\"5046203110572678\",\"CUIT\":20079311007},{\"Numero\":\"5046203111189259\",\"CUIT\":20079311007}],\"Tasa\":35.0000000,\"CBU\":\"3110021011000000769024\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20079311007,\"Apellido\":\"VEUTHEY ALBERTO OMAR\",\"FechaNacimiento\":\"19471009\",\"EstadoCivil\":\"CASADO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3534},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":3266301,\"RazonSocial\":\"CAUDERER EMILIO\",\"TipoDocTitular\":1,\"NroDocTitular\":20248901803,\"Calle\":\"JUAN B JUSTO\",\"Numero\":144,\"Piso\":5,\"Depto\":\"B\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":3266301,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650234576006\",\"CUIT\":20248901803}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000032663019\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20248901803,\"Apellido\":\"CAUDERER EMILIO\",\"FechaNacimiento\":\"19750924\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":5649606,\"RazonSocial\":\"CAUDERER EMILIO\",\"TipoDocTitular\":1,\"NroDocTitular\":20248901803,\"Calle\":\"JUAN B JUSTO\",\"Numero\":144,\"Piso\":5,\"Depto\":\"B\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":5649606,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650234576006\",\"CUIT\":20248901803}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000056496068\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20248901803,\"Apellido\":\"CAUDERER EMILIO\",\"FechaNacimiento\":\"19750924\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":4481401,\"RazonSocial\":\"CAUDERER JULIAN NICOLAS\",\"TipoDocTitular\":1,\"NroDocTitular\":20545633028,\"Calle\":\"J B JUSTO\",\"Numero\":144,\"Piso\":5,\"Depto\":\"B\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"18\",\"TipoOperacionDesc\":\"AC UVA Menores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":4481401,\"Moneda\":1080,\"Estado\":1,\"EstadoDesc\":\"BLOQUEADO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":2.5000000,\"CBU\":\"3110030211000044814012\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20545633028,\"Apellido\":\"CAUDERER JULIAN NICOLAS\",\"FechaNacimiento\":\"20150213\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":1266400,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":1266400,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"501056300012664110\",\"CUIT\":27290207318}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000012664009\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":9384803,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":9384803,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000003011\",\"CUIT\":27240056505}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000093848031\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":50094702,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":50094702,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000814003\",\"CUIT\":27240056505}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000500947029\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":4066501,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":4066501,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000814003\",\"CUIT\":27240056505}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000040665010\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8370607,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8370607,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000003011\",\"CUIT\":27240056505}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000083706075\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":4459901,\"RazonSocial\":\"VEUTHEY ADRIANA CAROLINA\",\"TipoDocTitular\":1,\"NroDocTitular\":27240056505,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"7\",\"TipoOperacionDesc\":\"AC Menores Autorizados\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":4459901,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000814003\",\"CUIT\":27240056505}],\"Tasa\":2.5000000,\"CBU\":\"3110030211000044599014\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27240056505,\"Apellido\":\"VEUTHEY ADRIANA CAROLINA\",\"FechaNacimiento\":\"19740530\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":4481303,\"RazonSocial\":\"CAUDERER SOFIA CONSTANZA\",\"TipoDocTitular\":1,\"NroDocTitular\":27509198700,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"18\",\"TipoOperacionDesc\":\"AC UVA Menores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":4481303,\"Moneda\":1080,\"Estado\":1,\"EstadoDesc\":\"BLOQUEADO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":2.5000000,\"CBU\":\"3110030211000044813033\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27509198700,\"Apellido\":\"CAUDERER SOFIA CONSTANZA\",\"FechaNacimiento\":\"20110304\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":4459803,\"RazonSocial\":\"CAUDERER SOFIA CONSTANZA\",\"TipoDocTitular\":1,\"NroDocTitular\":27509198700,\"Calle\":\"DONOVAN\",\"Numero\":290,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"53\",\"TipoOperacionDesc\":\"AC menores adolescentes\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":4459803,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000814003\",\"CUIT\":27240056505}],\"Tasa\":2.5000000,\"CBU\":\"3110030211000044598035\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":27509198700,\"Apellido\":\"CAUDERER SOFIA CONSTANZA\",\"FechaNacimiento\":\"20110304\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"FEMENINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8671600,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"13\",\"TipoOperacionDesc\":\"Cuenta Operativa NBCH\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8671600,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110822706\",\"CUIT\":30670157799},{\"Numero\":\"5046203110822707\",\"CUIT\":30670157799}],\"Tasa\":0E-7,\"CBU\":\"3110030211000086716004\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":14670707,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"13\",\"TipoOperacionDesc\":\"Cuenta Operativa NBCH\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":14670707,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000146707074\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":539209,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"20\",\"TipoOperacionDesc\":\"CC especial p/ Exportadores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":539209,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000005392092\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":7325106,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"20\",\"TipoOperacionDesc\":\"CC especial p/ Exportadores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":7325106,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000073251060\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8496707,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"20\",\"TipoOperacionDesc\":\"CC especial p/ Exportadores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8496707,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000084967077\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":9732101,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"20\",\"TipoOperacionDesc\":\"CC especial p/ Exportadores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":9732101,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110869233\",\"CUIT\":30670157799},{\"Numero\":\"5046203110992275\",\"CUIT\":30670157799},{\"Numero\":\"5046203110822707\",\"CUIT\":30670157799},{\"Numero\":\"5046203110869234\",\"CUIT\":30670157799},{\"Numero\":\"5046203111102723\",\"CUIT\":30670157799},{\"Numero\":\"5046203110869232\",\"CUIT\":30670157799},{\"Numero\":\"5046203110822706\",\"CUIT\":30670157799},{\"Numero\":\"5046203110869231\",\"CUIT\":30670157799},{\"Numero\":\"5046203110992274\",\"CUIT\":30670157799},{\"Numero\":\"5143650069591005\",\"CUIT\":27240056505},{\"Numero\":\"5046203110869235\",\"CUIT\":30670157799}],\"Tasa\":0E-7,\"CBU\":\"3110030211000097321011\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":14432106,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"20\",\"TipoOperacionDesc\":\"CC especial p/ Exportadores\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":14432106,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030215000144321069\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":2002309,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"TipoDocTitular\":1,\"NroDocTitular\":30670157799,\"Calle\":\"GRAL MARTIN M GUEMES\",\"Numero\":102,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":2002309,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030201000020023091\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670157799,\"RazonSocial\":\"NUEVO BANCO DEL CHACO SA\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8981102,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"TipoDocTitular\":1,\"NroDocTitular\":30716470748,\"Calle\":\"AV SARMIENTO\",\"Numero\":284,\"Piso\":1,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"5\",\"TipoOperacionDesc\":\"CC especial p/ PJ\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8981102,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110834185\",\"CUIT\":30716470748},{\"Numero\":\"5046203110834184\",\"CUIT\":30716470748}],\"Tasa\":0E-7,\"CBU\":\"3110030211000089811027\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30716470748,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":12322007,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"TipoDocTitular\":1,\"NroDocTitular\":30716470748,\"Calle\":\"AV SARMIENTO\",\"Numero\":284,\"Piso\":1,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"5\",\"TipoOperacionDesc\":\"CC especial p/ PJ\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":12322007,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000123220077\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30716470748,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":12364704,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"TipoDocTitular\":1,\"NroDocTitular\":30716470748,\"Calle\":\"AV SARMIENTO\",\"Numero\":284,\"Piso\":1,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20100809\",\"Productos\":[{\"TipoOperacion\":\"5\",\"TipoOperacionDesc\":\"CC especial p/ PJ\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":12364704,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110030211000123647047\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30716470748,\"RazonSocial\":\"FUNDACION LOS DINOSAURIOS\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "214",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:46:43 GMT"
+        }
+      },
+      "uuid": "7bd0ce1a-dfb8-4c7c-ab5b-eed20dadf345",
+      "persistent": true
+    }
+  ]
+}

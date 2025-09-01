@@ -1,0 +1,377 @@
+{
+  "mappings": [
+    {
+      "id": "d0e6a079-5e7c-4538-99d8-ce02eb1bec30",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=283200&modulo=21&sucursal=18&usuario.numeroDocumento=20245440783&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20245440783&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":21,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":283200,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":677635.24,\"SaldoDisponible\":677635.24,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018011000002832001\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "36",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:25 GMT"
+        }
+      },
+      "uuid": "d0e6a079-5e7c-4538-99d8-ce02eb1bec30",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "f31e0099-cfa5-4f44-b641-dc7958eddec3",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=283200&modulo=21&sucursal=18&usuario.numeroDocumento=20245440783&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20245440783&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":21,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":283200,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":677635.24,\"SaldoDisponible\":677635.24,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018011000002832001\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "f31e0099-cfa5-4f44-b641-dc7958eddec3",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "ee8fa251-3adc-4cf7-90b7-b861ecf164de",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20245440783&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20245440783",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20245440783,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"NumeroTarjetaDebito\":\"5143650632168000\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"INHABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"},{\"Cuit\":20245440783,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"NumeroTarjetaDebito\":\"5143650639740009\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"INHABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "26",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "ee8fa251-3adc-4cf7-90b7-b861ecf164de",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "81b8f56c-155c-4542-b986-4776bbed7578",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=283200&modulo=21&sucursal=18&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":677633.90,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159556805\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"21:48:36\",\"NroComprobante\":7001735,\"Categoria\":\"INTERSALDO\",\"CodMovimiento\":84,\"Descripcion\":\"Rendimientos Obtenidos\",\"Sentido\":\"+\",\"Importe\":1.34,\"ImporteValorizado\":1.34,\"SaldoParcial\":677635.24,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158947226\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:25:13\",\"NroComprobante\":901035453,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":957.00,\"ImporteValorizado\":957.00,\"SaldoParcial\":677633.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158947225\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:25:13\",\"NroComprobante\":901035453,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":31900.00,\"ImporteValorizado\":31900.00,\"SaldoParcial\":678590.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20276754530 NOMBRE Origen: MARCELO LUIS FEININGER CUENTA Origen: 0000003100157880676860 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 369574 ID Debin: L18MKX9R7W3MV8VO9O6WYV\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158940751\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:08:51\",\"NroComprobante\":900034893,\"Referencia\":\"FAC\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":356200.00,\"ImporteValorizado\":356200.00,\"SaldoParcial\":646690.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27302095952 NOMBRE Destino:  CUENTA Destino: 0000003100098626022988 Ref: FAC Motivo:  Mismo Tit: N ID Operacion: 007338 ID Debin: 5586387558\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158939119\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:04:42\",\"NroComprobante\":903034622,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":245.10,\"ImporteValorizado\":245.10,\"SaldoParcial\":1002890.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158939118\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:04:42\",\"NroComprobante\":903034622,\"Referencia\":\"TRANSF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8170.00,\"ImporteValorizado\":8170.00,\"SaldoParcial\":1003136.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 24345690936 NOMBRE Origen: SOTELO,DARIO RENE CUENTA Origen:  CUIT Destino: 20245440783 NOMBRE Destino: ULRICH ROBERTO FABIAN CUENTA Destino: 3110018011000002832001 Ref: TRANSF Motivo: VAR Mismo Tit: N ID Operacion: 385506\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158927791\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"19:31:36\",\"NroComprobante\":903033226,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":258.00,\"ImporteValorizado\":258.00,\"SaldoParcial\":994966.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158927790\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"19:31:36\",\"NroComprobante\":903033226,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8600.00,\"ImporteValorizado\":8600.00,\"SaldoParcial\":995224.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20369697995 NOMBRE Origen: HECTOR NICOLAS RIQUEL CUENTA Origen: 0000003100162810797599 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 562052 ID Debin: LMORZP905XYP53MYNEGJ46\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158908163\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"18:19:58\",\"NroComprobante\":903031031,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":245.10,\"ImporteValorizado\":245.10,\"SaldoParcial\":986624.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158908162\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"18:19:58\",\"NroComprobante\":903031031,\"Referencia\":\"TRANSF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8170.00,\"ImporteValorizado\":8170.00,\"SaldoParcial\":986869.10,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 24345690936 NOMBRE Origen: SOTELO,DARIO RENE CUENTA Origen:  CUIT Destino: 20245440783 NOMBRE Destino: ULRICH ROBERTO FABIAN CUENTA Destino: 3110018011000002832001 Ref: TRANSF Motivo: VAR Mismo Tit: N ID Operacion: 091450\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158888846\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:16:44\",\"NroComprobante\":900029285,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":273.90,\"ImporteValorizado\":273.90,\"SaldoParcial\":978699.10,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158888845\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:16:44\",\"NroComprobante\":900029285,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":9130.00,\"ImporteValorizado\":9130.00,\"SaldoParcial\":978973.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27284005886 NOMBRE Origen: MARISA ANDREA HERMAN CUENTA Origen: 0000003100105160233492 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 542783 ID Debin: Z0KV87948JO7WZQJ2PEYDX\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158802060\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:40:17\",\"NroComprobante\":903020781,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":430,\"Descripcion\":\"Transferencia debin Mismo Titular\",\"Sentido\":\"+\",\"Importe\":56448.24,\"ImporteValorizado\":56448.24,\"SaldoParcial\":969843.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20245440783 NOMBRE Origen: MADERAS SAN CAYETANO CUENTA Origen: 0000028400000181148061 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 956609 ID Debin: Z0KV87948JLWXOJQ2PEYDX\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158788915\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:21:13\",\"NroComprobante\":900019273,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1200000.00,\"ImporteValorizado\":1200000.00,\"SaldoParcial\":913394.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30688331761 NOMBRE Destino: GARANTIZAR SGR CUENTA Destino: 0070999020000055810360 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 073955\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158783602\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:13:48\",\"NroComprobante\":902018452,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":303.00,\"ImporteValorizado\":303.00,\"SaldoParcial\":2113394.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158783599\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:13:48\",\"NroComprobante\":902018452,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":10100.00,\"ImporteValorizado\":10100.00,\"SaldoParcial\":2113697.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20376928641 NOMBRE Origen: NELSON ACEVEDO CUENTA Origen: 0000003100195075009712 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 943163 ID Debin: WGRXJE27GM80YYWJN7MYQL\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158772040\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:01:28\",\"NroComprobante\":999004283,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":326,\"Descripcion\":\"Acred Convenios PRIVADOS - UNICOBRO\",\"Sentido\":\"+\",\"Importe\":1430765.36,\"ImporteValorizado\":1430765.36,\"SaldoParcial\":2103597.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158759754\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:44:42\",\"NroComprobante\":902016186,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":367.65,\"ImporteValorizado\":367.65,\"SaldoParcial\":672832.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158759753\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:44:42\",\"NroComprobante\":902016186,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":12255.00,\"ImporteValorizado\":12255.00,\"SaldoParcial\":673200.05,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23250872569 NOMBRE Origen: RAFAEL TELESFORO ANRIQUEZ CUENTA Origen: 0000003100173603848110 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 202780 ID Debin: 46YGOW9M8OXL76RZ9EXD8J\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158662294\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"11:34:31\",\"NroComprobante\":996004311,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":8576.75,\"ImporteValorizado\":8576.75,\"SaldoParcial\":660945.05,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158662293\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"11:34:31\",\"NroComprobante\":996004311,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":132,\"Descripcion\":\"Pago a Comercio Tarjeta de Crédito - Mastercard\",\"Sentido\":\"+\",\"Importe\":285891.69,\"ImporteValorizado\":285891.69,\"SaldoParcial\":669521.80,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158347390\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"22:24:17\",\"NroComprobante\":903042818,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":144.90,\"ImporteValorizado\":144.90,\"SaldoParcial\":383630.11,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158347389\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"22:24:17\",\"NroComprobante\":903042818,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":4830.00,\"ImporteValorizado\":4830.00,\"SaldoParcial\":383775.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27440399083 NOMBRE Origen: MARIA ESTELA GONZALEZ CUENTA Origen: 0000003100175456301176 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 022461 ID Debin: 1LMP68NKJGK8V8E52R7OEV\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158325557\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"21:52:15\",\"NroComprobante\":903040466,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1000000.00,\"ImporteValorizado\":1000000.00,\"SaldoParcial\":378945.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30670175088 NOMBRE Destino: CEMENTOS SRL CUENTA Destino: 0940005410002204160019 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 821689\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158319503\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"21:40:34\",\"NroComprobante\":901039818,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":1259.70,\"ImporteValorizado\":1259.70,\"SaldoParcial\":1378945.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "280",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "81b8f56c-155c-4542-b986-4776bbed7578",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-cuenta-movimientos",
+      "requiredScenarioState": "scenario-3-api24Nbch-canales-cuenta-movimientos-2"
+    },
+    {
+      "id": "df9e7da1-37d1-4826-8e90-d8835b410ead",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=283200&modulo=21&sucursal=18&usuario.numeroDocumento=20245440783&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20245440783&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":21,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":283200,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":677635.24,\"SaldoDisponible\":677635.24,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018011000002832001\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "37",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "df9e7da1-37d1-4826-8e90-d8835b410ead",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "f6ae57b2-8d09-434c-8e2c-e9d821f15b2e",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=283200&modulo=21&sucursal=18&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":677633.90,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159556805\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"21:48:36\",\"NroComprobante\":7001735,\"Categoria\":\"INTERSALDO\",\"CodMovimiento\":84,\"Descripcion\":\"Rendimientos Obtenidos\",\"Sentido\":\"+\",\"Importe\":1.34,\"ImporteValorizado\":1.34,\"SaldoParcial\":677635.24,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158947226\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:25:13\",\"NroComprobante\":901035453,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":957.00,\"ImporteValorizado\":957.00,\"SaldoParcial\":677633.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158947225\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:25:13\",\"NroComprobante\":901035453,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":31900.00,\"ImporteValorizado\":31900.00,\"SaldoParcial\":678590.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20276754530 NOMBRE Origen: MARCELO LUIS FEININGER CUENTA Origen: 0000003100157880676860 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 369574 ID Debin: L18MKX9R7W3MV8VO9O6WYV\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158940751\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:08:51\",\"NroComprobante\":900034893,\"Referencia\":\"FAC\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":356200.00,\"ImporteValorizado\":356200.00,\"SaldoParcial\":646690.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27302095952 NOMBRE Destino:  CUENTA Destino: 0000003100098626022988 Ref: FAC Motivo:  Mismo Tit: N ID Operacion: 007338 ID Debin: 5586387558\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158939119\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:04:42\",\"NroComprobante\":903034622,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":245.10,\"ImporteValorizado\":245.10,\"SaldoParcial\":1002890.90,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158939118\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"20:04:42\",\"NroComprobante\":903034622,\"Referencia\":\"TRANSF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8170.00,\"ImporteValorizado\":8170.00,\"SaldoParcial\":1003136.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 24345690936 NOMBRE Origen: SOTELO,DARIO RENE CUENTA Origen:  CUIT Destino: 20245440783 NOMBRE Destino: ULRICH ROBERTO FABIAN CUENTA Destino: 3110018011000002832001 Ref: TRANSF Motivo: VAR Mismo Tit: N ID Operacion: 385506\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158927791\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"19:31:36\",\"NroComprobante\":903033226,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":258.00,\"ImporteValorizado\":258.00,\"SaldoParcial\":994966.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158927790\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"19:31:36\",\"NroComprobante\":903033226,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8600.00,\"ImporteValorizado\":8600.00,\"SaldoParcial\":995224.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20369697995 NOMBRE Origen: HECTOR NICOLAS RIQUEL CUENTA Origen: 0000003100162810797599 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 562052 ID Debin: LMORZP905XYP53MYNEGJ46\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158908163\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"18:19:58\",\"NroComprobante\":903031031,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":245.10,\"ImporteValorizado\":245.10,\"SaldoParcial\":986624.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158908162\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"18:19:58\",\"NroComprobante\":903031031,\"Referencia\":\"TRANSF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":8170.00,\"ImporteValorizado\":8170.00,\"SaldoParcial\":986869.10,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 24345690936 NOMBRE Origen: SOTELO,DARIO RENE CUENTA Origen:  CUIT Destino: 20245440783 NOMBRE Destino: ULRICH ROBERTO FABIAN CUENTA Destino: 3110018011000002832001 Ref: TRANSF Motivo: VAR Mismo Tit: N ID Operacion: 091450\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158888846\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:16:44\",\"NroComprobante\":900029285,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":273.90,\"ImporteValorizado\":273.90,\"SaldoParcial\":978699.10,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158888845\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:16:44\",\"NroComprobante\":900029285,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":9130.00,\"ImporteValorizado\":9130.00,\"SaldoParcial\":978973.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27284005886 NOMBRE Origen: MARISA ANDREA HERMAN CUENTA Origen: 0000003100105160233492 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 542783 ID Debin: Z0KV87948JO7WZQJ2PEYDX\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158802060\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:40:17\",\"NroComprobante\":903020781,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":430,\"Descripcion\":\"Transferencia debin Mismo Titular\",\"Sentido\":\"+\",\"Importe\":56448.24,\"ImporteValorizado\":56448.24,\"SaldoParcial\":969843.00,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20245440783 NOMBRE Origen: MADERAS SAN CAYETANO CUENTA Origen: 0000028400000181148061 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 956609 ID Debin: Z0KV87948JLWXOJQ2PEYDX\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158788915\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:21:13\",\"NroComprobante\":900019273,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1200000.00,\"ImporteValorizado\":1200000.00,\"SaldoParcial\":913394.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30688331761 NOMBRE Destino: GARANTIZAR SGR CUENTA Destino: 0070999020000055810360 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 073955\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158783602\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:13:48\",\"NroComprobante\":902018452,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":303.00,\"ImporteValorizado\":303.00,\"SaldoParcial\":2113394.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158783599\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:13:48\",\"NroComprobante\":902018452,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":10100.00,\"ImporteValorizado\":10100.00,\"SaldoParcial\":2113697.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20376928641 NOMBRE Origen: NELSON ACEVEDO CUENTA Origen: 0000003100195075009712 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 943163 ID Debin: WGRXJE27GM80YYWJN7MYQL\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158772040\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"14:01:28\",\"NroComprobante\":999004283,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":326,\"Descripcion\":\"Acred Convenios PRIVADOS - UNICOBRO\",\"Sentido\":\"+\",\"Importe\":1430765.36,\"ImporteValorizado\":1430765.36,\"SaldoParcial\":2103597.76,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158759754\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:44:42\",\"NroComprobante\":902016186,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":367.65,\"ImporteValorizado\":367.65,\"SaldoParcial\":672832.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158759753\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:44:42\",\"NroComprobante\":902016186,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":12255.00,\"ImporteValorizado\":12255.00,\"SaldoParcial\":673200.05,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23250872569 NOMBRE Origen: RAFAEL TELESFORO ANRIQUEZ CUENTA Origen: 0000003100173603848110 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 202780 ID Debin: 46YGOW9M8OXL76RZ9EXD8J\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158662294\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"11:34:31\",\"NroComprobante\":996004311,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":8576.75,\"ImporteValorizado\":8576.75,\"SaldoParcial\":660945.05,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158662293\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"11:34:31\",\"NroComprobante\":996004311,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":132,\"Descripcion\":\"Pago a Comercio Tarjeta de Crédito - Mastercard\",\"Sentido\":\"+\",\"Importe\":285891.69,\"ImporteValorizado\":285891.69,\"SaldoParcial\":669521.80,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158347390\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"22:24:17\",\"NroComprobante\":903042818,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":144.90,\"ImporteValorizado\":144.90,\"SaldoParcial\":383630.11,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158347389\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"22:24:17\",\"NroComprobante\":903042818,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"+\",\"Importe\":4830.00,\"ImporteValorizado\":4830.00,\"SaldoParcial\":383775.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27440399083 NOMBRE Origen: MARIA ESTELA GONZALEZ CUENTA Origen: 0000003100175456301176 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 022461 ID Debin: 1LMP68NKJGK8V8E52R7OEV\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158325557\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"21:52:15\",\"NroComprobante\":903040466,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1000000.00,\"ImporteValorizado\":1000000.00,\"SaldoParcial\":378945.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30670175088 NOMBRE Destino: CEMENTOS SRL CUENTA Destino: 0940005410002204160019 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 821689\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158319503\",\"Sucursal\":18,\"Cuenta\":283200,\"Modulo\":21,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"21:40:34\",\"NroComprobante\":901039818,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":206,\"Descripcion\":\"SIRCREB\",\"Sentido\":\"-\",\"Importe\":1259.70,\"ImporteValorizado\":1259.70,\"SaldoParcial\":1378945.01,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "277",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "f6ae57b2-8d09-434c-8e2c-e9d821f15b2e",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-cuenta-movimientos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-api24Nbch-canales-cuenta-movimientos-2"
+    },
+    {
+      "id": "1f7a1e2a-7ec8-415c-a5c7-842f8415ea9d",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20245440783&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20245440783",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20245440783,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"NumeroTarjetaDebito\":\"5143650632168000\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"INHABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"},{\"Cuit\":20245440783,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"NumeroTarjetaDebito\":\"5143650639740009\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"INHABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:24 GMT"
+        }
+      },
+      "uuid": "1f7a1e2a-7ec8-415c-a5c7-842f8415ea9d",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "13adf650-d6c8-4f77-adbe-d28b8e697b55",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=283201&modulo=21&sucursal=18",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":21,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":283201,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":97.25,\"SaldoDisponible\":97.25,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018015000002832012\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "46",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:09 GMT"
+        }
+      },
+      "uuid": "13adf650-d6c8-4f77-adbe-d28b8e697b55",
+      "persistent": true
+    },
+    {
+      "id": "d0221935-ad87-4db6-9fec-afc8820cd875",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=1705&modulo=20&sucursal=18",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":20,\"Nombre\":\"ASOC PROD E INDUS FORESTAL CAS\",\"Cuenta\":1705,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":287549.30,\"SaldoDisponible\":287549.30,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018001000000017058\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "40",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:09 GMT"
+        }
+      },
+      "uuid": "d0221935-ad87-4db6-9fec-afc8820cd875",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-4-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "b1446397-d232-4774-8509-59d5ab189aa3",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=14703&modulo=20&sucursal=18",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":20,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":14703,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":-140855520.75,\"SaldoDisponible\":-20855520.75,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018001000000147034\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "42",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:09 GMT"
+        }
+      },
+      "uuid": "b1446397-d232-4774-8509-59d5ab189aa3",
+      "persistent": true
+    },
+    {
+      "id": "f683f766-efa3-4dbb-acf6-4caed44cab54",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=283200&modulo=21&sucursal=18",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":21,\"Nombre\":\"ULRICH ROBERTO FABIAN\",\"Cuenta\":283200,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":677635.24,\"SaldoDisponible\":677635.24,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018011000002832001\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "46",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:09 GMT"
+        }
+      },
+      "uuid": "f683f766-efa3-4dbb-acf6-4caed44cab54",
+      "persistent": true
+    },
+    {
+      "id": "e7fbee91-a33d-4ca4-9617-6166c5b9b472",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=1705&modulo=20&sucursal=18",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":18,\"Modulo\":20,\"Nombre\":\"ASOC PROD E INDUS FORESTAL CAS\",\"Cuenta\":1705,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":287549.30,\"SaldoDisponible\":287549.30,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110018001000000017058\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:09 GMT"
+        }
+      },
+      "uuid": "e7fbee91-a33d-4ca4-9617-6166c5b9b472",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-4-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "bdf00c9a-86fc-4fc4-bd9d-0292976a47a4",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20245440783&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":283200,\"RazonSocial\":\"ULRICH ROBERTO FABIAN\",\"TipoDocTitular\":1,\"NroDocTitular\":20245440783,\"Calle\":\"M MORENO\",\"Numero\":566,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"JUAN JOSE CASTELLI\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20110530\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":18,\"Cuenta\":283200,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110628673\",\"CUIT\":20245440783},{\"Numero\":\"5046203110963632\",\"CUIT\":20245440783},{\"Numero\":\"5046203110628674\",\"CUIT\":20245440783}],\"Tasa\":35.0000000,\"CBU\":\"3110018011000002832001\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20245440783,\"Apellido\":\"ULRICH ROBERTO FABIAN\",\"FechaNacimiento\":\"19750308\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3705},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":283201,\"RazonSocial\":\"ULRICH ROBERTO FABIAN\",\"TipoDocTitular\":1,\"NroDocTitular\":20245440783,\"Calle\":\"M MORENO\",\"Numero\":566,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"JUAN JOSE CASTELLI\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20110530\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":18,\"Cuenta\":283201,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":35.0000000,\"CBU\":\"3110018015000002832012\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20245440783,\"Apellido\":\"ULRICH ROBERTO FABIAN\",\"FechaNacimiento\":\"19750308\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3705},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":14703,\"RazonSocial\":\"ULRICH ROBERTO FABIAN\",\"TipoDocTitular\":1,\"NroDocTitular\":20245440783,\"Calle\":\"M MORENO\",\"Numero\":566,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"JUAN JOSE CASTELLI\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20110530\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":18,\"Cuenta\":14703,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110628674\",\"CUIT\":20245440783},{\"Numero\":\"5046203110628673\",\"CUIT\":20245440783},{\"Numero\":\"5046203110963632\",\"CUIT\":20245440783}],\"Tasa\":0E-7,\"CBU\":\"3110018001000000147034\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20245440783,\"Apellido\":\"ULRICH ROBERTO FABIAN\",\"FechaNacimiento\":\"19750308\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3705},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":1705,\"RazonSocial\":\"ASOC PROD E INDUS FORESTAL CAS\",\"TipoDocTitular\":1,\"NroDocTitular\":30658156922,\"Calle\":\"R DE ESCALADA\",\"Numero\":429,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"JUAN JOSE CASTELLI\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20110530\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":18,\"Cuenta\":1705,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[],\"Tasa\":0E-7,\"CBU\":\"3110018001000000017058\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30658156922,\"RazonSocial\":\"ASOC PROD E INDUS FORESTAL CAS\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3705}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "85",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:06 GMT"
+        }
+      },
+      "uuid": "bdf00c9a-86fc-4fc4-bd9d-0292976a47a4",
+      "persistent": true
+    },
+    {
+      "id": "2c7ce512-2772-4b14-b13f-ca53d0765187",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20245440783",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T21:27:06\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20245440783 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20245440783\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "35",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:27:06 GMT"
+        }
+      },
+      "uuid": "2c7ce512-2772-4b14-b13f-ca53d0765187",
+      "persistent": true
+    }
+  ]
+}

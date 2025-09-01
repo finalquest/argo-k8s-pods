@@ -101,3 +101,10 @@ function initializeSocketListeners() {
         }
     });
 }
+
+function stopAllExecution() {
+    if (confirm('¿Estás seguro de que quieres parar TODA la ejecución? Esto limpiará la cola y detendrá todos los workers activos.')) {
+        window.socket.emit('stop_all_execution');
+        console.log('Enviada señal para detener todo.');
+    }
+}

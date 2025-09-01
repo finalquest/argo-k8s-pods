@@ -1,0 +1,801 @@
+{
+  "mappings": [
+    {
+      "id": "eb2a5707-57e9-4bbf-92ac-e32f3b569028",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22marcosdipa%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"marcosdipa@mailinator.com\",\"nickname\":\"marcosdipa\",\"user_metadata\":{\"cuit\":\"20331441652\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"68a741a68ad3242b3d30d319\",\"provider\":\"auth0\",\"isSocial\":false}],\"picture\":\"https://s.gravatar.com/avatar/7668bb01ba456fbb4956ae8625cf6110?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fma.png\",\"username\":\"marcosdipa\",\"email_verified\":false,\"user_id\":\"auth0|68a741a68ad3242b3d30d319\",\"email\":\"marcosdipa@mailinator.com\",\"created_at\":\"2025-08-21T15:56:22.476Z\",\"updated_at\":\"2025-08-31T20:58:59.598Z\",\"last_login\":\"2025-08-31T20:58:59.598Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":112,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f745c5b6d4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756674053",
+          "x-ratelimit-remaining": "995",
+          "Date": "Sun, 31 Aug 2025 20:59:56 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.015",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "eb2a5707-57e9-4bbf-92ac-e32f3b569028",
+      "persistent": true,
+      "scenarioName": "scenario-1-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-1-auth0-api-v2-users-2"
+    },
+    {
+      "id": "14c44d04-610e-42b3-9599-040b69ad9653",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:59:55\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20331441652 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "27",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:55 GMT"
+        }
+      },
+      "uuid": "14c44d04-610e-42b3-9599-040b69ad9653",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-4"
+    },
+    {
+      "id": "10f776ad-051d-414d-9b7f-9f4c9c676caa",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220331441652%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"marcosdipa@mailinator.com\",\"nickname\":\"marcosdipa\",\"user_metadata\":{\"cuit\":\"20331441652\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"68a741a68ad3242b3d30d319\",\"provider\":\"auth0\",\"isSocial\":false}],\"picture\":\"https://s.gravatar.com/avatar/7668bb01ba456fbb4956ae8625cf6110?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fma.png\",\"username\":\"marcosdipa\",\"email_verified\":false,\"user_id\":\"auth0|68a741a68ad3242b3d30d319\",\"email\":\"marcosdipa@mailinator.com\",\"created_at\":\"2025-08-21T15:56:22.476Z\",\"updated_at\":\"2025-08-31T20:58:59.598Z\",\"last_login\":\"2025-08-31T20:58:59.598Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":112,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f74552c0d4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756674053",
+          "x-ratelimit-remaining": "996",
+          "Date": "Sun, 31 Aug 2025 20:59:55 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.016",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "10f776ad-051d-414d-9b7f-9f4c9c676caa",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-3-auth0-api-v2-users-3"
+    },
+    {
+      "id": "3015c35d-7fe0-405e-bc36-2ba71d7a84c1",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:59:54\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20331441652 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "27",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:54 GMT"
+        }
+      },
+      "uuid": "3015c35d-7fe0-405e-bc36-2ba71d7a84c1",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3",
+      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-4"
+    },
+    {
+      "id": "8e4fb61d-6a88-40aa-8e7f-01f0170f51ac",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220331441652%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"marcosdipa@mailinator.com\",\"nickname\":\"marcosdipa\",\"user_metadata\":{\"cuit\":\"20331441652\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"68a741a68ad3242b3d30d319\",\"provider\":\"auth0\",\"isSocial\":false}],\"picture\":\"https://s.gravatar.com/avatar/7668bb01ba456fbb4956ae8625cf6110?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fma.png\",\"username\":\"marcosdipa\",\"email_verified\":false,\"user_id\":\"auth0|68a741a68ad3242b3d30d319\",\"email\":\"marcosdipa@mailinator.com\",\"created_at\":\"2025-08-21T15:56:22.476Z\",\"updated_at\":\"2025-08-31T20:58:59.598Z\",\"last_login\":\"2025-08-31T20:58:59.598Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":112,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7452b92c4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756674053",
+          "x-ratelimit-remaining": "997",
+          "Date": "Sun, 31 Aug 2025 20:59:54 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.029",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "8e4fb61d-6a88-40aa-8e7f-01f0170f51ac",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-3-auth0-api-v2-users-2",
+      "newScenarioState": "scenario-3-auth0-api-v2-users-3"
+    },
+    {
+      "id": "185e85df-f9f9-49b9-be61-c7a3cfa85ea9",
+      "name": "api24nbch_canales_prestamos",
+      "request": {
+        "url": "/api24Nbch/canales/prestamos",
+        "method": "POST",
+        "customMatcher": {
+          "name": "custom-matcher",
+          "parameters": {
+            "body": "{\n  \"IdTransaccionSatelite\" : \"175667399173569\",\n  \"Usuario\" : {\n    \"Pais\" : \"80\",\n    \"NumeroDocumento\" : \"20331441652\",\n    \"TipoDocumento\" : \"1\"\n  },\n  \"Contexto\" : {\n    \"Pais\" : \"80\",\n    \"NumeroDocumento\" : \"20331441652\",\n    \"TipoDocumento\" : \"1\"\n  },\n  \"Cuenta\" : \"130609710\",\n  \"Modulo\" : \"21\",\n  \"Sucursal\" : \"30\",\n  \"Monto\" : \"50000\",\n  \"Cuotas\" : \"3\",\n  \"IdLinea\" : \"51201\",\n  \"TipoValidacion\" : \"SECURE_DEVICE\",\n  \"FechaUltModCredenciales\" : \"2025-08-31T20:58:59Z\",\n  \"ResultadoValidacion\" : \"SUCCESS\"\n}"
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "body": "{\"Timestamp\":\"2025-08-31T20:59:54\",\"Status\":400,\"Message\":\"no puede ser nulo\",\"Error\":\"Bad Request\",\"Path\":\"https://172.17.0.1:7079/canales/prestamos\"}",
+        "headers": {
+          "x-envoy-upstream-service-time": "24",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:54 GMT"
+        }
+      },
+      "uuid": "185e85df-f9f9-49b9-be61-c7a3cfa85ea9",
+      "persistent": true
+    },
+    {
+      "id": "6af7ea3b-9d2a-435a-a387-a0039b80a749",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22marcosdipa%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"marcosdipa@mailinator.com\",\"nickname\":\"marcosdipa\",\"user_metadata\":{\"cuit\":\"20331441652\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"68a741a68ad3242b3d30d319\",\"provider\":\"auth0\",\"isSocial\":false}],\"picture\":\"https://s.gravatar.com/avatar/7668bb01ba456fbb4956ae8625cf6110?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fma.png\",\"username\":\"marcosdipa\",\"email_verified\":false,\"user_id\":\"auth0|68a741a68ad3242b3d30d319\",\"email\":\"marcosdipa@mailinator.com\",\"created_at\":\"2025-08-21T15:56:22.476Z\",\"updated_at\":\"2025-08-31T20:58:59.598Z\",\"last_login\":\"2025-08-31T20:58:59.598Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":112,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f744f4da84225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756674053",
+          "x-ratelimit-remaining": "998",
+          "Date": "Sun, 31 Aug 2025 20:59:54 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.039",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "6af7ea3b-9d2a-435a-a387-a0039b80a749",
+      "persistent": true,
+      "scenarioName": "scenario-1-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-auth0-api-v2-users-2"
+    },
+    {
+      "id": "da1ac837-f0ac-453f-a555-5a85c38d0631",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:59:52\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20331441652 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "27",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:52 GMT"
+        }
+      },
+      "uuid": "da1ac837-f0ac-453f-a555-5a85c38d0631",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2",
+      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "ade1bbb8-99ae-4543-ba05-682d3adde4f2",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220331441652%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"name\":\"marcosdipa@mailinator.com\",\"nickname\":\"marcosdipa\",\"user_metadata\":{\"cuit\":\"20331441652\"},\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"68a741a68ad3242b3d30d319\",\"provider\":\"auth0\",\"isSocial\":false}],\"picture\":\"https://s.gravatar.com/avatar/7668bb01ba456fbb4956ae8625cf6110?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fma.png\",\"username\":\"marcosdipa\",\"email_verified\":false,\"user_id\":\"auth0|68a741a68ad3242b3d30d319\",\"email\":\"marcosdipa@mailinator.com\",\"created_at\":\"2025-08-21T15:56:22.476Z\",\"updated_at\":\"2025-08-31T20:58:59.598Z\",\"last_login\":\"2025-08-31T20:58:59.598Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":112,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f74453b4f4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756674053",
+          "x-ratelimit-remaining": "999",
+          "Date": "Sun, 31 Aug 2025 20:59:52 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.024",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "ade1bbb8-99ae-4543-ba05-682d3adde4f2",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-auth0-api-v2-users-2"
+    },
+    {
+      "id": "ec20cc43-a6e5-4fba-b1f7-01bc5beb1f10",
+      "name": "api24nbch_canales_cuenta_integrantes",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/integrantes?&cuenta=130609710&modulo=21&sucursal=30&titularidad=I",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Pais\":80,\"Cuit\":20331441652,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "38",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:51 GMT"
+        }
+      },
+      "uuid": "ec20cc43-a6e5-4fba-b1f7-01bc5beb1f10",
+      "persistent": true
+    },
+    {
+      "id": "1e0056e8-10e4-400a-8c97-325ea181507b",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8532509&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":8532509,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000085325092\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:41 GMT"
+        }
+      },
+      "uuid": "1e0056e8-10e4-400a-8c97-325ea181507b",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-4-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "e4607f55-ed35-4fd9-ada8-eebb845f5e7c",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=7763000&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":7763000,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000077630007\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:40 GMT"
+        }
+      },
+      "uuid": "e4607f55-ed35-4fd9-ada8-eebb845f5e7c",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-5-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "bd657402-80aa-46f7-aa09-fd42726743fd",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=130609710&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":130609710,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5763.03,\"SaldoDisponible\":5763.03,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001306097101\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:40 GMT"
+        }
+      },
+      "uuid": "bd657402-80aa-46f7-aa09-fd42726743fd",
+      "persistent": true,
+      "scenarioName": "scenario-6-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-6-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "b747097c-cd0a-4658-8fe3-8d22db9e8a93",
+      "name": "api24nbch_canales_prestamos_simular",
+      "request": {
+        "url": "/api24Nbch/canales/prestamos/simular?&sucursal=30&cuenta=130609710&modulo=21&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20331441652&contexto.tipoDocumento=1&contexto.pais=80&monto=50000&idLinea=51201",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Monto\":50000.00,\"MontoPrimerCuota\":19219.06,\"Plazo\":3,\"Tna\":90.0000000,\"Tea\":135.36310000,\"Cft\":183.6033325,\"FechaVencPrimerCuota\":\"2025-10-03\"},{\"Monto\":50000.00,\"MontoPrimerCuota\":10645.09,\"Plazo\":6,\"Tna\":90.0000000,\"Tea\":135.36310000,\"Cft\":183.6033325,\"FechaVencPrimerCuota\":\"2025-10-03\"},{\"Monto\":50000.00,\"MontoPrimerCuota\":6456.53,\"Plazo\":12,\"Tna\":90.0000000,\"Tea\":135.36310000,\"Cft\":183.6029357,\"FechaVencPrimerCuota\":\"2025-10-03\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "3199",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:40 GMT"
+        }
+      },
+      "uuid": "b747097c-cd0a-4658-8fe3-8d22db9e8a93",
+      "persistent": true
+    },
+    {
+      "id": "d7cded06-4d31-4028-b3e6-a04a032f2f48",
+      "name": "api24nbch_canales_prestamos_disponibles",
+      "request": {
+        "url": "/api24Nbch/canales/prestamos/disponibles?&cuit=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Monto\":1885782.32,\"Cuenta\":130609710,\"Modulo\":21,\"Sucursal\":30,\"IdLinea\":51201,\"DescripcionLinea\":\"Prestamos Inmediatos (cuotas/canal electronico)\",\"MontoMinimo\":1000.00},{\"Monto\":1571485.27,\"Cuenta\":130609710,\"Modulo\":21,\"Sucursal\":30,\"IdLinea\":50711,\"DescripcionLinea\":\"Anticipo en 1 cuota\",\"MontoMinimo\":100.00}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "1821",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:31 GMT"
+        }
+      },
+      "uuid": "d7cded06-4d31-4028-b3e6-a04a032f2f48",
+      "persistent": true
+    },
+    {
+      "id": "3163a060-846c-4210-80a4-68fb638740fd",
+      "name": "api24nbch_canales_tarjetacredito_cuentas",
+      "request": {
+        "url": "/api24Nbch/canales/tarjetaCredito/cuentas?&Usuario.NumeroDocumento=20331441652&Usuario.TipoDocumento=1&Usuario.Pais=80&Contexto.NumeroDocumento=20331441652&Contexto.TipoDocumento=1&Contexto.Pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Marca\":\"TUYA\",\"Cuenta\":\"382031\",\"Empresa\":\"311\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":5888003820311017,\"Tipo\":\"OWNER\",\"Codigo\":\"8\",\"Cuit\":\"20331441652\",\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"CodigoTitularidad\":\"0\"}]},{\"Marca\":\"TUYA\",\"Cuenta\":\"416722\",\"Empresa\":\"311\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":5888004167220001,\"Tipo\":\"OWNER\",\"Codigo\":\"8\",\"Cuit\":\"20331441652\",\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"CodigoTitularidad\":\"0\"}]}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "1085",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:18 GMT"
+        }
+      },
+      "uuid": "3163a060-846c-4210-80a4-68fb638740fd",
+      "persistent": true
+    },
+    {
+      "id": "a9067773-e6b9-4063-a343-f277ffe2258d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=130609710&modulo=21&sucursal=30&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20331441652&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":130609710,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5763.03,\"SaldoDisponible\":5763.03,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001306097101\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "30",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:17 GMT"
+        }
+      },
+      "uuid": "a9067773-e6b9-4063-a343-f277ffe2258d",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "4720de4a-caec-47de-8f1f-3e59db5c68af",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=130609710&modulo=21&sucursal=30&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20331441652&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":130609710,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5763.03,\"SaldoDisponible\":5763.03,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001306097101\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:17 GMT"
+        }
+      },
+      "uuid": "4720de4a-caec-47de-8f1f-3e59db5c68af",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "74275551-cfe7-45e5-9b75-572076b5c21a",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20331441652&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20331441652,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"NumeroTarjetaDebito\":\"5143650007685018\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "26",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:17 GMT"
+        }
+      },
+      "uuid": "74275551-cfe7-45e5-9b75-572076b5c21a",
+      "persistent": true,
+      "scenarioName": "scenario-8-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-8-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "95b3ffc0-2bfb-4fc3-964b-7b16f6d2086d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=130609710&modulo=21&sucursal=30&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20331441652&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":130609710,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5763.03,\"SaldoDisponible\":5763.03,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001306097101\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "46",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:16 GMT"
+        }
+      },
+      "uuid": "95b3ffc0-2bfb-4fc3-964b-7b16f6d2086d",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-7-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "b850d7a9-03b3-43a5-a994-e79f2f9b5bc0",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20331441652&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20331441652,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"NumeroTarjetaDebito\":\"5143650007685018\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "380",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:16 GMT"
+        }
+      },
+      "uuid": "b850d7a9-03b3-43a5-a994-e79f2f9b5bc0",
+      "persistent": true,
+      "scenarioName": "scenario-8-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-8-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "794faea7-63f3-4d83-88ea-d711c262f967",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=130609710&modulo=21&sucursal=30&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":5763.02,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159260118\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"20:28:13\",\"NroComprobante\":7000156,\"Categoria\":\"INTERSALDO\",\"CodMovimiento\":84,\"Descripcion\":\"Rendimientos Obtenidos\",\"Sentido\":\"+\",\"Importe\":0.01,\"ImporteValorizado\":0.01,\"SaldoParcial\":5763.03,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157035235\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-25\",\"FechaOperacion\":\"2025-08-25\",\"Hora\":\"20:50:02\",\"NroComprobante\":996034873,\"Referencia\":\"000000810308626\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":36,\"Descripcion\":\"Débitos Directos de Cámara\",\"Sentido\":\"-\",\"Importe\":2853.00,\"ImporteValorizado\":2853.00,\"SaldoParcial\":5763.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Originante: NACION SEGUROS CUIT/CUIL: 30678561165 Prestación: SEG-PATR-P Referencia: 000000810308626\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"153120057\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-19\",\"FechaOperacion\":\"2025-08-19\",\"Hora\":\"16:04:11\",\"NroComprobante\":900025890,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":10000.00,\"ImporteValorizado\":10000.00,\"SaldoParcial\":8616.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30703088534 NOMBRE Destino:  CUENTA Destino: 0168888100008247880816 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 312540 ID Debin: 7L8GYKNXWPZGZGDK2MPRZ5\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"146768499\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-11\",\"FechaOperacion\":\"2025-08-12\",\"Hora\":\"00:41:40\",\"NroComprobante\":901214372,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":5000.00,\"ImporteValorizado\":5000.00,\"SaldoParcial\":18616.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30703088534 NOMBRE Destino:  CUENTA Destino: 0168888100008247880816 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 842443 ID Debin: XJ8G7V95E8QK1WWR2EMPYR\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"142108680\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-06\",\"FechaOperacion\":\"2025-08-06\",\"Hora\":\"13:05:02\",\"NroComprobante\":998020413,\"Referencia\":\"\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":302000.00,\"ImporteValorizado\":302000.00,\"SaldoParcial\":23616.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30712533362 NOMBRE Destino: FUNDACION PERFECCIONANDO EL NORDESTE ARG CUENTA Destino: 3110030211000047142093 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20331441652-17544855008599954-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"142106746\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-06\",\"FechaOperacion\":\"2025-08-06\",\"Hora\":\"13:03:09\",\"NroComprobante\":998020350,\"Referencia\":\"\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":60000.00,\"ImporteValorizado\":60000.00,\"SaldoParcial\":325616.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20079318168 NOMBRE Destino: DI PAOLA JUAN RUBEN CUENTA Destino: 3110030211000062550073 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20331441652-17544853861022524-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"142097986\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-06\",\"FechaOperacion\":\"2025-08-06\",\"Hora\":\"12:54:49\",\"NroComprobante\":900024103,\"Referencia\":\"87804448\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":378000.82,\"ImporteValorizado\":378000.82,\"SaldoParcial\":385616.02,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 30708424478 NOMBRE Origen: COCOS CAPITAL SA CUENTA Origen:  CUIT Destino: 20331441652 NOMBRE Destino: DI PAOLA MARCOS JAVIER CUENTA Destino: 3110030211001306097101 Ref: 87804448 Motivo: VAR Mismo Tit: N ID Operacion: 876599\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"137082573\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"23:22:57\",\"NroComprobante\":903075522,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":40000.00,\"ImporteValorizado\":40000.00,\"SaldoParcial\":7615.20,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30703088534 NOMBRE Destino:  CUENTA Destino: 3220001805000054570077 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 948112 ID Debin: JMQKYZ9QOY0Z3MEV2V50P3\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136298518\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:28:24\",\"NroComprobante\":903035712,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":950000.00,\"ImporteValorizado\":950000.00,\"SaldoParcial\":47615.20,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30703088534 NOMBRE Destino:  CUENTA Destino: 3220001805000054570077 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 357337 ID Debin: 1LMP68NKJR84YLXP2R7OEV\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136298255\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:27:44\",\"NroComprobante\":901035648,\"Referencia\":\"VARIOS\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1500000.00,\"ImporteValorizado\":1500000.00,\"SaldoParcial\":997615.20,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30708424478 NOMBRE Destino: COCOS CAPITAL SA CUENTA Destino: 4310009943800000068586 Ref: VARIOS Motivo: VAR Mismo Tit: N ID Operacion: 458758\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136256625\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:04:01\",\"NroComprobante\":999003041,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":3043,\"Descripcion\":\"Debito Cobro Tc Tuya\",\"Sentido\":\"-\",\"Importe\":506675.17,\"ImporteValorizado\":506675.17,\"SaldoParcial\":2497615.20,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136256618\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:04:01\",\"NroComprobante\":999003041,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":323,\"Descripcion\":\"Acred convenios PRIVADOS - Haberes\",\"Sentido\":\"+\",\"Importe\":2998069.58,\"ImporteValorizado\":2998069.58,\"SaldoParcial\":3004290.37,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"135686364\",\"Sucursal\":30,\"Cuenta\":130609710,\"Modulo\":21,\"Fecha\":\"2025-07-31\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"01:40:18\",\"NroComprobante\":996022933,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":0,\"Descripcion\":\"Calculo y Contabilización Intereses Vista\",\"Sentido\":\"+\",\"Importe\":0.02,\"ImporteValorizado\":0.02,\"SaldoParcial\":6220.79,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "121",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:16 GMT"
+        }
+      },
+      "uuid": "794faea7-63f3-4d83-88ea-d711c262f967",
+      "persistent": true
+    },
+    {
+      "id": "65f5dde3-f7c4-49fd-b303-21dcbff6035d",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=130609710&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":130609710,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":5763.03,\"SaldoDisponible\":5763.03,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001306097101\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "59",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:04 GMT"
+        }
+      },
+      "uuid": "65f5dde3-f7c4-49fd-b303-21dcbff6035d",
+      "persistent": true,
+      "scenarioName": "scenario-6-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-6-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "6b181d48-0fe8-4d47-9ee9-b38aac1930fc",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=7763000&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":7763000,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000077630007\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "57",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:04 GMT"
+        }
+      },
+      "uuid": "6b181d48-0fe8-4d47-9ee9-b38aac1930fc",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-5-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "51257242-be26-4f74-8d04-a2db00bc9e12",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8532509&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"DI PAOLA MARCOS JAVIER\",\"Cuenta\":8532509,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":0.00,\"SaldoDisponible\":0.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000085325092\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "59",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:04 GMT"
+        }
+      },
+      "uuid": "51257242-be26-4f74-8d04-a2db00bc9e12",
+      "persistent": true,
+      "scenarioName": "scenario-4-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-4-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "5431fce2-70d7-4e2c-8bb5-98f69b7c7a0e",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":7763000,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":7763000,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000077630007\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8532509,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8532509,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000085325092\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":130609710,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":130609710,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030211001306097101\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "47",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:03 GMT"
+        }
+      },
+      "uuid": "5431fce2-70d7-4e2c-8bb5-98f69b7c7a0e",
+      "persistent": true,
+      "scenarioName": "scenario-9-api24Nbch-canales-producto",
+      "requiredScenarioState": "scenario-9-api24Nbch-canales-producto-2"
+    },
+    {
+      "id": "c6d20cdc-d4cb-48ed-b4e4-0ca2f864116b",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20331441652&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":7763000,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":7763000,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000077630007\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8532509,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8532509,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000085325092\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":130609710,\"RazonSocial\":\"DI PAOLA MARCOS JAVIER\",\"TipoDocTitular\":1,\"NroDocTitular\":20331441652,\"Calle\":\"ASAMBLEA\",\"Numero\":617,\"Piso\":0,\"Depto\":\"0\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180723\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":130609710,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650007685018\",\"CUIT\":20331441652}],\"Tasa\":35.0000000,\"CBU\":\"3110030211001306097101\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20331441652,\"Apellido\":\"DI PAOLA MARCOS JAVIER\",\"FechaNacimiento\":\"19880123\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "202",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:01 GMT"
+        }
+      },
+      "uuid": "c6d20cdc-d4cb-48ed-b4e4-0ca2f864116b",
+      "persistent": true,
+      "scenarioName": "scenario-9-api24Nbch-canales-producto",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-9-api24Nbch-canales-producto-2"
+    },
+    {
+      "id": "e4d9a475-4d69-41bb-b7a7-abd36ac6a597",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:59:01\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20331441652 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20331441652\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "56",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:59:01 GMT"
+        }
+      },
+      "uuid": "e4d9a475-4d69-41bb-b7a7-abd36ac6a597",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-autorizado-usuario-2"
+    }
+  ]
+}

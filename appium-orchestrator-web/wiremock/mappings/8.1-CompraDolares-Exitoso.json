@@ -1,0 +1,347 @@
+{
+  "mappings": [
+    {
+      "id": "64d2e0f5-18b0-4e0f-8d93-dc6fc164e7cc",
+      "name": "api24nbch_canales_moneda-extranjera_operatoriahabilitada",
+      "request": {
+        "url": "/api24Nbch/canales/moneda-extranjera/operatoriaHabilitada?&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20369718631&contexto.tipoDocumento=1&contexto.pais=80&esPersonaFisica=true&idTransaccion=1234",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Resultado\":\"Error\",\"Errores\":[{\"CodigoError\":\"1\",\"Error\":\"La operatoria de cambios no está habilitada\"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "57",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:16 GMT"
+        }
+      },
+      "uuid": "64d2e0f5-18b0-4e0f-8d93-dc6fc164e7cc",
+      "persistent": true
+    },
+    {
+      "id": "882f7269-5fcd-47de-8d53-3b425a5dd7a9",
+      "name": "api24nbch_canales_tarjetacredito_cuentas",
+      "request": {
+        "url": "/api24Nbch/canales/tarjetaCredito/cuentas?&Usuario.NumeroDocumento=20369718631&Usuario.TipoDocumento=1&Usuario.Pais=80&Contexto.NumeroDocumento=20369718631&Contexto.TipoDocumento=1&Contexto.Pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Marca\":\"MASTERCARD\",\"Cuenta\":\"8275\",\"Empresa\":\"168\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":5227906629401633,\"Tipo\":\"OWNER\",\"Codigo\":\"1\",\"Cuit\":\"20369718631\",\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"CodigoTitularidad\":\"0\"}]},{\"Marca\":\"VISA\",\"Cuenta\":\"87268109\",\"Empresa\":\"311\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":4732460000620289,\"Tipo\":\"OWNER\",\"Codigo\":\"3\",\"Cuit\":\"20369718631\",\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"CodigoTitularidad\":\"0\"}]},{\"Marca\":\"TUYA\",\"Cuenta\":\"103859\",\"Empresa\":\"311\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":5888001038596023,\"Tipo\":\"OWNER\",\"Codigo\":\"8\",\"Cuit\":\"20369718631\",\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"CodigoTitularidad\":\"0\"}]}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "1594",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:08 GMT"
+        }
+      },
+      "uuid": "882f7269-5fcd-47de-8d53-3b425a5dd7a9",
+      "persistent": true
+    },
+    {
+      "id": "74742e95-2e62-4876-9b1a-0775062c61d9",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=123138508&modulo=21&sucursal=30&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20369718631&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"Cuenta\":123138508,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":4163669.50,\"SaldoDisponible\":4163669.50,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001231385085\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:07 GMT"
+        }
+      },
+      "uuid": "74742e95-2e62-4876-9b1a-0775062c61d9",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "b8663033-7f86-4b77-b4f9-5702e5abc986",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=123138508&modulo=21&sucursal=30&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20369718631&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"Cuenta\":123138508,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":4163669.50,\"SaldoDisponible\":4163669.50,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001231385085\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:07 GMT"
+        }
+      },
+      "uuid": "b8663033-7f86-4b77-b4f9-5702e5abc986",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "5e8e709e-b8c1-4914-a2a4-c6e1221dae9e",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20369718631&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20369718631",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20369718631,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"NumeroTarjetaDebito\":\"5143650000860014\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "22",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:06 GMT"
+        }
+      },
+      "uuid": "5e8e709e-b8c1-4914-a2a4-c6e1221dae9e",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "2bf8e606-76d7-4f12-bc33-109b8142ff03",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=123138508&modulo=21&sucursal=30&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=20369718631&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"Cuenta\":123138508,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":4163669.50,\"SaldoDisponible\":4163669.50,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001231385085\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "47",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:06 GMT"
+        }
+      },
+      "uuid": "2bf8e606-76d7-4f12-bc33-109b8142ff03",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "bb1c2cd3-e476-487e-8daf-9772abdd8b7b",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20369718631&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=20369718631",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Cuit\":20369718631,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"NumeroTarjetaDebito\":\"5143650000860014\",\"TipoTarjetaDebito\":\"DEBIT\",\"Estado\":\"HABILITADA\",\"Marca\":\"MASTER DEBIT\",\"Titularidad\":\"TITULAR\",\"Imagen\":\"http://url_master_debit_MASTERCARD\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "350",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:06 GMT"
+        }
+      },
+      "uuid": "bb1c2cd3-e476-487e-8daf-9772abdd8b7b",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "a4488c53-5769-41c1-a475-b15f1aa008cc",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=123138508&modulo=21&sucursal=30&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":4163668.82,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159258494\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"20:27:13\",\"NroComprobante\":7000149,\"Categoria\":\"INTERSALDO\",\"CodMovimiento\":84,\"Descripcion\":\"Rendimientos Obtenidos\",\"Sentido\":\"+\",\"Importe\":0.68,\"ImporteValorizado\":0.68,\"SaldoParcial\":4163669.50,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158893429\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:25:39\",\"NroComprobante\":23000001,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":166,\"Descripcion\":\"Débito Comis. Gremial Interna\",\"Sentido\":\"-\",\"Importe\":1260.00,\"ImporteValorizado\":1260.00,\"SaldoParcial\":4163668.82,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158886565\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:11:24\",\"NroComprobante\":999007488,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":323,\"Descripcion\":\"Acred convenios PRIVADOS - Haberes\",\"Sentido\":\"+\",\"Importe\":1139059.64,\"ImporteValorizado\":1139059.64,\"SaldoParcial\":4164928.82,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158881418\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:10:45\",\"NroComprobante\":999006923,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":62,\"Descripcion\":\"Convenios - Débito Automático\",\"Sentido\":\"-\",\"Importe\":334176.67,\"ImporteValorizado\":334176.67,\"SaldoParcial\":3025869.18,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Convenio: WEB MUTUAL PERSO BANCO CHACO - 30556477864\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158881411\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:10:45\",\"NroComprobante\":999006923,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":62,\"Descripcion\":\"Convenios - Débito Automático\",\"Sentido\":\"-\",\"Importe\":150.00,\"ImporteValorizado\":150.00,\"SaldoParcial\":3360045.85,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Convenio: WEB ASOC.MUTUAL EMPL.BANCARIO - 30658983926\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158881409\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:10:45\",\"NroComprobante\":999006923,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":3040,\"Descripcion\":\"Debito Cobro Tc Mastercard\",\"Sentido\":\"-\",\"Importe\":1052486.29,\"ImporteValorizado\":1052486.29,\"SaldoParcial\":3360195.85,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158881402\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:10:45\",\"NroComprobante\":999006923,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":3043,\"Descripcion\":\"Debito Cobro Tc Tuya\",\"Sentido\":\"-\",\"Importe\":711631.99,\"ImporteValorizado\":711631.99,\"SaldoParcial\":4412682.14,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158881392\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"17:10:45\",\"NroComprobante\":999006923,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":323,\"Descripcion\":\"Acred convenios PRIVADOS - Haberes\",\"Sentido\":\"+\",\"Importe\":5122733.00,\"ImporteValorizado\":5122733.00,\"SaldoParcial\":5124314.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"156941640\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-25\",\"FechaOperacion\":\"2025-08-25\",\"Hora\":\"16:20:31\",\"NroComprobante\":997012644,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":155,\"Descripcion\":\"RESCATE CUOTAS PARTES FCI\",\"Sentido\":\"+\",\"Importe\":1100.00,\"ImporteValorizado\":1100.00,\"SaldoParcial\":1581.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"146699797\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-11\",\"FechaOperacion\":\"2025-08-11\",\"Hora\":\"22:51:00\",\"NroComprobante\":903205802,\"Referencia\":\"VARIOS\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":424,\"Descripcion\":\"Transferencia inmediata Mismo Titular\",\"Sentido\":\"-\",\"Importe\":344000.00,\"ImporteValorizado\":344000.00,\"SaldoParcial\":481.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20369718631 NOMBRE Destino: JOSE ANDRES SANCHEZ CUENTA Destino: 4530000800010125758764 Ref: VARIOS Motivo: VAR Mismo Tit: S ID Operacion: 046899\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"141342818\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-05\",\"FechaOperacion\":\"2025-08-05\",\"Hora\":\"17:43:27\",\"NroComprobante\":998061189,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":4500.00,\"ImporteValorizado\":4500.00,\"SaldoParcial\":344481.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27398611603 NOMBRE Origen: BERNACHEA FLORENCIA YANINA CUENTA Origen: 3110030211001384751012 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-27398611603-175441580424012857-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"141152836\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-05\",\"FechaOperacion\":\"2025-08-05\",\"Hora\":\"15:05:13\",\"NroComprobante\":900038957,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":49400.00,\"ImporteValorizado\":49400.00,\"SaldoParcial\":339981.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27354699171 NOMBRE Destino:  CUENTA Destino: 0000003100078233975361 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 403835 ID Debin: 5425956263\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"141150524\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-05\",\"FechaOperacion\":\"2025-08-05\",\"Hora\":\"15:03:20\",\"NroComprobante\":901038599,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":410,\"Descripcion\":\"Pagos Efectuados Por Link\",\"Sentido\":\"-\",\"Importe\":519551.50,\"ImporteValorizado\":519551.50,\"SaldoParcial\":389381.13,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Ente: TOYOTA PLAN.-P.FINES DET - Cliente: 20369718631\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"140583194\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-05\",\"Hora\":\"04:50:23\",\"NroComprobante\":996094731,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":3017,\"Descripcion\":\"Debito cobro de cuota de préstamo\",\"Sentido\":\"-\",\"Importe\":119768.06,\"ImporteValorizado\":119768.06,\"SaldoParcial\":908932.63,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Nro. de Préstamo: 5120814952 - Producto: 51201\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"140194585\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-04\",\"Hora\":\"21:31:11\",\"NroComprobante\":997152164,\"Referencia\":\"\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":153,\"Descripcion\":\"DEBITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"-\",\"Importe\":568717.10,\"ImporteValorizado\":568717.10,\"SaldoParcial\":1028700.69,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20283020844 NOMBRE Destino: GODOY ARNALDO FEDERICO CUENTA Destino: 3110030211000133337024 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20369718631-1754343068547168940-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"140192419\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-04\",\"Hora\":\"21:29:47\",\"NroComprobante\":900188634,\"Referencia\":\"VARIOS\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":50829.20,\"ImporteValorizado\":50829.20,\"SaldoParcial\":1597417.79,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20252794728 NOMBRE Destino: OBREGON SEBASTIAN DOMINGO CUENTA Destino: 3890084440005205177258 Ref: VARIOS Motivo: VAR Mismo Tit: N ID Operacion: 523312\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"138362316\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-04\",\"Hora\":\"09:55:12\",\"NroComprobante\":996010249,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":109,\"Descripcion\":\"Crédito Traspaso entre cuentas\",\"Sentido\":\"+\",\"Importe\":30.90,\"ImporteValorizado\":30.90,\"SaldoParcial\":1648246.99,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"138362127\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-04\",\"Hora\":\"09:54:59\",\"NroComprobante\":996010202,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":106,\"Descripcion\":\"Pago Plazo Fijo\",\"Sentido\":\"+\",\"Importe\":5762.25,\"ImporteValorizado\":5762.25,\"SaldoParcial\":1648216.09,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"137793966\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-02\",\"Hora\":\"16:29:47\",\"NroComprobante\":903038731,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":430,\"Descripcion\":\"Transferencia debin Mismo Titular\",\"Sentido\":\"-\",\"Importe\":27000.00,\"ImporteValorizado\":27000.00,\"SaldoParcial\":1642453.84,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20369718631 NOMBRE Destino:  CUENTA Destino: 0000076500000005309126 Ref: VAR Motivo:  Mismo Tit: S ID Operacion: 270028 ID Debin: 5407994887\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"137684504\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-02\",\"Hora\":\"13:59:45\",\"NroComprobante\":902023709,\"Referencia\":\"VARIOS\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":424,\"Descripcion\":\"Transferencia inmediata Mismo Titular\",\"Sentido\":\"-\",\"Importe\":40000.00,\"ImporteValorizado\":40000.00,\"SaldoParcial\":1669453.84,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20369718631 NOMBRE Destino: JOSE ANDRES SANCHEZ CUENTA Destino: 4530000800010125758764 Ref: VARIOS Motivo: VAR Mismo Tit: S ID Operacion: 492191\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"137682381\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-04\",\"FechaOperacion\":\"2025-08-02\",\"Hora\":\"13:57:14\",\"NroComprobante\":902023385,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":60000.00,\"ImporteValorizado\":60000.00,\"SaldoParcial\":1709453.84,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27163674527 NOMBRE Destino:  CUENTA Destino: 0000003100064858625891 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 369446 ID Debin: 5406551437\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136810796\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"18:52:30\",\"NroComprobante\":997011774,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":8166.33,\"ImporteValorizado\":8166.33,\"SaldoParcial\":1769453.84,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23407768264 NOMBRE Origen: OCAMPO VICTORIA CUENTA Origen: 3110030211001382861043 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-23407768264-175407434812720773-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136312470\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:57:15\",\"NroComprobante\":997010590,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":1500.00,\"ImporteValorizado\":1500.00,\"SaldoParcial\":1761287.51,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27398611603 NOMBRE Origen: BERNACHEA FLORENCIA YANINA CUENTA Origen: 3110030211001384751012 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-27398611603-175406743332273178-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136310317\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:52:12\",\"NroComprobante\":902037614,\"Referencia\":\"VAR\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":422,\"Descripcion\":\"Transferencia debin Distinto Titular\",\"Sentido\":\"-\",\"Importe\":37000.00,\"ImporteValorizado\":37000.00,\"SaldoParcial\":1759787.51,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27354699171 NOMBRE Destino:  CUENTA Destino: 0000003100078233975361 Ref: VAR Motivo:  Mismo Tit: N ID Operacion: 364333 ID Debin: 5400227848\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"136309995\",\"Sucursal\":30,\"Cuenta\":123138508,\"Modulo\":21,\"Fecha\":\"2025-08-01\",\"FechaOperacion\":\"2025-08-01\",\"Hora\":\"16:51:30\",\"NroComprobante\":903037165,\"Referencia\":\"VARIOS\",\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":424,\"Descripcion\":\"Transferencia inmediata Mismo Titular\",\"Sentido\":\"-\",\"Importe\":500000.00,\"ImporteValorizado\":500000.00,\"SaldoParcial\":1796787.51,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20369718631 NOMBRE Destino: JOSE ANDRES SANCHEZ CUENTA Destino: 4530000800010125758764 Ref: VARIOS Motivo: VAR Mismo Tit: S ID Operacion: 425703\"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "157",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:38:06 GMT"
+        }
+      },
+      "uuid": "a4488c53-5769-41c1-a475-b15f1aa008cc",
+      "persistent": true
+    },
+    {
+      "id": "5453cb8d-6fc5-4349-907a-7746e0319917",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=123138508&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"Cuenta\":123138508,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":4163669.50,\"SaldoDisponible\":4163669.50,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211001231385085\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:37:53 GMT"
+        }
+      },
+      "uuid": "5453cb8d-6fc5-4349-907a-7746e0319917",
+      "persistent": true
+    },
+    {
+      "id": "6ffe3d18-818a-45ec-b128-92beccb201ae",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=7390409&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"SANCHEZ JOSE ANDRES\",\"Cuenta\":7390409,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":10.00,\"SaldoDisponible\":10.00,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000073904098\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "54",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:37:53 GMT"
+        }
+      },
+      "uuid": "6ffe3d18-818a-45ec-b128-92beccb201ae",
+      "persistent": true
+    },
+    {
+      "id": "1f336384-007d-4177-a1b2-0d2fca4d6174",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":7390409,\"RazonSocial\":\"SANCHEZ JOSE ANDRES\",\"TipoDocTitular\":1,\"NroDocTitular\":20369718631,\"Calle\":\"FORTIN 5 HERMANOS MZ\",\"Numero\":52,\"Piso\":3,\"Depto\":\"0000\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180420\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":7390409,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000860014\",\"CUIT\":20369718631}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000073904098\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20369718631,\"Apellido\":\"SANCHEZ JOSE ANDRES\",\"FechaNacimiento\":\"19920630\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":123138508,\"RazonSocial\":\"SANCHEZ JOSE ANDRES\",\"TipoDocTitular\":1,\"NroDocTitular\":20369718631,\"Calle\":\"FORTIN 5 HERMANOS MZ\",\"Numero\":52,\"Piso\":3,\"Depto\":\"0000\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180420\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":123138508,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000860014\",\"CUIT\":20369718631}],\"Tasa\":35.0000000,\"CBU\":\"3110030211001231385085\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20369718631,\"Apellido\":\"SANCHEZ JOSE ANDRES\",\"FechaNacimiento\":\"19920630\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "46",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:37:53 GMT"
+        }
+      },
+      "uuid": "1f336384-007d-4177-a1b2-0d2fca4d6174",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-producto",
+      "requiredScenarioState": "scenario-3-api24Nbch-canales-producto-2"
+    },
+    {
+      "id": "f42654bc-2323-46d6-87d6-19cd99d067d7",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20369718631&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":7390409,\"RazonSocial\":\"SANCHEZ JOSE ANDRES\",\"TipoDocTitular\":1,\"NroDocTitular\":20369718631,\"Calle\":\"FORTIN 5 HERMANOS MZ\",\"Numero\":52,\"Piso\":3,\"Depto\":\"0000\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180420\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":7390409,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000860014\",\"CUIT\":20369718631}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000073904098\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20369718631,\"Apellido\":\"SANCHEZ JOSE ANDRES\",\"FechaNacimiento\":\"19920630\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":123138508,\"RazonSocial\":\"SANCHEZ JOSE ANDRES\",\"TipoDocTitular\":1,\"NroDocTitular\":20369718631,\"Calle\":\"FORTIN 5 HERMANOS MZ\",\"Numero\":52,\"Piso\":3,\"Depto\":\"0000\",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"20180420\",\"Productos\":[{\"TipoOperacion\":\"3\",\"TipoOperacionDesc\":\"Cuenta Sueldo\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":123138508,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650000860014\",\"CUIT\":20369718631}],\"Tasa\":35.0000000,\"CBU\":\"3110030211001231385085\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20369718631,\"Apellido\":\"SANCHEZ JOSE ANDRES\",\"FechaNacimiento\":\"19920630\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "137",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:37:45 GMT"
+        }
+      },
+      "uuid": "f42654bc-2323-46d6-87d6-19cd99d067d7",
+      "persistent": true,
+      "scenarioName": "scenario-3-api24Nbch-canales-producto",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-api24Nbch-canales-producto-2"
+    },
+    {
+      "id": "eeb68b1f-8fa3-491e-b62e-ca83df6074a8",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20369718631",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T21:37:45\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20369718631 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20369718631\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "63",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 21:37:45 GMT"
+        }
+      },
+      "uuid": "eeb68b1f-8fa3-491e-b62e-ca83df6074a8",
+      "persistent": true
+    }
+  ]
+}

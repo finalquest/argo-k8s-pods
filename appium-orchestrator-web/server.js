@@ -920,6 +920,28 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('stop_all_execution', () => {
+        console.log('--- 🛑 Recibida orden de PARAR TODO ---');
+        io.emit('log_update', { logLine: `--- 🛑 Recibida orden de PARAR TODO por un usuario. Limpiando cola y deteniendo workers... ---
+` });
+
+        // 1. Limpiar la cola de jobs pendientes
+        const canceledJobs = jobQueue.splice(0, jobQueue.length);
+        console.log(`Cancelados ${canceledJobs.length} jobs de la cola.`);
+
+        // 2. Detener todos los workers activos
+        workerPool.forEach(worker => {
+            if (worker.process) {
+                worker.terminating = true;
+                worker.process.kill('SIGTERM');
+                console.log(`Señal SIGTERM enviada al worker ${worker.id}`);
+            }
+        });
+
+        // 3. Actualizar el estado en la UI
+        broadcastStatus();
+    });
+
     socket.on('disconnect', () => {
         console.log('Un cliente se ha desconectado:', socket.id);
     });

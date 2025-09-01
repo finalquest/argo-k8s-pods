@@ -1,0 +1,1492 @@
+{
+  "mappings": [
+    {
+      "id": "e77f1c70-8161-4782-a702-d7a2628376dc",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22toledod%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"updated_at\":\"2025-08-31T20:42:53.417Z\",\"user_id\":\"auth0|65e86011ec34928a0dcf6e4c\",\"name\":\"toledod@mailinator.com\",\"username\":\"toledod\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T18:23:58.004Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"65e86011ec34928a0dcf6e4c\",\"provider\":\"auth0\",\"isSocial\":false}],\"email\":\"toledod@mailinator.com\",\"nickname\":\"toledod\",\"created_at\":\"2024-03-06T12:22:41.980Z\",\"picture\":\"https://s.gravatar.com/avatar/f686e94e51338b786c803fd2360a4eea?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fto.png\",\"blocked\":false,\"user_metadata\":{\"cuit\":\"20130332383\"},\"last_login\":\"2025-08-31T20:42:53.417Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":19315,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f705d58306a59-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "982",
+          "Date": "Sun, 31 Aug 2025 20:57:12 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.034",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "e77f1c70-8161-4782-a702-d7a2628376dc",
+      "persistent": true
+    },
+    {
+      "id": "b36a9444-829b-40ea-8a0b-d190e074ff0f",
+      "name": "api24nbch_canales_cuenta_acuerdos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/acuerdos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "22",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:11 GMT"
+        }
+      },
+      "uuid": "b36a9444-829b-40ea-8a0b-d190e074ff0f",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-acuerdos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-4"
+    },
+    {
+      "id": "7a7f705e-508d-42f3-851b-3bf05c37942f",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=username%3A%22barros%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-09-13T17:13:11.361Z\",\"last_password_reset\":\"2025-07-16T18:21:34.458Z\",\"user_id\":\"auth0|66e472a7f6077712bb2fd6ea\",\"email\":\"barros@mailinator.com\",\"name\":\"barros@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/c98a05f2ff5a3b266b683298dc882423?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fba.png\",\"email_verified\":false,\"user_metadata\":{\"cuit\":\"20047002932\"},\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"66e472a7f6077712bb2fd6ea\"}],\"updated_at\":\"2025-08-31T20:56:14.951Z\",\"nickname\":\"barros\",\"username\":\"barros\",\"last_login\":\"2025-08-31T20:56:14.950Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":1587,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7056cea34225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "983",
+          "Date": "Sun, 31 Aug 2025 20:57:11 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.047",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "7a7f705e-508d-42f3-851b-3bf05c37942f",
+      "persistent": true
+    },
+    {
+      "id": "98f73bd6-4aa9-490c-888f-4b189669a88a",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "37",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:11 GMT"
+        }
+      },
+      "uuid": "98f73bd6-4aa9-490c-888f-4b189669a88a",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-4"
+    },
+    {
+      "id": "23ed2fed-e087-4dbd-9582-f36f9ea7c456",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220250530553%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f705559006a59-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "984",
+          "Date": "Sun, 31 Aug 2025 20:57:11 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.014",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "23ed2fed-e087-4dbd-9582-f36f9ea7c456",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-3-auth0-api-v2-users-2"
+    },
+    {
+      "id": "731cb5c9-5971-4e84-8ba8-032971925e70",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220112496476%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70546c5e4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "985",
+          "Date": "Sun, 31 Aug 2025 20:57:11 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.029",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "731cb5c9-5971-4e84-8ba8-032971925e70",
+      "persistent": true,
+      "scenarioName": "scenario-4-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-4-auth0-api-v2-users-2"
+    },
+    {
+      "id": "53908053-e571-4e10-9110-18c5cb5fbfad",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:10\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20130332383 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20130332383\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "39",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT"
+        }
+      },
+      "uuid": "53908053-e571-4e10-9110-18c5cb5fbfad",
+      "persistent": true
+    },
+    {
+      "id": "0a37de3a-25c1-453b-8aeb-0913f55a0b93",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220130332383%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"updated_at\":\"2025-08-31T20:42:53.417Z\",\"user_id\":\"auth0|65e86011ec34928a0dcf6e4c\",\"name\":\"toledod@mailinator.com\",\"username\":\"toledod\",\"email_verified\":false,\"last_password_reset\":\"2025-07-16T18:23:58.004Z\",\"identities\":[{\"connection\":\"nbch\",\"user_id\":\"65e86011ec34928a0dcf6e4c\",\"provider\":\"auth0\",\"isSocial\":false}],\"email\":\"toledod@mailinator.com\",\"nickname\":\"toledod\",\"created_at\":\"2024-03-06T12:22:41.980Z\",\"picture\":\"https://s.gravatar.com/avatar/f686e94e51338b786c803fd2360a4eea?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fto.png\",\"blocked\":false,\"user_metadata\":{\"cuit\":\"20130332383\"},\"last_login\":\"2025-08-31T20:42:53.417Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":19315,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7051f98a4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "986",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.016",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "0a37de3a-25c1-453b-8aeb-0913f55a0b93",
+      "persistent": true
+    },
+    {
+      "id": "d0714a08-527d-4fd6-b8b2-803349be96f6",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:10\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20047002932 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT"
+        }
+      },
+      "uuid": "d0714a08-527d-4fd6-b8b2-803349be96f6",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-4"
+    },
+    {
+      "id": "b394d391-d2ef-40b0-a289-f8f88b98b147",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220047002932%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-09-13T17:13:11.361Z\",\"last_password_reset\":\"2025-07-16T18:21:34.458Z\",\"user_id\":\"auth0|66e472a7f6077712bb2fd6ea\",\"email\":\"barros@mailinator.com\",\"name\":\"barros@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/c98a05f2ff5a3b266b683298dc882423?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fba.png\",\"email_verified\":false,\"user_metadata\":{\"cuit\":\"20047002932\"},\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"66e472a7f6077712bb2fd6ea\"}],\"updated_at\":\"2025-08-31T20:56:14.951Z\",\"nickname\":\"barros\",\"username\":\"barros\",\"last_login\":\"2025-08-31T20:56:14.950Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":1587,\"app_metadata\":{}},{\"user_id\":\"auth0|65de1df1ab3e7cc284cf5b93\",\"nickname\":\"usercvme4\",\"email\":\"usercvme4@mailinator.com\",\"username\":\"usercvme4\",\"updated_at\":\"2024-05-28T19:36:08.193Z\",\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"65de1df1ab3e7cc284cf5b93\"}],\"email_verified\":false,\"created_at\":\"2024-02-27T17:37:53.416Z\",\"name\":\"usercvme4@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/11b8f700f673296a67bda95ec450c9b3?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fus.png\",\"user_metadata\":{\"cuit\":\"20047002932\"},\"last_login\":\"2024-05-28T19:36:08.193Z\",\"last_ip\":\"2800:810:599:a69a:8423:1653:9db2:5334\",\"logins_count\":392,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f704f4ece4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "987",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,accept-encoding",
+          "X-Auth0-L": "0.018",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "b394d391-d2ef-40b0-a289-f8f88b98b147",
+      "persistent": true,
+      "scenarioName": "scenario-6-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-6-auth0-api-v2-users-3"
+    },
+    {
+      "id": "f3e03df1-30cd-4974-84d2-9ccf5eb636b8",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:10\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20047002932 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "28",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT"
+        }
+      },
+      "uuid": "f3e03df1-30cd-4974-84d2-9ccf5eb636b8",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-3",
+      "newScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-4"
+    },
+    {
+      "id": "bc264745-d60c-489e-a4ec-03430fd0a295",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220047002932%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-09-13T17:13:11.361Z\",\"last_password_reset\":\"2025-07-16T18:21:34.458Z\",\"user_id\":\"auth0|66e472a7f6077712bb2fd6ea\",\"email\":\"barros@mailinator.com\",\"name\":\"barros@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/c98a05f2ff5a3b266b683298dc882423?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fba.png\",\"email_verified\":false,\"user_metadata\":{\"cuit\":\"20047002932\"},\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"66e472a7f6077712bb2fd6ea\"}],\"updated_at\":\"2025-08-31T20:56:14.951Z\",\"nickname\":\"barros\",\"username\":\"barros\",\"last_login\":\"2025-08-31T20:56:14.950Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":1587,\"app_metadata\":{}},{\"user_id\":\"auth0|65de1df1ab3e7cc284cf5b93\",\"nickname\":\"usercvme4\",\"email\":\"usercvme4@mailinator.com\",\"username\":\"usercvme4\",\"updated_at\":\"2024-05-28T19:36:08.193Z\",\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"65de1df1ab3e7cc284cf5b93\"}],\"email_verified\":false,\"created_at\":\"2024-02-27T17:37:53.416Z\",\"name\":\"usercvme4@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/11b8f700f673296a67bda95ec450c9b3?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fus.png\",\"user_metadata\":{\"cuit\":\"20047002932\"},\"last_login\":\"2024-05-28T19:36:08.193Z\",\"last_ip\":\"2800:810:599:a69a:8423:1653:9db2:5334\",\"logins_count\":392,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f704cbbed4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "988",
+          "Date": "Sun, 31 Aug 2025 20:57:10 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,accept-encoding",
+          "X-Auth0-L": "0.018",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "bc264745-d60c-489e-a4ec-03430fd0a295",
+      "persistent": true,
+      "scenarioName": "scenario-6-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-6-auth0-api-v2-users-2",
+      "newScenarioState": "scenario-6-auth0-api-v2-users-3"
+    },
+    {
+      "id": "570264a5-40fc-49dd-9d04-ca80fd65cdc8",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20118002009",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:09\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20118002009 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20118002009\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "26",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:09 GMT"
+        }
+      },
+      "uuid": "570264a5-40fc-49dd-9d04-ca80fd65cdc8",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-7-api24Nbch-canales-autorizado-usuario-2"
+    },
+    {
+      "id": "c208f098-67ec-4d21-b25f-02a27fff0d6c",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220118002009%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"last_password_reset\":\"2025-08-12T13:17:41.888Z\",\"name\":\"JELNICKI MARIANO\",\"given_name\":\" Mariano\",\"email_verified\":true,\"identities\":[{\"user_id\":\"20118002009\",\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\"},{\"connection\":\"email\",\"user_id\":\"6318cc27626051ee64c2b597\",\"provider\":\"email\",\"isSocial\":false,\"profileData\":{\"email\":\"sidepreme3@mailinator.com\",\"email_verified\":true}}],\"created_at\":\"2022-09-07T16:15:06.265Z\",\"updated_at\":\"2025-08-12T13:18:05.090Z\",\"email\":\"sidepreme3@mailinator.com\",\"family_name\":\"Jelnicki\",\"user_metadata\":{\"cuit\":\"20118002009\"},\"user_id\":\"auth0|20118002009\",\"nickname\":\"sidepreme3@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/0eeaf58f0bdbe04ebea7a73d951834b7?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fjm.png\",\"username\":\"sidepreme3\",\"last_login\":\"2025-08-12T13:18:05.090Z\",\"last_ip\":\"2800:2130:2840:1be:edce:faf2:b7d0:6f68\",\"logins_count\":649}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f704a48f74225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "989",
+          "Date": "Sun, 31 Aug 2025 20:57:09 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.024",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "c208f098-67ec-4d21-b25f-02a27fff0d6c",
+      "persistent": true,
+      "scenarioName": "scenario-8-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-8-auth0-api-v2-users-2"
+    },
+    {
+      "id": "984adb45-9d62-4d3c-9ab7-0f271503e0f3",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227291045168%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7049482c4225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "990",
+          "Date": "Sun, 31 Aug 2025 20:57:09 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.018",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "984adb45-9d62-4d3c-9ab7-0f271503e0f3",
+      "persistent": true,
+      "scenarioName": "scenario-9-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-9-auth0-api-v2-users-2"
+    },
+    {
+      "id": "2a77bdbe-a52b-4a77-83f9-7e116168ce8d",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227366114942%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70485f514225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "991",
+          "Date": "Sun, 31 Aug 2025 20:57:09 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.026",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "2a77bdbe-a52b-4a77-83f9-7e116168ce8d",
+      "persistent": true,
+      "scenarioName": "scenario-10-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-10-auth0-api-v2-users-2"
+    },
+    {
+      "id": "de197f9a-fd48-48cc-aa27-54bf935bcc1b",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227201933930%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70471e224225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "992",
+          "Date": "Sun, 31 Aug 2025 20:57:09 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.043",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "de197f9a-fd48-48cc-aa27-54bf935bcc1b",
+      "persistent": true,
+      "scenarioName": "scenario-11-auth0-api-v2-users",
+      "requiredScenarioState": "scenario-11-auth0-api-v2-users-2"
+    },
+    {
+      "id": "1a753c07-5beb-47ae-a396-d7f6cb30a8a7",
+      "name": "api24nbch_canales_producto_validarfirmantes",
+      "request": {
+        "url": "/api24Nbch/canales/producto/validarFirmantes?&sucursal=30&importe=2500&modulo=20&cuenta=94410&firmantes=20047002932",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "false",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "37",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:08 GMT"
+        }
+      },
+      "uuid": "1a753c07-5beb-47ae-a396-d7f6cb30a8a7",
+      "persistent": true
+    },
+    {
+      "id": "b327efdb-0475-4899-808c-8680f6b34242",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220250530553%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70440b064225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "993",
+          "Date": "Sun, 31 Aug 2025 20:57:08 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.021",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "b327efdb-0475-4899-808c-8680f6b34242",
+      "persistent": true,
+      "scenarioName": "scenario-3-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-3-auth0-api-v2-users-2"
+    },
+    {
+      "id": "893ccc19-06a0-4cfe-ad40-95d0e846f713",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220112496476%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7042d9c64225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "994",
+          "Date": "Sun, 31 Aug 2025 20:57:08 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.038",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "893ccc19-06a0-4cfe-ad40-95d0e846f713",
+      "persistent": true,
+      "scenarioName": "scenario-4-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-4-auth0-api-v2-users-2"
+    },
+    {
+      "id": "e81576f0-6362-43a9-bb17-08d58762dad2",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:08\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20047002932 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "29",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:08 GMT"
+        }
+      },
+      "uuid": "e81576f0-6362-43a9-bb17-08d58762dad2",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-2",
+      "newScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-3"
+    },
+    {
+      "id": "a6ed2a7c-df85-403c-8ebc-b4c525e39565",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220047002932%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"created_at\":\"2024-09-13T17:13:11.361Z\",\"last_password_reset\":\"2025-07-16T18:21:34.458Z\",\"user_id\":\"auth0|66e472a7f6077712bb2fd6ea\",\"email\":\"barros@mailinator.com\",\"name\":\"barros@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/c98a05f2ff5a3b266b683298dc882423?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fba.png\",\"email_verified\":false,\"user_metadata\":{\"cuit\":\"20047002932\"},\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"66e472a7f6077712bb2fd6ea\"}],\"updated_at\":\"2025-08-31T20:56:14.951Z\",\"nickname\":\"barros\",\"username\":\"barros\",\"last_login\":\"2025-08-31T20:56:14.950Z\",\"last_ip\":\"18.228.131.255\",\"logins_count\":1587,\"app_metadata\":{}},{\"user_id\":\"auth0|65de1df1ab3e7cc284cf5b93\",\"nickname\":\"usercvme4\",\"email\":\"usercvme4@mailinator.com\",\"username\":\"usercvme4\",\"updated_at\":\"2024-05-28T19:36:08.193Z\",\"identities\":[{\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\",\"user_id\":\"65de1df1ab3e7cc284cf5b93\"}],\"email_verified\":false,\"created_at\":\"2024-02-27T17:37:53.416Z\",\"name\":\"usercvme4@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/11b8f700f673296a67bda95ec450c9b3?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fus.png\",\"user_metadata\":{\"cuit\":\"20047002932\"},\"last_login\":\"2024-05-28T19:36:08.193Z\",\"last_ip\":\"2800:810:599:a69a:8423:1653:9db2:5334\",\"logins_count\":392,\"app_metadata\":{}}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70404f58f9a9-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "995",
+          "Date": "Sun, 31 Aug 2025 20:57:07 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,accept-encoding",
+          "X-Auth0-L": "0.032",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "a6ed2a7c-df85-403c-8ebc-b4c525e39565",
+      "persistent": true,
+      "scenarioName": "scenario-6-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-6-auth0-api-v2-users-2"
+    },
+    {
+      "id": "85dc28f4-9558-421a-86e1-ee7e173d6e3f",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20118002009",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:57:07\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20118002009 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20118002009\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "55",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:07 GMT"
+        }
+      },
+      "uuid": "85dc28f4-9558-421a-86e1-ee7e173d6e3f",
+      "persistent": true,
+      "scenarioName": "scenario-7-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-7-api24Nbch-canales-autorizado-usuario-2"
+    },
+    {
+      "id": "6c7f71f0-de49-408a-911a-f5864d914512",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2220118002009%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"last_password_reset\":\"2025-08-12T13:17:41.888Z\",\"name\":\"JELNICKI MARIANO\",\"given_name\":\" Mariano\",\"email_verified\":true,\"identities\":[{\"user_id\":\"20118002009\",\"provider\":\"auth0\",\"isSocial\":false,\"connection\":\"nbch\"},{\"connection\":\"email\",\"user_id\":\"6318cc27626051ee64c2b597\",\"provider\":\"email\",\"isSocial\":false,\"profileData\":{\"email\":\"sidepreme3@mailinator.com\",\"email_verified\":true}}],\"created_at\":\"2022-09-07T16:15:06.265Z\",\"updated_at\":\"2025-08-12T13:18:05.090Z\",\"email\":\"sidepreme3@mailinator.com\",\"family_name\":\"Jelnicki\",\"user_metadata\":{\"cuit\":\"20118002009\"},\"user_id\":\"auth0|20118002009\",\"nickname\":\"sidepreme3@mailinator.com\",\"picture\":\"https://s.gravatar.com/avatar/0eeaf58f0bdbe04ebea7a73d951834b7?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fjm.png\",\"username\":\"sidepreme3\",\"last_login\":\"2025-08-12T13:18:05.090Z\",\"last_ip\":\"2800:2130:2840:1be:edce:faf2:b7d0:6f68\",\"logins_count\":649}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f703c6be27283-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "996",
+          "Date": "Sun, 31 Aug 2025 20:57:07 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "Accept-Encoding,origin",
+          "X-Auth0-L": "0.031",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "6c7f71f0-de49-408a-911a-f5864d914512",
+      "persistent": true,
+      "scenarioName": "scenario-8-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-8-auth0-api-v2-users-2"
+    },
+    {
+      "id": "a7c7391d-1b22-45e4-a892-eee2d73977b6",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227291045168%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f703af9544225-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "997",
+          "Date": "Sun, 31 Aug 2025 20:57:07 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.041",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "a7c7391d-1b22-45e4-a892-eee2d73977b6",
+      "persistent": true,
+      "scenarioName": "scenario-9-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-9-auth0-api-v2-users-2"
+    },
+    {
+      "id": "85445608-53fd-4095-8cd9-189119fc5e01",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227366114942%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f7039ff746a59-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "998",
+          "Date": "Sun, 31 Aug 2025 20:57:06 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.030",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "85445608-53fd-4095-8cd9-189119fc5e01",
+      "persistent": true,
+      "scenarioName": "scenario-10-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-10-auth0-api-v2-users-2"
+    },
+    {
+      "id": "8a340a0e-654b-4563-b10a-f28d5939edbc",
+      "name": "auth0_api_v2_users",
+      "request": {
+        "url": "/auth0/api/v2/users?q=user_metadata.cuit%3A%2227201933930%22",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "CF-Ray": "977f70386de96a59-EWR",
+          "Server": "cloudflare",
+          "x-ratelimit-limit": "1000",
+          "X-Content-Type-Options": "nosniff",
+          "x-ratelimit-reset": "1756673887",
+          "x-ratelimit-remaining": "999",
+          "Date": "Sun, 31 Aug 2025 20:57:06 GMT",
+          "access-control-expose-headers": "WWW-Authenticate,Server-Authorization",
+          "Accept-Ranges": "bytes",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "CF-Cache-Status": "DYNAMIC",
+          "Cache-Control": "no-cache",
+          "Vary": "origin,Accept-Encoding",
+          "X-Auth0-L": "0.032",
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "uuid": "8a340a0e-654b-4563-b10a-f28d5939edbc",
+      "persistent": true,
+      "scenarioName": "scenario-11-auth0-api-v2-users",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-11-auth0-api-v2-users-2"
+    },
+    {
+      "id": "bff9ff96-a729-49d8-82af-648273108fd1",
+      "name": "api24nbch_canales_cuenta_integrantes",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/integrantes?&cuenta=94410&modulo=20&sucursal=30&titularidad=E",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":27201933930},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":27366114942},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":27291045168},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":20118002009},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":20047002932},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":20130332383},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":20112496476},{\"Pais\":80,\"LimiteFirma\":999999999999999,\"CategoriaFirma\":\"\",\"Cuit\":20250530553}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "180",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:06 GMT"
+        }
+      },
+      "uuid": "bff9ff96-a729-49d8-82af-648273108fd1",
+      "persistent": true
+    },
+    {
+      "id": "fd1e8b4e-8a39-408a-b7b4-526b0e53621d",
+      "name": "api24nbch_canales_cuenta_integrantes",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/integrantes?&cuenta=94410&modulo=20&sucursal=30&titularidad=I",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Pais\":80,\"Cuit\":20112496476,\"Nombre\":\"GIMENEZ ROBERTO OSCAR\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":20118002009,\"Nombre\":\"JELNICKI MARIANO\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":20130332383,\"Nombre\":\"TOLEDO DANIEL ADOLFO\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":27291045168,\"Nombre\":\"ALMEIDA CAMILA CADEM\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":20047002932,\"Nombre\":\"BARROS ANGEL OSCAR\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":27201933930,\"Nombre\":\"GELMAN VIVANA CLAUDIA\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":20250530553,\"Nombre\":\"ECHAZARRETA MARCOS RODOLFO\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"},{\"Pais\":80,\"Cuit\":27366114942,\"Nombre\":\"ANTONIOL FLAVIA DANIELA\",\"CodTitularidad\":1,\"Titularidad\":\"Participante\"}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "144",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:57:06 GMT"
+        }
+      },
+      "uuid": "fd1e8b4e-8a39-408a-b7b4-526b0e53621d",
+      "persistent": true
+    },
+    {
+      "id": "d64aaa89-fbfd-461b-b630-23a42f8a09bc",
+      "name": "api24nbch_canales_plazo-fijo_simular",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo/simular",
+        "method": "POST",
+        "customMatcher": {
+          "name": "custom-matcher",
+          "parameters": {
+            "body": "{\n  \"Usuario\" : {\n    \"NumeroDocumento\" : \"20047002932\",\n    \"TipoDocumento\" : \"1\",\n    \"Pais\" : \"80\"\n  },\n  \"Contexto\" : {\n    \"NumeroDocumento\" : \"30670181819\",\n    \"TipoDocumento\" : \"1\",\n    \"Pais\" : \"80\"\n  },\n  \"CodigoMoneda\" : \"ARS\",\n  \"Capital\" : \"2500\",\n  \"Modalidad\" : \"101\",\n  \"Plazo\" : \"30\",\n  \"Cuentas\" : [ {\n    \"Cuenta\" : \"94410\",\n    \"Modulo\" : \"20\",\n    \"Sucursal\" : \"30\"\n  } ]\n}"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"FechaVencimiento\":\"2025-10-03\",\"Plazo\":30,\"Interes\":98.6,\"Capital\":2500,\"Modalidad\":\"101\",\"Tasa\":47.99,\"Moneda\":\"ARS\",\"MonedaReferencia\":{\"Moneda\":\"\",\"FactorDeConversion\":0.00,\"FactorDeConversionInicial\":0.00,\"FechaFactorDeConversion\":\"2025-09-03\",\"Intereses\":0.0,\"Capital\":0.0,\"CapitalInicial\":2500},\"Cuentas\":[{\"Modulo\":20,\"Sucursal\":30,\"Cuenta\":94410}],\"DatosContrato\":{},\"Tea\":60.1032222,\"Tna\":47.99}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "322",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:52 GMT"
+        }
+      },
+      "uuid": "d64aaa89-fbfd-461b-b630-23a42f8a09bc",
+      "persistent": true
+    },
+    {
+      "id": "1e7bdf5d-4b2c-43af-846b-20407beaa7e6",
+      "name": "api24nbch_canales_plazo-fijo_modalidades",
+      "request": {
+        "url": "/api24Nbch/canales/plazo-fijo/modalidades",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Datos\":{\"Modalidades\":[{\"Codigo\":\"101\",\"Descripcion\":\"Plazo Fijo Tradicional\",\"Configuracion\":{\"Monedas\":[{\"Codigo\":\"ARS\",\"PlazoMin\":30,\"PlazoMax\":365,\"Monto\":2500.00,\"MontoMin\":2500.00,\"MontoMax\":9999999999999.00},{\"Codigo\":\"USD\",\"PlazoMin\":30,\"PlazoMax\":365,\"Monto\":1000.00,\"MontoMin\":1000.00,\"MontoMax\":9999999999999.00}],\"Habilitado\":true,\"HabilitadoPersonaFisica\":true,\"HabilitadoPersonaJuridica\":true,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"102\",\"Descripcion\":\"Plazo Fijo Precancelable\",\"Configuracion\":{\"Monedas\":[],\"Habilitado\":false,\"HabilitadoPersonaFisica\":false,\"HabilitadoPersonaJuridica\":false,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"103\",\"Descripcion\":\"Plazo Fijo UVA\",\"Configuracion\":{\"Monedas\":[{\"Codigo\":\"ARS\",\"PlazoMin\":90,\"PlazoMax\":365,\"Monto\":1567.33000000000,\"MontoMin\":1567.33000000000,\"MontoMax\":15673299999998432.67000000000}],\"Habilitado\":true,\"HabilitadoPersonaFisica\":true,\"HabilitadoPersonaJuridica\":true,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"104\",\"Descripcion\":\"Plazo Fijo UVI\",\"Configuracion\":{\"Monedas\":[],\"Habilitado\":false,\"HabilitadoPersonaFisica\":true,\"HabilitadoPersonaJuridica\":true,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"105\",\"Descripcion\":\"PF Título\",\"Configuracion\":{\"Monedas\":[],\"Habilitado\":false,\"HabilitadoPersonaFisica\":false,\"HabilitadoPersonaJuridica\":false,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"106\",\"Descripcion\":\"Pago anticipado de intereses\",\"Configuracion\":{\"Monedas\":[],\"Habilitado\":false,\"HabilitadoPersonaFisica\":false,\"HabilitadoPersonaJuridica\":false,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"107\",\"Descripcion\":\"Plazo Fijo Depósito Judicial\",\"Configuracion\":{\"Monedas\":[],\"Habilitado\":false,\"HabilitadoPersonaFisica\":false,\"HabilitadoPersonaJuridica\":false,\"AccionesAlVencimiento\":[{\"Codigo\":4,\"Descripcion\":\"Renueva Capital\"},{\"Codigo\":6,\"Descripcion\":\"Renueva Monto (capital + intereses)\"},{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}},{\"Codigo\":\"108\",\"Descripcion\":\"Plazo Fijo UVA Precancelable\",\"DiasPrecancelacion\":30,\"Configuracion\":{\"Monedas\":[{\"Codigo\":\"ARS\",\"PlazoMin\":180,\"PlazoMax\":365,\"Monto\":1567.33000000000,\"MontoMin\":1567.33000000000,\"MontoMax\":15673299999998432.67000000000}],\"Habilitado\":true,\"HabilitadoPersonaFisica\":true,\"HabilitadoPersonaJuridica\":true,\"AccionesAlVencimiento\":[{\"Codigo\":2,\"Descripcion\":\"Cancela y Acredita Cta. Vista\"}]}}]}}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "74",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:44 GMT"
+        }
+      },
+      "uuid": "1e7bdf5d-4b2c-43af-846b-20407beaa7e6",
+      "persistent": true
+    },
+    {
+      "id": "a5fc9bf0-ed21-4a4c-ac8d-f58a31985280",
+      "name": "api24nbch_canales_tarjetacredito_cuentas",
+      "request": {
+        "url": "/api24Nbch/canales/tarjetaCredito/cuentas?&Usuario.NumeroDocumento=20047002932&Usuario.TipoDocumento=1&Usuario.Pais=80&Contexto.NumeroDocumento=30670181819&Contexto.TipoDocumento=1&Contexto.Pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Marca\":\"VISA\",\"Cuenta\":\"112527977\",\"Empresa\":\"311\",\"TipoUsuario\":\"\",\"Usuario\":\"\",\"Tarjetas\":[{\"Numero\":4732490000009134,\"Tipo\":\"EXTENSION\",\"Codigo\":\"3\",\"Cuit\":\"20047002932\",\"Nombre\":\"BARROS ANGEL OSCAR\",\"CodigoTitularidad\":\"1\"},{\"Numero\":4732490000009159,\"Tipo\":\"EXTENSION\",\"Codigo\":\"3\",\"Cuit\":\"20130332383\",\"Nombre\":\"TOLEDO DANIEL ADOLFO\",\"CodigoTitularidad\":\"1\"}]}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "1460",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:36 GMT"
+        }
+      },
+      "uuid": "a5fc9bf0-ed21-4a4c-ac8d-f58a31985280",
+      "persistent": true
+    },
+    {
+      "id": "58173fbc-ffc9-4446-99b7-a93c62e24e82",
+      "name": "api24nbch_canales_cuenta_acuerdos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/acuerdos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "17",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "58173fbc-ffc9-4446-99b7-a93c62e24e82",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-acuerdos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-3",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-4"
+    },
+    {
+      "id": "1966d30a-35ef-414f-8dd4-c15cf0f85b62",
+      "name": "api24nbch_canales_cuenta_acuerdos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/acuerdos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "17",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "1966d30a-35ef-414f-8dd4-c15cf0f85b62",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-acuerdos",
+      "requiredScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-2",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-3"
+    },
+    {
+      "id": "9a9b6a12-cd66-4590-9496-9466014b9bdb",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "32",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "9a9b6a12-cd66-4590-9496-9466014b9bdb",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-3",
+      "newScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-4"
+    },
+    {
+      "id": "30f02892-5d1a-4c44-89fd-7071ffa7f50f",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "30f02892-5d1a-4c44-89fd-7071ffa7f50f",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-2",
+      "newScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-3"
+    },
+    {
+      "id": "1464add3-72dc-4e48-b284-6610e5661d4c",
+      "name": "api24nbch_canales_cuenta_acuerdos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/acuerdos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "345",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "1464add3-72dc-4e48-b284-6610e5661d4c",
+      "persistent": true,
+      "scenarioName": "scenario-1-api24Nbch-canales-cuenta-acuerdos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-1-api24Nbch-canales-cuenta-acuerdos-2"
+    },
+    {
+      "id": "afc7bf3a-9cb8-4fed-a298-f3c07e3a2bfc",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20047002932&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=30670181819",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "24",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:35 GMT"
+        }
+      },
+      "uuid": "afc7bf3a-9cb8-4fed-a298-f3c07e3a2bfc",
+      "persistent": true,
+      "scenarioName": "scenario-12-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "scenario-12-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "656c0aed-9755-4b8d-ad9f-643539b92c14",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=94410&modulo=20&sucursal=30&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":2467590.40,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159164079\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"01:43:52\",\"NroComprobante\":901000976,\"Referencia\":\"VARVarios\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":40000.00,\"ImporteValorizado\":40000.00,\"SaldoParcial\":2507590.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27133097576 NOMBRE Origen: BIANCHI/MARIA E CUENTA Origen:  CUIT Destino: 30670181819 NOMBRE Destino: SIDEPREME DEL CHACO CUENTA Destino: 3110030201000000944109 Ref: VARVarios Motivo: VAR Mismo Tit: N ID Operacion: 191832016217\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158831788\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"15:26:02\",\"NroComprobante\":901023887,\"Referencia\":\"SEG\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":5956606.00,\"ImporteValorizado\":5956606.00,\"SaldoParcial\":2467590.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30500049460 NOMBRE Destino: SANCOR COOPERATIVA DE SEGUROS LIMITADA CUENTA Destino: 3100003900020001619984 Ref: SEG Motivo: SEG Mismo Tit: N ID Operacion: 805455\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158738094\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:11:11\",\"NroComprobante\":998009085,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":61328.00,\"ImporteValorizado\":61328.00,\"SaldoParcial\":8424196.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20410393922 NOMBRE Origen: HERRERA MANNI WALTER LEONEL CUENTA Origen: 3110030211001485189109 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20410393922-1756386668364492280-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730111\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:23\",\"NroComprobante\":903012629,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1500000.00,\"ImporteValorizado\":1500000.00,\"SaldoParcial\":8362868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20291846786 NOMBRE Destino: VIGIER JOSE MIGUEL CUENTA Destino: 0150517701000117441430 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803474\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730104\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:23\",\"NroComprobante\":900012636,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1150000.00,\"ImporteValorizado\":1150000.00,\"SaldoParcial\":9862868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30553526996 NOMBRE Destino: CONSEJO PROFESIONAL CIENCIAS ECONOMICAS CUENTA Destino: 3110030201000000250109 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803473\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730100\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":903012628,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":800000.00,\"ImporteValorizado\":800000.00,\"SaldoParcial\":11012868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20264477485 NOMBRE Destino: SCUFFI PABLO CUENTA Destino: 3110030211001145023011 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803472\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730098\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":902012502,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":850000.00,\"ImporteValorizado\":850000.00,\"SaldoParcial\":11812868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20208928172 NOMBRE Destino: BIT CHAKOCH, ALEJAND CUENTA Destino: 0340218608218021845009 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803471\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730094\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":901012447,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2109280.00,\"ImporteValorizado\":2109280.00,\"SaldoParcial\":12662868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20112496476 NOMBRE Destino: GIMENEZ ROBERTO OSCAR CUENTA Destino: 0720505788000035024804 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803470\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730090\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":902012501,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2518020.00,\"ImporteValorizado\":2518020.00,\"SaldoParcial\":14772148.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20130332383 NOMBRE Destino: TOLEDO DANIEL ADOLFO CUENTA Destino: 0150517701000149517804 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803469\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158714816\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:30:53\",\"NroComprobante\":998007848,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":102100.00,\"ImporteValorizado\":102100.00,\"SaldoParcial\":17290168.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20215465943 NOMBRE Origen: DIKOWIEC ESTEBAN JOSE CUENTA Origen: 3110030211003057779093 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20215465943-1756384251210490280-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158634559\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"10:52:01\",\"NroComprobante\":997001293,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":155,\"Descripcion\":\"RESCATE CUOTAS PARTES FCI\",\"Sentido\":\"+\",\"Importe\":15000000.00,\"ImporteValorizado\":15000000.00,\"SaldoParcial\":17188068.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158057195\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:46:41\",\"NroComprobante\":998003346,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":41177.00,\"ImporteValorizado\":41177.00,\"SaldoParcial\":2188068.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23134395664 NOMBRE Origen: BENITEZ BEATRIZ NANCI CUENTA Origen: 3110030211001216936060 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-23134395664-1756295199822459176-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051025\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":901007388,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":83559.30,\"ImporteValorizado\":83559.30,\"SaldoParcial\":2146891.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30715974823 NOMBRE Destino: KOMSA SA CUENTA Destino: 0070071920000013334406 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 792574\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051013\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":900007152,\"Referencia\":\"LED\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":159897.46,\"ImporteValorizado\":159897.46,\"SaldoParcial\":2230450.70,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30541984905 NOMBRE Destino: QUAIN RADIO S A CUENTA Destino: 3110030201000000131073 Ref: LED Motivo: FAC Mismo Tit: N ID Operacion: 792573\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051004\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":901007387,\"Referencia\":\"CAF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":104198.40,\"ImporteValorizado\":104198.40,\"SaldoParcial\":2390348.16,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27063778236 NOMBRE Destino: RODRIGUEZ LILIANA INES CUENTA Destino: 1500047300008832595550 Ref: CAF Motivo: FAC Mismo Tit: N ID Operacion: 792572\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158050999\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":902007207,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":231928.27,\"ImporteValorizado\":231928.27,\"SaldoParcial\":2494546.56,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 33711483719 NOMBRE Destino: ARWAN COMPUTACION SRL CUENTA Destino: 3110030201180260070003 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 792571\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158015298\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"10:49:03\",\"NroComprobante\":997007934,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":67480.00,\"ImporteValorizado\":67480.00,\"SaldoParcial\":2726474.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20121725704 NOMBRE Origen: GERZEL HUGO RICARDO CUENTA Origen: 3110030211000049467044 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20121725704-1756291740699457272-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157749574\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"22:16:03\",\"NroComprobante\":901043872,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":90435.00,\"ImporteValorizado\":90435.00,\"SaldoParcial\":2658994.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20147323493 NOMBRE Origen: PLACIDO/M A MARINICH CUENTA Origen:  CUIT Destino: 30670181819 NOMBRE Destino: SIDEPREME DEL CHACO CUENTA Destino: 3110030201000000944109 Ref:  Motivo: VAR Mismo Tit: N ID Operacion: 006562399200\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157550323\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:47:55\",\"NroComprobante\":998004426,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":102100.00,\"ImporteValorizado\":102100.00,\"SaldoParcial\":2568559.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23249085049 NOMBRE Origen: RODRIGUEZ GUSTAVO FABIAN CUENTA Origen: 3110030211003027476018 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-23249085049-1756219673501432048-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157539203\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:32:31\",\"NroComprobante\":997005177,\"Referencia\":\"Operacion N°:997005177\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":161,\"Descripcion\":\"IB - Crédito Distinto Titular Interbanco\",\"Sentido\":\"+\",\"Importe\":1694599.00,\"ImporteValorizado\":1694599.00,\"SaldoParcial\":2466459.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 30517886854 NOMBRE Origen: COLEGIO MEDICO GREMIAL DEL CH CUENTA Origen: 007-01-002389330101 Ref: Operacion N°:997005177 Motivo:  Mismo Tit: N ID Operacion: 3052356\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157515250\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:00:25\",\"NroComprobante\":909000094,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":11,\"Descripcion\":\"Pago Cheque por Caja\",\"Sentido\":\"-\",\"Importe\":50000.00,\"ImporteValorizado\":50000.00,\"SaldoParcial\":771860.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Nro. Cheque: 3168959\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157496291\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"13:33:50\",\"NroComprobante\":200000031,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":11,\"Descripcion\":\"Pago Cheque por Caja\",\"Sentido\":\"-\",\"Importe\":185693.10,\"ImporteValorizado\":185693.10,\"SaldoParcial\":821860.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Nro. Cheque: 3168958\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465709\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:15\",\"NroComprobante\":901011448,\"Referencia\":\"FDO\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":57902.40,\"ImporteValorizado\":57902.40,\"SaldoParcial\":1007553.93,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30517891769 NOMBRE Destino: FEDERACION MEDICA DEL CHACO CUENTA Destino: 3110030201000000445060 Ref: FDO Motivo: VAR Mismo Tit: N ID Operacion: 791182\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465704\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:14\",\"NroComprobante\":903011287,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":338225.00,\"ImporteValorizado\":338225.00,\"SaldoParcial\":1065456.33,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20112496476 NOMBRE Destino: GIMENEZ ROBERTO OSCAR CUENTA Destino: 0720505788000035024804 Ref:  Motivo: VAR Mismo Tit: N ID Operacion: 791181\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465700\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:14\",\"NroComprobante\":903011286,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2283735.00,\"ImporteValorizado\":2283735.00,\"SaldoParcial\":1403681.33,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20047002932 NOMBRE Destino: BARROS ANGEL OSCAR CUENTA Destino: 3110030211000065807046 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 857750\"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "193",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:34 GMT"
+        }
+      },
+      "uuid": "656c0aed-9755-4b8d-ad9f-643539b92c14",
+      "persistent": true,
+      "scenarioName": "scenario-13-api24Nbch-canales-cuenta-movimientos",
+      "requiredScenarioState": "scenario-13-api24Nbch-canales-cuenta-movimientos-2"
+    },
+    {
+      "id": "4214020d-0efa-47c9-964b-24581b25805c",
+      "name": "api24nbch_canales_cuenta_movimientos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/movimientos?&cuenta=94410&modulo=20&sucursal=30&suboperacion=0&limite=1200&filtro.fechaDesde=2025-07-31&filtro.fechaHasta=2025-09-07&filtro.numeroPagina=0&filtro.limitePagina=25&filtro.soloAntedatados=false",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"SaldoInicial\":2467590.40,\"SignoSaldoInicial\":\"+\",\"CodMoneda\":80,\"Movimientos\":[{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"159164079\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-29\",\"FechaOperacion\":\"2025-08-29\",\"Hora\":\"01:43:52\",\"NroComprobante\":901000976,\"Referencia\":\"VARVarios\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":40000.00,\"ImporteValorizado\":40000.00,\"SaldoParcial\":2507590.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 27133097576 NOMBRE Origen: BIANCHI/MARIA E CUENTA Origen:  CUIT Destino: 30670181819 NOMBRE Destino: SIDEPREME DEL CHACO CUENTA Destino: 3110030201000000944109 Ref: VARVarios Motivo: VAR Mismo Tit: N ID Operacion: 191832016217\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158831788\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"15:26:02\",\"NroComprobante\":901023887,\"Referencia\":\"SEG\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":5956606.00,\"ImporteValorizado\":5956606.00,\"SaldoParcial\":2467590.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30500049460 NOMBRE Destino: SANCOR COOPERATIVA DE SEGUROS LIMITADA CUENTA Destino: 3100003900020001619984 Ref: SEG Motivo: SEG Mismo Tit: N ID Operacion: 805455\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158738094\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"13:11:11\",\"NroComprobante\":998009085,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":61328.00,\"ImporteValorizado\":61328.00,\"SaldoParcial\":8424196.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20410393922 NOMBRE Origen: HERRERA MANNI WALTER LEONEL CUENTA Origen: 3110030211001485189109 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20410393922-1756386668364492280-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730111\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:23\",\"NroComprobante\":903012629,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1500000.00,\"ImporteValorizado\":1500000.00,\"SaldoParcial\":8362868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20291846786 NOMBRE Destino: VIGIER JOSE MIGUEL CUENTA Destino: 0150517701000117441430 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803474\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730104\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:23\",\"NroComprobante\":900012636,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":1150000.00,\"ImporteValorizado\":1150000.00,\"SaldoParcial\":9862868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30553526996 NOMBRE Destino: CONSEJO PROFESIONAL CIENCIAS ECONOMICAS CUENTA Destino: 3110030201000000250109 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803473\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730100\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":903012628,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":800000.00,\"ImporteValorizado\":800000.00,\"SaldoParcial\":11012868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20264477485 NOMBRE Destino: SCUFFI PABLO CUENTA Destino: 3110030211001145023011 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803472\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730098\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":902012502,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":850000.00,\"ImporteValorizado\":850000.00,\"SaldoParcial\":11812868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20208928172 NOMBRE Destino: BIT CHAKOCH, ALEJAND CUENTA Destino: 0340218608218021845009 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803471\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730094\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":901012447,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2109280.00,\"ImporteValorizado\":2109280.00,\"SaldoParcial\":12662868.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20112496476 NOMBRE Destino: GIMENEZ ROBERTO OSCAR CUENTA Destino: 0720505788000035024804 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803470\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158730090\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:57:22\",\"NroComprobante\":902012501,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2518020.00,\"ImporteValorizado\":2518020.00,\"SaldoParcial\":14772148.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20130332383 NOMBRE Destino: TOLEDO DANIEL ADOLFO CUENTA Destino: 0150517701000149517804 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 803469\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158714816\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"12:30:53\",\"NroComprobante\":998007848,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":102100.00,\"ImporteValorizado\":102100.00,\"SaldoParcial\":17290168.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20215465943 NOMBRE Origen: DIKOWIEC ESTEBAN JOSE CUENTA Origen: 3110030211003057779093 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20215465943-1756384251210490280-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158634559\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-28\",\"FechaOperacion\":\"2025-08-28\",\"Hora\":\"10:52:01\",\"NroComprobante\":997001293,\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":155,\"Descripcion\":\"RESCATE CUOTAS PARTES FCI\",\"Sentido\":\"+\",\"Importe\":15000000.00,\"ImporteValorizado\":15000000.00,\"SaldoParcial\":17188068.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\" \"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158057195\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:46:41\",\"NroComprobante\":998003346,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":41177.00,\"ImporteValorizado\":41177.00,\"SaldoParcial\":2188068.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23134395664 NOMBRE Origen: BENITEZ BEATRIZ NANCI CUENTA Origen: 3110030211001216936060 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-23134395664-1756295199822459176-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051025\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":901007388,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":83559.30,\"ImporteValorizado\":83559.30,\"SaldoParcial\":2146891.40,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30715974823 NOMBRE Destino: KOMSA SA CUENTA Destino: 0070071920000013334406 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 792574\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051013\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":900007152,\"Referencia\":\"LED\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":159897.46,\"ImporteValorizado\":159897.46,\"SaldoParcial\":2230450.70,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30541984905 NOMBRE Destino: QUAIN RADIO S A CUENTA Destino: 3110030201000000131073 Ref: LED Motivo: FAC Mismo Tit: N ID Operacion: 792573\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158051004\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":901007387,\"Referencia\":\"CAF\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":104198.40,\"ImporteValorizado\":104198.40,\"SaldoParcial\":2390348.16,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 27063778236 NOMBRE Destino: RODRIGUEZ LILIANA INES CUENTA Destino: 1500047300008832595550 Ref: CAF Motivo: FAC Mismo Tit: N ID Operacion: 792572\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158050999\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"11:28:11\",\"NroComprobante\":902007207,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":231928.27,\"ImporteValorizado\":231928.27,\"SaldoParcial\":2494546.56,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 33711483719 NOMBRE Destino: ARWAN COMPUTACION SRL CUENTA Destino: 3110030201180260070003 Ref:  Motivo: FAC Mismo Tit: N ID Operacion: 792571\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"158015298\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-27\",\"FechaOperacion\":\"2025-08-27\",\"Hora\":\"10:49:03\",\"NroComprobante\":997007934,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":67480.00,\"ImporteValorizado\":67480.00,\"SaldoParcial\":2726474.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20121725704 NOMBRE Origen: GERZEL HUGO RICARDO CUENTA Origen: 3110030211000049467044 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-20121725704-1756291740699457272-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157749574\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"22:16:03\",\"NroComprobante\":901043872,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"+\",\"Importe\":90435.00,\"ImporteValorizado\":90435.00,\"SaldoParcial\":2658994.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 20147323493 NOMBRE Origen: PLACIDO/M A MARINICH CUENTA Origen:  CUIT Destino: 30670181819 NOMBRE Destino: SIDEPREME DEL CHACO CUENTA Destino: 3110030201000000944109 Ref:  Motivo: VAR Mismo Tit: N ID Operacion: 006562399200\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157550323\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:47:55\",\"NroComprobante\":998004426,\"Referencia\":\"\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":152,\"Descripcion\":\"CREDITO POR TRANSFERENCIA NBCH24\",\"Sentido\":\"+\",\"Importe\":102100.00,\"ImporteValorizado\":102100.00,\"SaldoParcial\":2568559.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 23249085049 NOMBRE Origen: RODRIGUEZ GUSTAVO FABIAN CUENTA Origen: 3110030211003027476018 Ref:  Motivo:  Mismo Tit: N ID Operacion: 1-23249085049-1756219673501432048-0\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157539203\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:32:31\",\"NroComprobante\":997005177,\"Referencia\":\"Operacion N°:997005177\",\"Categoria\":\"OTROSCRED\",\"CodMovimiento\":161,\"Descripcion\":\"IB - Crédito Distinto Titular Interbanco\",\"Sentido\":\"+\",\"Importe\":1694599.00,\"ImporteValorizado\":1694599.00,\"SaldoParcial\":2466459.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Origen: 30517886854 NOMBRE Origen: COLEGIO MEDICO GREMIAL DEL CH CUENTA Origen: 007-01-002389330101 Ref: Operacion N°:997005177 Motivo:  Mismo Tit: N ID Operacion: 3052356\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157515250\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"14:00:25\",\"NroComprobante\":909000094,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":11,\"Descripcion\":\"Pago Cheque por Caja\",\"Sentido\":\"-\",\"Importe\":50000.00,\"ImporteValorizado\":50000.00,\"SaldoParcial\":771860.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Nro. Cheque: 3168959\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157496291\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"13:33:50\",\"NroComprobante\":200000031,\"Categoria\":\"OTROSDEB\",\"CodMovimiento\":11,\"Descripcion\":\"Pago Cheque por Caja\",\"Sentido\":\"-\",\"Importe\":185693.10,\"ImporteValorizado\":185693.10,\"SaldoParcial\":821860.83,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"Nro. Cheque: 3168958\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465709\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:15\",\"NroComprobante\":901011448,\"Referencia\":\"FDO\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":57902.40,\"ImporteValorizado\":57902.40,\"SaldoParcial\":1007553.93,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 30517891769 NOMBRE Destino: FEDERACION MEDICA DEL CHACO CUENTA Destino: 3110030201000000445060 Ref: FDO Motivo: VAR Mismo Tit: N ID Operacion: 791182\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465704\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:14\",\"NroComprobante\":903011287,\"Referencia\":\"\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":338225.00,\"ImporteValorizado\":338225.00,\"SaldoParcial\":1065456.33,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20112496476 NOMBRE Destino: GIMENEZ ROBERTO OSCAR CUENTA Destino: 0720505788000035024804 Ref:  Motivo: VAR Mismo Tit: N ID Operacion: 791181\"},{\"NroTransaccion\":0,\"SubOperacion\":0,\"Id\":\"157465700\",\"Sucursal\":30,\"Cuenta\":94410,\"Modulo\":20,\"Fecha\":\"2025-08-26\",\"FechaOperacion\":\"2025-08-26\",\"Hora\":\"12:44:14\",\"NroComprobante\":903011286,\"Referencia\":\"HON\",\"Categoria\":\"TRANSFERENCIAS\",\"CodMovimiento\":421,\"Descripcion\":\"Transferencia inmediata Distinto Titular\",\"Sentido\":\"-\",\"Importe\":2283735.00,\"ImporteValorizado\":2283735.00,\"SaldoParcial\":1403681.33,\"SignoSaldoParcial\":\"+\",\"Detalle\":\"CUIT Destino: 20047002932 NOMBRE Destino: BARROS ANGEL OSCAR CUENTA Destino: 3110030211000065807046 Ref: HON Motivo: HON Mismo Tit: N ID Operacion: 857750\"}]}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "493",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:34 GMT"
+        }
+      },
+      "uuid": "4214020d-0efa-47c9-964b-24581b25805c",
+      "persistent": true,
+      "scenarioName": "scenario-13-api24Nbch-canales-cuenta-movimientos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-13-api24Nbch-canales-cuenta-movimientos-2"
+    },
+    {
+      "id": "66c0d8fa-4d7c-49bb-bf54-dd049bc82ed3",
+      "name": "api24nbch_canales_tarjeta-debito",
+      "request": {
+        "url": "/api24Nbch/canales/tarjeta-debito?&usuario.pais=80&usuario.tipoDocumento=1&usuario.numeroDocumento=20047002932&contexto.pais=80&contexto.tipoDocumento=1&contexto.numeroDocumento=30670181819",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "382",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:34 GMT"
+        }
+      },
+      "uuid": "66c0d8fa-4d7c-49bb-bf54-dd049bc82ed3",
+      "persistent": true,
+      "scenarioName": "scenario-12-api24Nbch-canales-tarjeta-debito",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-12-api24Nbch-canales-tarjeta-debito-2"
+    },
+    {
+      "id": "ec4ced53-f6c7-422e-9eba-f5598da0cea1",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "46",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:34 GMT"
+        }
+      },
+      "uuid": "ec4ced53-f6c7-422e-9eba-f5598da0cea1",
+      "persistent": true,
+      "scenarioName": "scenario-2-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-2-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "d666b5a0-8398-4478-a43e-12a36f4851e7",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "34",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:20 GMT"
+        }
+      },
+      "uuid": "d666b5a0-8398-4478-a43e-12a36f4851e7",
+      "persistent": true,
+      "scenarioName": "scenario-14-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "scenario-14-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "d37a3995-b5db-472f-9312-ceb35ef7e656",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=94410&modulo=20&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":20,\"Nombre\":\"SIDEPREME DEL CHACO\",\"Cuenta\":94410,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"SaldoContable\":2507590.40,\"SaldoDisponible\":2507590.40,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030201000000944109\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "56",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:19 GMT"
+        }
+      },
+      "uuid": "d37a3995-b5db-472f-9312-ceb35ef7e656",
+      "persistent": true,
+      "scenarioName": "scenario-14-api24Nbch-canales-cuenta-saldos",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-14-api24Nbch-canales-cuenta-saldos-2"
+    },
+    {
+      "id": "82797e23-6b39-4f51-bfee-0135684ef041",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=6580704&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"BARROS ANGEL OSCAR\",\"Cuenta\":6580704,\"Signo\":\"$\",\"Operacion\":0,\"Moneda\":\"PESOS\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"PESOS\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":1635664.80,\"SaldoDisponible\":1635664.80,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030211000065807046\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "53",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:19 GMT"
+        }
+      },
+      "uuid": "82797e23-6b39-4f51-bfee-0135684ef041",
+      "persistent": true
+    },
+    {
+      "id": "0be00319-7d91-4fef-b921-b03628a77a71",
+      "name": "api24nbch_canales_cuenta_saldos",
+      "request": {
+        "url": "/api24Nbch/canales/cuenta/saldos?&cuenta=8497007&modulo=21&sucursal=30",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"Empresa\":0,\"Sucursal\":30,\"Modulo\":21,\"Nombre\":\"BARROS ANGEL OSCAR\",\"Cuenta\":8497007,\"Signo\":\"U$S\",\"Operacion\":0,\"Moneda\":\"DÓLAR ESTADOUNIDENSE\",\"TipoOperacion\":0,\"SubCuentaDesc\":\"DÓLAR ESTADOUNIDENSE\",\"SubOperacion\":0,\"ModuloDesc\":\"CAJA_AHORRO\",\"SaldoContable\":138.42,\"SaldoDisponible\":138.42,\"SaldoHistorico\":0,\"TarjetasDebito\":[],\"CBU\":\"3110030215000084970071\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "53",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:19 GMT"
+        }
+      },
+      "uuid": "0be00319-7d91-4fef-b921-b03628a77a71",
+      "persistent": true
+    },
+    {
+      "id": "31873d80-54db-4a17-98b1-f5d3fee3c7d0",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&contexto.numeroDocumento=30670181819&contexto.tipoDocumento=1&contexto.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":94410,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"TipoDocTitular\":1,\"NroDocTitular\":30670181819,\"Calle\":\"AV AVALOS TORRE B\",\"Numero\":468,\"Piso\":4,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":94410,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110754908\",\"CUIT\":30670181819},{\"Numero\":\"5046203110830745\",\"CUIT\":30670181819},{\"Numero\":\"5046203110918386\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108596\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108595\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754909\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754910\",\"CUIT\":30670181819},{\"Numero\":\"5046203110766515\",\"CUIT\":30670181819}],\"Tasa\":0E-7,\"CBU\":\"3110030201000000944109\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670181819,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "74",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:19 GMT"
+        }
+      },
+      "uuid": "31873d80-54db-4a17-98b1-f5d3fee3c7d0",
+      "persistent": true
+    },
+    {
+      "id": "ccc28117-8801-4862-8c31-a6495c0f6bd1",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":6580704,\"RazonSocial\":\"BARROS ANGEL OSCAR\",\"TipoDocTitular\":1,\"NroDocTitular\":20047002932,\"Calle\":\"M DE CERVANTES\",\"Numero\":157,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"23\",\"TipoOperacionDesc\":\"Cuenta Sueldo Adm. Publica Provincial\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":6580704,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650543033012\",\"CUIT\":20047002932}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000065807046\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20047002932,\"Apellido\":\"BARROS ANGEL OSCAR\",\"FechaNacimiento\":\"19480327\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8497007,\"RazonSocial\":\"BARROS ANGEL OSCAR\",\"TipoDocTitular\":1,\"NroDocTitular\":20047002932,\"Calle\":\"M DE CERVANTES\",\"Numero\":157,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8497007,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650543033012\",\"CUIT\":20047002932}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000084970071\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20047002932,\"Apellido\":\"BARROS ANGEL OSCAR\",\"FechaNacimiento\":\"19480327\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":94410,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"TipoDocTitular\":1,\"NroDocTitular\":30670181819,\"Calle\":\"AV AVALOS TORRE B\",\"Numero\":468,\"Piso\":4,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":94410,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110754908\",\"CUIT\":30670181819},{\"Numero\":\"5046203110830745\",\"CUIT\":30670181819},{\"Numero\":\"5046203110918386\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108596\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108595\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754909\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754910\",\"CUIT\":30670181819},{\"Numero\":\"5046203110766515\",\"CUIT\":30670181819}],\"Tasa\":0E-7,\"CBU\":\"3110030201000000944109\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670181819,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "56",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:19 GMT"
+        }
+      },
+      "uuid": "ccc28117-8801-4862-8c31-a6495c0f6bd1",
+      "persistent": true,
+      "scenarioName": "scenario-15-api24Nbch-canales-producto",
+      "requiredScenarioState": "scenario-15-api24Nbch-canales-producto-2"
+    },
+    {
+      "id": "f371a576-5edc-4ed9-91f6-5c963bf21c96",
+      "name": "api24nbch_canales_autorizado_usuario",
+      "request": {
+        "url": "/api24Nbch/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "body": "{\"Timestamp\":\"2025-08-31T20:56:16\",\"Status\":404,\"Message\":\"El usuario con Tipo Documento 1 y Nro Documento 20047002932 no se ha encontrado\",\"Error\":\"La autorización no se ha encontrado\",\"Path\":\"https://172.17.0.1:7079/canales/autorizado/usuario?tipoDoc=1&nroDoc=20047002932\"}",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "67",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:16 GMT"
+        }
+      },
+      "uuid": "f371a576-5edc-4ed9-91f6-5c963bf21c96",
+      "persistent": true,
+      "scenarioName": "scenario-5-api24Nbch-canales-autorizado-usuario",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-5-api24Nbch-canales-autorizado-usuario-2"
+    },
+    {
+      "id": "2f8430fa-c17f-46c9-a048-505bf3ca1adf",
+      "name": "api24nbch_canales_producto",
+      "request": {
+        "url": "/api24Nbch/canales/producto?&usuario.numeroDocumento=20047002932&usuario.tipoDocumento=1&usuario.pais=80&modulos=20&modulos=21",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "body": "[{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":6580704,\"RazonSocial\":\"BARROS ANGEL OSCAR\",\"TipoDocTitular\":1,\"NroDocTitular\":20047002932,\"Calle\":\"M DE CERVANTES\",\"Numero\":157,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"23\",\"TipoOperacionDesc\":\"Cuenta Sueldo Adm. Publica Provincial\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":6580704,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650543033012\",\"CUIT\":20047002932}],\"Tasa\":35.0000000,\"CBU\":\"3110030211000065807046\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20047002932,\"Apellido\":\"BARROS ANGEL OSCAR\",\"FechaNacimiento\":\"19480327\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":8497007,\"RazonSocial\":\"BARROS ANGEL OSCAR\",\"TipoDocTitular\":1,\"NroDocTitular\":20047002932,\"Calle\":\"M DE CERVANTES\",\"Numero\":157,\"Piso\":0,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"1\",\"TipoOperacionDesc\":\"AC  Caja de Ahorro\",\"SubOperacion\":\"\",\"Modulo\":21,\"ModuloDesc\":\"CAJA_AHORRO\",\"Sucursal\":30,\"Cuenta\":8497007,\"Moneda\":2,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5143650543033012\",\"CUIT\":20047002932}],\"Tasa\":35.0000000,\"CBU\":\"3110030215000084970071\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":20047002932,\"Apellido\":\"BARROS ANGEL OSCAR\",\"FechaNacimiento\":\"19480327\",\"EstadoCivil\":\"SOLTERO\",\"Sexo\":\"MASCULINO\",\"TipoTitularidad\":\"1\",\"Nacionalidad\":\"ARGENTINA\",\"EsPersonaFisica\":true},\"FormaOperar\":\"INDISTINCT\",\"CP\":3500},{\"Percepcion\":\"\",\"CodigoEntidadFinanciera\":311,\"Nrocuenta\":94410,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"TipoDocTitular\":1,\"NroDocTitular\":30670181819,\"Calle\":\"AV AVALOS TORRE B\",\"Numero\":468,\"Piso\":4,\"Depto\":\" \",\"Localidad\":\"RESISTENCIA\",\"Provincia\":6,\"Pais\":80,\"FechaAlta\":\"19980727\",\"Productos\":[{\"TipoOperacion\":\"51\",\"TipoOperacionDesc\":\"CC común\",\"SubOperacion\":\"\",\"Modulo\":20,\"ModuloDesc\":\"CUENTA_CORRIENTE\",\"Sucursal\":30,\"Cuenta\":94410,\"Moneda\":80,\"Estado\":0,\"EstadoDesc\":\"ACTIVO\",\"Bloqueo\":0.00,\"TarjetasDebito\":[{\"Numero\":\"5046203110754908\",\"CUIT\":30670181819},{\"Numero\":\"5046203110830745\",\"CUIT\":30670181819},{\"Numero\":\"5046203110918386\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108596\",\"CUIT\":30670181819},{\"Numero\":\"5046203111108595\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754909\",\"CUIT\":30670181819},{\"Numero\":\"5046203110754910\",\"CUIT\":30670181819},{\"Numero\":\"5046203110766515\",\"CUIT\":30670181819}],\"Tasa\":0E-7,\"CBU\":\"3110030201000000944109\"}],\"Titular\":{\"TipoDoc\":1,\"NroDoc\":30670181819,\"RazonSocial\":\"SIDEPREME DEL CHACO\",\"EsPersonaFisica\":false},\"FormaOperar\":\"COMPOUND\",\"CP\":3500}]",
+        "headers": {
+          "Keep-Alive": "timeout=5, max=100",
+          "x-envoy-upstream-service-time": "186",
+          "x-service-timestamp": "20250820160549",
+          "x-service-rev": "6db48cc",
+          "Server": "istio-envoy",
+          "x-service-version": "3.1.809",
+          "x-service-name": "Canales",
+          "content-type": "application/json",
+          "Date": "Sun, 31 Aug 2025 20:56:16 GMT"
+        }
+      },
+      "uuid": "2f8430fa-c17f-46c9-a048-505bf3ca1adf",
+      "persistent": true,
+      "scenarioName": "scenario-15-api24Nbch-canales-producto",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "scenario-15-api24Nbch-canales-producto-2"
+    }
+  ]
+}
