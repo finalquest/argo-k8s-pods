@@ -1,3 +1,5 @@
+let apkSource = 'registry'; // 'registry' o 'local'
+
 async function loadBranches() {
     const branchSelect = document.getElementById('branch-select');
     try {
@@ -142,17 +144,21 @@ async function fetchApkVersions() {
     apkVersionSelect.disabled = false;
 
     try {
-        // Assuming a repository structure like apks/CLIENT/int
+        // El endpoint ahora es inteligente. El parámetro repo es opcional y solo se usa para oras.
         const repo = `apks/${selectedClient}/int`;
         const response = await fetch(`/api/apk/versions?repo=${repo}`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.details || `HTTP error! status: ${response.status}`);
         }
-        const versions = await response.json();
-        populateApkVersions(versions);
+        const data = await response.json();
+        apkSource = data.source; // Guardar el origen
+        populateApkVersions(data.versions);
+        console.log(`APK source set to: ${apkSource}`);
+
     } catch (error) {
         console.error('Error al buscar versiones de APK:', error);
         apkVersionSelect.innerHTML = '<option>Error al cargar</option>';
+        apkSource = 'registry'; // Reset to default on error
     }
 }

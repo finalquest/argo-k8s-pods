@@ -63,13 +63,30 @@ app.get('/api/branches', async (req, res) => {
 });
 
 app.get('/api/apk/versions', (req, res) => {
+    // Modo 1: Directorio Local de APKs
+    if (process.env.LOCAL_APK_DIRECTORY) {
+        const apkDir = process.env.LOCAL_APK_DIRECTORY;
+        if (!fs.existsSync(apkDir)) {
+            console.error(`El directorio de APKs locales especificado no existe: ${apkDir}`);
+            return res.status(500).json({ error: 'El directorio de APKs locales no existe.' });
+        }
+        try {
+            const files = fs.readdirSync(apkDir);
+            const apkFiles = files.filter(file => path.extname(file).toLowerCase() === '.apk');
+            return res.json({ source: 'local', versions: apkFiles });
+        } catch (error) {
+            console.error(`Error al leer el directorio de APKs locales: ${error.message}`);
+            return res.status(500).json({ error: 'Error al leer el directorio de APKs locales.' });
+        }
+    }
+
+    // Modo 2: Registro ORAS (comportamiento anterior)
     const { repo } = req.query;
     if (!repo) {
         return res.status(400).json({ error: 'Se requiere el parámetro \'repo\'.' });
     }
 
-    // Basic sanitization to prevent command injection
-    const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-\/.\s]/g, '');
+    const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-\/.]/g, '');
     if (sanitizedRepo !== repo) {
         return res.status(400).json({ error: 'Parámetro \'repo\' contiene caracteres inválidos.' });
     }
@@ -84,7 +101,7 @@ app.get('/api/apk/versions', (req, res) => {
         }
         
         const versions = stdout.trim().split('\n').filter(Boolean);
-        res.json(versions);
+        res.json({ source: 'registry', versions: versions });
     });
 });
 
@@ -526,7 +543,8 @@ function broadcastStatus() {
         status: worker.status,
         branch: worker.branch,
         client: worker.client,
-        apkVersion: worker.apkVersion
+        apkIdentifier: worker.apkIdentifier,
+        apkSourceType: worker.apkSourceType
     }));
     io.emit('worker_pool_update', slots);
 }
@@ -568,20 +586,24 @@ function processQueue() {
 }
 
 function assignJobToWorker(job) {
-    const apkVersion = job.apkVersion || process.env.APK_PATH; // Fallback for jobs without version
+    const apkSourceType = job.localApk ? 'local' : 'registry';
+    const apkIdentifier = job.localApk || job.apkVersion || process.env.APK_PATH;
+
     let worker = workerPool.find(w => 
         w.branch === job.branch && 
         w.client === job.client && 
-        w.apkVersion === apkVersion && 
+        w.apkIdentifier === apkIdentifier &&
+        w.apkSourceType === apkSourceType &&
         w.status === 'ready'
     );
+
     if (worker) {
         runJobOnWorker(job, worker);
         return true;
     }
 
     if (workerPool.length < maxWorkers) {
-        const newWorker = createWorker(job.branch, job.client, apkVersion);
+        const newWorker = createWorker(job.branch, job.client, apkIdentifier, apkSourceType);
         runJobOnWorker(job, newWorker);
         return true;
     }
@@ -647,7 +669,7 @@ async function runJobOnWorker(job, worker) {
     broadcastStatus();
 }
 
-function createWorker(branch, client, apkVersion) {
+function createWorker(branch, client, apkIdentifier, apkSourceType) {
     const workerId = workerPool.length > 0 ? Math.max(...workerPool.map(w => w.id)) + 1 : 0;
     const workerProcess = fork(path.join(__dirname, 'worker.js'));
 
@@ -656,16 +678,24 @@ function createWorker(branch, client, apkVersion) {
         process: workerProcess,
         branch: branch,
         client: client,
-        apkVersion: apkVersion, // Store APK version
+        apkIdentifier: apkIdentifier,
+        apkSourceType: apkSourceType,
         status: 'initializing',
         currentJob: null,
         terminating: false
     };
 
     workerPool.push(worker);
-    console.log(`Worker ${worker.id} creado para la branch ${branch}, cliente ${client} y APK ${apkVersion}.`);
+    console.log(`Worker ${worker.id} creado para la branch ${branch}, cliente ${client}, APK: ${apkIdentifier} (source: ${apkSourceType})`);
     
-    worker.process.send({ type: 'INIT', branch: branch, client: client, apkVersion: apkVersion });
+    const initMessage = { type: 'INIT', branch, client };
+    if (apkSourceType === 'local') {
+        initMessage.localApkPath = path.join(process.env.LOCAL_APK_DIRECTORY, apkIdentifier);
+    } else {
+        initMessage.apkVersion = apkIdentifier;
+    }
+    
+    worker.process.send(initMessage);
 
     workerProcess.on('message', async (message) => {
         const currentJob = worker.currentJob;
