@@ -1,0 +1,253 @@
+{
+    "mappings": [
+{   
+            "id": "7c880f8c-c9bc-413f-a950-5e06ff8acc41",
+            "priority": 99,
+            "request": {
+                "urlPattern": "/",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {
+            "id": "7c880f8c-c9bc-413f-a950-5e06ff8acc42",
+            "priority": 99,
+            "request": {
+                "url": "/cvu",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        }, 
+        {   
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc43",
+            "priority": 99,
+            "request": {
+                "urlPattern": "/api24Nbch/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc44",
+            "priority": 99,
+            "request": {
+                "url": "/api24Nbch",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {   
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc45",
+            "request": {
+                "urlPattern": "/coelsa/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc45"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc46",
+            "request": {
+                "url": "/coelsa",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc46"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc48",
+            "request": {
+                "urlPattern": "/bts/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc48"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc47",
+            "request": {
+                "url": "/bts",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc47"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc49",
+            "request": {
+                "urlPattern": "/echeq/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc49"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc50",
+            "request": {
+                "url": "/echeq",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc50"
+        },
+        {
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc51",
+            "request": {
+                "urlPattern": "/link-pagos/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc51"
+        },
+        {   
+            "priority": 99,
+            "id": "7c880f8c-c9bc-413f-a950-5e05ff8acc52",
+            "request": {
+                "url": "/link-pagos",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "7c880f8c-c9bc-413f-a950-5e05ff8acc52"
+        },
+       {
+            "priority": 99,
+            "id": "184ab057-7f30-4da7-9f78-b53585cc5fd2",
+            "request": {
+                "urlPattern": "/apiqBpn/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "184ab057-7f30-4da7-9f78-b53585cc5fd2"
+        },
+        {
+            "priority": 99,
+            "id": "f48f3e39-9260-4b61-a859-86d6695fe248",
+            "request": {
+                "url": "/apiqBpn",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "f48f3e39-9260-4b61-a859-86d6695fe248"
+        },
+        {
+            "priority": 99,
+            "id": "4225f9c7-d7ff-4ae6-9d73-9ce330f5f8b1",
+            "request": {
+                "urlPattern": "/profileid/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "4225f9c7-d7ff-4ae6-9d73-9ce330f5f8b1"
+        },
+        {
+            "priority": 99,
+            "id": "cb46893b-7465-458e-ae11-494a850bab7d",
+            "request": {
+                "url": "/profileid",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            },
+            "uuid": "cb46893b-7465-458e-ae11-494a850bab7d"
+        },
+        {
+            "request": {
+                "urlPattern": "/auth0/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {
+            "request": {
+                "url": "/auth0",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {   "priority": 99,
+            "request": {
+                "urlPattern": "/apisNbch/.*",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        },
+        {
+            "priority": 99,
+            "request": {
+                "url": "/apisNbch",
+                "method": "ANY"
+            },
+            "response": {
+                "status": 200,
+                "proxyBaseUrl": "http://172.17.0.1:7079"
+            }
+        }
+],
+"importOptions": {
+        "duplicatePolicy": "IGNORE",
+        "deleteAllNotInImport": true
+    }
+}
