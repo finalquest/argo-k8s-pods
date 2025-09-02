@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
   name: {{ include "appium-orchestrator-chart.fullname" . }}
   labels:
     {{- include "appium-orchestrator-chart.labels" . | nindent 4 }}
