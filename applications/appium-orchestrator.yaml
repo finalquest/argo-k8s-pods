@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: appium-orchestrator
-  namespace: argocd
+  namespace: android-emulators
 spec:
   project: default
   source:
