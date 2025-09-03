@@ -63,20 +63,23 @@ function parseScriptOutput(output) {
 function setupWorkerEnvironment() {
     workspaceDir = path.join(os.tmpdir(), `worker-${crypto.randomBytes(8).toString('hex')}`);
     fs.mkdirSync(workspaceDir, { recursive: true });
-    sendToParent({ type: 'LOG', data: `[worker] Workspace creado en: ${workspaceDir}\n` });
+    sendToParent({ type: 'LOG', data: `[worker] Workspace creado en: ${workspaceDir}
+` });
 
     const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
     runScript(setupScript, [workspaceDir, branch], (code) => {
         if (code !== 0) {
-            sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la preparación del workspace. Terminando.\n` });
+            sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la preparación del workspace. Terminando.
+` });
             return process.exit(1);
         }
-        sendToParent({ type: 'LOG', data: '[worker] ✅ Workspace listo.\n' });
+        sendToParent({ type: 'LOG', data: '[worker] ✅ Workspace listo.' });
 
         const findEmulatorScript = path.join(__dirname, 'scripts', 'find-and-lock-emulator.sh');
         runScript(findEmulatorScript, [], (code, output) => {
             if (code !== 0) {
-                sendToParent({ type: 'LOG', data: `[worker] ❌ No se pudo bloquear un emulador. Terminando.\n` });
+                sendToParent({ type: 'LOG', data: `[worker] ❌ No se pudo bloquear un emulador. Terminando.
+` });
                 return process.exit(1);
             }
             const { EMULATOR_ID, ADB_HOST } = parseScriptOutput(output);
@@ -85,30 +88,36 @@ function setupWorkerEnvironment() {
 
             // Permitir sobreescribir el ADB_HOST para desarrollo local contra un clúster
             if (process.env.ADB_HOST_OVERRIDE) {
-                sendToParent({ type: 'LOG', data: `[worker] ⚠️  ADB_HOST original ('${environment.adbHost}') será sobreescrito por ADB_HOST_OVERRIDE.\n` });
+                sendToParent({ type: 'LOG', data: `[worker] ⚠️  ADB_HOST original ('${environment.adbHost}') será sobreescrito por ADB_HOST_OVERRIDE.
+` });
                 environment.adbHost = process.env.ADB_HOST_OVERRIDE;
             }
 
-            sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId || 'local'} bloqueado. Usando ADB_HOST: ${environment.adbHost}\n` });
+            sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId || 'local'} bloqueado. Usando ADB_HOST: ${environment.adbHost}
+` });
 
             const startAppiumScript = path.join(__dirname, 'scripts', 'start-appium.sh');
             runScript(startAppiumScript, [workspaceDir], (code, output) => {
                 if (code !== 0) {
-                    sendToParent({ type: 'LOG', data: `[worker] ❌ Falló el inicio de Appium. Terminando.\n` });
+                    sendToParent({ type: 'LOG', data: `[worker] ❌ Falló el inicio de Appium. Terminando.
+` });
                     return cleanupAndExit(1);
                 }
                 const { APPIUM_PID, APPIUM_PORT } = parseScriptOutput(output);
                 environment.appiumPid = APPIUM_PID;
                 environment.appiumPort = APPIUM_PORT;
-                sendToParent({ type: 'LOG', data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.\n` });
+                sendToParent({ type: 'LOG', data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.
+` });
 
                 const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
                 runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], (code) => {
                     if (code !== 0) {
-                        sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.\n` });
+                        sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.
+` });
                         return cleanupAndExit(1);
                     }
-                    sendToParent({ type: 'LOG', data: `[worker] ✅ APK de cliente ${client} instalado.\n` });
+                    sendToParent({ type: 'LOG', data: `[worker] ✅ APK de cliente ${client} instalado.
+` });
 
                     sendToParent({ type: 'READY' });
                 });
@@ -124,7 +133,6 @@ function runTest(job) {
 
     const executeTest = () => {
         runScript(runnerScript, args, (code) => {
-            // El reporte ya no se genera aquí, así que no se envía la ruta.
             sendToParent({
                 type: 'READY_FOR_NEXT_JOB',
                 data: { exitCode: code, reportPath: null }
@@ -133,28 +141,36 @@ function runTest(job) {
     };
 
     if (mappingToLoad) {
-        sendToParent({ type: 'LOG', data: `[worker] 📼 Job de verificación detectado. Cargando mapping: ${mappingToLoad}\n` });
+        const logMessage = job.usePreexistingMapping 
+            ? `[worker] 💾 Usando mapping preexistente: ${mappingToLoad}\n`
+            : `[worker] 📼 Job de verificación detectado. Cargando mapping: ${mappingToLoad}\n`;
+
+        sendToParent({ type: 'LOG', data: logMessage });
+        
         const loadMappingScript = path.join(__dirname, 'scripts', 'load-mapping.sh');
         runScript(loadMappingScript, [mappingToLoad], (code) => {
             if (code !== 0) {
-                sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.\n` });
+                sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.
+` });
                 sendToParent({
                     type: 'READY_FOR_NEXT_JOB',
                     data: { exitCode: code, reportPath: null }
                 });
             } else {
-                sendToParent({ type: 'LOG', data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test de verificación...\n` });
+                sendToParent({ type: 'LOG', data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test...
+` });
                 executeTest();
             }
         });
     } else {
-        // Es un job normal o de grabación
+        // Es un job normal o de grabación sin carga de mapping
         executeTest();
     }
 }
 
 function cleanupAndExit(code) {
-    sendToParent({ type: 'LOG', data: `[worker] Iniciando limpieza...\n` });
+    sendToParent({ type: 'LOG', data: `[worker] Iniciando limpieza...
+` });
     if (environment.appiumPid) {
         const stopAppiumScript = path.join(__dirname, 'scripts', 'stop-appium.sh');
         try { execSync(`bash ${stopAppiumScript} ${environment.appiumPid}`); } catch (e) { /* Ignorar errores */ }
@@ -165,9 +181,11 @@ function cleanupAndExit(code) {
     }
     if (workspaceDir && fs.existsSync(workspaceDir)) {
         fs.rmSync(workspaceDir, { recursive: true, force: true });
-        sendToParent({ type: 'LOG', data: `[worker] Workspace ${workspaceDir} eliminado.\n` });
+        sendToParent({ type: 'LOG', data: `[worker] Workspace ${workspaceDir} eliminado.
+` });
     }
-    sendToParent({ type: 'LOG', data: `[worker] Limpieza completa. Saliendo con código ${code}.\n` });
+    sendToParent({ type: 'LOG', data: `[worker] Limpieza completa. Saliendo con código ${code}.
+` });
     process.exit(code);
 }
 
@@ -190,14 +208,14 @@ process.on('message', (message) => {
                     const reportDir = path.join(workspaceDir, 'appium', 'allure-report');
                     sendToParent({ type: 'UNIFIED_REPORT_READY', data: { reportPath: reportDir } });
                 } else {
-                    sendToParent({ type: 'LOG', data: '[worker] ❌ Falló la generación del reporte unificado.\n' });
+                    sendToParent({ type: 'LOG', data: '[worker] ❌ Falló la generación del reporte unificado.' });
                     // Aún así, avisamos que estamos listos para terminar
                     sendToParent({ type: 'UNIFIED_REPORT_READY', data: { reportPath: null } });
                 }
             });
             break;
         case 'TERMINATE':
-            sendToParent({ type: 'LOG', data: '[worker] Recibida orden de terminar.\n' });
+            sendToParent({ type: 'LOG', data: '[worker] Recibida orden de terminar.' });
             cleanupAndExit(0);
             break;
         default:
@@ -207,11 +225,11 @@ process.on('message', (message) => {
 });
 
 process.on('SIGTERM', () => {
-    sendToParent({ type: 'LOG', data: '[worker] Recibida señal SIGTERM.\n' });
+    sendToParent({ type: 'LOG', data: '[worker] Recibida señal SIGTERM.' });
     cleanupAndExit(143);
 });
 
 process.on('SIGINT', () => {
-    sendToParent({ type: 'LOG', data: '[worker] Recibida señal SIGINT.\n' });
+    sendToParent({ type: 'LOG', data: '[worker] Recibida señal SIGINT.' });
     cleanupAndExit(130);
 });

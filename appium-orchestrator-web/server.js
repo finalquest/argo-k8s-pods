@@ -392,7 +392,7 @@ app.post('/api/wiremock/recordings/stop', async (req, res) => {
             : splitAndSaveMappings(data.mappings, recordingName);
 
         res.json({
-            message: `Grabación '${recordingName}' finalizada y mappings guardados.`,
+            message: `Grabación '${recordingName}' finalizada y mappings guardados.`, 
             summary: summary
         });
     } catch (error) {
@@ -846,15 +846,20 @@ io.on('connection', (socket) => {
             // Encolar el de grabación primero, luego el de verificación
             if (recordJob.highPriority) {
                 jobQueue.unshift(verifyJob, recordJob); // El de grabación queda primero
-                io.emit('log_update', { logLine: `--- ⚡️ Test de grabación y verificación para '${data.feature}' añadido a la cola con prioridad alta. ---\n` });
+                io.emit('log_update', { logLine: `--- ⚡️ Test de grabación y verificación para '${data.feature}' añadido a la cola con prioridad alta. ---
+` });
             } else {
                 jobQueue.push(recordJob, verifyJob);
-                io.emit('log_update', { logLine: `--- 📼 Petición de grabación y verificación para '${data.feature}' encolada. ---\n` });
+                io.emit('log_update', { logLine: `--- 📼 Petición de grabación y verificación para '${data.feature}' encolada. ---
+` });
             }
 
         } else {
             // --- Lógica normal ---
             const job = { ...data, id: ++jobIdCounter };
+            if (data.usePreexistingMapping) {
+                job.mappingToLoad = `${data.feature}.json`;
+            }
             if (job.highPriority) {
                 jobQueue.unshift(job);
                 io.emit('log_update', { logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
@@ -870,7 +875,7 @@ io.on('connection', (socket) => {
 
     socket.on('run_batch', (data) => {
         console.log('--- DEBUG: Datos recibidos en run_batch ---', data);
-        const { jobs = [], record = false } = data;
+        const { jobs = [], record = false, usePreexistingMapping = false } = data;
         const highPriority = jobs.length > 0 && jobs[0].highPriority;
 
         let jobsToQueue = [];
@@ -908,11 +913,17 @@ io.on('connection', (socket) => {
 `;
             io.emit('log_update', { logLine: logMessage });
 
-            jobsToQueue = jobs.map(jobData => ({
-                ...jobData,
-                id: ++jobIdCounter,
-                record: false // Asegurarse que record es false si no es un lote de grabación
-            }));
+            jobsToQueue = jobs.map(jobData => {
+                const newJob = {
+                    ...jobData,
+                    id: ++jobIdCounter,
+                    record: false // Asegurarse que record es false si no es un lote de grabación
+                };
+                if (usePreexistingMapping) {
+                    newJob.mappingToLoad = `${jobData.feature}.json`;
+                }
+                return newJob;
+            });
         }
 
         if (highPriority) {

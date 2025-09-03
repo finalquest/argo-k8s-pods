@@ -10,6 +10,9 @@ function runTest(branch, client, feature, highPriority = false, record = false) 
         jobPayload.apkVersion = selectedApk;
     }
 
+    const useLocalMappingsCheckbox = document.getElementById('use-local-mappings-checkbox');
+    jobPayload.usePreexistingMapping = useLocalMappingsCheckbox.checked;
+
     window.socket.emit('run_test', jobPayload);
     switchTab('workers');
 }
@@ -20,12 +23,14 @@ function runSelectedTests() {
     const apkVersionSelect = document.getElementById('apk-version-select');
     const priorityCheckbox = document.getElementById('batch-priority-checkbox');
     const recordCheckbox = document.getElementById('record-mappings-checkbox');
+    const useLocalMappingsCheckbox = document.getElementById('use-local-mappings-checkbox');
     
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
     const selectedApk = apkVersionSelect.value;
     const highPriority = priorityCheckbox.checked;
     const recordMappings = recordCheckbox.checked;
+    const usePreexistingMapping = useLocalMappingsCheckbox.checked;
 
     const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
@@ -50,7 +55,7 @@ function runSelectedTests() {
         feature: cb.dataset.featureName,
     }));
 
-    window.socket.emit('run_batch', { jobs, record: recordMappings });
+    window.socket.emit('run_batch', { jobs, record: recordMappings, usePreexistingMapping });
     switchTab('workers');
 }
 
