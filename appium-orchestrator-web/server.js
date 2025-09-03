@@ -29,12 +29,14 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
     process.exit(1);
 }
 
-app.use(session({
+const sessionMiddleware = session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 horas
-}));
+});
+
+app.use(sessionMiddleware);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -102,6 +104,9 @@ app.get('/api/current-user', (req, res) => {
         res.json(null);
     }
 });
+
+// Proteger todos los endpoints /api subsiguientes. /api/current-user está definido antes y permanece público.
+app.use('/api', ensureAuthenticated);
 
 
 const { GIT_REPO_URL, GIT_USER, GIT_PAT } = process.env;
@@ -894,6 +899,22 @@ function createWorker(branch, client, apkIdentifier, apkSourceType) {
 
 
 // --- Manejo de Socket.IO ---
+
+const wrap = middleware => (socket, next) => middleware(socket.request, {}, next);
+
+io.use(wrap(sessionMiddleware));
+io.use(wrap(passport.initialize()));
+io.use(wrap(passport.session()));
+
+io.use((socket, next) => {
+    if (socket.request.user) {
+        next();
+    } else {
+        console.log('Rechazando conexión de socket no autenticada.');
+        next(new Error('unauthorized'));
+    }
+});
+
 io.on('connection', (socket) => {
     console.log('Un cliente se ha conectado:', socket.id);
 
