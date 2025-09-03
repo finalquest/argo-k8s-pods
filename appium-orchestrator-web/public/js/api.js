@@ -1,3 +1,15 @@
+async function getCurrentUser() {
+    try {
+        const response = await fetch('/api/current-user');
+        if (response.status === 401) return null; // No autenticado
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user status:', error);
+        return null; // Asumir no logueado en caso de error de red
+    }
+}
+
 let apkSource = 'registry'; // 'registry' o 'local'
 
 async function loadBranches() {

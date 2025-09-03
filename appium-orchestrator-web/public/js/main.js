@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
+});
+
+async function checkAuthStatus() {
+    const authOverlay = document.getElementById('auth-overlay');
+    const userInfoDiv = document.getElementById('user-info');
+
+    const user = await getCurrentUser();
+
+    if (user) {
+        // Usuario autenticado
+        authOverlay.style.display = 'none';
+
+        document.getElementById('user-name').textContent = user.name;
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-photo').src = user.photo;
+        userInfoDiv.style.display = 'block';
+
+        // Inicializar la app principal
+        initializeApp();
+    } else {
+        // Usuario no autenticado
+        authOverlay.style.display = 'flex';
+        userInfoDiv.style.display = 'none';
+    }
+}
+
+function initializeApp() {
     window.socket = io();
     initializeSocketListeners();
     initializeUiEventListeners();
@@ -7,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadBranches();
     loadHistoryBranches();
     loadHistory();
-});
+}
 
 function initializeUiEventListeners() {
     const fetchBtn = document.getElementById('fetch-features-btn');

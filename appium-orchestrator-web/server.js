@@ -10,6 +10,9 @@ const { fork, exec } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 require('dotenv').config();
 
@@ -18,6 +21,88 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
+
+// --- Configuración de Autenticación ---
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, GOOGLE_HOSTED_DOMAIN } = process.env;
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
+    console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+    process.exit(1);
+}
+
+app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 horas
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: `${process.env.APP_BASE_URL}/auth/google/callback`,
+    hd: GOOGLE_HOSTED_DOMAIN
+  },
+  (accessToken, refreshToken, profile, done) => {
+    // En este punto, el perfil de Google ha sido verificado.
+    // Puedes buscar en tu base de datos si el usuario existe, o crearlo.
+    // Por ahora, simplemente pasamos el perfil.
+    // Asegúrate de que el usuario pertenece al dominio correcto si `hd` no es suficiente.
+    if (GOOGLE_HOSTED_DOMAIN && profile._json.hd !== GOOGLE_HOSTED_DOMAIN) {
+        return done(new Error("Dominio de Google no autorizado"));
+    }
+    return done(null, profile);
+  }
+));
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+
+// Middleware para proteger rutas
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: 'No autenticado' });
+}
+
+// --- Rutas de Autenticación ---
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => {
+    // Redirección exitosa a la página principal.
+    res.redirect('/');
+  });
+
+app.get('/auth/logout', (req, res, next) => {
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
+});
+
+app.get('/api/current-user', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.json({
+            name: req.user.displayName,
+            email: req.user.emails[0].value,
+            photo: req.user.photos[0].value
+        });
+    } else {
+        res.json(null);
+    }
+});
+
 
 const { GIT_REPO_URL, GIT_USER, GIT_PAT } = process.env;
 if (!GIT_REPO_URL || !GIT_USER || !GIT_PAT) {

@@ -16,7 +16,10 @@
     "archiver": "^7.0.1",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "node-fetch": "^2.6.7",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "simple-git": "^3.28.0",
     "socket.io": "^4.8.1"
   },

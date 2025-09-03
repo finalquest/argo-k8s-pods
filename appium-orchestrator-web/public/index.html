@@ -213,9 +213,31 @@
     </style>
 </head>
 <body>
+    <div id="auth-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 249, 250, 0.9); z-index: 999; display: flex; justify-content: center; align-items: center; text-align: center; backdrop-filter: blur(4px);">
+        <div style="padding: 2em 3em; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <h2 style="margin-bottom: 0.5em;">Appium Orchestrator</h2>
+            <p style="color: #6c757d;">Por favor, inicia sesión para continuar.</p>
+            <a href="/auth/google" style="text-decoration: none; padding: 0.7em 1.5em; background-color: #4285F4; color: white; border-radius: 4px; font-weight: 500; display: inline-block; margin-top: 1em;">
+                Login with Google
+            </a>
+        </div>
+    </div>
+
     <div class="header">
         <h1>Appium Orchestrator Web</h1>
         <div id="queue-status" style="font-weight: 500;"></div>
+        <div id="auth-container" style="position: absolute; top: 1.5em; right: 2em; text-align: right;">
+            <div id="user-info" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div>
+                        <div id="user-name" style="font-weight: 500;"></div>
+                        <div id="user-email" style="font-size: 0.8em; color: #555;"></div>
+                    </div>
+                    <img id="user-photo" src="" alt="User photo" style="width: 40px; height: 40px; border-radius: 50%;">
+                </div>
+                <a href="/auth/logout" style="font-size: 0.8em; color: #007bff; margin-top: 5px; display: inline-block;">Logout</a>
+            </div>
+        </div>
     </div>
 
     <div class="container">
