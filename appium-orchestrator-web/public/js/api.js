@@ -10,6 +10,17 @@ async function getCurrentUser() {
     }
 }
 
+async function getLocalDevices() {
+    try {
+        const response = await fetch('/api/local-devices');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching local devices:', error);
+        return []; // Devolver lista vacía en caso de error
+    }
+}
+
 let apkSource = 'registry'; // 'registry' o 'local'
 
 async function loadBranches() {

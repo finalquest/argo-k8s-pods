@@ -35,6 +35,26 @@ function initializeApp() {
     loadBranches();
     loadHistoryBranches();
     loadHistory();
+    loadLocalDevices(); // Cargar dispositivos locales
+}
+
+async function loadLocalDevices() {
+    const devices = await getLocalDevices();
+    const container = document.getElementById('device-selector-container');
+    const select = document.getElementById('device-select');
+
+    if (devices && devices.length > 0) {
+        container.style.display = 'block';
+        select.innerHTML = '';
+        devices.forEach(device => {
+            const option = document.createElement('option');
+            option.value = device;
+            option.textContent = device;
+            select.appendChild(option);
+        });
+    } else {
+        container.style.display = 'none';
+    }
 }
 
 function initializeUiEventListeners() {

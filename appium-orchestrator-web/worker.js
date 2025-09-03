@@ -25,10 +25,12 @@ function sendToParent(message) {
     }
 }
 
-function runScript(scriptPath, args, onDone) {
+function runScript(scriptPath, args, env, onDone) {
     sendToParent({ type: 'LOG', data: `[worker] Ejecutando: ${path.basename(scriptPath)} ${args.join(' ')}
 ` });
-    const scriptProcess = spawn('bash', [scriptPath, ...args]);
+    const options = { env: { ...process.env, ...env } };
+    const scriptProcess = spawn('bash', [scriptPath, ...args], options);
+
     let scriptOutput = '';
     scriptProcess.stdout.on('data', (data) => {
         const output = data.toString();
@@ -67,7 +69,7 @@ function setupWorkerEnvironment() {
 ` });
 
     const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
-    runScript(setupScript, [workspaceDir, branch], (code) => {
+    runScript(setupScript, [workspaceDir, branch], null, (code) => {
         if (code !== 0) {
             sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la preparación del workspace. Terminando.
 ` });
@@ -75,64 +77,83 @@ function setupWorkerEnvironment() {
         }
         sendToParent({ type: 'LOG', data: '[worker] ✅ Workspace listo.' });
 
-        const findEmulatorScript = path.join(__dirname, 'scripts', 'find-and-lock-emulator.sh');
-        runScript(findEmulatorScript, [], (code, output) => {
-            if (code !== 0) {
-                sendToParent({ type: 'LOG', data: `[worker] ❌ No se pudo bloquear un emulador. Terminando.
+        // Si estamos en modo local, nos saltamos la búsqueda de emuladores remotos.
+        if (process.env.DEVICE_SOURCE === 'local') {
+            sendToParent({ type: 'LOG', data: `[worker]  Modo local detectado. Omitiendo búsqueda de emulador remoto.
 ` });
-                return process.exit(1);
-            }
-            const { EMULATOR_ID, ADB_HOST } = parseScriptOutput(output);
-            environment.emulatorId = EMULATOR_ID;
-            environment.adbHost = ADB_HOST;
-
-            // Permitir sobreescribir el ADB_HOST para desarrollo local contra un clúster
-            if (process.env.ADB_HOST_OVERRIDE) {
-                sendToParent({ type: 'LOG', data: `[worker] ⚠️  ADB_HOST original ('${environment.adbHost}') será sobreescrito por ADB_HOST_OVERRIDE.
-` });
-                environment.adbHost = process.env.ADB_HOST_OVERRIDE;
-            }
-
-            sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId || 'local'} bloqueado. Usando ADB_HOST: ${environment.adbHost}
-` });
-
-            const startAppiumScript = path.join(__dirname, 'scripts', 'start-appium.sh');
-            runScript(startAppiumScript, [workspaceDir], (code, output) => {
+            // En modo local, adbHost no es crítico porque ANDROID_SERIAL toma precedencia.
+            // Lo establecemos a un valor por defecto por si algún script lo necesita.
+            environment.adbHost = 'localhost';
+            finishSetup();
+        } else {
+            // Modo remoto: Ejecutar la lógica de búsqueda y bloqueo de emuladores.
+            const findEmulatorScript = path.join(__dirname, 'scripts', 'find-and-lock-emulator.sh');
+            runScript(findEmulatorScript, [], null, (code, output) => {
                 if (code !== 0) {
-                    sendToParent({ type: 'LOG', data: `[worker] ❌ Falló el inicio de Appium. Terminando.
+                    sendToParent({ type: 'LOG', data: `[worker] ❌ No se pudo bloquear un emulador. Terminando.
 ` });
-                    return cleanupAndExit(1);
+                    return process.exit(1);
                 }
-                const { APPIUM_PID, APPIUM_PORT } = parseScriptOutput(output);
-                environment.appiumPid = APPIUM_PID;
-                environment.appiumPort = APPIUM_PORT;
-                sendToParent({ type: 'LOG', data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.
+                const { EMULATOR_ID, ADB_HOST } = parseScriptOutput(output);
+                environment.emulatorId = EMULATOR_ID;
+                environment.adbHost = ADB_HOST;
+                sendToParent({ type: 'LOG', data: `[worker] ✅ Emulador ${environment.emulatorId} bloqueado. Usando ADB_HOST: ${environment.adbHost}
 ` });
-
-                const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
-                runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], (code) => {
-                    if (code !== 0) {
-                        sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.
-` });
-                        return cleanupAndExit(1);
-                    }
-                    sendToParent({ type: 'LOG', data: `[worker] ✅ APK de cliente ${client} instalado.
-` });
-
-                    sendToParent({ type: 'READY' });
-                });
+                finishSetup();
             });
+        }
+    });
+}
+
+// Función refactorizada con los pasos finales de la configuración
+function finishSetup() {
+    const startAppiumScript = path.join(__dirname, 'scripts', 'start-appium.sh');
+    runScript(startAppiumScript, [workspaceDir], null, (code, output) => {
+        if (code !== 0) {
+            sendToParent({ type: 'LOG', data: `[worker] ❌ Falló el inicio de Appium. Terminando.
+` });
+            return cleanupAndExit(1);
+        }
+        const { APPIUM_PID, APPIUM_PORT } = parseScriptOutput(output);
+        environment.appiumPid = APPIUM_PID;
+        environment.appiumPort = APPIUM_PORT;
+        sendToParent({ type: 'LOG', data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.
+` });
+
+        const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
+        runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], null, (code) => {
+            if (code !== 0) {
+                sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.
+` });
+                return cleanupAndExit(1);
+            }
+            sendToParent({ type: 'LOG', data: `[worker] ✅ APK de cliente ${client} instalado.
+` });
+
+            sendToParent({ type: 'READY' });
         });
     });
 }
 
+
 function runTest(job) {
-    const { client, feature, mappingToLoad } = job;
+    const { client, feature, mappingToLoad, deviceSerial } = job;
     const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
-    const args = [workspaceDir, branch, client, feature, environment.adbHost, environment.appiumPort];
+    
+    // Si estamos en modo local (deviceSerial existe), lo usamos como identificador del dispositivo.
+    // Si no, usamos el adbHost del emulador remoto que el worker bloqueó al iniciar.
+    const deviceIdentifier = deviceSerial || environment.adbHost;
+    const args = [workspaceDir, branch, client, feature, deviceIdentifier, environment.appiumPort];
 
     const executeTest = () => {
-        runScript(runnerScript, args, (code) => {
+        const env = {};
+        // Si es un job local, establecemos ANDROID_SERIAL.
+        // Los scripts usarán esta variable para apuntar a un dispositivo específico.
+        if (deviceSerial) {
+            env.ANDROID_SERIAL = deviceSerial;
+        }
+
+        runScript(runnerScript, args, env, (code) => {
             sendToParent({
                 type: 'READY_FOR_NEXT_JOB',
                 data: { exitCode: code, reportPath: null }
@@ -148,7 +169,7 @@ function runTest(job) {
         sendToParent({ type: 'LOG', data: logMessage });
         
         const loadMappingScript = path.join(__dirname, 'scripts', 'load-mapping.sh');
-        runScript(loadMappingScript, [mappingToLoad], (code) => {
+        runScript(loadMappingScript, [mappingToLoad], null, (code) => {
             if (code !== 0) {
                 sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.
 ` });
@@ -203,7 +224,7 @@ process.on('message', (message) => {
             break;
         case 'GENERATE_UNIFIED_REPORT':
             const generateReportScript = path.join(__dirname, 'scripts', 'generate-report.sh');
-            runScript(generateReportScript, [workspaceDir], (code) => {
+            runScript(generateReportScript, [workspaceDir], null, (code) => {
                 if (code === 0) {
                     const reportDir = path.join(workspaceDir, 'appium', 'allure-report');
                     sendToParent({ type: 'UNIFIED_REPORT_READY', data: { reportPath: reportDir } });

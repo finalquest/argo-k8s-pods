@@ -2,7 +2,14 @@ let runningJobs = new Map();
 
 function runTest(branch, client, feature, highPriority = false, record = false) {
     const selectedApk = document.getElementById('apk-version-select').value;
-    let jobPayload = { branch, client, feature, highPriority, record };
+    let jobPayload = { 
+        branch, 
+        client, 
+        feature, 
+        highPriority, 
+        record, 
+        deviceSerial: document.getElementById('device-select').value 
+    };
 
     if (apkSource === 'local') {
         jobPayload.localApk = selectedApk;
@@ -42,6 +49,7 @@ function runSelectedTests() {
         branch: selectedBranch,
         client: selectedClient,
         highPriority: highPriority,
+        deviceSerial: document.getElementById('device-select').value,
     };
 
     if (apkSource === 'local') {

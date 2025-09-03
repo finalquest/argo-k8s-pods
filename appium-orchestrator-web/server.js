@@ -108,6 +108,50 @@ app.get('/api/current-user', (req, res) => {
 // Proteger todos los endpoints /api subsiguientes. /api/current-user está definido antes y permanece público.
 app.use('/api', ensureAuthenticated);
 
+app.get('/api/local-devices', (req, res) => {
+    if (process.env.DEVICE_SOURCE !== 'local') {
+        // Si no estamos en modo local, devolvemos una lista vacía.
+        // El frontend usará esto como señal para no mostrar el dropdown de dispositivos.
+        return res.json([]);
+    }
+
+    exec('adb devices', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error al ejecutar "adb devices": ${error.message}`);
+            return res.status(500).json({ error: 'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.' });
+        }
+
+        const devices = stdout.split('\n')
+            .slice(1)
+            .map(line => line.split('\t'))
+            .filter(parts => parts.length === 2 && parts[1] === 'device')
+            .map(parts => parts[0]);
+
+        res.json(devices);
+    });
+});
+
+app.get('/api/local-devices', (req, res) => {
+    if (process.env.DEVICE_SOURCE !== 'local') {
+        return res.json([]);
+    }
+
+    exec('adb devices', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error al ejecutar "adb devices": ${error.message}`);
+            return res.status(500).json({ error: 'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.' });
+        }
+
+        const devices = stdout.split('\n')
+            .slice(1)
+            .map(line => line.split('\t'))
+            .filter(parts => parts.length === 2 && parts[1] === 'device')
+            .map(parts => parts[0]);
+
+        res.json(devices);
+    });
+});
+
 
 const { GIT_REPO_URL, GIT_USER, GIT_PAT } = process.env;
 if (!GIT_REPO_URL || !GIT_USER || !GIT_PAT) {

@@ -5,4 +5,5 @@ npm-debug.log
 *.md
 docs/
 .DS_Store
+wiremock/
 .env
