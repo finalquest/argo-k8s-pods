@@ -1,7 +1,7 @@
 let wiremockLiveViewInterval = null;
 let lastKnownRequests = [];
 
-export async function listWiremockMappings() {
+async function listWiremockMappings() {
     const output = document.getElementById('wiremock-mappings-output');
     output.textContent = 'Cargando...';
     try {
@@ -13,7 +13,7 @@ export async function listWiremockMappings() {
     }
 }
 
-export async function deleteWiremockMappings() {
+async function deleteWiremockMappings() {
     if (!confirm('¿Estás seguro de que quieres eliminar todos los mappings?')) {
         return;
     }
@@ -32,7 +32,7 @@ export async function deleteWiremockMappings() {
     }
 }
 
-export async function resetWiremockMappings() {
+async function resetWiremockMappings() {
     if (!confirm('¿Estás seguro de que quieres resetear los mappings a su estado por defecto?')) {
         return;
     }
@@ -51,7 +51,7 @@ export async function resetWiremockMappings() {
     }
 }
 
-export async function loadBaseMappings() {
+async function loadBaseMappings() {
     if (!confirm('¿Estás seguro de que quieres cargar los base mappings? Esto reemplazará los mappings actuales.')) {
         return;
     }
@@ -81,7 +81,7 @@ export async function loadBaseMappings() {
     }
 }
 
-export async function importWiremockMappings() {
+async function importWiremockMappings() {
     const importTextarea = document.getElementById('wiremock-import-textarea');
     const mappingsJson = importTextarea.value;
     if (!mappingsJson) {
@@ -117,7 +117,7 @@ export async function importWiremockMappings() {
     }
 }
 
-export function handleMappingsFileUpload(event) {
+function handleMappingsFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -127,7 +127,7 @@ export function handleMappingsFileUpload(event) {
     reader.readAsText(file);
 }
 
-export async function listWiremockRequests() {
+async function listWiremockRequests() {
     const output = document.getElementById('wiremock-requests-output');
     const isFirstLoad = lastKnownRequests.length === 0;
 
@@ -193,7 +193,7 @@ export async function listWiremockRequests() {
     }
 }
 
-export async function deleteWiremockRequests() {
+async function deleteWiremockRequests() {
     if (!confirm('¿Estás seguro de que quieres eliminar todos los requests?')) {
         return;
     }
@@ -213,7 +213,7 @@ export async function deleteWiremockRequests() {
     }
 }
 
-export async function startWiremockRecording() {
+async function startWiremockRecording() {
     const output = document.getElementById('wiremock-recording-output');
     output.textContent = 'Iniciando grabación...';
     try {
@@ -229,7 +229,7 @@ export async function startWiremockRecording() {
     }
 }
 
-export async function stopWiremockRecording() {
+async function stopWiremockRecording() {
     const recordingName = document.getElementById('wiremock-recording-name').value;
     if (!recordingName) {
         alert('Por favor, introduce un nombre para la grabación.');
@@ -257,7 +257,7 @@ export async function stopWiremockRecording() {
     }
 }
 
-export async function getWiremockRecordingStatus() {
+async function getWiremockRecordingStatus() {
     const output = document.getElementById('wiremock-recording-output');
     output.textContent = 'Consultando estado...';
     try {
@@ -269,7 +269,7 @@ export async function getWiremockRecordingStatus() {
     }
 }
 
-export function startLiveView() {
+function startLiveView() {
     if (wiremockLiveViewInterval) return;
     lastKnownRequests = [];
     const output = document.getElementById('wiremock-requests-output');
@@ -278,14 +278,14 @@ export function startLiveView() {
     wiremockLiveViewInterval = setInterval(listWiremockRequests, 2000);
 }
 
-export function stopLiveView() {
+function stopLiveView() {
     if (wiremockLiveViewInterval) {
         clearInterval(wiremockLiveViewInterval);
         wiremockLiveViewInterval = null;
     }
 }
 
-export async function openDownloadMappingsModal() {
+async function openDownloadMappingsModal() {
     const modal = document.getElementById('mappings-download-modal');
     const container = document.getElementById('mappings-list-container');
     container.innerHTML = '<p>Cargando...</p>';
@@ -314,7 +314,7 @@ export async function openDownloadMappingsModal() {
     }
 }
 
-export async function downloadSelectedMappings() {
+async function downloadSelectedMappings() {
     const selected = document.querySelectorAll('#mappings-list-container .mapping-checkbox:checked');
     if (selected.length === 0) {
         alert('Por favor, selecciona al menos un mapping para descargar.');
@@ -358,7 +358,7 @@ export async function downloadSelectedMappings() {
     }
 }
 
-export function initializeWiremockTab() {
+function initializeWiremockTab() {
     document.querySelectorAll('.sub-tab-btn').forEach(button => {
         button.addEventListener('click', () => {
             switchWiremockSubTab(button.dataset.subtab);

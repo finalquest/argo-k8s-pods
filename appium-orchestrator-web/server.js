@@ -6,7 +6,7 @@ const simpleGit = require('simple-git');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const { fork, exec } = require('child_process');
+const { fork, exec, spawn } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');
@@ -103,6 +103,12 @@ app.get('/api/current-user', (req, res) => {
     } else {
         res.json(null);
     }
+});
+
+app.get('/api/config', (req, res) => {
+    res.json({
+        persistentWorkspacesEnabled: !!process.env.PERSISTENT_WORKSPACES_ROOT
+    });
 });
 
 // Proteger todos los endpoints /api subsiguientes. /api/current-user está definido antes y permanece público.
@@ -244,6 +250,30 @@ app.get('/api/features', async (req, res) => {
     if (!branch || !client) {
         return res.status(400).json({ error: 'Se requieren los parámetros \'branch\' y \'client\'.' });
     }
+
+    // Lógica para leer features desde un workspace persistente si existe
+    if (process.env.PERSISTENT_WORKSPACES_ROOT) {
+        const sanitizedBranch = sanitize(branch);
+        const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
+        const featuresPath = path.join(workspacePath, 'test', 'features', client, 'feature');
+
+        if (fs.existsSync(featuresPath)) {
+            console.log(`[API Features] Leyendo features desde el workspace local para la branch: ${branch}`);
+            try {
+                const allEntries = await fs.promises.readdir(featuresPath, { withFileTypes: true });
+                const featureFiles = allEntries
+                    .filter(dirent => dirent.isFile() && dirent.name.endsWith('.feature'))
+                    .map(dirent => dirent.name.replace(/\.feature$/, ''));
+                return res.json(featureFiles);
+            } catch (error) {
+                console.error(`Error al leer features del workspace local para la branch '${branch}':`, error);
+                // No devolver error, simplemente pasar al método de fallback (clonado remoto)
+            }
+        }
+    }
+
+    // Fallback: Si no hay workspace persistente o falla la lectura, clonar remotamente
+    console.log(`[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`);
     const tmpDir = path.join(os.tmpdir(), `appium-features-${crypto.randomBytes(16).toString('hex')}`);
     const authenticatedUrl = getAuthenticatedUrl();
     try {
@@ -332,6 +362,34 @@ app.get('/api/history', (req, res) => {
         res.status(500).json({ error: 'Error interno al leer el historial.' });
     }
 });
+
+app.get('/api/workspace-status/:branch', (req, res) => {
+    const { branch } = req.params;
+    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+        return res.status(404).json({ error: 'La funcionalidad de workspaces persistentes no está habilitada.' });
+    }
+
+    const sanitizedBranch = sanitize(branch);
+    const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
+
+    if (!fs.existsSync(workspacePath)) {
+        return res.json({ modified_features: [] }); // No hay workspace, no hay cambios
+    }
+
+    const command = `git -C ${workspacePath} diff --name-only HEAD`;
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error al ejecutar git diff para la branch ${branch}:`, stderr);
+            return res.status(500).json({ error: 'Error al comprobar el estado del workspace.', details: stderr });
+        }
+
+        const modifiedFiles = stdout.trim().split('\n').filter(Boolean);
+        const modifiedFeatures = modifiedFiles.filter(file => file.includes('/feature/') && file.endsWith('.feature'));
+        
+        res.json({ modified_features: modifiedFeatures });
+    });
+});
+
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
@@ -747,7 +805,7 @@ function assignJobToWorker(job) {
 
     if (workerPool.length < maxWorkers) {
         // Pasamos el deviceSerial al crear el worker.
-        const newWorker = createWorker(job.branch, job.client, apkIdentifier, apkSourceType, job.deviceSerial);
+        const newWorker = createWorker(job.branch, job.client, apkIdentifier, apkSourceType, job.deviceSerial, job.persistentWorkspace);
         runJobOnWorker(job, newWorker);
         return true;
     }
@@ -848,8 +906,15 @@ function createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial
         logMessage += `, Dispositivo: ${deviceSerial}`;
     }
     console.log(logMessage);
+
+    // --- Lógica de Workspace Persistente ---
+    const sanitizedBranch = sanitize(branch);
+    const workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT || os.tmpdir(), sanitizedBranch);
+    fs.mkdirSync(workerWorkspacePath, { recursive: true });
+    console.log(`[SERVER] Asignando workspace a worker ${workerId}: ${workerWorkspacePath}`);
     
-    const initMessage = { type: 'INIT', branch, client };
+    const isPersistent = !!process.env.PERSISTENT_WORKSPACES_ROOT;
+    const initMessage = { type: 'INIT', branch, client, workerWorkspacePath, isPersistent }; // Pass persistent workspace path and flag
     if (apkSourceType === 'local') {
         initMessage.localApkPath = path.join(process.env.LOCAL_APK_DIRECTORY, apkIdentifier);
     } else {
@@ -1010,19 +1075,21 @@ io.on('connection', (socket) => {
 
     socket.on('run_test', (data) => {
         console.log('--- DEBUG: Datos recibidos en run_test ---', data);
+        const { persistentWorkspace } = data; // Extract persistentWorkspace
 
         if (data.record) {
             // --- Lógica de Record & Verify ---
             const recordJobId = ++jobIdCounter;
             const verifyJobId = ++jobIdCounter;
 
-            const recordJob = { ...data, id: recordJobId, record: true };
+            const recordJob = { ...data, id: recordJobId, record: true, persistentWorkspace }; // Pass persistentWorkspace
             const verifyJob = {
                 ...data,
                 id: verifyJobId,
                 record: false,
                 highPriority: true, // Para que se ejecute justo después
-                mappingToLoad: `${data.feature}.json`
+                mappingToLoad: `${data.feature}.json`,
+                persistentWorkspace // Pass persistentWorkspace
             };
 
             // Encolar el de grabación primero, luego el de verificación
@@ -1038,7 +1105,7 @@ io.on('connection', (socket) => {
 
         } else {
             // --- Lógica normal ---
-            const job = { ...data, id: ++jobIdCounter };
+            const job = { ...data, id: ++jobIdCounter, persistentWorkspace }; // Pass persistentWorkspace
             if (data.usePreexistingMapping) {
                 job.mappingToLoad = `${data.feature}.json`;
             }
@@ -1057,7 +1124,7 @@ io.on('connection', (socket) => {
 
     socket.on('run_batch', (data) => {
         console.log('--- DEBUG: Datos recibidos en run_batch ---', data);
-        const { jobs = [], record = false, usePreexistingMapping = false } = data;
+        const { jobs = [], record = false, usePreexistingMapping = false, persistentWorkspace } = data; // Extract persistentWorkspace
         const highPriority = jobs.length > 0 && jobs[0].highPriority;
 
         let jobsToQueue = [];
@@ -1075,13 +1142,15 @@ io.on('connection', (socket) => {
                 const recordJob = {
                     ...jobData,
                     id: ++jobIdCounter,
-                    record: true
+                    record: true,
+                    persistentWorkspace // Pass persistentWorkspace
                 };
                 const verifyJob = {
                     ...jobData,
                     id: ++jobIdCounter,
                     record: false,
-                    mappingToLoad: `${jobData.feature}.json`
+                    mappingToLoad: `${jobData.feature}.json`,
+                    persistentWorkspace // Pass persistentWorkspace
                 };
                 return [recordJob, verifyJob]; // Devuelve el par intercalado
             });
@@ -1099,7 +1168,8 @@ io.on('connection', (socket) => {
                 const newJob = {
                     ...jobData,
                     id: ++jobIdCounter,
-                    record: false // Asegurarse que record es false si no es un lote de grabación
+                    record: false, // Asegurarse que record es false si no es un lote de grabación
+                    persistentWorkspace // Pass persistentWorkspace
                 };
                 if (usePreexistingMapping) {
                     newJob.mappingToLoad = `${jobData.feature}.json`;
@@ -1163,6 +1233,137 @@ io.on('connection', (socket) => {
 
         // 3. Actualizar el estado en la UI
         broadcastStatus();
+    });
+
+    socket.on('prepare_workspace', (data) => {
+        const { branch } = data;
+        const logPrefix = `[Workspace Prep: ${branch}]`;
+        const logSlot = { slotId: 'system' }; // Use system log panel
+
+        if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada en el servidor.\n` });
+            return;
+        }
+
+        if (!branch) {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error: No se ha especificado una branch.\n` });
+            return;
+        }
+
+        // Limpiar el panel de sistema antes de empezar
+        io.emit('log_clear', logSlot);
+        io.emit('log_update', { ...logSlot, logLine: `--- 🚀 Iniciando preparación del workspace para la branch: ${branch} ---\n` });
+
+        const sanitizedBranch = sanitize(branch);
+        const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+        fs.mkdirSync(workspacePath, { recursive: true });
+
+        const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
+        const scriptProcess = spawn('bash', [setupScript, workspacePath, branch]);
+
+        scriptProcess.stdout.on('data', (data) => {
+            io.emit('log_update', { ...logSlot, logLine: data.toString() });
+        });
+
+        scriptProcess.stderr.on('data', (data) => {
+            io.emit('log_update', { ...logSlot, logLine: `[stderr] ${data.toString()}` });
+        });
+
+        scriptProcess.on('close', (code) => {
+            if (code === 0) {
+                io.emit('log_update', { ...logSlot, logLine: `\n--- ✅ Preparación del workspace para ${branch} finalizada con éxito ---\n` });
+                socket.emit('workspace_ready', { branch }); // Notificar al cliente que inició la acción
+            } else {
+                io.emit('log_update', { ...logSlot, logLine: `\n--- ❌ Error: La preparación del workspace para ${branch} falló con código ${code} ---\n` });
+            }
+        });
+
+        scriptProcess.on('error', (err) => {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error al iniciar el script: ${err.message}\n` });
+        });
+    });
+
+    socket.on('commit_changes', async (data) => {
+        const { branch, files, message } = data;
+        const logPrefix = `[Git Commit: ${branch}]`;
+        const logSlot = { slotId: 'system' }; // Use system log panel
+
+        if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada.\n` });
+            return;
+        }
+
+        if (!branch || !files || files.length === 0 || !message) {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error: Faltan datos para realizar el commit (branch, archivos o mensaje).\n` });
+            return;
+        }
+
+        io.emit('log_update', { ...logSlot, logLine: `--- 🚀 Iniciando proceso de commit para la branch: ${branch} ---\n` });
+
+        const sanitizedBranch = sanitize(branch);
+        const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
+
+        if (!fs.existsSync(workspacePath)) {
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error: No se encontró el workspace local.\n` });
+            return;
+        }
+
+        // --- Validación de Seguridad de Archivos ---
+        for (const file of files) {
+            const fullPath = path.join(workspacePath, file);
+            const resolvedPath = path.resolve(fullPath);
+            if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
+                io.emit('log_update', { ...logSlot, logLine: `${logPrefix} ❌ Error de seguridad: Se intentó acceder a un archivo fuera del workspace: ${file}\n` });
+                return;
+            }
+        }
+
+        const executeGitCommand = (command, args) => {
+            return new Promise((resolve, reject) => {
+                const gitProcess = spawn(command, args, { cwd: workspacePath });
+
+                gitProcess.stdout.on('data', (data) => {
+                    io.emit('log_update', { ...logSlot, logLine: data.toString() });
+                });
+
+                gitProcess.stderr.on('data', (data) => {
+                    io.emit('log_update', { ...logSlot, logLine: `[stderr] ${data.toString()}` });
+                });
+
+                gitProcess.on('close', (code) => {
+                    if (code === 0) {
+                        resolve();
+                    } else {
+                        reject(new Error(`El comando de Git falló con código ${code}`));
+                    }
+                });
+
+                gitProcess.on('error', (err) => {
+                    reject(err);
+                });
+            });
+        };
+
+        try {
+            const authenticatedUrl = getAuthenticatedUrl();
+
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} étape 1/4: Añadiendo archivos...\n` });
+            await executeGitCommand('git', ['add', ...files]);
+
+            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 2/4: Realizando commit...\n` });
+            await executeGitCommand('git', ['commit', '-m', message]);
+
+            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 3/4: Configurando URL remota para el push...\n` });
+            await executeGitCommand('git', ['remote', 'set-url', 'origin', authenticatedUrl]);
+
+            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 4/4: Empujando cambios al repositorio remoto...\n` });
+            await executeGitCommand('git', ['push', 'origin', branch]);
+
+            io.emit('log_update', { ...logSlot, logLine: `\n--- ✅ Proceso de commit finalizado con éxito para la branch: ${branch} ---\n` });
+
+        } catch (error) {
+            io.emit('log_update', { ...logSlot, logLine: `\n--- ❌ Error durante el proceso de commit: ${error.message} ---\n` });
+        }
     });
 
     socket.on('disconnect', () => {

@@ -1,6 +1,4 @@
-import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus } from './ui.js';
-
-export async function getCurrentUser() {
+async function getCurrentUser() {
     try {
         const response = await fetch('/api/current-user');
         if (response.status === 401) return null; // No autenticado
@@ -12,30 +10,7 @@ export async function getCurrentUser() {
     }
 }
 
-export async function fetchConfig() {
-    try {
-        const response = await fetch('/api/config');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching server config:', error);
-        return { persistentWorkspacesEnabled: false }; // Valor por defecto en caso de error
-    }
-}
-
-export async function getWorkspaceStatus(branch) {
-    if (!branch) return { modified_features: [] };
-    try {
-        const response = await fetch(`/api/workspace-status/${branch}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error(`Error fetching workspace status for branch ${branch}:`, error);
-        return { modified_features: [] }; // Devolver lista vacía en caso de error
-    }
-}
-
-export async function getLocalDevices() {
+async function getLocalDevices() {
     try {
         const response = await fetch('/api/local-devices');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -46,9 +21,9 @@ export async function getLocalDevices() {
     }
 }
 
-export let apkSource = 'registry'; // 'registry' o 'local'
+let apkSource = 'registry'; // 'registry' o 'local'
 
-export async function loadBranches() {
+async function loadBranches() {
     const branchSelect = document.getElementById('branch-select');
     try {
         const response = await fetch('/api/branches');
@@ -67,7 +42,7 @@ export async function loadBranches() {
     }
 }
 
-export async function fetchFeatures(onRunTestCallback) {
+async function fetchFeatures() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
     const featuresList = document.getElementById('features-list');
@@ -110,13 +85,19 @@ export async function fetchFeatures(onRunTestCallback) {
             const runButton = document.createElement('button');
             runButton.textContent = 'Run';
             runButton.className = 'run-btn';
-            runButton.dataset.feature = feature; // FIX: Add feature name to dataset
+            runButton.onclick = () => {
+                const record = document.getElementById('record-mappings-checkbox').checked;
+                runTest(selectedBranch, selectedClient, feature, false, record);
+            };
             
             const priorityButton = document.createElement('button');
             priorityButton.textContent = '⚡️';
             priorityButton.title = 'Run with high priority';
             priorityButton.className = 'priority-btn';
-            priorityButton.dataset.feature = feature; // FIX: Add feature name to dataset
+            priorityButton.onclick = () => {
+                const record = document.getElementById('record-mappings-checkbox').checked;
+                runTest(selectedBranch, selectedClient, feature, true, record);
+            };
 
             buttonsDiv.appendChild(runButton);
             buttonsDiv.appendChild(priorityButton);
@@ -124,21 +105,13 @@ export async function fetchFeatures(onRunTestCallback) {
             featuresList.appendChild(li);
         });
         updateSelectedCount();
-
-        // Auto-refresh git status after fetching features
-        const config = await fetchConfig();
-        if (config.persistentWorkspacesEnabled) {
-            const status = await getWorkspaceStatus(selectedBranch);
-            updateFeaturesWithGitStatus(status.modified_features, selectedClient);
-        }
-
     } catch (error) {
         console.error('Error al buscar features:', error);
         featuresList.innerHTML = '<li>Error al buscar features.</li>';
     }
 }
 
-export async function loadHistoryBranches() {
+async function loadHistoryBranches() {
     const historyBranchFilter = document.getElementById('history-branch-filter');
     try {
         const response = await fetch('/api/history/branches');
@@ -159,7 +132,7 @@ export async function loadHistoryBranches() {
     }
 }
 
-export async function loadHistory(branch = '') {
+async function loadHistory(branch = '') {
     const historyList = document.getElementById('history-list');
     historyList.innerHTML = '<li>Cargando historial...</li>';
     try {
@@ -180,7 +153,7 @@ export async function loadHistory(branch = '') {
     }
 }
 
-export async function fetchApkVersions() {
+async function fetchApkVersions() {
     const clientSelect = document.getElementById('client-select');
     const selectedClient = clientSelect.value;
     const apkVersionSelect = document.getElementById('apk-version-select');

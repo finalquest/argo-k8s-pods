@@ -1,3 +1,8 @@
+import { getWorkspaceStatus, fetchConfig, getCurrentUser, getLocalDevices, loadBranches, fetchFeatures, loadHistoryBranches, loadHistory, fetchApkVersions, apkSource } from './api.js';
+import { initializeSocketListeners, runTest, runSelectedTests, stopAllExecution, prepareWorkspace, commitChanges } from './socket.js';
+import { switchTab, updateSelectedCount, toggleSelectAll, displayPrepareWorkspaceButton, displayGitControls, updateFeaturesWithGitStatus, displayFeatureFilter, filterFeatureList, displayCommitButton, createCommitModal } from './ui.js';
+import { initializeWiremockTab } from './wiremock.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
 });
@@ -27,15 +32,110 @@ async function checkAuthStatus() {
 }
 
 function initializeApp() {
-    window.socket = io();
-    initializeSocketListeners();
-    initializeUiEventListeners();
+    const socket = io();
+    initializeSocketListeners(socket);
+    initializeUiEventListeners(socket);
+    initializeAppControls(socket);
     initializeWiremockTab();
 
     loadBranches();
     loadHistoryBranches();
     loadHistory();
-    loadLocalDevices(); // Cargar dispositivos locales
+    loadLocalDevices();
+}
+
+async function initializeAppControls(socket) {
+    const config = await fetchConfig();
+    displayPrepareWorkspaceButton(config.persistentWorkspacesEnabled);
+    displayGitControls(config.persistentWorkspacesEnabled);
+    displayFeatureFilter(config.persistentWorkspacesEnabled);
+    displayCommitButton(config.persistentWorkspacesEnabled);
+    createCommitModal(); // Always create the modal structure in the DOM
+
+    // --- Event Listeners for new controls ---
+    const prepareWorkspaceBtn = document.getElementById('prepare-workspace-btn');
+    if (prepareWorkspaceBtn) {
+        prepareWorkspaceBtn.addEventListener('click', () => {
+            const selectedBranch = document.getElementById('branch-select').value;
+            prepareWorkspace(socket, selectedBranch);
+        });
+    }
+
+    const refreshGitStatusBtn = document.getElementById('refresh-git-status-btn');
+    if (refreshGitStatusBtn) {
+        refreshGitStatusBtn.addEventListener('click', async () => {
+            const selectedBranch = document.getElementById('branch-select').value;
+            const selectedClient = document.getElementById('client-select').value;
+            if (!selectedBranch) {
+                alert('Por favor, selecciona una branch.');
+                return;
+            }
+            const status = await getWorkspaceStatus(selectedBranch);
+            updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+        });
+    }
+
+    const featureFilterSelect = document.getElementById('feature-filter-select');
+    if (featureFilterSelect) {
+        featureFilterSelect.addEventListener('change', filterFeatureList);
+    }
+
+    const commitBtn = document.getElementById('commit-changes-btn');
+    if (commitBtn) {
+        commitBtn.addEventListener('click', () => {
+            const modal = document.getElementById('commit-modal');
+            const filesList = document.getElementById('commit-files-list');
+            filesList.innerHTML = ''; // Clear previous list
+
+            const selectedFiles = document.querySelectorAll('li.modified .feature-checkbox:checked');
+            if (selectedFiles.length === 0) {
+                alert('No hay features modificados seleccionados para el commit.');
+                return;
+            }
+
+            selectedFiles.forEach(cb => {
+                const featureName = cb.dataset.featureName;
+                const li = document.createElement('li');
+                li.textContent = featureName;
+                filesList.appendChild(li);
+            });
+
+            modal.style.display = 'block';
+        });
+    }
+
+    // --- Modal Listeners ---
+    const commitModal = document.getElementById('commit-modal');
+    const closeCommitModalBtn = document.getElementById('close-commit-modal');
+    const confirmCommitBtn = document.getElementById('confirm-commit-btn');
+
+    if (commitModal && closeCommitModalBtn && confirmCommitBtn) {
+        closeCommitModalBtn.onclick = () => commitModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == commitModal) {
+                commitModal.style.display = 'none';
+            }
+        }
+
+        confirmCommitBtn.addEventListener('click', () => {
+            const message = document.getElementById('commit-message').value;
+            if (!message.trim()) {
+                alert('El mensaje de commit no puede estar vacío.');
+                return;
+            }
+
+            const branch = document.getElementById('branch-select').value;
+            const client = document.getElementById('client-select').value;
+            const files = Array.from(document.querySelectorAll('li.modified .feature-checkbox:checked')).map(cb => {
+                // Construct the relative path as expected by the backend
+                return `test/features/${client}/feature/${cb.dataset.featureName}.feature`;
+            });
+
+            commitChanges(socket, { branch, files, message });
+            commitModal.style.display = 'none';
+            document.getElementById('commit-message').value = ''; // Clear textarea
+        });
+    }
 }
 
 async function loadLocalDevices() {
@@ -62,7 +162,6 @@ async function refreshLocalDevices() {
     const originalContent = refreshBtn.innerHTML;
     
     refreshBtn.disabled = true;
-    // Use a smaller spinner for the icon button
     refreshBtn.innerHTML = '<span class="spinner" style="width: 0.9em; height: 0.9em; border-width: 2px; vertical-align: middle;"></span>'; 
     
     try {
@@ -75,7 +174,7 @@ async function refreshLocalDevices() {
     }
 }
 
-function initializeUiEventListeners() {
+function initializeUiEventListeners(socket) {
     const fetchBtn = document.getElementById('fetch-features-btn');
     const fetchApkBtn = document.getElementById('fetch-apk-versions-btn');
     const runSelectedBtn = document.getElementById('run-selected-btn');
@@ -85,10 +184,10 @@ function initializeUiEventListeners() {
     const featuresList = document.getElementById('features-list');
     const refreshDevicesBtn = document.getElementById('refresh-devices-btn');
 
-    fetchBtn.addEventListener('click', fetchFeatures);
+    fetchBtn.addEventListener('click', () => fetchFeatures());
     fetchApkBtn.addEventListener('click', fetchApkVersions);
-    runSelectedBtn.addEventListener('click', runSelectedTests);
-    stopAllBtn.addEventListener('click', stopAllExecution);
+    runSelectedBtn.addEventListener('click', () => runSelectedTests(socket));
+    stopAllBtn.addEventListener('click', () => stopAllExecution(socket));
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
     historyBranchFilter.addEventListener('change', () => loadHistory(historyBranchFilter.value));
     refreshDevicesBtn.addEventListener('click', refreshLocalDevices);
@@ -103,7 +202,9 @@ function initializeUiEventListeners() {
         if (e.target.classList.contains('run-btn') || e.target.classList.contains('priority-btn')) {
             const featureName = e.target.dataset.feature;
             const highPriority = e.target.classList.contains('priority-btn');
-            runSingleTest(featureName, highPriority);
+            const branch = document.getElementById('branch-select').value;
+            const client = document.getElementById('client-select').value;
+            runTest(socket, branch, client, featureName, highPriority);
         }
     });
 
@@ -111,7 +212,7 @@ function initializeUiEventListeners() {
         if (e.target.classList.contains('cancel-job-btn')) {
             const jobId = parseInt(e.target.dataset.jobId, 10);
             if (confirm(`¿Seguro que quieres cancelar el job ${jobId} de la cola?`)) {
-                window.socket.emit('cancel_job', { jobId });
+                socket.emit('cancel_job', { jobId });
             }
         }
     });

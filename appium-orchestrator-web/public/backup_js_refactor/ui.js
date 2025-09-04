@@ -1,11 +1,11 @@
-export function switchTab(tabName) {
+function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`${tabName}-view`).classList.add('active');
     document.querySelector(`.tab-btn[data-tab='${tabName}']`).classList.add('active');
 }
 
-export function getStatusText(status) {
+function getStatusText(status) {
     switch (status) {
         case 'initializing': return 'Inicializando';
         case 'ready': return 'Listo';
@@ -14,7 +14,7 @@ export function getStatusText(status) {
     }
 }
 
-export function renderHistoryItem(item) {
+function renderHistoryItem(item) {
     const li = document.createElement('li');
 
     const infoDiv = document.createElement('div');
@@ -41,7 +41,7 @@ export function renderHistoryItem(item) {
     return li;
 }
 
-export function renderWorkerStatus(workers) {
+function renderWorkerStatus(workers) {
     const workerStatusContainer = document.getElementById('worker-status-container');
     workerStatusContainer.innerHTML = '';
     if (workers.length === 0) {
@@ -65,7 +65,7 @@ export function renderWorkerStatus(workers) {
     });
 }
 
-export function renderWorkerPool(workers, socket) {
+function renderWorkerPool(workers) {
     const panelsContainer = document.getElementById('log-panels-container');
     const panelsToRemove = new Set(Array.from(panelsContainer.children).map(p => p.id));
     workers.forEach(worker => {
@@ -113,7 +113,7 @@ export function renderWorkerPool(workers, socket) {
             stopButton.className = 'stop-btn';
             stopButton.onclick = () => {
                 if (confirm(`¿Seguro que quieres detener el test para ${worker.job.featureName}?`)) {
-                    socket.emit('stop_test', { slotId: worker.slotId, jobId: worker.job.id });
+                    window.socket.emit('stop_test', { slotId: worker.slotId, jobId: worker.job.id });
                 }
             };
             controlsDiv.appendChild(stopButton);
@@ -127,23 +127,14 @@ export function renderWorkerPool(workers, socket) {
     });
 }
 
-export function updateSelectedCount() {
+function updateSelectedCount() {
     const runSelectedBtn = document.getElementById('run-selected-btn');
     const selectedCount = document.querySelectorAll('.feature-checkbox:checked').length;
     runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
     runSelectedBtn.disabled = selectedCount === 0;
-    updateCommitButtonState(); // Update commit button state as well
 }
 
-export function updateCommitButtonState() {
-    const commitBtn = document.getElementById('commit-changes-btn');
-    if (!commitBtn) return;
-
-    const selectedModified = document.querySelectorAll('li.modified .feature-checkbox:checked').length;
-    commitBtn.disabled = selectedModified === 0;
-}
-
-export function toggleSelectAll(event) {
+function toggleSelectAll(event) {
     const checkboxes = document.querySelectorAll('.feature-checkbox');
     checkboxes.forEach(cb => {
         cb.checked = event.target.checked;
@@ -151,13 +142,13 @@ export function toggleSelectAll(event) {
     updateSelectedCount();
 }
 
-export function updateQueueStatus(status) {
+function updateQueueStatus(status) {
     const statusDiv = document.getElementById('queue-status');
     statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
     renderQueue(status.queue);
 }
 
-export function renderQueue(queue) {
+function renderQueue(queue) {
     const queueList = document.getElementById('queued-tests-list');
     if (!queueList) return;
     queueList.innerHTML = '';
@@ -179,14 +170,14 @@ export function renderQueue(queue) {
     });
 }
 
-export function switchWiremockSubTab(tabName) {
+function switchWiremockSubTab(tabName) {
     document.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`wiremock-${tabName}-view`).classList.add('active');
     document.querySelector(`.sub-tab-btn[data-subtab='${tabName}']`).classList.add('active');
 }
 
-export function populateApkVersions(versions) {
+function populateApkVersions(versions) {
     const apkVersionSelect = document.getElementById('apk-version-select');
     apkVersionSelect.innerHTML = '';
 
@@ -201,148 +192,4 @@ export function populateApkVersions(versions) {
         option.textContent = version;
         apkVersionSelect.appendChild(option);
     });
-}
-
-export function displayPrepareWorkspaceButton(isEnabled) {
-    if (!isEnabled) return;
-
-    const button = document.createElement('button');
-    button.id = 'prepare-workspace-btn';
-    button.textContent = 'Preparar Workspace';
-    button.title = 'Clona el repo y corre yarn install para la branch seleccionada, sin ejecutar un test.';
-    
-    // Insert after the branch select dropdown
-    const branchSelect = document.getElementById('branch-select');
-    if (branchSelect && branchSelect.parentElement) {
-        branchSelect.parentElement.insertBefore(button, branchSelect.nextSibling);
-    }
-}
-
-export function displayGitControls(isEnabled) {
-    if (!isEnabled) return;
-
-    const prepareBtn = document.getElementById('prepare-workspace-btn');
-    if (!prepareBtn) return;
-
-    const button = document.createElement('button');
-    button.id = 'refresh-git-status-btn';
-    button.textContent = 'Refrescar Cambios (Git)';
-    button.title = 'Comprueba los cambios locales en los features de esta branch contra Git.';
-    
-    prepareBtn.parentElement.insertBefore(button, prepareBtn.nextSibling);
-}
-
-export function displayFeatureFilter(isEnabled) {
-    if (!isEnabled) return;
-
-    const featuresHeader = document.querySelector('.features-header');
-    if (!featuresHeader) return;
-
-    const filterContainer = document.createElement('div');
-    filterContainer.style.display = 'flex';
-    filterContainer.style.alignItems = 'center';
-    filterContainer.style.gap = '0.5rem';
-
-    const label = document.createElement('label');
-    label.htmlFor = 'feature-filter-select';
-    label.textContent = 'Filtrar:';
-
-    const select = document.createElement('select');
-    select.id = 'feature-filter-select';
-    select.innerHTML = `
-        <option value="all">Todos</option>
-        <option value="modified">Solo Modificados</option>
-    `;
-
-    filterContainer.appendChild(label);
-    filterContainer.appendChild(select);
-
-    // Add it to the left of the "Select All" checkbox
-    const selectAllContainer = featuresHeader.querySelector('div');
-    if (selectAllContainer) {
-        featuresHeader.insertBefore(filterContainer, selectAllContainer);
-    }
-}
-
-export function filterFeatureList() {
-    const filterValue = document.getElementById('feature-filter-select').value;
-    const featuresList = document.getElementById('features-list');
-    const featureItems = featuresList.getElementsByTagName('li');
-
-    for (const item of featureItems) {
-        switch (filterValue) {
-            case 'modified':
-                if (item.classList.contains('modified')) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-                break;
-            case 'all':
-            default:
-                item.style.display = 'flex';
-                break;
-        }
-    }
-}
-
-export function updateFeaturesWithGitStatus(modifiedFeatures, client) {
-    const featuresList = document.getElementById('features-list');
-    const featureItems = featuresList.getElementsByTagName('li');
-
-    const modifiedSet = new Set(modifiedFeatures.map(f => {
-        // Normalizar la ruta para que coincida con el nombre del feature
-        const parts = f.split('/');
-        return parts[parts.length - 1];
-    }));
-
-    for (const item of featureItems) {
-        const featureNameSpan = item.querySelector('span');
-        if (!featureNameSpan) continue;
-
-        const featureName = featureNameSpan.textContent + '.feature';
-
-        // Limpiar estado anterior y aplicar el nuevo si corresponde
-        item.classList.remove('modified');
-        if (modifiedSet.has(featureName)) {
-            item.classList.add('modified');
-        }
-    }
-}
-
-export function displayCommitButton(isEnabled) {
-    if (!isEnabled) return;
-
-    const selectAllContainer = document.querySelector('.features-header div');
-    if (!selectAllContainer) return;
-
-    const button = document.createElement('button');
-    button.id = 'commit-changes-btn';
-    button.textContent = 'Hacer Commit de Cambios';
-    button.disabled = true; // Disabled by default
-    button.style.backgroundColor = 'var(--primary-color)';
-    button.style.borderColor = 'var(--primary-color)';
-    button.style.marginLeft = '2em';
-
-    selectAllContainer.appendChild(button);
-}
-
-export function createCommitModal() {
-    const modalHTML = `
-    <div id="commit-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Hacer Commit de Cambios</h2>
-                <span id="close-commit-modal" class="close-btn">&times;</span>
-            </div>
-            <div>
-                <p>Archivos a incluir:</p>
-                <ul id="commit-files-list"></ul>
-                <label for="commit-message">Mensaje de Commit:</label>
-                <textarea id="commit-message" rows="4" required></textarea>
-                <button id="confirm-commit-btn" style="width: 100%; margin-top: 1rem;">Confirmar Commit</button>
-            </div>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
 }

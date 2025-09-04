@@ -234,16 +234,6 @@
             background: var(--gray-50);
         }
 
-        #features-list li.modified {
-            background-color: #FEFCE8; /* Light Yellow */
-            border-left: 5px solid #FACC15; /* Amber */
-            font-weight: 500;
-        }
-
-        #features-list li.modified:hover {
-            background-color: #FEF9C3; /* Slightly darker yellow on hover */
-        }
-
         #features-list li:last-child, #history-list li:last-child, #queued-tests-list li:last-child { 
             border-bottom: none; 
         }
@@ -758,10 +748,6 @@
                     <input type="checkbox" id="use-local-mappings-checkbox">
                     Usar Mappings Locales 💾
                 </label>
-                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5rem;">                                       │
-                    <input type="checkbox" id="persistent-workspace-checkbox">                                                                  │
-                     Workspace Persistente 🔄                                                                                                    │
-                    </label>  
                 <button id="stop-all-btn" style="background-color: var(--danger-color); border-color: var(--danger-color); margin-left: auto;">Parar Todo 🛑</button>
             </div>
             <div class="features-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -778,12 +764,7 @@
         <div id="workers-view" class="tab-content">
             <h2>Estado de Workers</h2>
             <div id="worker-status-container"></div>
-            <div id="log-panels-container" class="panels-container">
-                <div id="log-panel-system" class="log-panel">
-                    <div class="panel-header status-initializing">Worker 0 (Sistema)</div>
-                    <div class="panel-content">Logs de operaciones del sistema aparecerán aquí...</div>
-                </div>
-            </div>
+            <div id="log-panels-container" class="panels-container"></div>
         </div>
 
         <!-- Queue Tab -->
@@ -865,7 +846,11 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="js/main.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/socket.js"></script>
+    <script src="js/wiremock.js"></script>
+    <script src="js/main.js"></script>
 
     <!-- Mappings Download Modal -->
     <div id="mappings-download-modal" class="modal">

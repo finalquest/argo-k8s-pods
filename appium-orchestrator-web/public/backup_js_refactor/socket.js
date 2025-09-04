@@ -1,9 +1,6 @@
-import { apkSource, loadHistory } from './api.js';
-import { switchTab, updateQueueStatus, renderWorkerPool, renderWorkerStatus } from './ui.js';
-
 let runningJobs = new Map();
 
-export function runTest(socket, branch, client, feature, highPriority = false, record = false) {
+function runTest(branch, client, feature, highPriority = false, record = false) {
     const selectedApk = document.getElementById('apk-version-select').value;
     let jobPayload = { 
         branch, 
@@ -23,30 +20,24 @@ export function runTest(socket, branch, client, feature, highPriority = false, r
     const useLocalMappingsCheckbox = document.getElementById('use-local-mappings-checkbox');
     jobPayload.usePreexistingMapping = useLocalMappingsCheckbox.checked;
 
-    // Get persistent workspace checkbox value
-    const persistentWorkspaceCheckbox = document.getElementById('persistent-workspace-checkbox');
-    jobPayload.persistentWorkspace = persistentWorkspaceCheckbox.checked;
-
-    socket.emit('run_test', jobPayload);
+    window.socket.emit('run_test', jobPayload);
     switchTab('workers');
 }
 
-export function runSelectedTests(socket) {
+function runSelectedTests() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
     const apkVersionSelect = document.getElementById('apk-version-select');
     const priorityCheckbox = document.getElementById('batch-priority-checkbox');
     const recordCheckbox = document.getElementById('record-mappings-checkbox');
     const useLocalMappingsCheckbox = document.getElementById('use-local-mappings-checkbox');
-    const persistentWorkspaceCheckbox = document.getElementById('persistent-workspace-checkbox'); // Get persistent workspace checkbox
-
+    
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
     const selectedApk = apkVersionSelect.value;
     const highPriority = priorityCheckbox.checked;
     const recordMappings = recordCheckbox.checked;
     const usePreexistingMapping = useLocalMappingsCheckbox.checked;
-    const persistentWorkspace = persistentWorkspaceCheckbox.checked; // Get persistent workspace value
 
     const selectedCheckboxes = document.querySelectorAll('.feature-checkbox:checked');
     if (selectedCheckboxes.length === 0) {
@@ -72,27 +63,27 @@ export function runSelectedTests(socket) {
         feature: cb.dataset.featureName,
     }));
 
-    socket.emit('run_batch', { jobs, record: recordMappings, usePreexistingMapping, persistentWorkspace }); // Pass persistentWorkspace
+    window.socket.emit('run_batch', { jobs, record: recordMappings, usePreexistingMapping });
     switchTab('workers');
 }
 
-export function initializeSocketListeners(socket) {
-    socket.on('init', (data) => {
+function initializeSocketListeners() {
+    window.socket.on('init', (data) => {
         updateQueueStatus(data.status);
-                    renderWorkerPool(data.slots, socket);
+        renderWorkerPool(data.slots);
         renderWorkerStatus(data.slots);
     });
 
-    socket.on('worker_pool_update', (slots) => {
-            renderWorkerPool(slots, socket);
-            renderWorkerStatus(slots);
-        });
+    window.socket.on('worker_pool_update', (slots) => {
+        renderWorkerPool(slots);
+        renderWorkerStatus(slots);
+    });
 
-    socket.on('queue_status_update', (status) => {
+    window.socket.on('queue_status_update', (status) => {
         updateQueueStatus(status);
     });
 
-    socket.on('job_started', (data) => {
+    window.socket.on('job_started', (data) => {
         runningJobs.set(data.slotId, data);
         const panel = document.getElementById(`log-panel-${data.slotId}`);
         if (panel) {
@@ -100,7 +91,7 @@ export function initializeSocketListeners(socket) {
         }
     });
 
-    socket.on('log_update', (data) => {
+    window.socket.on('log_update', (data) => {
         if (data.slotId === undefined) {
             console.log("Log general:", data.logLine);
             return;
@@ -119,7 +110,7 @@ export function initializeSocketListeners(socket) {
         }
     });
 
-    socket.on('job_finished', (data) => {
+    window.socket.on('job_finished', (data) => {
         const jobDetails = runningJobs.get(data.slotId);
         if (!jobDetails) return;
 
@@ -137,47 +128,11 @@ export function initializeSocketListeners(socket) {
             loadHistory();
         }
     });
-
-    socket.on('log_clear', (data) => {
-        if (data.slotId === undefined) return;
-        const panel = document.getElementById(`log-panel-${data.slotId}`);
-        if (panel) {
-            const content = panel.querySelector('.panel-content');
-            content.innerHTML = ''; // Clear the content
-        }
-    });
-
-    socket.on('workspace_ready', (data) => {
-        console.log(`Workspace para la branch ${data.branch} está listo.`);
-        const selectedBranch = document.getElementById('branch-select').value;
-        if (data.branch === selectedBranch) {
-            console.log('Refrescando features automáticamente...');
-            document.getElementById('fetch-features-btn').click();
-        }
-    });
 }
 
-export function stopAllExecution(socket) {
+function stopAllExecution() {
     if (confirm('¿Estás seguro de que quieres parar TODA la ejecución? Esto limpiará la cola y detendrá todos los workers activos.')) {
-        socket.emit('stop_all_execution');
+        window.socket.emit('stop_all_execution');
         console.log('Enviada señal para detener todo.');
     }
-}
-
-export function prepareWorkspace(socket, branch) {
-    if (!branch) {
-        alert('Por favor, selecciona una branch para preparar el workspace.');
-        return;
-    }
-    socket.emit('prepare_workspace', { branch });
-    switchTab('workers'); // Cambiar a la pestaña de logs para ver el progreso
-}
-
-export function commitChanges(socket, data) {
-    if (!data.branch || !data.files || data.files.length === 0 || !data.message) {
-        alert('Error: Faltan datos para realizar el commit.');
-        return;
-    }
-    socket.emit('commit_changes', data);
-    switchTab('workers'); // Switch to log view to see progress
 }

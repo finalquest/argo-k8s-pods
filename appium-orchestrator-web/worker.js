@@ -10,6 +10,7 @@ let branch = '';
 let client = '';
 let apkVersion = '';
 let localApkPath = '';
+let isWorkspacePersistent = false; // Flag to prevent deleting persistent workspaces
 let deviceSerialForLocalWorker = null; // Para workers locales, el serial se fija al inicio.
 let environment = {
     appiumPid: null,
@@ -64,12 +65,12 @@ function parseScriptOutput(output) {
 }
 
 function setupWorkerEnvironment() {
-    workspaceDir = path.join(os.tmpdir(), `worker-${crypto.randomBytes(8).toString('hex')}`);
-    fs.mkdirSync(workspaceDir, { recursive: true });
-    sendToParent({ type: 'LOG', data: `[worker] Workspace creado en: ${workspaceDir}
+    // La ruta del workspace ahora es definida por el servidor y recibida en INIT.
+    sendToParent({ type: 'LOG', data: `[worker] Usando workspace asignado: ${workspaceDir}
 ` });
 
     const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
+
     runScript(setupScript, [workspaceDir, branch], null, (code) => {
         if (code !== 0) {
             sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la preparación del workspace. Terminando.
@@ -89,7 +90,8 @@ function setupWorkerEnvironment() {
                 return process.exit(1);
             }
             environment.adbHost = deviceSerialForLocalWorker;
-            sendToParent({ type: 'LOG', data: `[worker]  Dispositivo local asignado: ${environment.adbHost}\n` });
+            sendToParent({ type: 'LOG', data: `[worker]  Dispositivo local asignado: ${environment.adbHost}
+` });
             finishSetup();
         } else {
             // Modo remoto: Ejecutar la lógica de búsqueda y bloqueo de emuladores.
@@ -109,6 +111,8 @@ function setupWorkerEnvironment() {
             });
         }
     });
+
+
 }
 
 // Función refactorizada con los pasos finales de la configuración
@@ -207,9 +211,10 @@ function cleanupAndExit(code) {
         const releaseEmulatorScript = path.join(__dirname, 'scripts', 'release-emulator.sh');
         try { execSync(`bash ${releaseEmulatorScript} "${environment.emulatorId}" ${environment.adbHost}`); } catch (e) { /* Ignorar errores */ }
     }
-    if (workspaceDir && fs.existsSync(workspaceDir)) {
+    // Solo borrar el workspace si NO es persistente
+    if (!isWorkspacePersistent && workspaceDir && fs.existsSync(workspaceDir)) {
         fs.rmSync(workspaceDir, { recursive: true, force: true });
-        sendToParent({ type: 'LOG', data: `[worker] Workspace ${workspaceDir} eliminado.
+        sendToParent({ type: 'LOG', data: `[worker] Workspace temporal ${workspaceDir} eliminado.
 ` });
     }
     sendToParent({ type: 'LOG', data: `[worker] Limpieza completa. Saliendo con código ${code}.
@@ -226,6 +231,8 @@ process.on('message', (message) => {
             apkVersion = message.apkVersion || '';
             localApkPath = message.localApkPath || '';
             deviceSerialForLocalWorker = message.deviceSerial || null;
+            workspaceDir = message.workerWorkspacePath; // Aceptar la ruta del workspace del servidor
+            isWorkspacePersistent = message.isPersistent; // Aceptar el flag del servidor
             setupWorkerEnvironment();
             break;
         case 'START':
