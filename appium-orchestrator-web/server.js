@@ -723,13 +723,22 @@ function assignJobToWorker(job) {
     const apkSourceType = job.localApk ? 'local' : 'registry';
     const apkIdentifier = job.localApk || job.apkVersion || process.env.APK_PATH;
 
-    let worker = workerPool.find(w => 
-        w.branch === job.branch && 
-        w.client === job.client && 
-        w.apkIdentifier === apkIdentifier &&
-        w.apkSourceType === apkSourceType &&
-        w.status === 'ready'
-    );
+    // Para workers locales, el deviceSerial es un criterio de búsqueda.
+    const isLocal = process.env.DEVICE_SOURCE === 'local';
+
+    let worker = workerPool.find(w => {
+        const baseMatch = w.branch === job.branch && 
+                          w.client === job.client && 
+                          w.apkIdentifier === apkIdentifier &&
+                          w.apkSourceType === apkSourceType &&
+                          w.status === 'ready';
+        if (!baseMatch) return false;
+        // Si es local, también debe coincidir el serial del dispositivo.
+        if (isLocal) {
+            return w.deviceSerial === job.deviceSerial;
+        }
+        return true;
+    });
 
     if (worker) {
         runJobOnWorker(job, worker);
@@ -737,7 +746,8 @@ function assignJobToWorker(job) {
     }
 
     if (workerPool.length < maxWorkers) {
-        const newWorker = createWorker(job.branch, job.client, apkIdentifier, apkSourceType);
+        // Pasamos el deviceSerial al crear el worker.
+        const newWorker = createWorker(job.branch, job.client, apkIdentifier, apkSourceType, job.deviceSerial);
         runJobOnWorker(job, newWorker);
         return true;
     }
@@ -803,9 +813,21 @@ async function runJobOnWorker(job, worker) {
     broadcastStatus();
 }
 
-function createWorker(branch, client, apkIdentifier, apkSourceType) {
+function createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial) {
     const workerId = workerPool.length > 0 ? Math.max(...workerPool.map(w => w.id)) + 1 : 0;
-    const workerProcess = fork(path.join(__dirname, 'worker.js'));
+
+    const forkOptions = {};
+    // Cuando se ejecuta en modo local DENTRO de Docker, necesitamos decirle al worker
+    // dónde encontrar el servidor ADB del host. 'host.docker.internal' es un DNS
+    // especial de Docker que resuelve a la IP del host.
+    if (process.env.DEVICE_SOURCE === 'local' && process.env.IS_DOCKER) {
+        console.log(`[SERVER] Docker local mode detected. Injecting ANDROID_ADB_SERVER_HOST=host.docker.internal for worker ${workerId}`);
+        forkOptions.env = {
+            ...process.env,
+            ANDROID_ADB_SERVER_HOST: 'host.docker.internal'
+        };
+    }
+    const workerProcess = fork(path.join(__dirname, 'worker.js'), [], forkOptions);
 
     const worker = {
         id: workerId,
@@ -814,19 +836,29 @@ function createWorker(branch, client, apkIdentifier, apkSourceType) {
         client: client,
         apkIdentifier: apkIdentifier,
         apkSourceType: apkSourceType,
+        deviceSerial: deviceSerial, // Se almacena el serial en el worker
         status: 'initializing',
         currentJob: null,
         terminating: false
     };
 
     workerPool.push(worker);
-    console.log(`Worker ${worker.id} creado para la branch ${branch}, cliente ${client}, APK: ${apkIdentifier} (source: ${apkSourceType})`);
+    let logMessage = `Worker ${worker.id} creado para la branch ${branch}, cliente ${client}, APK: ${apkIdentifier} (source: ${apkSourceType})`;
+    if (deviceSerial) {
+        logMessage += `, Dispositivo: ${deviceSerial}`;
+    }
+    console.log(logMessage);
     
     const initMessage = { type: 'INIT', branch, client };
     if (apkSourceType === 'local') {
         initMessage.localApkPath = path.join(process.env.LOCAL_APK_DIRECTORY, apkIdentifier);
     } else {
         initMessage.apkVersion = apkIdentifier;
+    }
+
+    // Si es un worker para un dispositivo local, enviamos el serial en el mensaje INIT.
+    if (process.env.DEVICE_SOURCE === 'local') {
+        initMessage.deviceSerial = deviceSerial;
     }
     
     worker.process.send(initMessage);

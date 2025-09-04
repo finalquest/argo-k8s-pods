@@ -10,10 +10,11 @@ let branch = '';
 let client = '';
 let apkVersion = '';
 let localApkPath = '';
+let deviceSerialForLocalWorker = null; // Para workers locales, el serial se fija al inicio.
 let environment = {
     appiumPid: null,
     appiumPort: null,
-    adbHost: null,
+    adbHost: null, // Puede ser el host remoto o el serial del dispositivo local.
     emulatorId: null
 };
 
@@ -81,9 +82,14 @@ function setupWorkerEnvironment() {
         if (process.env.DEVICE_SOURCE === 'local') {
             sendToParent({ type: 'LOG', data: `[worker]  Modo local detectado. Omitiendo búsqueda de emulador remoto.
 ` });
-            // En modo local, adbHost no es crítico porque ANDROID_SERIAL toma precedencia.
-            // Lo establecemos a un valor por defecto por si algún script lo necesita.
-            environment.adbHost = 'localhost';
+            // En modo local, el adbHost es el serial del dispositivo, que debe ser provisto en INIT.
+            if (!deviceSerialForLocalWorker) {
+                sendToParent({ type: 'LOG', data: `[worker] ❌ Error: DEVICE_SOURCE=local pero no se proveyó un deviceSerial en INIT.
+` });
+                return process.exit(1);
+            }
+            environment.adbHost = deviceSerialForLocalWorker;
+            sendToParent({ type: 'LOG', data: `[worker]  Dispositivo local asignado: ${environment.adbHost}\n` });
             finishSetup();
         } else {
             // Modo remoto: Ejecutar la lógica de búsqueda y bloqueo de emuladores.
@@ -121,7 +127,8 @@ function finishSetup() {
 ` });
 
         const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
-        runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], null, (code) => {
+        const env = { DEVICE_SOURCE: process.env.DEVICE_SOURCE };
+        runScript(installApkScript, [workspaceDir, environment.adbHost, client, apkVersion, localApkPath], env, (code) => {
             if (code !== 0) {
                 sendToParent({ type: 'LOG', data: `[worker] ❌ Falló la instalación del APK. Terminando.
 ` });
@@ -213,10 +220,12 @@ function cleanupAndExit(code) {
 process.on('message', (message) => {
     switch (message.type) {
         case 'INIT':
+            sendToParent({ type: 'LOG', data: `[worker] Initializing. ANDROID_ADB_SERVER_HOST=${process.env.ANDROID_ADB_SERVER_HOST}\n` });
             branch = message.branch;
             client = message.client;
             apkVersion = message.apkVersion || '';
             localApkPath = message.localApkPath || '';
+            deviceSerialForLocalWorker = message.deviceSerial || null;
             setupWorkerEnvironment();
             break;
         case 'START':

@@ -92,8 +92,15 @@ fi
 
 # --- Instalación ---
 success "ADB Host para la instalación: $ADB_HOST"
-debug "🔗 Conectando a $ADB_HOST..."
-adb connect "$ADB_HOST" > /dev/null
+
+# Solo conectar si no es un dispositivo local. 
+# Para dispositivos locales, se asume que ANDROID_SERIAL se usará directamente.
+if [[ "$DEVICE_SOURCE" != "local" ]]; then
+  debug "🔗 Conectando a ADB Host remoto: $ADB_HOST..."
+  adb connect "$ADB_HOST" > /dev/null
+else
+  debug "🔌 Dispositivo local. Omitiendo 'adb connect'. Se usará ANDROID_SERIAL."
+fi
 
 CLIENT_UPPER=$(echo "$CLIENT" | tr 'a-z' 'A-Z')
 PACKAGE_NAME=$(grep "APP_PACKAGE_${CLIENT_UPPER}" "${APPIUM_DIR}/.env" | cut -d'=' -f2 | tr -d '')

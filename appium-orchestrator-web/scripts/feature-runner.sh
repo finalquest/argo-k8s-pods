@@ -50,6 +50,12 @@ fi
 # Crear archivo de configuración de WDIO al vuelo
 CONFIG_FILE="${APPIUM_DIR}/config/wdio.conf.ts"
 
+DOCKER_CAPS=""
+if [[ "$IS_DOCKER" == "true" ]]; then
+    info "Docker detectado. Forzando remoteAdbHost a 'host.docker.internal'."
+    DOCKER_CAPS="'appium:remoteAdbHost': 'host.docker.internal',"
+fi
+
 cat > "$CONFIG_FILE" <<- EOM
 import { config } from './wdio.local.shared';
 
@@ -69,6 +75,7 @@ config.capabilities = [{
     "appium:skipDeviceInitialization": false,
     "appium:automationName": 'UiAutomator2',
     'appium:udid': '${ADB_HOST}',
+    ${DOCKER_CAPS}
     'appium:systemPort': ${SYSTEM_PORT},
     'appium:appPackage': '${PACKAGE_NAME}',
     'appium:appActivity': 'com.poincenot.doit.MainActivity',
@@ -90,12 +97,16 @@ EOM
 
 success "Configuración de WDIO generada para ${FEATURE_NAME}"
 
+debug "--- ENVIRONMENT VARIABLES ---"
+printenv
+debug "---------------------------"
+
 debug "🎬 Ejecutando test..."
 
 # Ejecutar WDIO
 cd "$APPIUM_DIR"
 FEATURE_ARG="${CLIENT}/feature/${FEATURE_NAME}"
-if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
+if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -x -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
     EXIT_CODE=$?
     error "La ejecución de WDIO falló con código de salida $EXIT_CODE"
 else
