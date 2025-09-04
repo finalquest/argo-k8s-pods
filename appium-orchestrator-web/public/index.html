@@ -5,139 +5,459 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appium Orchestrator</title>
     <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
-        .header { background: #fff; padding: 1em 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .container { max-width: 1200px; margin: auto; padding: 0 2em;}
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #059669;
+            --success-hover: #047857;
+            --warning-color: #d97706;
+            --warning-hover: #b45309;
+            --danger-color: #dc2626;
+            --danger-hover: #b91c1c;
+            --info-color: #0891b2;
+            --info-hover: #0e7490;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, var(--gray-50) 0%, #ffffff 100%);
+            color: var(--gray-900); 
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header { 
+            background: linear-gradient(135deg, #ffffff 0%, var(--gray-50) 100%);
+            padding: 1.5rem 2rem; 
+            box-shadow: var(--shadow-md);
+            border-bottom: 1px solid var(--gray-200);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.025em;
+        }
+
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 2rem;
+        }
         
-        /* Tabs */
-        .tabs { border-bottom: 2px solid #dee2e6; margin-bottom: 1.5em; }
-        .tab-btn { background: none; border: none; font-size: 1.1em; padding: 1em 1.5em; cursor: pointer; color: #495057; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: #007bff; border-bottom-color: #007bff; font-weight: 600; }
+        /* Enhanced Tabs */
+        .tabs { 
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .tab-btn { 
+            background: none; 
+            border: none; 
+            font-size: 1rem; 
+            font-weight: 500;
+            padding: 1rem 1.5rem; 
+            cursor: pointer; 
+            color: var(--gray-600); 
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
+        .tab-btn.active { 
+            color: var(--primary-color); 
+            border-bottom-color: var(--primary-color);
+            background: var(--gray-50);
+            font-weight: 600;
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .controls { display: flex; flex-wrap: wrap; gap: 1em; align-items: center; margin-bottom: 1.5em; }
-        label { font-weight: 500; }
-        select, button { padding: 0.5em 1em; border-radius: 4px; border: 1px solid #ced4da; font-size: 1em; }
-        button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        
-        #features-list, #history-list {
-            list-style-type: none;
-            padding: 1em;
-            max-height: 350px;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            background: #fff;
+        /* Enhanced Controls */
+        .controls { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 1rem; 
+            align-items: center; 
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
         }
-        #features-list li, #history-list li {
-            padding: 0.5em;
-            border-bottom: 1px solid #dee2e6;
+
+        label { 
+            font-weight: 500; 
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        select, input[type="text"], textarea { 
+            padding: 0.75rem 1rem; 
+            border-radius: 8px; 
+            border: 1px solid var(--gray-300); 
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        select:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        /* Enhanced Buttons */
+        button { 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 8px; 
+            border: 1px solid transparent; 
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Button Variants */
+        button, .report-btn {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        button:hover:not(:disabled), .report-btn:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .run-btn { 
+            background: var(--success-color); 
+            border-color: var(--success-color); 
+        }
+        .run-btn:hover:not(:disabled) { 
+            background: var(--success-hover);
+            border-color: var(--success-hover);
+        }
+
+        .priority-btn { 
+            background: var(--warning-color); 
+            border-color: var(--warning-color); 
+            color: white;
+        }
+        .priority-btn:hover:not(:disabled) { 
+            background: var(--warning-hover);
+            border-color: var(--warning-hover);
+        }
+
+        button[style*="dc3545"] {
+            background: var(--danger-color) !important;
+            border-color: var(--danger-color) !important;
+        }
+
+        button[style*="dc3545"]:hover:not(:disabled) {
+            background: var(--danger-hover) !important;
+            border-color: var(--danger-hover) !important;
+        }
+
+        button[style*="17a2b8"] {
+            background: var(--info-color) !important;
+            border-color: var(--info-color) !important;
+        }
+
+        button[style*="17a2b8"]:hover:not(:disabled) {
+            background: var(--info-hover) !important;
+            border-color: var(--info-hover) !important;
+        }
+        
+        /* Enhanced Lists */
+        #features-list, #history-list, #queued-tests-list {
+            list-style-type: none;
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #features-list li, #history-list li, #queued-tests-list li {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        #features-list li:hover, #history-list li:hover, #queued-tests-list li:hover {
+            background: var(--gray-50);
+        }
+
+        #features-list li:last-child, #history-list li:last-child, #queued-tests-list li:last-child { 
+            border-bottom: none; 
+        }
+
+        /* Enhanced Headers */
+        .features-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem 0;
+        }
+
+        .features-header h2, h2, h3 {
+            color: var(--gray-900);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Enhanced Workers View */
+        #worker-status-container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 1rem; 
+            padding: 1.5rem; 
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        .worker-status-btn { 
+            background: var(--gray-500); 
+            border-color: var(--gray-500); 
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .worker-status-btn.status-busy { 
+            background: var(--warning-color); 
+            border-color: var(--warning-color); 
+            color: white;
+        }
+
+        .worker-status-btn.status-ready { 
+            background: var(--success-color); 
+            border-color: var(--success-color); 
+        }
+
+        .worker-status-btn.status-initializing { 
+            background: var(--info-color); 
+            border-color: var(--info-color); 
+        }
+
+        .panels-container { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .log-panel { 
+            border: 1px solid var(--gray-200); 
+            border-radius: 12px; 
+            background: white; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .panel-header { 
+            background: var(--gray-100); 
+            padding: 1rem 1.5rem; 
+            font-weight: 600; 
+            border-bottom: 1px solid var(--gray-200);
+            transition: background-color 0.3s;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        #features-list li:last-child, #history-list li:last-child { border-bottom: none; }
-        
-        .run-btn { background-color: #28a745; border-color: #28a745; }
-        .run-btn:hover { background-color: #218838; }
 
-        .priority-btn { background-color: #ffc107; border-color: #ffc107; color: #212529; }
-        .priority-btn:hover { background-color: #e0a800; }
+        .panel-header .stop-btn { 
+            background: var(--danger-color); 
+            border-color: var(--danger-color); 
+            padding: 0.5rem 1rem; 
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
 
-        .report-btn {
-            background-color: #007bff;
+        .panel-header .stop-btn:hover { 
+            background: var(--danger-hover);
+            border-color: var(--danger-hover);
+        }
+
+        .panel-header.status-busy { 
+            background: var(--warning-color); 
             color: white;
-            padding: 0.5em 1em;
-            border-radius: 4px;
-            font-size: 1em;
-            border: 1px solid #007bff;
-            cursor: pointer;
         }
-        .report-btn:hover {
-            background-color: #0056b3;
+
+        .panel-header.status-ready { 
+            background: var(--success-color); 
+            color: white; 
         }
-        
-        /* Workers View */
-        #worker-status-container { display: flex; flex-wrap: wrap; gap: 0.5em; padding: 1em; background-color: #e9ecef; border-radius: 8px; margin-bottom: 1.5em; }
-        .worker-status-btn { background-color: #6c757d; border-color: #6c757d; color: white; }
-        .worker-status-btn.status-busy { background-color: #ffc107; border-color: #ffc107; color: #212529; }
-        .worker-status-btn.status-ready { background-color: #28a745; border-color: #28a745; }
-        .worker-status-btn.status-initializing { background-color: #17a2b8; border-color: #17a2b8; }
 
-        .panels-container { display: flex; flex-wrap: wrap; gap: 1.5em; }
-        .log-panel { flex: 1 1 400px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; display: flex; flex-direction: column; min-width: 400px; scroll-margin-top: 1em;}
-        .panel-header { background: #e9ecef; padding: 0.75em; font-weight: bold; border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px; transition: background-color 0.3s; }
-        .panel-header .stop-btn { float: right; background-color: #dc3545; border-color: #dc3545; padding: 0.2em 0.6em; font-size: 0.8em; }
-        .panel-header .stop-btn:hover { background-color: #c82333; }
-        .panel-header.status-busy { background-color: #ffc107; }
-        .panel-header.status-ready { background-color: #28a745; color: white; }
-        .panel-header.status-initializing { background-color: #17a2b8; color: white; }
-        .panel-content { height: 350px; overflow-y: scroll; padding: 1em; font-family: monospace; white-space: pre-wrap; background-color: #212529; color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+        .panel-header.status-initializing { 
+            background: var(--info-color); 
+            color: white; 
+        }
 
-        /* Sub-tabs for Wiremock */
+        .panel-content { 
+            height: 350px; 
+            overflow-y: auto; 
+            padding: 1rem; 
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; 
+            white-space: pre-wrap; 
+            background: var(--gray-900); 
+            color: var(--gray-100);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Enhanced Sub-tabs */
         .sub-tabs {
             display: flex;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 1em;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
         }
+
         .sub-tab-btn {
             background: none;
             border: none;
-            padding: 0.5em 1em;
+            padding: 0.75rem 1.5rem;
             cursor: pointer;
-            font-size: 1em;
-            color: #666;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
             border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
         }
+
+        .sub-tab-btn:hover {
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
         .sub-tab-btn.active {
-            color: #007bff;
-            border-bottom-color: #007bff;
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: var(--gray-50);
         }
+
         .sub-tab-content {
             display: none;
         }
         .sub-tab-content.active {
             display: block;
         }
+
         .new-request-highlight {
-            background-color: #fffbe6; /* Un amarillo claro */
+            background: #fef3c7;
             transition: background-color 2s ease-in-out;
         }
 
-        /* Styles for Log Entries */
-        #wiremock-requests-output {
-            background: #212529;
-            color: #f8f9fa;
-            padding: 1em;
-            border-radius: 4px;
+        /* Enhanced Log Styles */
+        #wiremock-requests-output, #wiremock-mappings-output, #wiremock-recording-output {
+            background: var(--gray-900);
+            color: var(--gray-100);
+            padding: 1.5rem;
+            border-radius: 12px;
             max-height: 70vh;
             overflow-y: auto;
-            font-family: monospace;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
         }
+
         .log-entry {
-            border-bottom: 1px solid #444;
-            padding: 0.5em;
-            margin-bottom: 0.5em;
+            border-bottom: 1px solid var(--gray-700);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
         }
+
         .log-summary {
             cursor: pointer;
+            transition: background-color 0.2s ease;
         }
+
+        .log-summary:hover {
+            background: var(--gray-800);
+        }
+
         .log-details {
             display: none;
-            padding-left: 1em;
-            margin-top: 0.5em;
-            background-color: #333;
-            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            background: var(--gray-800);
+            border-radius: 8px;
+            border: 1px solid var(--gray-700);
         }
+
         .log-details pre {
             white-space: pre-wrap;
             word-break: break-all;
-            padding: 1em;
+            padding: 0;
+            margin: 0;
         }
 
-        /* Modal Styles */
+        /* Enhanced Modal */
         .modal {
             display: none; 
             position: fixed; 
@@ -147,77 +467,217 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
         }
+
         .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
+            background: white;
+            margin: 5% auto; 
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+            width: 90%;
+            max-width: 700px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 1em;
-            margin-bottom: 1em;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
+
         .close-btn {
-            color: #aaa;
-            font-size: 28px;
+            color: var(--gray-400);
+            font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
+            transition: color 0.2s ease;
         }
+
         .close-btn:hover, .close-btn:focus {
-            color: black;
+            color: var(--gray-600);
         }
+
         #mappings-list-container {
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 1em;
-            margin-bottom: 1em;
+            border: 1px solid var(--gray-200);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background: var(--gray-50);
         }
+
         #mappings-list-container label {
             display: block;
-            padding: 0.5em;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
         }
+
         #mappings-list-container label:hover {
-            background-color: #f1f1f1;
+            background: white;
         }
+
         .mapping-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.2em 0;
+            padding: 0.25rem 0;
         }
+
         .mapping-item-label {
             flex-grow: 1;
         }
+
         .download-single-btn {
-            font-size: 0.8em;
-            padding: 0.3em 0.8em;
+            font-size: 0.75rem;
+            padding: 0.5rem 1rem;
             text-decoration: none;
-            background-color: #6c757d;
+            background: var(--gray-500);
             color: white;
-            border-radius: 4px;
-        }
-        .download-single-btn:hover {
-            background-color: #5a6268;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
 
+        .download-single-btn:hover {
+            background: var(--gray-600);
+            transform: translateY(-1px);
+        }
+
+        /* Enhanced Auth Overlay */
+        #auth-overlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(248, 249, 250, 0.95); 
+            z-index: 999; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            backdrop-filter: blur(8px);
+        }
+
+        #auth-overlay > div {
+            padding: 3rem 4rem; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+        }
+
+        #auth-overlay h2 {
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+
+        #auth-overlay p {
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        #auth-overlay a {
+            text-decoration: none; 
+            padding: 1rem 2rem; 
+            background: var(--primary-color); 
+            color: white; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        #auth-overlay a:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Enhanced User Info */
+        #auth-container {
+            position: absolute; 
+            top: 1.5rem; 
+            right: 2rem; 
+            text-align: right;
+        }
+
+        #user-info img {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%;
+            border: 2px solid var(--gray-200);
+        }
+
+        #user-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        #user-email {
+            font-size: 0.75rem; 
+            color: var(--gray-500);
+        }
+
+        /* Enhanced Queue Status */
+        #queue-status {
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-top: 0.5rem;
+        }
+
+        /* Enhanced Form Elements */
+        input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            accent-color: var(--primary-color);
+        }
+
+        textarea {
+            width: 100%; 
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .panels-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            #auth-container {
+                position: static;
+                margin-top: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="auth-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 249, 250, 0.9); z-index: 999; display: flex; justify-content: center; align-items: center; text-align: center; backdrop-filter: blur(4px);">
-        <div style="padding: 2em 3em; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h2 style="margin-bottom: 0.5em;">Appium Orchestrator</h2>
-            <p style="color: #6c757d;">Por favor, inicia sesión para continuar.</p>
-            <a href="/auth/google" style="text-decoration: none; padding: 0.7em 1.5em; background-color: #4285F4; color: white; border-radius: 4px; font-weight: 500; display: inline-block; margin-top: 1em;">
+    <div id="auth-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 249, 250, 0.95); z-index: 999; display: flex; justify-content: center; align-items: center; text-align: center; backdrop-filter: blur(8px);">
+        <div style="padding: 3rem 4rem; background: white; border-radius: 16px; box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200);">
+            <h2 style="margin-bottom: 0.5rem;">Appium Orchestrator</h2>
+            <p style="color: var(--gray-600); margin-bottom: 2rem;">Por favor, inicia sesión para continuar.</p>
+            <a href="/auth/google" style="text-decoration: none; padding: 1rem 2rem; background: var(--primary-color); color: white; border-radius: 8px; font-weight: 600; display: inline-block; transition: all 0.2s ease;">
                 Login with Google
             </a>
         </div>
@@ -225,17 +685,17 @@
 
     <div class="header">
         <h1>Appium Orchestrator Web</h1>
-        <div id="queue-status" style="font-weight: 500;"></div>
-        <div id="auth-container" style="position: absolute; top: 1.5em; right: 2em; text-align: right;">
+        <div id="queue-status" style="font-weight: 500; color: var(--gray-700); margin-top: 0.5rem;"></div>
+        <div id="auth-container" style="position: absolute; top: 1.5rem; right: 2rem; text-align: right;">
             <div id="user-info" style="display: none;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div>
-                        <div id="user-name" style="font-weight: 500;"></div>
-                        <div id="user-email" style="font-size: 0.8em; color: #555;"></div>
+                        <div id="user-name" style="font-weight: 600; color: var(--gray-900);"></div>
+                        <div id="user-email" style="font-size: 0.75rem; color: var(--gray-500);"></div>
                     </div>
-                    <img id="user-photo" src="" alt="User photo" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <img id="user-photo" src="/placeholder.svg" alt="User photo" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gray-200);">
                 </div>
-                <a href="/auth/logout" style="font-size: 0.8em; color: #007bff; margin-top: 5px; display: inline-block;">Logout</a>
+                <a href="/auth/logout" style="font-size: 0.75rem; color: var(--primary-color); margin-top: 5px; display: inline-block; transition: all 0.2s ease;">Logout</a>
             </div>
         </div>
     </div>
@@ -271,23 +731,24 @@
                 <div id="device-selector-container" style="display: none;">
                     <label for="device-select">Device:</label>
                     <select id="device-select"></select>
+                    <button id="refresh-devices-btn" title="Refresh Devices" style="padding: 0.4em 0.6em; line-height: 1; margin-left: 5px; font-size: 0.9em;">&#x21bb;</button>
                 </div>
                 <button id="fetch-apk-versions-btn">Buscar Versiones</button>
                 <button id="fetch-features-btn">Buscar Features</button>
-                <button id="run-selected-btn" style="background-color: #17a2b8;" disabled>Ejecutar Selección (0)</button>
-                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5em;">
+                <button id="run-selected-btn" style="background-color: var(--info-color); border-color: var(--info-color);" disabled>Ejecutar Selección (0)</button>
+                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" id="batch-priority-checkbox">
                     Alta Prioridad ⚡
                 </label>
-                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5em;">
+                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" id="record-mappings-checkbox">
                     Grabar Mappings 🔴
                 </label>
-                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5em;">
+                <label style="margin-left: 1em; display: inline-flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" id="use-local-mappings-checkbox">
                     Usar Mappings Locales 💾
                 </label>
-                <button id="stop-all-btn" style="background-color: #dc3545; margin-left: auto;">Parar Todo 🛑</button>
+                <button id="stop-all-btn" style="background-color: var(--danger-color); border-color: var(--danger-color); margin-left: auto;">Parar Todo 🛑</button>
             </div>
             <div class="features-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Features</h2>
@@ -309,7 +770,7 @@
         <!-- Queue Tab -->
         <div id="queue-view" class="tab-content">
             <h2>Cola de Espera</h2>
-            <ul id="queued-tests-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
+            <ul id="queued-tests-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 12px; background: white; box-shadow: var(--shadow-sm);"></ul>
         </div>
 
         <!-- Results Tab -->
@@ -321,7 +782,7 @@
                     <option value="">Todas</option>
                 </select>
             </div>
-            <ul id="history-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; background: #fff;"></ul>
+            <ul id="history-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 12px; background: white; box-shadow: var(--shadow-sm);"></ul>
         </div>
 
         <!-- Wiremock Tab -->
@@ -335,20 +796,20 @@
                 <h2>Wiremock Control</h2>
                 <div class="controls">
                     <button id="wiremock-list-mappings-btn">List Mappings</button>
-                    <button id="wiremock-delete-mappings-btn" style="background-color: #dc3545;">Delete All Mappings</button>
-                    <button id="wiremock-reset-mappings-btn" style="background-color: #ffc107; color: #212529;">Reset Mappings</button>
-                    <button id="wiremock-base-mappings-btn" style="background-color: #17a2b8;">Base Mappings</button>
-                    <button id="open-mappings-download-modal-btn" style="background-color: #28a745;">Download Mappings...</button>
+                    <button id="wiremock-delete-mappings-btn" style="background-color: var(--danger-color); border-color: var(--danger-color);">Delete All Mappings</button>
+                    <button id="wiremock-reset-mappings-btn" style="background-color: var(--warning-color); border-color: var(--warning-color); color: white;">Reset Mappings</button>
+                    <button id="wiremock-base-mappings-btn" style="background-color: var(--info-color); border-color: var(--info-color);">Base Mappings</button>
+                    <button id="open-mappings-download-modal-btn" style="background-color: var(--primary-color); border-color: var(--primary-color);">Download Mappings...</button>
                 </div>
-                <pre id="wiremock-mappings-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+                <pre id="wiremock-mappings-output" style="background: var(--gray-900); color: var(--gray-100); padding: 1.5rem; border-radius: 12px; max-height: 500px; overflow-y: auto; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);"></pre>
                 <hr style="margin: 2em 0;">
                 <h3>Import Mappings</h3>
                 <div class="controls">
-                    <textarea id="wiremock-import-textarea" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+                    <textarea id="wiremock-import-textarea" rows="10" style="width: 100%; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;"></textarea>
                 </div>
                 <div class="controls">
                     <button id="wiremock-import-mappings-btn">Import Mappings from Text</button>
-                    <button id="wiremock-upload-mappings-btn" style="background-color: #6c757d;">Upload JSON File</button>
+                    <button id="wiremock-upload-mappings-btn" style="background-color: var(--gray-500); border-color: var(--gray-500);">Upload JSON File</button>
                     <input type="file" id="wiremock-upload-input" style="display: none;" accept=".json">
                 </div>
                 <hr style="margin: 2em 0;">
@@ -366,25 +827,24 @@
                 <button id="wiremock-start-recording-btn">Start Recording</button>
                 <button id="wiremock-stop-recording-btn">Stop Recording</button>
                 <button id="wiremock-status-recording-btn">Get Status</button>
-                <pre id="wiremock-recording-output" style="background: #212529; color: #f8f9fa; padding: 1em; border-radius: 4px; max-height: 500px; overflow-y: auto;"></pre>
+                <pre id="wiremock-recording-output" style="background: var(--gray-900); color: var(--gray-100); padding: 1.5rem; border-radius: 12px; max-height: 500px; overflow-y: auto; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);"></pre>
             </div>
 
             <div id="wiremock-requests-view" class="sub-tab-content">
                 <h3>Received Requests</h3>
                 <div class="controls">
                     <button id="wiremock-list-requests-btn">List Requests</button>
-                    <button id="wiremock-delete-requests-btn" style="background-color: #dc3545;">Delete All Requests</button>
+                    <button id="wiremock-delete-requests-btn" style="background-color: var(--danger-color); border-color: var(--danger-color);">Delete All Requests</button>
                     <label style="margin-left: auto;">
                         <input type="checkbox" id="wiremock-live-view-toggle" checked>
                         Live View
                     </label>
                 </div>
-                <div id="wiremock-requests-output"></div>
+                <div id="wiremock-requests-output" style="background: var(--gray-900); color: var(--gray-100); padding: 1.5rem; border-radius: 12px; max-height: 70vh; overflow-y: auto; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);"></div>
             </div>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/api.js"></script>
@@ -405,10 +865,10 @@
                     Seleccionar Todo
                 </label>
             </div>
-            <div id="mappings-list-container">
+            <div id="mappings-list-container" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-200); padding: 1rem; margin-bottom: 1rem; border-radius: 8px; background: var(--gray-50);">
                 <p>Cargando...</p>
             </div>
-            <button id="download-selected-mappings-btn" style="width: 100%; padding: 0.8em; margin-top: 1em;">Descargar Selección</button>
+            <button id="download-selected-mappings-btn" style="width: 100%; padding: 0.8em; margin-top: 1em; background-color: var(--primary-color); border-color: var(--primary-color); color: white; border-radius: 8px; transition: all 0.2s ease;">Descargar Selección</button>
         </div>
     </div>
 

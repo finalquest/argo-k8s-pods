@@ -44,7 +44,7 @@ async function loadLocalDevices() {
     const select = document.getElementById('device-select');
 
     if (devices && devices.length > 0) {
-        container.style.display = 'block';
+        container.style.display = 'flex';
         select.innerHTML = '';
         devices.forEach(device => {
             const option = document.createElement('option');
@@ -57,6 +57,24 @@ async function loadLocalDevices() {
     }
 }
 
+async function refreshLocalDevices() {
+    const refreshBtn = document.getElementById('refresh-devices-btn');
+    const originalContent = refreshBtn.innerHTML;
+    
+    refreshBtn.disabled = true;
+    // Use a smaller spinner for the icon button
+    refreshBtn.innerHTML = '<span class="spinner" style="width: 0.9em; height: 0.9em; border-width: 2px; vertical-align: middle;"></span>'; 
+    
+    try {
+        await loadLocalDevices();
+    } catch (error) {
+        console.error("Failed to refresh local devices:", error);
+    } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalContent;
+    }
+}
+
 function initializeUiEventListeners() {
     const fetchBtn = document.getElementById('fetch-features-btn');
     const fetchApkBtn = document.getElementById('fetch-apk-versions-btn');
@@ -65,6 +83,7 @@ function initializeUiEventListeners() {
     const selectAllCheckbox = document.getElementById('select-all-features');
     const historyBranchFilter = document.getElementById('history-branch-filter');
     const featuresList = document.getElementById('features-list');
+    const refreshDevicesBtn = document.getElementById('refresh-devices-btn');
 
     fetchBtn.addEventListener('click', fetchFeatures);
     fetchApkBtn.addEventListener('click', fetchApkVersions);
@@ -72,6 +91,7 @@ function initializeUiEventListeners() {
     stopAllBtn.addEventListener('click', stopAllExecution);
     selectAllCheckbox.addEventListener('change', toggleSelectAll);
     historyBranchFilter.addEventListener('change', () => loadHistory(historyBranchFilter.value));
+    refreshDevicesBtn.addEventListener('click', refreshLocalDevices);
 
     featuresList.addEventListener('change', (e) => {
         if (e.target.classList.contains('feature-checkbox')) {
