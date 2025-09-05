@@ -224,7 +224,7 @@
             box-shadow: var(--shadow-sm);
         }
 
-        #features-list li, #history-list li, #queued-tests-list li {
+        #history-list li, #queued-tests-list li {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--gray-100);
             display: flex;
@@ -232,9 +232,27 @@
             align-items: center;
             transition: background-color 0.2s ease;
         }
-
-        #features-list li:hover, #history-list li:hover, #queued-tests-list li:hover {
+        #history-list li:hover, #queued-tests-list li:hover {
             background: var(--gray-50);
+        }
+
+        #features-list li {
+            display: block;
+            border-bottom: 1px solid var(--gray-100);
+            padding: 0;
+        }
+
+        #features-list .feature-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            box-sizing: border-box;
+        }
+
+        #features-list .feature-item:hover {
+             background: var(--gray-50);
         }
 
         #features-list li.modified {
@@ -314,9 +332,13 @@
         }
 
         .panels-container { 
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1.5rem;
+        }
+
+        .worker-log-panel {
+            order: -1; /* Moves worker panels before the system log panel */
         }
 
         .log-panel { 
@@ -657,6 +679,43 @@
             width: 100%; 
             font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
             resize: vertical;
+        }
+
+        /* Tree View Styles */
+        #features-list ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        #features-list .folder > .feature-item {
+            justify-content: flex-start; /* Alinea el títulod e la carpeta a la izquierda */
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #features-list .folder > .feature-item::before {
+            content: '▶ ';
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        #features-list .folder.expanded > .feature-item::before {
+            transform: rotate(90deg);
+        }
+
+        #features-list .folder > ul {
+            display: none;
+        }
+
+        #features-list .folder.expanded > ul {
+            display: block;
+        }
+        
+        #features-list li .feature-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
 
         /* Responsive Design */

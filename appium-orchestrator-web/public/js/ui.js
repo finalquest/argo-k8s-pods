@@ -73,7 +73,7 @@ export function renderWorkerPool(workers, socket) {
         let panel = document.getElementById(`log-panel-${worker.slotId}`);
         if (!panel) {
             panel = document.createElement('div');
-            panel.className = 'log-panel';
+            panel.className = 'log-panel worker-log-panel'; // Added 'worker-log-panel' class
             panel.id = `log-panel-${worker.slotId}`;
             panel.innerHTML = `<div class="panel-header"></div><div class="panel-content"></div>`;
             panelsContainer.appendChild(panel);
@@ -286,31 +286,28 @@ export function filterFeatureList() {
     }
 }
 
-export function updateFeaturesWithGitStatus(modifiedFeatures, client) {
-    const featuresList = document.getElementById('features-list');
-    const featureItems = featuresList.getElementsByTagName('li');
-
+export function updateFeaturesWithGitStatus(modifiedFeatures) {
     const modifiedSet = new Set(modifiedFeatures.map(f => {
-        // Normalizar la ruta para que coincida con el nombre del feature
         const parts = f.split('/');
         return parts[parts.length - 1];
     }));
 
-    for (const item of featureItems) {
-        const featureNameSpan = item.querySelector('span');
-        if (!featureNameSpan) continue;
+    const featureItems = document.querySelectorAll('#features-list .file');
 
-        const featureName = featureNameSpan.textContent + '.feature';
+    featureItems.forEach(item => {
+        const checkbox = item.querySelector('.feature-checkbox');
+        if (!checkbox) return;
 
-        // Limpiar estado anterior y aplicar el nuevo si corresponde
+        const featureName = checkbox.dataset.featureName + '.feature';
+
         item.classList.remove('modified');
         if (modifiedSet.has(featureName)) {
             item.classList.add('modified');
         }
-    }
+    });
 }
 
-export function addFeatureControls(li, feature, config) {
+export function addFeatureControls(li, featureName, config) {
     const buttonsDiv = document.createElement('div');
     buttonsDiv.style.display = 'flex';
     buttonsDiv.style.gap = '0.5em';
@@ -320,7 +317,7 @@ export function addFeatureControls(li, feature, config) {
         const editButton = document.createElement('button');
         editButton.textContent = 'Editar';
         editButton.className = 'edit-btn';
-        editButton.dataset.feature = feature;
+        editButton.dataset.feature = featureName;
         editButton.style.backgroundColor = 'var(--gray-500)';
         buttonsDiv.appendChild(editButton);
     }
@@ -328,17 +325,62 @@ export function addFeatureControls(li, feature, config) {
     const runButton = document.createElement('button');
     runButton.textContent = 'Run';
     runButton.className = 'run-btn';
-    runButton.dataset.feature = feature;
+    runButton.dataset.feature = featureName;
     
     const priorityButton = document.createElement('button');
     priorityButton.textContent = '⚡️';
     priorityButton.title = 'Run with high priority';
     priorityButton.className = 'priority-btn';
-    priorityButton.dataset.feature = feature;
+    priorityButton.dataset.feature = featureName;
 
     buttonsDiv.appendChild(runButton);
     buttonsDiv.appendChild(priorityButton);
     li.appendChild(buttonsDiv);
+}
+
+export function renderFeatureTree(parentElement, nodes, config) {
+    nodes.forEach(node => {
+        const li = document.createElement('li');
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'feature-item';
+
+        if (node.type === 'folder') {
+            li.classList.add('folder');
+            itemDiv.textContent = node.name;
+            li.appendChild(itemDiv);
+
+            if (node.children && node.children.length > 0) {
+                const nestedUl = document.createElement('ul');
+                renderFeatureTree(nestedUl, node.children, config);
+                li.appendChild(nestedUl);
+            }
+        } else if (node.type === 'file') {
+            li.classList.add('file');
+            
+            const controlsDiv = document.createElement('div');
+            controlsDiv.style.display = 'flex';
+            controlsDiv.style.alignItems = 'center';
+            controlsDiv.style.gap = '1em';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'feature-checkbox';
+            checkbox.dataset.featureName = node.featureName;
+            checkbox.onchange = updateSelectedCount;
+
+            const featureNameSpan = document.createElement('span');
+            featureNameSpan.textContent = node.name;
+
+            controlsDiv.appendChild(checkbox);
+            controlsDiv.appendChild(featureNameSpan);
+            itemDiv.appendChild(controlsDiv);
+
+            addFeatureControls(itemDiv, node.featureName, config);
+            li.appendChild(itemDiv);
+        }
+
+        parentElement.appendChild(li);
+    });
 }
 
 let codeMirrorEditor = null;

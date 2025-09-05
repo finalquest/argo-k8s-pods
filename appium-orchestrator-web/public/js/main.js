@@ -117,7 +117,7 @@ async function initializeAppControls(socket) {
             const branch = document.getElementById('branch-select').value;
             const client = document.getElementById('client-select').value;
             const files = Array.from(document.querySelectorAll('li.modified .feature-checkbox:checked')).map(cb => {
-                return `test/features/${client}/feature/${cb.dataset.featureName}.feature`;
+                return `test/features/${client}/feature/modulos/${cb.dataset.featureName}.feature`;
             });
 
             commitChanges(socket, { branch, files, message });
@@ -219,6 +219,14 @@ function initializeUiEventListeners(socket) {
 
     featuresList.addEventListener('click', async (e) => {
         const target = e.target;
+
+        // Handle folder expansion/collapse
+        const folderItem = target.closest('.folder > .feature-item');
+        if (folderItem) {
+            folderItem.parentElement.classList.toggle('expanded');
+            return; // Stop further processing
+        }
+
         const featureName = target.dataset.feature;
         const branch = document.getElementById('branch-select').value;
         const client = document.getElementById('client-select').value;

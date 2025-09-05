@@ -105,7 +105,7 @@ debug "🎬 Ejecutando test..."
 
 # Ejecutar WDIO
 cd "$APPIUM_DIR"
-FEATURE_ARG="${CLIENT}/feature/${FEATURE_NAME}"
+FEATURE_ARG="${CLIENT}/feature/modulos/${FEATURE_NAME}"
 if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -x -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
     EXIT_CODE=$?
     error "La ejecución de WDIO falló con código de salida $EXIT_CODE"

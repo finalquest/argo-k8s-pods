@@ -1,4 +1,4 @@
-import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus, addFeatureControls } from './ui.js';
+import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus, renderFeatureTree } from './ui.js';
 
 export async function getCurrentUser() {
     try {
@@ -125,45 +125,21 @@ export async function fetchFeatures() {
 
         if (!featuresResponse.ok) throw new Error(`HTTP error! status: ${featuresResponse.status}`);
         
-        const features = await featuresResponse.json();
+        const featureTree = await featuresResponse.json();
         featuresList.innerHTML = '';
 
-        if (features.length === 0) {
+        if (featureTree.length === 0) {
             featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
+        } else {
+            renderFeatureTree(featuresList, featureTree, config);
         }
-
-        features.forEach(feature => {
-            const li = document.createElement('li');
-            
-            const controlsDiv = document.createElement('div');
-            controlsDiv.style.display = 'flex';
-            controlsDiv.style.alignItems = 'center';
-            controlsDiv.style.gap = '1em';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'feature-checkbox';
-            checkbox.dataset.featureName = feature;
-            checkbox.onchange = updateSelectedCount;
-
-            const featureNameSpan = document.createElement('span');
-            featureNameSpan.textContent = feature;
-
-            controlsDiv.appendChild(checkbox);
-            controlsDiv.appendChild(featureNameSpan);
-            li.appendChild(controlsDiv);
-
-            addFeatureControls(li, feature, config); // Refactored button creation
-
-            featuresList.appendChild(li);
-        });
 
         updateSelectedCount();
 
         // Auto-refresh git status after fetching features
         if (config.persistentWorkspacesEnabled) {
             const status = await getWorkspaceStatus(selectedBranch);
-            updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+            updateFeaturesWithGitStatus(status.modified_features);
         }
 
     } catch (error) {

@@ -245,59 +245,97 @@ app.get('/api/apk/versions', (req, res) => {
     });
 });
 
+async function readFeaturesRecursive(basePath, currentDirectory) {
+    const entries = await fs.promises.readdir(currentDirectory, { withFileTypes: true });
+    const nodes = [];
+
+    for (const dirent of entries) {
+        const fullPath = path.join(currentDirectory, dirent.name);
+        if (dirent.isDirectory()) {
+            nodes.push({
+                type: 'folder',
+                name: dirent.name,
+                children: await readFeaturesRecursive(basePath, fullPath)
+            });
+        } else if (dirent.isFile() && dirent.name.endsWith('.feature')) {
+            // Calculate the relative path from the basePath to the feature file
+            const relativePath = path.relative(basePath, fullPath);
+            nodes.push({
+                type: 'file',
+                name: dirent.name, // Keep original file name for display
+                featureName: relativePath.replace(/\.feature$/, '') // This is the full relative path without extension
+            });
+        }
+    }
+    // Opcional: Ordenar para que las carpetas aparezcan antes que los archivos
+    return nodes.sort((a, b) => {
+        if (a.type === b.type) {
+            return a.name.localeCompare(b.name);
+        }
+        return a.type === 'folder' ? -1 : 1;
+    });
+}
+
 app.get('/api/features', async (req, res) => {
     const { branch, client } = req.query;
     if (!branch || !client) {
         return res.status(400).json({ error: 'Se requieren los parámetros \'branch\' y \'client\'.' });
     }
 
+    let featuresPath = null;
+    let foundInPersistent = false;
+
     // Lógica para leer features desde un workspace persistente si existe
     if (process.env.PERSISTENT_WORKSPACES_ROOT) {
         const sanitizedBranch = sanitize(branch);
         const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
-        const featuresPath = path.join(workspacePath, 'test', 'features', client, 'feature');
+        const potentialFeaturesPath = path.join(workspacePath, 'test', 'features', client, 'feature', 'modulos');
 
-        if (fs.existsSync(featuresPath)) {
+        if (fs.existsSync(potentialFeaturesPath)) {
+            featuresPath = potentialFeaturesPath;
+            foundInPersistent = true;
             console.log(`[API Features] Leyendo features desde el workspace local para la branch: ${branch}`);
-            try {
-                const allEntries = await fs.promises.readdir(featuresPath, { withFileTypes: true });
-                const featureFiles = allEntries
-                    .filter(dirent => dirent.isFile() && dirent.name.endsWith('.feature'))
-                    .map(dirent => dirent.name.replace(/\.feature$/, ''));
-                return res.json(featureFiles);
-            } catch (error) {
-                console.error(`Error al leer features del workspace local para la branch '${branch}':`, error);
-                // No devolver error, simplemente pasar al método de fallback (clonado remoto)
-            }
         }
     }
 
-    // Fallback: Si no hay workspace persistente o falla la lectura, clonar remotamente
-    console.log(`[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`);
-    const tmpDir = path.join(os.tmpdir(), `appium-features-${crypto.randomBytes(16).toString('hex')}`);
-    const authenticatedUrl = getAuthenticatedUrl();
-    try {
-        await fs.promises.mkdir(tmpDir, { recursive: true });
-        const git = simpleGit(tmpDir);
-        await git.clone(authenticatedUrl, tmpDir, ['--branch', branch, '--depth', '1', '--no-checkout']);
-        const featureDirForCheckout = path.join('test', 'features', client, 'feature');
-        await git.checkout(branch, ['--', featureDirForCheckout]);
-        const featuresPath = path.join(tmpDir, featureDirForCheckout);
-        if (!fs.existsSync(featuresPath)) {
-            return res.json([]);
+    // Si no se encontró en el workspace persistente o no está habilitado, intentar clonar remotamente
+    if (!foundInPersistent) {
+        console.log(`[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`);
+        const tmpDir = path.join(os.tmpdir(), `appium-features-${crypto.randomBytes(16).toString('hex')}`);
+        const authenticatedUrl = getAuthenticatedUrl();
+        try {
+            await fs.promises.mkdir(tmpDir, { recursive: true });
+            const git = simpleGit(tmpDir);
+            await git.clone(authenticatedUrl, tmpDir, ['--branch', branch, '--depth', '1', '--no-checkout']);
+            const featureDirForCheckout = path.join('test', 'features', client, 'feature', 'modulos');
+            await git.checkout(branch, ['--', featureDirForCheckout]);
+            featuresPath = path.join(tmpDir, featureDirForCheckout);
+        } catch (error) {
+            console.error(`Error al clonar o hacer checkout para la branch '${branch}':`, error);
+            res.status(500).json({ error: 'Error interno al listar features.' });
+            return; // Exit if cloning/checkout fails
+        } finally {
+            // Cleanup tmpDir will happen later if featuresPath is valid
         }
-        const allEntries = await fs.promises.readdir(featuresPath, { withFileTypes: true });
-        const featureFiles = allEntries
-            .filter(dirent => dirent.isFile() && dirent.name.endsWith('.feature'))
-            .map(dirent => dirent.name.replace(/\.feature$/, ''));
-        res.json(featureFiles);
-    } catch (error) {
-        console.error(`Error al listar features para la branch '${branch}':`, error);
-        res.status(500).json({ error: 'Error interno al listar features.' });
-    } finally {
-        if (fs.existsSync(tmpDir)) {
-            await fs.promises.rm(tmpDir, { recursive: true, force: true });
+    }
+
+    // Now, featuresPath should be set to a valid directory or null if no features found/cloned
+    if (featuresPath && fs.existsSync(featuresPath)) {
+        try {
+            const featureTree = await readFeaturesRecursive(featuresPath, featuresPath); // Adjusted to match original_old_string's call signature
+            res.json(featureTree);
+        } catch (error) {
+            console.error(`Error al leer la estructura de features desde ${featuresPath}:`, error);
+            res.status(500).json({ error: 'Error interno al leer features.' });
+        } finally {
+            // Clean up temporary directory if it was used
+            if (!foundInPersistent && featuresPath.startsWith(os.tmpdir())) {
+                await fs.promises.rm(path.dirname(featuresPath), { recursive: true, force: true }); // Clean up tmpDir
+            }
         }
+    } else {
+        // No features found in persistent workspace and no features cloned/checked out
+        res.json([]);
     }
 });
 
@@ -384,7 +422,7 @@ app.get('/api/workspace-status/:branch', (req, res) => {
         }
 
         const modifiedFiles = stdout.trim().split('\n').filter(Boolean);
-        const modifiedFeatures = modifiedFiles.filter(file => file.includes('/feature/') && file.endsWith('.feature'));
+        const modifiedFeatures = modifiedFiles.filter(file => file.includes('/feature/modulos/') && file.endsWith('.feature'));
         
         res.json({ modified_features: modifiedFeatures });
     });
@@ -401,7 +439,7 @@ app.get('/api/feature-content', async (req, res) => {
 
     const sanitizedBranch = sanitize(branch);
     const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
-    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', feature);
+    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', 'modulos', feature);
 
     // Security check
     const resolvedPath = path.resolve(featurePath);
@@ -429,7 +467,7 @@ app.post('/api/feature-content', async (req, res) => {
 
     const sanitizedBranch = sanitize(branch);
     const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
-    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', feature);
+    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', 'modulos', feature);
 
     // Security check
     const resolvedPath = path.resolve(featurePath);
