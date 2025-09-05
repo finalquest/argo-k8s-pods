@@ -390,6 +390,62 @@ app.get('/api/workspace-status/:branch', (req, res) => {
     });
 });
 
+app.get('/api/feature-content', async (req, res) => {
+    const { branch, client, feature } = req.query;
+    if (!branch || !client || !feature) {
+        return res.status(400).json({ error: 'Se requieren los parámetros branch, client y feature.' });
+    }
+    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+        return res.status(404).json({ error: 'La funcionalidad de workspaces persistentes no está habilitada.' });
+    }
+
+    const sanitizedBranch = sanitize(branch);
+    const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
+    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', feature);
+
+    // Security check
+    const resolvedPath = path.resolve(featurePath);
+    if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
+        return res.status(403).json({ error: 'Acceso a archivo no autorizado.' });
+    }
+
+    try {
+        const content = await fs.promises.readFile(featurePath, 'utf-8');
+        res.type('text/plain').send(content);
+    } catch (error) {
+        console.error(`Error al leer el archivo del feature ${feature}:`, error);
+        res.status(500).json({ error: 'No se pudo leer el archivo del feature.' });
+    }
+});
+
+app.post('/api/feature-content', async (req, res) => {
+    const { branch, client, feature, content } = req.body;
+    if (!branch || !client || !feature || content === undefined) {
+        return res.status(400).json({ error: 'Faltan parámetros (branch, client, feature, content).' });
+    }
+    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+        return res.status(404).json({ error: 'La funcionalidad de workspaces persistentes no está habilitada.' });
+    }
+
+    const sanitizedBranch = sanitize(branch);
+    const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch, 'appium');
+    const featurePath = path.join(workspacePath, 'test', 'features', client, 'feature', feature);
+
+    // Security check
+    const resolvedPath = path.resolve(featurePath);
+    if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
+        return res.status(403).json({ error: 'Acceso a archivo no autorizado.' });
+    }
+
+    try {
+        await fs.promises.writeFile(featurePath, content, 'utf-8');
+        res.status(200).json({ message: 'Feature guardado con éxito.' });
+    } catch (error) {
+        console.error(`Error al guardar el archivo del feature ${feature}:`, error);
+        res.status(500).json({ error: 'No se pudo guardar el archivo del feature.' });
+    }
+});
+
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
@@ -1347,19 +1403,33 @@ io.on('connection', (socket) => {
         try {
             const authenticatedUrl = getAuthenticatedUrl();
 
-            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} étape 1/4: Añadiendo archivos...\n` });
+            io.emit('log_update', { ...logSlot, logLine: `${logPrefix} étape 1/5: Sincronizando con el repositorio remoto (git pull)...
+` });
+            await executeGitCommand('git', ['pull', '--rebase', 'origin', branch]);
+
+            io.emit('log_update', { ...logSlot, logLine: `
+${logPrefix} étape 2/5: Añadiendo archivos...
+` });
             await executeGitCommand('git', ['add', ...files]);
 
-            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 2/4: Realizando commit...\n` });
+            io.emit('log_update', { ...logSlot, logLine: `
+${logPrefix} étape 3/5: Realizando commit...
+` });
             await executeGitCommand('git', ['commit', '-m', message]);
 
-            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 3/4: Configurando URL remota para el push...\n` });
+            io.emit('log_update', { ...logSlot, logLine: `
+${logPrefix} étape 4/5: Configurando URL remota para el push...
+` });
             await executeGitCommand('git', ['remote', 'set-url', 'origin', authenticatedUrl]);
 
-            io.emit('log_update', { ...logSlot, logLine: `\n${logPrefix} étape 4/4: Empujando cambios al repositorio remoto...\n` });
+            io.emit('log_update', { ...logSlot, logLine: `
+${logPrefix} étape 5/5: Empujando cambios al repositorio remoto...
+` });
             await executeGitCommand('git', ['push', 'origin', branch]);
 
-            io.emit('log_update', { ...logSlot, logLine: `\n--- ✅ Proceso de commit finalizado con éxito para la branch: ${branch} ---\n` });
+            io.emit('log_update', { ...logSlot, logLine: `
+--- ✅ Proceso de commit finalizado con éxito para la branch: ${branch} ---
+` });
 
         } catch (error) {
             io.emit('log_update', { ...logSlot, logLine: `\n--- ❌ Error durante el proceso de commit: ${error.message} ---\n` });

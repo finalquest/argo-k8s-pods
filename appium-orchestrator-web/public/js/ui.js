@@ -310,6 +310,85 @@ export function updateFeaturesWithGitStatus(modifiedFeatures, client) {
     }
 }
 
+export function addFeatureControls(li, feature, config) {
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.style.display = 'flex';
+    buttonsDiv.style.gap = '0.5em';
+
+    // Botón de Editar (condicional)
+    if (config.persistentWorkspacesEnabled) {
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Editar';
+        editButton.className = 'edit-btn';
+        editButton.dataset.feature = feature;
+        editButton.style.backgroundColor = 'var(--gray-500)';
+        buttonsDiv.appendChild(editButton);
+    }
+
+    const runButton = document.createElement('button');
+    runButton.textContent = 'Run';
+    runButton.className = 'run-btn';
+    runButton.dataset.feature = feature;
+    
+    const priorityButton = document.createElement('button');
+    priorityButton.textContent = '⚡️';
+    priorityButton.title = 'Run with high priority';
+    priorityButton.className = 'priority-btn';
+    priorityButton.dataset.feature = feature;
+
+    buttonsDiv.appendChild(runButton);
+    buttonsDiv.appendChild(priorityButton);
+    li.appendChild(buttonsDiv);
+}
+
+let codeMirrorEditor = null;
+
+export function createEditModal() {
+    const modalHTML = `
+    <div id="edit-feature-modal" class="modal">
+        <div class="modal-content" style="max-width: 80vw;">
+            <div class="modal-header">
+                <h2 id="edit-modal-title">Editar Feature</h2>
+                <span id="close-edit-modal" class="close-btn">&times;</span>
+            </div>
+            <div id="editor-container">
+                <textarea id="feature-editor"></textarea>
+            </div>
+            <button id="save-feature-btn" style="width: 100%; margin-top: 1rem;">Guardar Cambios</button>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+export function openEditModal(branch, client, feature, content) {
+    document.getElementById('edit-modal-title').textContent = `Editando: ${feature}`;
+    const modal = document.getElementById('edit-feature-modal');
+    const editorTextarea = document.getElementById('feature-editor');
+    editorTextarea.value = content;
+
+    modal.style.display = 'block';
+
+    if (codeMirrorEditor) {
+        codeMirrorEditor.toTextArea();
+    }
+
+    codeMirrorEditor = CodeMirror.fromTextArea(editorTextarea, {
+        lineNumbers: true,
+        mode: 'gherkin',
+        theme: 'material-darker',
+        indentUnit: 2,
+        tabSize: 2
+    });
+    codeMirrorEditor.setSize("100%", "60vh");
+    
+    // Store data for the save button
+    document.getElementById('save-feature-btn').dataset.saveInfo = JSON.stringify({branch, client, feature});
+}
+
+export function getEditorContent() {
+    return codeMirrorEditor ? codeMirrorEditor.getValue() : null;
+}
+
 export function displayCommitButton(isEnabled) {
     if (!isEnabled) return;
 

@@ -1,6 +1,6 @@
-import { getWorkspaceStatus, fetchConfig, getCurrentUser, getLocalDevices, loadBranches, fetchFeatures, loadHistoryBranches, loadHistory, fetchApkVersions, apkSource } from './api.js';
+import { getFeatureContent, saveFeatureContent, getWorkspaceStatus, fetchConfig, getCurrentUser, getLocalDevices, loadBranches, fetchFeatures, loadHistoryBranches, loadHistory, fetchApkVersions, apkSource } from './api.js';
 import { initializeSocketListeners, runTest, runSelectedTests, stopAllExecution, prepareWorkspace, commitChanges } from './socket.js';
-import { switchTab, updateSelectedCount, toggleSelectAll, displayPrepareWorkspaceButton, displayGitControls, updateFeaturesWithGitStatus, displayFeatureFilter, filterFeatureList, displayCommitButton, createCommitModal } from './ui.js';
+import { switchTab, updateSelectedCount, toggleSelectAll, displayPrepareWorkspaceButton, displayGitControls, updateFeaturesWithGitStatus, displayFeatureFilter, filterFeatureList, displayCommitButton, createCommitModal, openEditModal, getEditorContent, createEditModal } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,18 +14,13 @@ async function checkAuthStatus() {
     const user = await getCurrentUser();
 
     if (user) {
-        // Usuario autenticado
         authOverlay.style.display = 'none';
-
         document.getElementById('user-name').textContent = user.name;
         document.getElementById('user-email').textContent = user.email;
         document.getElementById('user-photo').src = user.photo;
         userInfoDiv.style.display = 'block';
-
-        // Inicializar la app principal
         initializeApp();
     } else {
-        // Usuario no autenticado
         authOverlay.style.display = 'flex';
         userInfoDiv.style.display = 'none';
     }
@@ -50,7 +45,8 @@ async function initializeAppControls(socket) {
     displayGitControls(config.persistentWorkspacesEnabled);
     displayFeatureFilter(config.persistentWorkspacesEnabled);
     displayCommitButton(config.persistentWorkspacesEnabled);
-    createCommitModal(); // Always create the modal structure in the DOM
+    createCommitModal();
+    createEditModal();
 
     // --- Event Listeners for new controls ---
     const prepareWorkspaceBtn = document.getElementById('prepare-workspace-btn');
@@ -85,7 +81,7 @@ async function initializeAppControls(socket) {
         commitBtn.addEventListener('click', () => {
             const modal = document.getElementById('commit-modal');
             const filesList = document.getElementById('commit-files-list');
-            filesList.innerHTML = ''; // Clear previous list
+            filesList.innerHTML = '';
 
             const selectedFiles = document.querySelectorAll('li.modified .feature-checkbox:checked');
             if (selectedFiles.length === 0) {
@@ -111,12 +107,6 @@ async function initializeAppControls(socket) {
 
     if (commitModal && closeCommitModalBtn && confirmCommitBtn) {
         closeCommitModalBtn.onclick = () => commitModal.style.display = 'none';
-        window.onclick = (event) => {
-            if (event.target == commitModal) {
-                commitModal.style.display = 'none';
-            }
-        }
-
         confirmCommitBtn.addEventListener('click', () => {
             const message = document.getElementById('commit-message').value;
             if (!message.trim()) {
@@ -127,14 +117,43 @@ async function initializeAppControls(socket) {
             const branch = document.getElementById('branch-select').value;
             const client = document.getElementById('client-select').value;
             const files = Array.from(document.querySelectorAll('li.modified .feature-checkbox:checked')).map(cb => {
-                // Construct the relative path as expected by the backend
                 return `test/features/${client}/feature/${cb.dataset.featureName}.feature`;
             });
 
             commitChanges(socket, { branch, files, message });
             commitModal.style.display = 'none';
-            document.getElementById('commit-message').value = ''; // Clear textarea
+            document.getElementById('commit-message').value = '';
         });
+    }
+
+    const editModal = document.getElementById('edit-feature-modal');
+    const closeEditModalBtn = document.getElementById('close-edit-modal');
+    const saveFeatureBtn = document.getElementById('save-feature-btn');
+
+    if (editModal && closeEditModalBtn && saveFeatureBtn) {
+        closeEditModalBtn.onclick = () => editModal.style.display = 'none';
+        saveFeatureBtn.addEventListener('click', async () => {
+            const content = getEditorContent();
+            const { branch, client, feature } = JSON.parse(saveFeatureBtn.dataset.saveInfo);
+            
+            const result = await saveFeatureContent(branch, client, feature, content);
+            if (result) {
+                alert('Feature guardado con éxito!');
+                editModal.style.display = 'none';
+                // Auto-refresh git status
+                document.getElementById('refresh-git-status-btn')?.click();
+            }
+        });
+    }
+
+    // Close modals on outside click
+    window.onclick = (event) => {
+        if (event.target == commitModal) {
+            commitModal.style.display = 'none';
+        }
+        if (event.target == editModal) {
+            editModal.style.display = 'none';
+        }
     }
 }
 
@@ -198,13 +217,20 @@ function initializeUiEventListeners(socket) {
         }
     });
 
-    featuresList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('run-btn') || e.target.classList.contains('priority-btn')) {
-            const featureName = e.target.dataset.feature;
-            const highPriority = e.target.classList.contains('priority-btn');
-            const branch = document.getElementById('branch-select').value;
-            const client = document.getElementById('client-select').value;
+    featuresList.addEventListener('click', async (e) => {
+        const target = e.target;
+        const featureName = target.dataset.feature;
+        const branch = document.getElementById('branch-select').value;
+        const client = document.getElementById('client-select').value;
+
+        if (target.classList.contains('run-btn') || target.classList.contains('priority-btn')) {
+            const highPriority = target.classList.contains('priority-btn');
             runTest(socket, branch, client, featureName, highPriority);
+        } else if (target.classList.contains('edit-btn')) {
+            const content = await getFeatureContent(branch, client, featureName + '.feature');
+            if (content !== null) {
+                openEditModal(branch, client, featureName + '.feature', content);
+            }
         }
     });
 

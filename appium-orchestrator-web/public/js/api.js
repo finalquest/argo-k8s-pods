@@ -1,4 +1,4 @@
-import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus } from './ui.js';
+import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus, addFeatureControls } from './ui.js';
 
 export async function getCurrentUser() {
     try {
@@ -35,6 +35,42 @@ export async function getWorkspaceStatus(branch) {
     }
 }
 
+export async function getFeatureContent(branch, client, feature) {
+    try {
+        const response = await fetch(`/api/feature-content?branch=${branch}&client=${client}&feature=${feature}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error del servidor');
+        }
+        return await response.text();
+    } catch (error) {
+        console.error('Error fetching feature content:', error);
+        alert(`No se pudo cargar el contenido del feature: ${error.message}`);
+        return null;
+    }
+}
+
+export async function saveFeatureContent(branch, client, feature, content) {
+    try {
+        const response = await fetch('/api/feature-content', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ branch, client, feature, content }),
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error del servidor');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error saving feature content:', error);
+        alert(`No se pudo guardar el contenido del feature: ${error.message}`);
+        return null;
+    }
+}
+
 export async function getLocalDevices() {
     try {
         const response = await fetch('/api/local-devices');
@@ -67,66 +103,64 @@ export async function loadBranches() {
     }
 }
 
-export async function fetchFeatures(onRunTestCallback) {
+export async function fetchFeatures() {
     const branchSelect = document.getElementById('branch-select');
     const clientSelect = document.getElementById('client-select');
     const featuresList = document.getElementById('features-list');
     const selectedBranch = branchSelect.value;
     const selectedClient = clientSelect.value;
+
     if (!selectedBranch || !selectedClient) {
         alert('Por favor, selecciona una branch y un cliente.');
         return;
     }
+
     featuresList.innerHTML = '<li>Cargando...</li>';
+
     try {
-        const response = await fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const features = await response.json();
+        const [config, featuresResponse] = await Promise.all([
+            fetchConfig(),
+            fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`)
+        ]);
+
+        if (!featuresResponse.ok) throw new Error(`HTTP error! status: ${featuresResponse.status}`);
+        
+        const features = await featuresResponse.json();
         featuresList.innerHTML = '';
+
         if (features.length === 0) {
             featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
         }
+
         features.forEach(feature => {
             const li = document.createElement('li');
+            
+            const controlsDiv = document.createElement('div');
+            controlsDiv.style.display = 'flex';
+            controlsDiv.style.alignItems = 'center';
+            controlsDiv.style.gap = '1em';
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'feature-checkbox';
             checkbox.dataset.featureName = feature;
             checkbox.onchange = updateSelectedCount;
+
             const featureNameSpan = document.createElement('span');
             featureNameSpan.textContent = feature;
-            const controlsDiv = document.createElement('div');
-            controlsDiv.style.display = 'flex';
-            controlsDiv.style.alignItems = 'center';
-            controlsDiv.style.gap = '1em';
+
             controlsDiv.appendChild(checkbox);
             controlsDiv.appendChild(featureNameSpan);
             li.appendChild(controlsDiv);
 
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.style.display = 'flex';
-            buttonsDiv.style.gap = '0.5em';
+            addFeatureControls(li, feature, config); // Refactored button creation
 
-            const runButton = document.createElement('button');
-            runButton.textContent = 'Run';
-            runButton.className = 'run-btn';
-            runButton.dataset.feature = feature; // FIX: Add feature name to dataset
-            
-            const priorityButton = document.createElement('button');
-            priorityButton.textContent = '⚡️';
-            priorityButton.title = 'Run with high priority';
-            priorityButton.className = 'priority-btn';
-            priorityButton.dataset.feature = feature; // FIX: Add feature name to dataset
-
-            buttonsDiv.appendChild(runButton);
-            buttonsDiv.appendChild(priorityButton);
-            li.appendChild(buttonsDiv);
             featuresList.appendChild(li);
         });
+
         updateSelectedCount();
 
         // Auto-refresh git status after fetching features
-        const config = await fetchConfig();
         if (config.persistentWorkspacesEnabled) {
             const status = await getWorkspaceStatus(selectedBranch);
             updateFeaturesWithGitStatus(status.modified_features, selectedClient);
