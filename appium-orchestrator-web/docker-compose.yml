@@ -5,7 +5,7 @@ services:
     build: .
     container_name: appium_orchestrator
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       # Monta la carpeta local 'apks' en la ruta '/app/apks' dentro del contenedor.
       # Coloca tus archivos .apk en la carpeta './apks' en la raíz del proyecto.

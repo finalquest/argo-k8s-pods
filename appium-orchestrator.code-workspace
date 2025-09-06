@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"javascript.autoClosingTags": false,
+		"typescript.autoClosingTags": false,
+		"eslint.lintTask.enable": true,
+		"prettier.trailingComma": "es5",
+		"prettier.singleQuote": true,
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+			"source.organizeImports": "never",
+			"source.fixAll.eslint": "explicit"
+		},
+		"typescript.disableAutomaticTypeAcquisition": true,
+		"workbench.editor.enablePreview": false,
+		"workbench.editor.enablePreviewFromQuickOpen": false,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/node_modules": true,
+			"node_modules": true,
+			"**/.classpath": true,
+			"**/.project": true,
+			"**/.settings": true,
+			"**/.factorypath": true
+		}
+	}
+ }

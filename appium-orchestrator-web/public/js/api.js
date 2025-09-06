@@ -1,224 +1,238 @@
-import { renderHistoryItem, populateApkVersions, updateSelectedCount, updateFeaturesWithGitStatus, renderFeatureTree } from './ui.js';
+import {
+  renderHistoryItem,
+  populateApkVersions,
+  updateSelectedCount,
+  updateFeaturesWithGitStatus,
+  renderFeatureTree,
+} from './ui.js';
 
 export async function getCurrentUser() {
-    try {
-        const response = await fetch('/api/current-user');
-        if (response.status === 401) return null; // No autenticado
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching user status:', error);
-        return null; // Asumir no logueado en caso de error de red
-    }
+  try {
+    const response = await fetch('/api/current-user');
+    if (response.status === 401) return null; // No autenticado
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching user status:', error);
+    return null; // Asumir no logueado en caso de error de red
+  }
 }
 
 export async function fetchConfig() {
-    try {
-        const response = await fetch('/api/config');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching server config:', error);
-        return { persistentWorkspacesEnabled: false }; // Valor por defecto en caso de error
-    }
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching server config:', error);
+    return { persistentWorkspacesEnabled: false }; // Valor por defecto en caso de error
+  }
 }
 
 export async function getWorkspaceStatus(branch) {
-    if (!branch) return { modified_features: [] };
-    try {
-        const response = await fetch(`/api/workspace-status/${branch}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error(`Error fetching workspace status for branch ${branch}:`, error);
-        return { modified_features: [] }; // Devolver lista vacía en caso de error
-    }
+  if (!branch) return { modified_features: [] };
+  try {
+    const response = await fetch(`/api/workspace-status/${branch}`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(
+      `Error fetching workspace status for branch ${branch}:`,
+      error,
+    );
+    return { modified_features: [] }; // Devolver lista vacía en caso de error
+  }
 }
 
 export async function getFeatureContent(branch, client, feature) {
-    try {
-        const response = await fetch(`/api/feature-content?branch=${branch}&client=${client}&feature=${feature}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error del servidor');
-        }
-        return await response.text();
-    } catch (error) {
-        console.error('Error fetching feature content:', error);
-        alert(`No se pudo cargar el contenido del feature: ${error.message}`);
-        return null;
+  try {
+    const response = await fetch(
+      `/api/feature-content?branch=${branch}&client=${client}&feature=${feature}`,
+    );
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error del servidor');
     }
+    return await response.text();
+  } catch (error) {
+    console.error('Error fetching feature content:', error);
+    alert(`No se pudo cargar el contenido del feature: ${error.message}`);
+    return null;
+  }
 }
 
 export async function saveFeatureContent(branch, client, feature, content) {
-    try {
-        const response = await fetch('/api/feature-content', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ branch, client, feature, content }),
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error del servidor');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Error saving feature content:', error);
-        alert(`No se pudo guardar el contenido del feature: ${error.message}`);
-        return null;
+  try {
+    const response = await fetch('/api/feature-content', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ branch, client, feature, content }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error del servidor');
     }
+    return await response.json();
+  } catch (error) {
+    console.error('Error saving feature content:', error);
+    alert(`No se pudo guardar el contenido del feature: ${error.message}`);
+    return null;
+  }
 }
 
 export async function getLocalDevices() {
-    try {
-        const response = await fetch('/api/local-devices');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching local devices:', error);
-        return []; // Devolver lista vacía en caso de error
-    }
+  try {
+    const response = await fetch('/api/local-devices');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching local devices:', error);
+    return []; // Devolver lista vacía en caso de error
+  }
 }
 
 export let apkSource = 'registry'; // 'registry' o 'local'
 
 export async function loadBranches() {
-    const branchSelect = document.getElementById('branch-select');
-    try {
-        const response = await fetch('/api/branches');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const branches = await response.json();
-        branchSelect.innerHTML = '';
-        branches.forEach(branch => {
-            const option = document.createElement('option');
-            option.value = branch;
-            option.textContent = branch;
-            branchSelect.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error al cargar branches:', error);
-        branchSelect.innerHTML = '<option>Error al cargar</option>';
-    }
+  const branchSelect = document.getElementById('branch-select');
+  try {
+    const response = await fetch('/api/branches');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const branches = await response.json();
+    branchSelect.innerHTML = '';
+    branches.forEach((branch) => {
+      const option = document.createElement('option');
+      option.value = branch;
+      option.textContent = branch;
+      branchSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar branches:', error);
+    branchSelect.innerHTML = '<option>Error al cargar</option>';
+  }
 }
 
 export async function fetchFeatures() {
-    const branchSelect = document.getElementById('branch-select');
-    const clientSelect = document.getElementById('client-select');
-    const featuresList = document.getElementById('features-list');
-    const selectedBranch = branchSelect.value;
-    const selectedClient = clientSelect.value;
+  const branchSelect = document.getElementById('branch-select');
+  const clientSelect = document.getElementById('client-select');
+  const featuresList = document.getElementById('features-list');
+  const selectedBranch = branchSelect.value;
+  const selectedClient = clientSelect.value;
 
-    if (!selectedBranch || !selectedClient) {
-        alert('Por favor, selecciona una branch y un cliente.');
-        return;
+  if (!selectedBranch || !selectedClient) {
+    alert('Por favor, selecciona una branch y un cliente.');
+    return;
+  }
+
+  featuresList.innerHTML = '<li>Cargando...</li>';
+
+  try {
+    const [config, featuresResponse] = await Promise.all([
+      fetchConfig(),
+      fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`),
+    ]);
+
+    if (!featuresResponse.ok)
+      throw new Error(`HTTP error! status: ${featuresResponse.status}`);
+
+    const featureTree = await featuresResponse.json();
+    featuresList.innerHTML = '';
+
+    if (featureTree.length === 0) {
+      featuresList.innerHTML =
+        '<li>No se encontraron features para esta selección.</li>';
+    } else {
+      renderFeatureTree(featuresList, featureTree, config);
     }
 
-    featuresList.innerHTML = '<li>Cargando...</li>';
+    updateSelectedCount();
 
-    try {
-        const [config, featuresResponse] = await Promise.all([
-            fetchConfig(),
-            fetch(`/api/features?branch=${selectedBranch}&client=${selectedClient}`)
-        ]);
-
-        if (!featuresResponse.ok) throw new Error(`HTTP error! status: ${featuresResponse.status}`);
-        
-        const featureTree = await featuresResponse.json();
-        featuresList.innerHTML = '';
-
-        if (featureTree.length === 0) {
-            featuresList.innerHTML = '<li>No se encontraron features para esta selección.</li>';
-        } else {
-            renderFeatureTree(featuresList, featureTree, config);
-        }
-
-        updateSelectedCount();
-
-        // Auto-refresh git status after fetching features
-        if (config.persistentWorkspacesEnabled) {
-            const status = await getWorkspaceStatus(selectedBranch);
-            updateFeaturesWithGitStatus(status.modified_features);
-        }
-
-    } catch (error) {
-        console.error('Error al buscar features:', error);
-        featuresList.innerHTML = '<li>Error al buscar features.</li>';
+    // Auto-refresh git status after fetching features
+    if (config.persistentWorkspacesEnabled) {
+      const status = await getWorkspaceStatus(selectedBranch);
+      updateFeaturesWithGitStatus(status.modified_features);
     }
+  } catch (error) {
+    console.error('Error al buscar features:', error);
+    featuresList.innerHTML = '<li>Error al buscar features.</li>';
+  }
 }
 
 export async function loadHistoryBranches() {
-    const historyBranchFilter = document.getElementById('history-branch-filter');
-    try {
-        const response = await fetch('/api/history/branches');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const branches = await response.json();
-        // Clear existing options except the first one ("Todas")
-        while (historyBranchFilter.options.length > 1) {
-            historyBranchFilter.remove(1);
-        }
-        branches.forEach(branch => {
-            const option = document.createElement('option');
-            option.value = branch;
-            option.textContent = branch;
-            historyBranchFilter.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error al cargar las branches del historial:', error);
+  const historyBranchFilter = document.getElementById('history-branch-filter');
+  try {
+    const response = await fetch('/api/history/branches');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const branches = await response.json();
+    // Clear existing options except the first one ("Todas")
+    while (historyBranchFilter.options.length > 1) {
+      historyBranchFilter.remove(1);
     }
+    branches.forEach((branch) => {
+      const option = document.createElement('option');
+      option.value = branch;
+      option.textContent = branch;
+      historyBranchFilter.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar las branches del historial:', error);
+  }
 }
 
 export async function loadHistory(branch = '') {
-    const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '<li>Cargando historial...</li>';
-    try {
-        const url = branch ? `/api/history?branch=${branch}` : '/api/history';
-        const response = await fetch(url);
-        const history = await response.json();
-        historyList.innerHTML = '';
-        if (history.length === 0) {
-            historyList.innerHTML = '<li>No hay historial de reportes para esta selección.</li>';
-        }
-        history.forEach(item => {
-            const li = renderHistoryItem(item);
-            historyList.appendChild(li);
-        });
-    } catch (error) {
-        console.error('Error al cargar el historial:', error);
-        historyList.innerHTML = '<li>Error al cargar el historial.</li>';
+  const historyList = document.getElementById('history-list');
+  historyList.innerHTML = '<li>Cargando historial...</li>';
+  try {
+    const url = branch ? `/api/history?branch=${branch}` : '/api/history';
+    const response = await fetch(url);
+    const history = await response.json();
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+      historyList.innerHTML =
+        '<li>No hay historial de reportes para esta selección.</li>';
     }
+    history.forEach((item) => {
+      const li = renderHistoryItem(item);
+      historyList.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error al cargar el historial:', error);
+    historyList.innerHTML = '<li>Error al cargar el historial.</li>';
+  }
 }
 
 export async function fetchApkVersions() {
-    const clientSelect = document.getElementById('client-select');
-    const selectedClient = clientSelect.value;
-    const apkVersionSelect = document.getElementById('apk-version-select');
+  const clientSelect = document.getElementById('client-select');
+  const selectedClient = clientSelect.value;
+  const apkVersionSelect = document.getElementById('apk-version-select');
 
-    if (!selectedClient) {
-        alert('Por favor, selecciona un cliente primero.');
-        return;
+  if (!selectedClient) {
+    alert('Por favor, selecciona un cliente primero.');
+    return;
+  }
+
+  apkVersionSelect.innerHTML = '<option>Cargando...</option>';
+  apkVersionSelect.disabled = false;
+
+  try {
+    // El endpoint ahora es inteligente. El parámetro repo es opcional y solo se usa para oras.
+    const repo = `apks/${selectedClient}/int`;
+    const response = await fetch(`/api/apk/versions?repo=${repo}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.details || `HTTP error! status: ${response.status}`,
+      );
     }
-
-    apkVersionSelect.innerHTML = '<option>Cargando...</option>';
-    apkVersionSelect.disabled = false;
-
-    try {
-        // El endpoint ahora es inteligente. El parámetro repo es opcional y solo se usa para oras.
-        const repo = `apks/${selectedClient}/int`;
-        const response = await fetch(`/api/apk/versions?repo=${repo}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.details || `HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        apkSource = data.source; // Guardar el origen
-        populateApkVersions(data.versions);
-        console.log(`APK source set to: ${apkSource}`);
-
-    } catch (error) {
-        console.error('Error al buscar versiones de APK:', error);
-        apkVersionSelect.innerHTML = '<option>Error al cargar</option>';
-        apkSource = 'registry'; // Reset to default on error
-    }
+    const data = await response.json();
+    apkSource = data.source; // Guardar el origen
+    populateApkVersions(data.versions);
+    console.log(`APK source set to: ${apkSource}`);
+  } catch (error) {
+    console.error('Error al buscar versiones de APK:', error);
+    apkVersionSelect.innerHTML = '<option>Error al cargar</option>';
+    apkSource = 'registry'; // Reset to default on error
+  }
 }
