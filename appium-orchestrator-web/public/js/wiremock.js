@@ -1,4 +1,4 @@
-import { switchWiremockSubTab } from './ui';
+import { switchWiremockSubTab } from './ui.js';
 
 let wiremockLiveViewInterval = null;
 let lastKnownRequests = [];

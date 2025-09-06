@@ -241,32 +241,21 @@ export function populateApkVersions(versions) {
 export function displayPrepareWorkspaceButton(isEnabled) {
   if (!isEnabled) return;
 
-  const button = document.createElement('button');
-  button.id = 'prepare-workspace-btn';
-  button.textContent = 'Preparar Workspace';
-  button.title =
-    'Clona el repo y corre yarn install para la branch seleccionada, sin ejecutar un test.';
-
-  // Insert after the branch select dropdown
-  const branchSelect = document.getElementById('branch-select');
-  if (branchSelect && branchSelect.parentElement) {
-    branchSelect.parentElement.insertBefore(button, branchSelect.nextSibling);
+  const button = document.getElementById('prepare-workspace-btn');
+  if (button) {
+    button.style.display = 'inline-flex';
+    button.title = 'Clona el repo y corre yarn install para la branch seleccionada, sin ejecutar un test.';
   }
 }
 
 export function displayGitControls(isEnabled) {
   if (!isEnabled) return;
 
-  const prepareBtn = document.getElementById('prepare-workspace-btn');
-  if (!prepareBtn) return;
-
-  const button = document.createElement('button');
-  button.id = 'refresh-git-status-btn';
-  button.textContent = 'Refrescar Cambios (Git)';
-  button.title =
-    'Comprueba los cambios locales en los features de esta branch contra Git.';
-
-  prepareBtn.parentElement.insertBefore(button, prepareBtn.nextSibling);
+  const button = document.getElementById('refresh-git-status-btn');
+  if (button) {
+    button.style.display = 'inline-flex';
+    button.title = 'Comprueba los cambios locales en los features de esta branch contra Git.';
+  }
 }
 
 export function displayFeatureFilter(isEnabled) {
@@ -275,52 +264,100 @@ export function displayFeatureFilter(isEnabled) {
   const featuresHeader = document.querySelector('.features-header');
   if (!featuresHeader) return;
 
-  const filterContainer = document.createElement('div');
-  filterContainer.style.display = 'flex';
-  filterContainer.style.alignItems = 'center';
-  filterContainer.style.gap = '0.5rem';
+  // Hide the Features title
+  const featuresTitle = featuresHeader.querySelector('h2');
+  if (featuresTitle) {
+    featuresTitle.style.display = 'none';
+  }
 
-  const label = document.createElement('label');
-  label.htmlFor = 'feature-filter-select';
-  label.textContent = 'Filtrar:';
+  // Create a container for the left side controls in a row
+  const leftControlsContainer = document.createElement('div');
+  leftControlsContainer.className = 'filter-controls-container';
 
-  const select = document.createElement('select');
-  select.id = 'feature-filter-select';
-  select.innerHTML = `
+  // Text filter container - move the existing input here first
+  const textFilterContainer = document.createElement('div');
+  textFilterContainer.className = 'filter-group';
+
+  const textLabel = document.createElement('label');
+  textLabel.htmlFor = 'features-filter';
+  textLabel.textContent = 'Buscar:';
+
+  // Move the existing input from the HTML to here
+  const existingInput = document.getElementById('features-filter');
+  if (existingInput) {
+    existingInput.parentNode.removeChild(existingInput);
+    textFilterContainer.appendChild(textLabel);
+    textFilterContainer.appendChild(existingInput);
+  }
+
+  // Status filter container
+  const statusFilterContainer = document.createElement('div');
+  statusFilterContainer.className = 'filter-group';
+
+  const statusLabel = document.createElement('label');
+  statusLabel.htmlFor = 'feature-filter-select';
+  statusLabel.textContent = 'Estado:';
+
+  const statusSelect = document.createElement('select');
+  statusSelect.id = 'feature-filter-select';
+  statusSelect.innerHTML = `
         <option value="all">Todos</option>
         <option value="modified">Solo Modificados</option>
     `;
 
-  filterContainer.appendChild(label);
-  filterContainer.appendChild(select);
+  statusFilterContainer.appendChild(statusLabel);
+  statusFilterContainer.appendChild(statusSelect);
+
+  // Add both containers to the left controls in row
+  leftControlsContainer.appendChild(textFilterContainer);
+  leftControlsContainer.appendChild(statusFilterContainer);
 
   // Add it to the left of the "Select All" checkbox
   const selectAllContainer = featuresHeader.querySelector('div');
   if (selectAllContainer) {
-    featuresHeader.insertBefore(filterContainer, selectAllContainer);
+    featuresHeader.insertBefore(leftControlsContainer, selectAllContainer);
   }
 }
 
 export function filterFeatureList() {
-  const filterValue = document.getElementById('feature-filter-select').value;
+  const statusFilterElement = document.getElementById('feature-filter-select');
+  const filterValue = statusFilterElement ? statusFilterElement.value : 'all';
+  const textFilter = document.getElementById('features-filter').value.toLowerCase();
   const featuresList = document.getElementById('features-list');
   const featureItems = featuresList.getElementsByTagName('li');
 
   for (const item of featureItems) {
-    switch (filterValue) {
-      case 'modified':
-        if (item.classList.contains('modified')) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
-        break;
-      case 'all':
-      default:
-        item.style.display = 'flex';
-        break;
+    let shouldShow = true;
+
+    // Apply status filter (modified/all) only if the element exists
+    if (statusFilterElement) {
+      switch (filterValue) {
+        case 'modified':
+          if (!item.classList.contains('modified')) {
+            shouldShow = false;
+          }
+          break;
+        case 'all':
+        default:
+          break;
+      }
     }
+
+    // Apply text filter if there's text
+    if (shouldShow && textFilter) {
+      const itemText = item.textContent.toLowerCase();
+      if (!itemText.includes(textFilter)) {
+        shouldShow = false;
+      }
+    }
+
+    item.style.display = shouldShow ? '' : 'none';
   }
+}
+
+export function filterFeatureListByText() {
+  // Apply both filters when text changes
+  filterFeatureList();
 }
 
 export function updateFeaturesWithGitStatus(modifiedFeatures) {
@@ -348,28 +385,28 @@ export function updateFeaturesWithGitStatus(modifiedFeatures) {
 
 export function addFeatureControls(li, featureName, config) {
   const buttonsDiv = document.createElement('div');
-  buttonsDiv.style.display = 'flex';
-  buttonsDiv.style.gap = '0.5em';
+  buttonsDiv.className = 'feature-actions';
 
   // Botón de Editar (condicional)
   if (config.persistentWorkspacesEnabled) {
     const editButton = document.createElement('button');
-    editButton.textContent = 'Editar';
-    editButton.className = 'edit-btn';
+    editButton.innerHTML = '✏️';
+    editButton.className = 'edit-btn btn-edit';
+    editButton.title = 'Editar';
     editButton.dataset.feature = featureName;
-    editButton.style.backgroundColor = 'var(--gray-500)';
     buttonsDiv.appendChild(editButton);
   }
 
   const runButton = document.createElement('button');
-  runButton.textContent = 'Run';
-  runButton.className = 'run-btn';
+  runButton.innerHTML = '▶️';
+  runButton.className = 'run-btn btn-run';
+  runButton.title = 'Ejecutar';
   runButton.dataset.feature = featureName;
 
   const priorityButton = document.createElement('button');
-  priorityButton.textContent = '⚡️';
-  priorityButton.title = 'Run with high priority';
-  priorityButton.className = 'priority-btn';
+  priorityButton.innerHTML = '⚡';
+  priorityButton.title = 'Ejecutar con alta prioridad';
+  priorityButton.className = 'priority-btn btn-quick';
   priorityButton.dataset.feature = featureName;
 
   buttonsDiv.appendChild(runButton);
@@ -396,11 +433,6 @@ export function renderFeatureTree(parentElement, nodes, config) {
     } else if (node.type === 'file') {
       li.classList.add('file');
 
-      const controlsDiv = document.createElement('div');
-      controlsDiv.style.display = 'flex';
-      controlsDiv.style.alignItems = 'center';
-      controlsDiv.style.gap = '1em';
-
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.className = 'feature-checkbox';
@@ -410,9 +442,8 @@ export function renderFeatureTree(parentElement, nodes, config) {
       const featureNameSpan = document.createElement('span');
       featureNameSpan.textContent = node.name;
 
-      controlsDiv.appendChild(checkbox);
-      controlsDiv.appendChild(featureNameSpan);
-      itemDiv.appendChild(controlsDiv);
+      itemDiv.appendChild(checkbox);
+      itemDiv.appendChild(featureNameSpan);
 
       addFeatureControls(itemDiv, node.featureName, config);
       li.appendChild(itemDiv);

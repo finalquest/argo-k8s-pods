@@ -28,6 +28,7 @@ import {
   updateFeaturesWithGitStatus,
   displayFeatureFilter,
   filterFeatureList,
+  filterFeatureListByText,
   displayCommitButton,
   createCommitModal,
   openEditModal,
@@ -71,6 +72,9 @@ function initializeApp() {
   loadHistoryBranches();
   loadHistory();
   loadLocalDevices();
+  
+  // Auto-fetch APK versions on page load
+  fetchApkVersions();
 }
 
 async function initializeAppControls(socket) {
@@ -108,6 +112,11 @@ async function initializeAppControls(socket) {
   const featureFilterSelect = document.getElementById('feature-filter-select');
   if (featureFilterSelect) {
     featureFilterSelect.addEventListener('change', filterFeatureList);
+  }
+
+  const featuresFilterInput = document.getElementById('features-filter');
+  if (featuresFilterInput) {
+    featuresFilterInput.addEventListener('input', filterFeatureListByText);
   }
 
   const commitBtn = document.getElementById('commit-changes-btn');
@@ -236,16 +245,15 @@ async function refreshLocalDevices() {
 
 function initializeUiEventListeners(socket) {
   const fetchBtn = document.getElementById('fetch-features-btn');
-  const fetchApkBtn = document.getElementById('fetch-apk-versions-btn');
   const runSelectedBtn = document.getElementById('run-selected-btn');
   const stopAllBtn = document.getElementById('stop-all-btn');
   const selectAllCheckbox = document.getElementById('select-all-features');
   const historyBranchFilter = document.getElementById('history-branch-filter');
   const featuresList = document.getElementById('features-list');
   const refreshDevicesBtn = document.getElementById('refresh-devices-btn');
+  const refreshApkVersionsBtn = document.getElementById('refresh-apk-versions-btn');
 
   fetchBtn.addEventListener('click', () => fetchFeatures());
-  fetchApkBtn.addEventListener('click', fetchApkVersions);
   runSelectedBtn.addEventListener('click', () => runSelectedTests(socket));
   stopAllBtn.addEventListener('click', () => stopAllExecution(socket));
   selectAllCheckbox.addEventListener('change', toggleSelectAll);
@@ -253,6 +261,7 @@ function initializeUiEventListeners(socket) {
     loadHistory(historyBranchFilter.value),
   );
   refreshDevicesBtn.addEventListener('click', refreshLocalDevices);
+  refreshApkVersionsBtn.addEventListener('click', fetchApkVersions);
 
   featuresList.addEventListener('change', (e) => {
     if (e.target.classList.contains('feature-checkbox')) {

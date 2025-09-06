@@ -13,1005 +13,190 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css"
     />
-    <style>
-      :root {
-        --primary-color: #2563eb;
-        --primary-hover: #1d4ed8;
-        --success-color: #059669;
-        --success-hover: #047857;
-        --warning-color: #d97706;
-        --warning-hover: #b45309;
-        --danger-color: #dc2626;
-        --danger-hover: #b91c1c;
-        --info-color: #0891b2;
-        --info-hover: #0e7490;
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md:
-          0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg:
-          0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        --shadow-xl:
-          0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-      }
-
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          'Helvetica Neue', Arial, sans-serif;
-        margin: 0;
-        background: linear-gradient(135deg, var(--gray-50) 0%, #ffffff 100%);
-        color: var(--gray-900);
-        line-height: 1.6;
-        min-height: 100vh;
-      }
-
-      .header {
-        background: linear-gradient(135deg, #ffffff 0%, var(--gray-50) 100%);
-        padding: 1.5rem 2rem;
-        box-shadow: var(--shadow-md);
-        border-bottom: 1px solid var(--gray-200);
-        position: relative;
-      }
-
-      .header h1 {
-        margin: 0;
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: var(--gray-900);
-        letter-spacing: -0.025em;
-      }
-
-      .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-      }
-
-      /* Enhanced Tabs */
-      .tabs {
-        background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--gray-200);
-        margin-bottom: 2rem;
-        overflow: hidden;
-      }
-
-      .tab-btn {
-        background: none;
-        border: none;
-        font-size: 1rem;
-        font-weight: 500;
-        padding: 1rem 1.5rem;
-        cursor: pointer;
-        color: var(--gray-600);
-        border-bottom: 3px solid transparent;
-        transition: all 0.2s ease;
-        position: relative;
-      }
-
-      .tab-btn:hover {
-        background: var(--gray-50);
-        color: var(--gray-900);
-      }
-
-      .tab-btn.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-        background: var(--gray-50);
-        font-weight: 600;
-      }
-
-      .tab-content {
-        display: none;
-      }
-      .tab-content.active {
-        display: block;
-      }
-
-      /* Enhanced Controls */
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--gray-200);
-      }
-
-      label {
-        font-weight: 500;
-        color: var(--gray-700);
-        font-size: 0.875rem;
-      }
-
-      select,
-      input[type='text'],
-      textarea {
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        border: 1px solid var(--gray-300);
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-        background: white;
-      }
-
-      select:focus,
-      input[type='text']:focus,
-      textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
-      }
-
-      /* Enhanced Buttons */
-      button {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-decoration: none;
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      /* Button Variants */
-      button,
-      .report-btn {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-      }
-
-      button:hover:not(:disabled),
-      .report-btn:hover {
-        background: var(--primary-hover);
-        border-color: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-      }
-
-      .run-btn {
-        background: var(--success-color);
-        border-color: var(--success-color);
-      }
-      .run-btn:hover:not(:disabled) {
-        background: var(--success-hover);
-        border-color: var(--success-hover);
-      }
-
-      .priority-btn {
-        background: var(--warning-color);
-        border-color: var(--warning-color);
-        color: white;
-      }
-      .priority-btn:hover:not(:disabled) {
-        background: var(--warning-hover);
-        border-color: var(--warning-hover);
-      }
-
-      button[style*='dc3545'] {
-        background: var(--danger-color) !important;
-        border-color: var(--danger-color) !important;
-      }
-
-      button[style*='dc3545']:hover:not(:disabled) {
-        background: var(--danger-hover) !important;
-        border-color: var(--danger-hover) !important;
-      }
-
-      button[style*='17a2b8'] {
-        background: var(--info-color) !important;
-        border-color: var(--info-color) !important;
-      }
-
-      button[style*='17a2b8']:hover:not(:disabled) {
-        background: var(--info-hover) !important;
-        border-color: var(--info-hover) !important;
-      }
-
-      /* Enhanced Lists */
-      #features-list,
-      #history-list,
-      #queued-tests-list {
-        list-style-type: none;
-        padding: 0;
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid var(--gray-200);
-        border-radius: 12px;
-        background: white;
-        box-shadow: var(--shadow-sm);
-      }
-
-      #history-list li,
-      #queued-tests-list li {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: background-color 0.2s ease;
-      }
-      #history-list li:hover,
-      #queued-tests-list li:hover {
-        background: var(--gray-50);
-      }
-
-      #features-list li {
-        display: block;
-        border-bottom: 1px solid var(--gray-100);
-        padding: 0;
-      }
-
-      #features-list .feature-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        padding: 1rem 1.5rem;
-        box-sizing: border-box;
-      }
-
-      #features-list .feature-item:hover {
-        background: var(--gray-50);
-      }
-
-      #features-list li.modified {
-        background-color: #fefce8; /* Light Yellow */
-        border-left: 5px solid #facc15; /* Amber */
-        font-weight: 500;
-      }
-
-      #features-list li.modified:hover {
-        background-color: #fef9c3; /* Slightly darker yellow on hover */
-      }
-
-      #features-list li:last-child,
-      #history-list li:last-child,
-      #queued-tests-list li:last-child {
-        border-bottom: none;
-      }
-
-      /* Enhanced Headers */
-      .features-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 1rem 0;
-      }
-
-      .features-header h2,
-      h2,
-      h3 {
-        color: var(--gray-900);
-        font-weight: 700;
-        margin: 0;
-      }
-
-      h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-      }
-
-      h3 {
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-      }
-
-      /* Enhanced Workers View */
-      #worker-status-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        padding: 1.5rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--gray-200);
-        margin-bottom: 2rem;
-      }
-
-      .worker-status-btn {
-        background: var(--gray-500);
-        border-color: var(--gray-500);
-        color: white;
-        border-radius: 8px;
-        font-weight: 500;
-      }
-
-      .worker-status-btn.status-busy {
-        background: var(--warning-color);
-        border-color: var(--warning-color);
-        color: white;
-      }
-
-      .worker-status-btn.status-ready {
-        background: var(--success-color);
-        border-color: var(--success-color);
-      }
-
-      .worker-status-btn.status-initializing {
-        background: var(--info-color);
-        border-color: var(--info-color);
-      }
-
-      .panels-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-
-      .worker-log-panel {
-        order: -1; /* Moves worker panels before the system log panel */
-      }
-
-      .log-panel {
-        border: 1px solid var(--gray-200);
-        border-radius: 12px;
-        background: white;
-        display: flex;
-        flex-direction: column;
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-      }
-
-      .panel-header {
-        background: var(--gray-100);
-        padding: 1rem 1.5rem;
-        font-weight: 600;
-        border-bottom: 1px solid var(--gray-200);
-        transition: background-color 0.3s;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .panel-header .stop-btn {
-        background: var(--danger-color);
-        border-color: var(--danger-color);
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-        border-radius: 6px;
-      }
-
-      .panel-header .stop-btn:hover {
-        background: var(--danger-hover);
-        border-color: var(--danger-hover);
-      }
-
-      .panel-header.status-busy {
-        background: var(--warning-color);
-        color: white;
-      }
-
-      .panel-header.status-ready {
-        background: var(--success-color);
-        color: white;
-      }
-
-      .panel-header.status-initializing {
-        background: var(--info-color);
-        color: white;
-      }
-
-      .panel-content {
-        height: 350px;
-        overflow-y: auto;
-        padding: 1rem;
-        font-family:
-          'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas,
-          'Courier New', monospace;
-        white-space: pre-wrap;
-        background: var(--gray-900);
-        color: var(--gray-100);
-        font-size: 0.875rem;
-        line-height: 1.5;
-      }
-
-      /* Enhanced Sub-tabs */
-      .sub-tabs {
-        display: flex;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid var(--gray-200);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-      }
-
-      .sub-tab-btn {
-        background: none;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        cursor: pointer;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--gray-600);
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s ease;
-      }
-
-      .sub-tab-btn:hover {
-        background: var(--gray-50);
-        color: var(--gray-900);
-      }
-
-      .sub-tab-btn.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-        background: var(--gray-50);
-      }
-
-      .sub-tab-content {
-        display: none;
-      }
-      .sub-tab-content.active {
-        display: block;
-      }
-
-      .new-request-highlight {
-        background: #fef3c7;
-        transition: background-color 2s ease-in-out;
-      }
-
-      /* Enhanced Log Styles */
-      #wiremock-requests-output,
-      #wiremock-mappings-output,
-      #wiremock-recording-output {
-        background: var(--gray-900);
-        color: var(--gray-100);
-        padding: 1.5rem;
-        border-radius: 12px;
-        max-height: 70vh;
-        overflow-y: auto;
-        font-family:
-          'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas,
-          'Courier New', monospace;
-        border: 1px solid var(--gray-200);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .log-entry {
-        border-bottom: 1px solid var(--gray-700);
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        border-radius: 6px;
-      }
-
-      .log-summary {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-      }
-
-      .log-summary:hover {
-        background: var(--gray-800);
-      }
-
-      .log-details {
-        display: none;
-        padding: 1rem;
-        margin-top: 0.5rem;
-        background: var(--gray-800);
-        border-radius: 8px;
-        border: 1px solid var(--gray-700);
-      }
-
-      .log-details pre {
-        white-space: pre-wrap;
-        word-break: break-all;
-        padding: 0;
-        margin: 0;
-      }
-
-      /* Enhanced Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-      }
-
-      .modal-content {
-        background: white;
-        margin: 5% auto;
-        padding: 2rem;
-        border: 1px solid var(--gray-200);
-        width: 90%;
-        max-width: 700px;
-        border-radius: 16px;
-        box-shadow: var(--shadow-xl);
-      }
-
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--gray-200);
-        padding-bottom: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .close-btn {
-        color: var(--gray-400);
-        font-size: 1.5rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: color 0.2s ease;
-      }
-
-      .close-btn:hover,
-      .close-btn:focus {
-        color: var(--gray-600);
-      }
-
-      #mappings-list-container {
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid var(--gray-200);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        background: var(--gray-50);
-      }
-
-      #mappings-list-container label {
-        display: block;
-        padding: 0.75rem;
-        border-radius: 6px;
-        transition: background-color 0.2s ease;
-      }
-
-      #mappings-list-container label:hover {
-        background: white;
-      }
-
-      .mapping-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.25rem 0;
-      }
-
-      .mapping-item-label {
-        flex-grow: 1;
-      }
-
-      .download-single-btn {
-        font-size: 0.75rem;
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        background: var(--gray-500);
-        color: white;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-      }
-
-      .download-single-btn:hover {
-        background: var(--gray-600);
-        transform: translateY(-1px);
-      }
-
-      /* Enhanced Auth Overlay */
-      #auth-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(248, 249, 250, 0.95);
-        z-index: 999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        backdrop-filter: blur(8px);
-      }
-
-      #auth-overlay > div {
-        padding: 3rem 4rem;
-        background: white;
-        border-radius: 16px;
-        box-shadow: var(--shadow-xl);
-        border: 1px solid var(--gray-200);
-      }
-
-      #auth-overlay h2 {
-        margin-bottom: 0.5rem;
-        color: var(--gray-900);
-      }
-
-      #auth-overlay p {
-        color: var(--gray-600);
-        margin-bottom: 2rem;
-      }
-
-      #auth-overlay a {
-        text-decoration: none;
-        padding: 1rem 2rem;
-        background: var(--primary-color);
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
-        display: inline-block;
-        transition: all 0.2s ease;
-      }
-
-      #auth-overlay a:hover {
-        background: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-      }
-
-      /* Enhanced User Info */
-      #auth-container {
-        position: absolute;
-        top: 1.5rem;
-        right: 2rem;
-        text-align: right;
-      }
-
-      #user-info img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 2px solid var(--gray-200);
-      }
-
-      #user-name {
-        font-weight: 600;
-        color: var(--gray-900);
-      }
-
-      #user-email {
-        font-size: 0.75rem;
-        color: var(--gray-500);
-      }
-
-      /* Enhanced Queue Status */
-      #queue-status {
-        font-weight: 500;
-        color: var(--gray-700);
-        margin-top: 0.5rem;
-      }
-
-      /* Enhanced Form Elements */
-      input[type='checkbox'] {
-        width: 1rem;
-        height: 1rem;
-        accent-color: var(--primary-color);
-      }
-
-      textarea {
-        width: 100%;
-        font-family:
-          'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas,
-          'Courier New', monospace;
-        resize: vertical;
-      }
-
-      /* Tree View Styles */
-      #features-list ul {
-        list-style-type: none;
-        padding-left: 20px;
-      }
-
-      #features-list .folder > .feature-item {
-        justify-content: flex-start; /* Alinea el títulod e la carpeta a la izquierda */
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      #features-list .folder > .feature-item::before {
-        content: '▶ ';
-        display: inline-block;
-        transition: transform 0.2s;
-      }
-
-      #features-list .folder.expanded > .feature-item::before {
-        transform: rotate(90deg);
-      }
-
-      #features-list .folder > ul {
-        display: none;
-      }
-
-      #features-list .folder.expanded > ul {
-        display: block;
-      }
-
-      #features-list li .feature-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-      }
-
-      /* Responsive Design */
-      @media (max-width: 768px) {
-        .container {
-          padding: 1rem;
-        }
-
-        .controls {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .panels-container {
-          grid-template-columns: 1fr;
-        }
-
-        .header {
-          padding: 1rem;
-        }
-
-        #auth-container {
-          position: static;
-          margin-top: 1rem;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
   </head>
   <body>
-    <div
-      id="auth-overlay"
-      style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(248, 249, 250, 0.95);
-        z-index: 999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        backdrop-filter: blur(8px);
-      "
-    >
-      <div
-        style="
-          padding: 3rem 4rem;
-          background: white;
-          border-radius: 16px;
-          box-shadow: var(--shadow-xl);
-          border: 1px solid var(--gray-200);
-        "
-      >
-        <h2 style="margin-bottom: 0.5rem">Appium Orchestrator</h2>
-        <p style="color: var(--gray-600); margin-bottom: 2rem">
-          Por favor, inicia sesión para continuar.
-        </p>
-        <a
-          href="/auth/google"
-          style="
-            text-decoration: none;
-            padding: 1rem 2rem;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 8px;
-            font-weight: 600;
-            display: inline-block;
-            transition: all 0.2s ease;
-          "
-        >
-          Login with Google
-        </a>
+    <div id="auth-overlay">
+      <div>
+        <h2>Appium Orchestrator</h2>
+        <p>Por favor, inicia sesión para continuar.</p>
+        <a href="/auth/google">Login with Google</a>
       </div>
     </div>
 
     <div class="header">
       <h1>Appium Orchestrator Web</h1>
-      <div
-        id="queue-status"
-        style="font-weight: 500; color: var(--gray-700); margin-top: 0.5rem"
-      ></div>
-      <div
-        id="auth-container"
-        style="position: absolute; top: 1.5rem; right: 2rem; text-align: right"
-      >
+      <div id="queue-status"></div>
+      <div id="auth-container">
         <div id="user-info" style="display: none">
-          <div style="display: flex; align-items: center; gap: 10px">
-            <div>
-              <div
-                id="user-name"
-                style="font-weight: 600; color: var(--gray-900)"
-              ></div>
-              <div
-                id="user-email"
-                style="font-size: 0.75rem; color: var(--gray-500)"
-              ></div>
-            </div>
-            <img
-              id="user-photo"
-              src="/placeholder.svg"
-              alt="User photo"
-              style="
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                border: 2px solid var(--gray-200);
-              "
-            />
+          <div>
+            <div id="user-name"></div>
+            <div id="user-email"></div>
           </div>
-          <a
-            href="/auth/logout"
-            style="
-              font-size: 0.75rem;
-              color: var(--primary-color);
-              margin-top: 5px;
-              display: inline-block;
-              transition: all 0.2s ease;
-            "
-            >Logout</a
-          >
+          <img
+            id="user-photo"
+            src="/placeholder.svg"
+            alt="User photo"
+          />
+          <a href="/auth/logout">Logout</a>
         </div>
       </div>
     </div>
 
     <div class="container">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="setup">Setup</button>
-        <button class="tab-btn" data-tab="workers">Workers</button>
-        <button class="tab-btn" data-tab="queue">Cola</button>
-        <button class="tab-btn" data-tab="results">Resultados</button>
-        <button class="tab-btn" data-tab="wiremock">Wiremock</button>
+        <div class="tabs-container">
+          <button class="tab-btn active" data-tab="setup">Setup</button>
+          <button class="tab-btn" data-tab="workers">Workers</button>
+          <button class="tab-btn" data-tab="queue">Cola</button>
+          <button class="tab-btn" data-tab="results">Resultados</button>
+          <button class="tab-btn" data-tab="wiremock">Wiremock</button>
+        </div>
+        <button id="stop-all-btn" class="danger-btn">
+          Parar Todo 🛑
+        </button>
       </div>
 
       <!-- Setup Tab -->
       <div id="setup-view" class="tab-content active">
-        <div class="controls">
-          <div>
-            <label for="client-select">Cliente:</label>
-            <select id="client-select">
-              <option value="nbch">nbch</option>
-              <option value="bpn">bpn</option>
-              <option value="bind">bind</option>
-            </select>
+        <!-- Environment Configuration Card -->
+        <div class="config-card">
+          <div class="card-header">
+            <h3>⚙️ Configuración del Entorno</h3>
+            <div class="header-actions">
+              <button id="prepare-workspace-btn" class="secondary-btn hidden">
+                ⚙️ Preparar Workspace
+              </button>
+              <button id="refresh-git-status-btn" class="secondary-btn hidden">
+                🔄 Refrescar Cambios (Git)
+              </button>
+            </div>
           </div>
-          <div>
-            <label for="branch-select">Branch:</label>
-            <select id="branch-select">
-              <option>Cargando...</option>
-            </select>
+          <div class="card-content">
+            <div class="config-grid">
+              <div class="config-item">
+                <label for="client-select">Cliente:</label>
+                <select id="client-select">
+                  <option value="nbch">nbch</option>
+                  <option value="bpn">bpn</option>
+                  <option value="bind">bind</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label for="branch-select">Branch:</label>
+                <select id="branch-select">
+                  <option>Cargando...</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label for="apk-version-select">Versión APK:</label>
+                <div class="input-with-button">
+                  <select id="apk-version-select" disabled>
+                    <option>N/A</option>
+                  </select>
+                  <button
+                    id="refresh-apk-versions-btn"
+                    class="refresh-btn"
+                    title="Refresh APK Versions"
+                  >
+                    &#x21bb;
+                  </button>
+                </div>
+              </div>
+              <div class="config-item" id="device-selector-container" class="hidden">
+                <label for="device-select">Device:</label>
+                <div class="input-with-button">
+                  <select id="device-select"></select>
+                  <button
+                    id="refresh-devices-btn"
+                    class="refresh-btn"
+                    title="Refresh Devices"
+                  >
+                    &#x21bb;
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label for="apk-version-select">Versión APK:</label>
-            <select id="apk-version-select" disabled>
-              <option>N/A</option>
-            </select>
+        </div>
+
+        <!-- Execution Options Card -->
+        <div class="config-card">
+          <div class="card-header">
+            <h3>⚙️ Opciones de Ejecución</h3>
           </div>
-          <div id="device-selector-container" style="display: none">
-            <label for="device-select">Device:</label>
-            <select id="device-select"></select>
-            <button
-              id="refresh-devices-btn"
-              title="Refresh Devices"
-              style="
-                padding: 0.4em 0.6em;
-                line-height: 1;
-                margin-left: 5px;
-                font-size: 0.9em;
-              "
-            >
-              &#x21bb;
+          <div class="card-content">
+            <div class="options-grid">
+              <label class="checkbox-label">
+                <input type="checkbox" id="batch-priority-checkbox" />
+                Alta Prioridad ⚡
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="record-mappings-checkbox" />
+                Grabar Mappings 🔴
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="use-local-mappings-checkbox" />
+                Usar Mappings Locales 💾
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="persistent-workspace-checkbox" />
+                Workspace Persistente 🔄
+              </label>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Search and Execution Card -->
+        <div class="config-card">
+          <div class="card-header">
+            <h3>⚙️ Búsqueda y Ejecución</h3>
+            <button id="fetch-features-btn" class="secondary-btn">
+              🔍 Buscar Features
             </button>
           </div>
-          <button id="fetch-apk-versions-btn">Buscar Versiones</button>
-          <button id="fetch-features-btn">Buscar Features</button>
-          <button
-            id="run-selected-btn"
-            style="
-              background-color: var(--info-color);
-              border-color: var(--info-color);
-            "
-            disabled
-          >
-            Ejecutar Selección (0)
-          </button>
-          <label
-            style="
-              margin-left: 1em;
-              display: inline-flex;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            <input type="checkbox" id="batch-priority-checkbox" />
-            Alta Prioridad ⚡
-          </label>
-          <label
-            style="
-              margin-left: 1em;
-              display: inline-flex;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            <input type="checkbox" id="record-mappings-checkbox" />
-            Grabar Mappings 🔴
-          </label>
-          <label
-            style="
-              margin-left: 1em;
-              display: inline-flex;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            <input type="checkbox" id="use-local-mappings-checkbox" />
-            Usar Mappings Locales 💾
-          </label>
-          <label
-            style="
-              margin-left: 1em;
-              display: inline-flex;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            │ <input type="checkbox" id="persistent-workspace-checkbox" /> │
-            Workspace Persistente 🔄 │
-          </label>
-          <button
-            id="stop-all-btn"
-            style="
-              background-color: var(--danger-color);
-              border-color: var(--danger-color);
-              margin-left: auto;
-            "
-          >
-            Parar Todo 🛑
-          </button>
-        </div>
-        <div
-          class="features-header"
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <h2>Features</h2>
-          <div>
-            <input type="checkbox" id="select-all-features" />
-            <label for="select-all-features">Seleccionar Todo</label>
+          <div class="card-content">
+            
+            <div class="search-controls">
+              <div class="search-input-group">
+                <label for="features-filter">Buscar:</label>
+                <input 
+                  type="text" 
+                  id="features-filter" 
+                  placeholder="Filtrar por feature completa..."
+                  class="features-filter-input"
+                />
+              </div>
+              <div class="status-filter-group">
+                <label for="feature-filter-select">Estado:</label>
+                <select id="feature-filter-select">
+                  <option value="all">Todos</option>
+                  <option value="modified">Solo Modificados</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="execution-controls">
+              <div class="selection-controls">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="select-all-features" />
+                  Seleccionar Todo
+                </label>
+                <button id="commit-changes-btn" class="commit-btn hidden">
+                  ← Hacer Commit de Cambios
+                </button>
+              </div>
+              <button id="run-selected-btn" class="execute-btn" disabled>
+                ▷ Ejecutar Selección (0)
+              </button>
+            </div>
+
+            <ul id="features-list">
+              <li>Selecciona cliente y branch para buscar features.</li>
+            </ul>
           </div>
         </div>
-        <ul id="features-list">
-          <li>Selecciona cliente y branch para buscar features.</li>
-        </ul>
       </div>
 
       <!-- Workers Tab -->
