@@ -31,11 +31,14 @@ import {
   filterFeatureListByText,
   displayCommitButton,
   createCommitModal,
-  openEditModal,
-  getEditorContent,
-  createEditModal,
+  initIdeView,
+  setIdeEditorContent,
+  getIdeEditorContent,
+  setSaveButtonState,
 } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
+
+let activeFeature = null; // Holds info about the currently open feature in the IDE
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthStatus();
@@ -60,6 +63,29 @@ async function checkAuthStatus() {
   }
 }
 
+async function handleSave() {
+  if (!activeFeature) {
+    alert('No hay ningún archivo activo para guardar.');
+    return;
+  }
+  const content = getIdeEditorContent();
+  const { branch, client, featureName } = activeFeature;
+
+  const result = await saveFeatureContent(
+    branch,
+    client,
+    `${featureName}.feature`,
+    content,
+  );
+
+  if (result) {
+    alert('Feature guardado con éxito!');
+    setSaveButtonState(false); // Disable button after save
+    // Auto-refresh git status to show the change
+    document.getElementById('refresh-git-status-btn')?.click();
+  }
+}
+
 function initializeApp() {
   // eslint-disable-next-line no-undef
   const socket = io();
@@ -67,6 +93,7 @@ function initializeApp() {
   initializeUiEventListeners(socket);
   initializeAppControls(socket);
   initializeWiremockTab();
+  initIdeView(handleSave); // Initialize the IDE view
 
   loadBranches();
   loadHistoryBranches();
@@ -84,7 +111,6 @@ async function initializeAppControls(socket) {
   displayFeatureFilter(config.persistentWorkspacesEnabled);
   displayCommitButton(config.persistentWorkspacesEnabled);
   createCommitModal();
-  createEditModal();
 
   // --- Event Listeners for new controls ---
   const prepareWorkspaceBtn = document.getElementById('prepare-workspace-btn');
@@ -173,35 +199,10 @@ async function initializeAppControls(socket) {
     });
   }
 
-  const editModal = document.getElementById('edit-feature-modal');
-  const closeEditModalBtn = document.getElementById('close-edit-modal');
-  const saveFeatureBtn = document.getElementById('save-feature-btn');
-
-  if (editModal && closeEditModalBtn && saveFeatureBtn) {
-    closeEditModalBtn.onclick = () => (editModal.style.display = 'none');
-    saveFeatureBtn.addEventListener('click', async () => {
-      const content = getEditorContent();
-      const { branch, client, feature } = JSON.parse(
-        saveFeatureBtn.dataset.saveInfo,
-      );
-
-      const result = await saveFeatureContent(branch, client, feature, content);
-      if (result) {
-        alert('Feature guardado con éxito!');
-        editModal.style.display = 'none';
-        // Auto-refresh git status
-        document.getElementById('refresh-git-status-btn')?.click();
-      }
-    });
-  }
-
   // Close modals on outside click
   window.onclick = (event) => {
     if (event.target == commitModal) {
       commitModal.style.display = 'none';
-    }
-    if (event.target == editModal) {
-      editModal.style.display = 'none';
     }
   };
 }
@@ -275,11 +276,49 @@ function initializeUiEventListeners(socket) {
     // Handle folder expansion/collapse
     const folderItem = target.closest('.folder > .feature-item');
     if (folderItem) {
+      // Prevent toggling when a button inside is clicked
+      if (e.target.closest('button, input')) return;
       folderItem.parentElement.classList.toggle('expanded');
-      return; // Stop further processing
+      return;
     }
 
+    // Handle file click to open in editor
+    const fileItem = target.closest('.file > .feature-item');
+    if (fileItem) {
+      // Don't trigger if a button or checkbox inside the item was clicked
+      if (e.target.closest('button, input[type="checkbox"]')) {
+        return;
+      }
+
+      const featureName = fileItem.parentElement.dataset.featureName;
+      const branch = document.getElementById('branch-select').value;
+      const client = document.getElementById('client-select').value;
+
+      setIdeEditorContent('// Cargando...', true);
+      activeFeature = null; // Reset active feature while loading
+
+      const content = await getFeatureContent(
+        branch,
+        client,
+        featureName + '.feature',
+      );
+
+      if (content !== null) {
+        setIdeEditorContent(content, false); // Make editor writable
+        activeFeature = { branch, client, featureName }; // Set active feature
+      } else {
+        setIdeEditorContent(
+          '// No se pudo cargar el contenido del archivo.',
+          true,
+        );
+      }
+      return;
+    }
+
+    // This part handles the old buttons, which are direct children of feature-item
     const featureName = target.dataset.feature;
+    if (!featureName) return; // If no feature is associated, do nothing
+
     const branch = document.getElementById('branch-select').value;
     const client = document.getElementById('client-select').value;
 
@@ -289,15 +328,6 @@ function initializeUiEventListeners(socket) {
     ) {
       const highPriority = target.classList.contains('priority-btn');
       runTest(socket, branch, client, featureName, highPriority);
-    } else if (target.classList.contains('edit-btn')) {
-      const content = await getFeatureContent(
-        branch,
-        client,
-        featureName + '.feature',
-      );
-      if (content !== null) {
-        openEditModal(branch, client, featureName + '.feature', content);
-      }
     }
   });
 

@@ -387,16 +387,6 @@ export function addFeatureControls(li, featureName, config) {
   const buttonsDiv = document.createElement('div');
   buttonsDiv.className = 'feature-actions';
 
-  // Botón de Editar (condicional)
-  if (config.persistentWorkspacesEnabled) {
-    const editButton = document.createElement('button');
-    editButton.innerHTML = '✏️';
-    editButton.className = 'edit-btn btn-edit';
-    editButton.title = 'Editar';
-    editButton.dataset.feature = featureName;
-    buttonsDiv.appendChild(editButton);
-  }
-
   const runButton = document.createElement('button');
   runButton.innerHTML = '▶️';
   runButton.className = 'run-btn btn-run';
@@ -422,16 +412,19 @@ export function renderFeatureTree(parentElement, nodes, config) {
 
     if (node.type === 'folder') {
       li.classList.add('folder');
-      itemDiv.textContent = node.name;
+      li.dataset.folderPath = node.name; // Add folder path as a data attribute
+      itemDiv.textContent = `📁 ${node.name}`; // Add icon
       li.appendChild(itemDiv);
 
       if (node.children && node.children.length > 0) {
         const nestedUl = document.createElement('ul');
+        nestedUl.classList.add('nested'); // Class for CSS targeting
         renderFeatureTree(nestedUl, node.children, config);
         li.appendChild(nestedUl);
       }
     } else if (node.type === 'file') {
       li.classList.add('file');
+      li.dataset.featureName = node.featureName; // Add feature name as a data attribute
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
@@ -440,7 +433,7 @@ export function renderFeatureTree(parentElement, nodes, config) {
       checkbox.onchange = updateSelectedCount;
 
       const featureNameSpan = document.createElement('span');
-      featureNameSpan.textContent = node.name;
+      featureNameSpan.textContent = `📄 ${node.name}`; // Add icon
 
       itemDiv.appendChild(checkbox);
       itemDiv.appendChild(featureNameSpan);
@@ -453,56 +446,9 @@ export function renderFeatureTree(parentElement, nodes, config) {
   });
 }
 
-let codeMirrorEditor = null;
+let ideCodeMirror = null; // For the new IDE view
 
-export function createEditModal() {
-  const modalHTML = `
-    <div id="edit-feature-modal" class="modal">
-        <div class="modal-content" style="max-width: 80vw;">
-            <div class="modal-header">
-                <h2 id="edit-modal-title">Editar Feature</h2>
-                <span id="close-edit-modal" class="close-btn">&times;</span>
-            </div>
-            <div id="editor-container">
-                <textarea id="feature-editor"></textarea>
-            </div>
-            <button id="save-feature-btn" style="width: 100%; margin-top: 1rem;">Guardar Cambios</button>
-        </div>
-    </div>`;
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
 
-export function openEditModal(branch, client, feature, content) {
-  document.getElementById('edit-modal-title').textContent =
-    `Editando: ${feature}`;
-  const modal = document.getElementById('edit-feature-modal');
-  const editorTextarea = document.getElementById('feature-editor');
-  editorTextarea.value = content;
-
-  modal.style.display = 'block';
-
-  if (codeMirrorEditor) {
-    codeMirrorEditor.toTextArea();
-  }
-
-  codeMirrorEditor = CodeMirror.fromTextArea(editorTextarea, {
-    lineNumbers: true,
-    mode: 'gherkin',
-    theme: 'material-darker',
-    indentUnit: 2,
-    tabSize: 2,
-  });
-  codeMirrorEditor.setSize('100%', '60vh');
-
-  // Store data for the save button
-  document.getElementById('save-feature-btn').dataset.saveInfo = JSON.stringify(
-    { branch, client, feature },
-  );
-}
-
-export function getEditorContent() {
-  return codeMirrorEditor ? codeMirrorEditor.getValue() : null;
-}
 
 export function displayCommitButton(isEnabled) {
   if (!isEnabled) return;
@@ -540,3 +486,72 @@ export function createCommitModal() {
     </div>`;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
+
+export function initIdeView(onSaveCallback) {
+  // Initialize Split.js
+  Split(['#feature-tree-panel', '#editor-panel'], {
+    sizes: [30, 70],
+    minSize: [200, 300],
+    gutterSize: 8,
+    cursor: 'col-resize',
+  });
+
+  // Initialize CodeMirror in the right panel
+  const editorPanel = document.getElementById('editor-panel');
+  editorPanel.innerHTML = `
+    <div class="editor-controls">
+      <button id="save-feature-ide-btn" class="execute-btn" style="display: none;" disabled>Guardar Cambios</button>
+    </div>
+    <div class="codemirror-wrapper"></div>
+  `;
+
+  const wrapper = editorPanel.querySelector('.codemirror-wrapper');
+  ideCodeMirror = CodeMirror(wrapper, {
+    value: '// Selecciona un archivo del árbol para ver su contenido.\n',
+    lineNumbers: true,
+    mode: 'gherkin',
+    theme: 'material-darker',
+    readOnly: true,
+  });
+  ideCodeMirror.setSize('100%', '100%');
+
+  // Enable save button on change
+  ideCodeMirror.on('change', () => {
+    const saveBtn = document.getElementById('save-feature-ide-btn');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+    }
+  });
+
+  // Attach the save callback to the button
+  const saveBtn = document.getElementById('save-feature-ide-btn');
+  if (saveBtn && typeof onSaveCallback === 'function') {
+    saveBtn.addEventListener('click', onSaveCallback);
+  }
+}
+
+export function setIdeEditorContent(content, isReadOnly = false) {
+  const saveBtn = document.getElementById('save-feature-ide-btn');
+  if (ideCodeMirror) {
+    ideCodeMirror.setValue(content);
+    ideCodeMirror.setOption('readOnly', isReadOnly);
+    ideCodeMirror.clearHistory(); // Clear history to ensure clean state
+  }
+  if (saveBtn) {
+    saveBtn.style.display = isReadOnly ? 'none' : 'inline-block';
+    saveBtn.disabled = true; // Always disable on new content load
+  }
+}
+
+export function getIdeEditorContent() {
+  return ideCodeMirror ? ideCodeMirror.getValue() : null;
+}
+
+export function setSaveButtonState(enabled) {
+  const saveBtn = document.getElementById('save-feature-ide-btn');
+  if (saveBtn) {
+    saveBtn.disabled = !enabled;
+  }
+}
+
+

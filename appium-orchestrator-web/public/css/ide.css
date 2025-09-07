@@ -1,0 +1,77 @@
+/* --- IDE Layout --- */
+#ide-container {
+  display: flex;
+  height: 60vh; /* Or a suitable height */
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#feature-tree-panel {
+  width: 30%; /* Initial width */
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--gray-50);
+  border-right: 1px solid var(--gray-200);
+}
+
+#editor-panel {
+  width: 70%; /* Initial width */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-controls {
+  padding: 8px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  text-align: right;
+}
+
+.codemirror-wrapper {
+  flex-grow: 1;
+  height: 0; /* This is key for the wrapper to fill the space */
+}
+
+/* --- Feature Tree --- */
+#features-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#features-list .folder > .feature-item,
+#features-list .file > .feature-item {
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+#features-list .folder > .feature-item:hover,
+#features-list .file > .feature-item:hover {
+  background-color: var(--gray-100);
+}
+
+#features-list ul.nested {
+  display: none;
+  list-style-type: none;
+  padding-left: 20px; /* Indent nested items */
+}
+
+#features-list .folder.expanded > ul.nested {
+  display: block;
+}
+
+/* Gutter style for Split.js */
+.gutter {
+  background-color: var(--gray-200);
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bM/5+BgYGBgYGBgYGBgYGBgYGBgYGJAUoNAwA+2g3+3e2/ugAAAABJRU5ErkJggg==');
+  cursor: col-resize;
+}

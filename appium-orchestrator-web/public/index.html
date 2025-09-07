@@ -13,7 +13,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css"
     />
-    <link rel="stylesheet" href="css/styles.css">
+        <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/ide.css">
   </head>
   <body>
     <div id="auth-overlay">
@@ -192,9 +193,14 @@
               </button>
             </div>
 
-            <ul id="features-list">
-              <li>Selecciona cliente y branch para buscar features.</li>
-            </ul>
+            <div id="ide-container">
+              <div id="feature-tree-panel">
+                <ul id="features-list">
+                  <li>Selecciona cliente y branch para buscar features.</li>
+                </ul>
+              </div>
+              <div id="editor-panel"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -432,6 +438,8 @@
     <!-- CodeMirror JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/gherkin/gherkin.min.js"></script>
+    <!-- Split.js for resizable panels -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
     <script type="module" src="js/main.js"></script>
 
     <!-- Mappings Download Modal -->
