@@ -25,8 +25,22 @@
       </div>
     </div>
 
-    <div class="header">
-      <h1>Appium Orchestrator Web</h1>
+    <div class="header" id="main-header">
+      <div class="header-title-section">
+        <h1 id="main-title">Appium Orchestrator Web</h1>
+        <div class="header-indicators">
+          <div id="uncommitted-changes-indicator" class="commit-status-indicator hidden">
+            <span class="warning-icon">📝</span>
+            <span class="status-text">Archivos modificados sin commit</span>
+            <button id="header-commit-btn" class="commit-btn">Commit</button>
+          </div>
+          <div id="pending-commits-indicator" class="commit-status-indicator hidden">
+            <span class="warning-icon">⬆️</span>
+            <span class="status-text">Commits pendientes de push</span>
+            <button id="header-push-btn" class="push-btn">Push</button>
+          </div>
+        </div>
+      </div>
       <div id="queue-status"></div>
       <div id="auth-container">
         <div id="user-info" style="display: none">

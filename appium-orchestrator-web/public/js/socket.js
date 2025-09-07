@@ -1,4 +1,4 @@
-import { apkSource, loadHistory } from './api.js';
+import { apkSource, loadHistory, getWorkspaceChanges } from './api.js';
 import {
   switchTab,
   updateQueueStatus,
@@ -182,6 +182,49 @@ export function initializeSocketListeners(socket) {
       document.getElementById('fetch-features-btn').click();
     }
   });
+
+  socket.on('commit_status_update', async (data) => {
+    console.log(`Commit status update for branch ${data.branch}:`, data);
+    const selectedBranch = document.getElementById('branch-select').value;
+    if (data.branch === selectedBranch) {
+      // Also check for workspace changes to determine the correct state
+      const workspaceStatus = await getWorkspaceChanges(data.branch);
+      
+      const header = document.getElementById('main-header');
+      const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
+      const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
+      const uncommittedStatusText = uncommittedIndicator.querySelector('.status-text');
+      const pendingStatusText = pendingCommitsIndicator.querySelector('.status-text');
+      
+      // Clear all header status classes first
+      header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+      
+      // Handle uncommitted changes (yellow indicator)
+      if (workspaceStatus.hasChanges) {
+        header.classList.add('has-uncommitted-changes');
+        uncommittedIndicator.classList.remove('hidden');
+        const totalChanges = workspaceStatus.modifiedFiles;
+        uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
+      } else {
+        uncommittedIndicator.classList.add('hidden');
+      }
+      
+      // Handle pending commits (red indicator)
+      if (data.hasPendingCommits) {
+        header.classList.add('has-pending-commits');
+        header.classList.remove('has-uncommitted-changes');
+        pendingCommitsIndicator.classList.remove('hidden');
+        pendingStatusText.textContent = data.message || 'Commits pendientes de push';
+      } else {
+        pendingCommitsIndicator.classList.add('hidden');
+      }
+      
+      // If no indicators are showing, ensure header is clean
+      if (!workspaceStatus.hasChanges && !data.hasPendingCommits) {
+        header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+      }
+    }
+  });
 }
 
 export function stopAllExecution(socket) {
@@ -210,5 +253,14 @@ export function commitChanges(socket, data) {
     return;
   }
   socket.emit('commit_changes', data);
+  switchTab('workers'); // Switch to log view to see progress
+}
+
+export function pushChanges(socket, branch) {
+  if (!branch) {
+    alert('Error: No se especificó una branch para el push.');
+    return;
+  }
+  socket.emit('push_changes', { branch });
   switchTab('workers'); // Switch to log view to see progress
 }

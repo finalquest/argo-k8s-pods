@@ -2,6 +2,8 @@ import {
   getFeatureContent,
   saveFeatureContent,
   getWorkspaceStatus,
+  getCommitStatus,
+  getWorkspaceChanges,
   fetchConfig,
   getCurrentUser,
   getLocalDevices,
@@ -18,6 +20,7 @@ import {
   stopAllExecution,
   prepareWorkspace,
   commitChanges,
+  pushChanges,
 } from './socket.js';
 import {
   switchTab,
@@ -81,7 +84,10 @@ async function handleSave() {
     alert('Feature guardado con éxito!');
     setSaveButtonState(false); // Disable button after save
     // Auto-refresh git status to show the change
-    document.getElementById('refresh-git-status-btn')?.click();
+    const refreshBtn = document.getElementById('refresh-git-status-btn');
+    if (refreshBtn) {
+      refreshBtn.click();
+    }
     return true; // Return true on success
   }
   return false; // Return false on failure
@@ -140,6 +146,15 @@ function initializeApp() {
 
   // Auto-fetch APK versions on page load
   fetchApkVersions();
+  
+  // Listen for features loaded event to update commit status
+  window.addEventListener('featuresLoaded', async (event) => {
+    const { branch } = event.detail;
+    const config = await fetchConfig();
+    if (config.persistentWorkspacesEnabled) {
+      await updateCommitStatusIndicator(branch);
+    }
+  });
 }
 
 async function initializeAppControls(socket) {
@@ -169,6 +184,33 @@ async function initializeAppControls(socket) {
       }
       const status = await getWorkspaceStatus(selectedBranch);
       updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+      // Also update commit status indicator
+      await updateCommitStatusIndicator(selectedBranch);
+    });
+  }
+
+  // --- Header commit button listener ---
+  const headerCommitBtn = document.getElementById('header-commit-btn');
+  if (headerCommitBtn) {
+    headerCommitBtn.addEventListener('click', () => {
+      if (!activeFeature) {
+        alert('No hay ningún archivo activo para commitear.');
+        return;
+      }
+      handleIdeCommit();
+    });
+  }
+
+  // --- Header push button listener ---
+  const headerPushBtn = document.getElementById('header-push-btn');
+  if (headerPushBtn) {
+    headerPushBtn.addEventListener('click', () => {
+      const selectedBranch = document.getElementById('branch-select').value;
+      if (!selectedBranch) {
+        alert('Por favor, selecciona una branch.');
+        return;
+      }
+      pushChanges(socket, selectedBranch);
     });
   }
 
@@ -218,6 +260,72 @@ async function initializeAppControls(socket) {
       commitModal.style.display = 'none';
     }
   };
+
+  // --- Branch change listener ---
+  const branchSelect = document.getElementById('branch-select');
+  if (branchSelect) {
+    branchSelect.addEventListener('change', async () => {
+      const selectedBranch = branchSelect.value;
+      const selectedClient = document.getElementById('client-select').value;
+      
+      // Reset active feature when branch changes
+      activeFeature = null;
+      
+      // Clear IDE editor
+      const editorPanel = document.getElementById('editor-panel');
+      if (editorPanel) {
+        const saveBtn = editorPanel.querySelector('#ide-save-btn');
+        const commitBtn = editorPanel.querySelector('#ide-commit-btn');
+        const runBtn = editorPanel.querySelector('#ide-run-btn');
+        
+        if (saveBtn) saveBtn.style.display = 'none';
+        if (commitBtn) commitBtn.style.display = 'none';
+        if (runBtn) runBtn.style.display = 'none';
+        
+        // Clear editor content
+        const ideEditorContent = getIdeEditorContent();
+        if (ideEditorContent !== null) {
+          setIdeEditorContent({
+            content: '// Selecciona una branch y luego un archivo para ver su contenido.',
+            isReadOnly: true,
+            isModified: false
+          });
+        }
+      }
+      
+      // Clear feature list and update git status for the new branch
+      const featuresList = document.getElementById('features-list');
+      if (featuresList) {
+        featuresList.innerHTML = '<li>Cargando...</li>';
+      }
+      
+      // Update commit status indicator for the new branch
+      if (selectedBranch && config.persistentWorkspacesEnabled) {
+        await updateCommitStatusIndicator(selectedBranch);
+        
+        // Also update git status for features if both branch and client are selected
+        if (selectedClient) {
+          const status = await getWorkspaceStatus(selectedBranch);
+          updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+        }
+      } else {
+        // Hide indicator if persistent workspaces are not enabled
+        const header = document.getElementById('main-header');
+        const indicator = document.getElementById('commit-status-indicator');
+        
+        if (header) header.classList.remove('has-pending-commits');
+        if (indicator) indicator.classList.add('hidden');
+      }
+    });
+  }
+
+  // Initial commit status check after a short delay to ensure DOM is ready
+  setTimeout(async () => {
+    const initialBranch = document.getElementById('branch-select').value;
+    if (initialBranch && config.persistentWorkspacesEnabled) {
+      await updateCommitStatusIndicator(initialBranch);
+    }
+  }, 500);
 }
 
 async function loadLocalDevices() {
@@ -236,6 +344,73 @@ async function loadLocalDevices() {
     });
   } else {
     container.style.display = 'none';
+  }
+}
+
+async function updateCommitStatusIndicator(branch) {
+  // Check if persistent workspaces are enabled by fetching config
+  const config = await fetchConfig();
+  if (!config.persistentWorkspacesEnabled) return;
+  
+  try {
+    const [commitStatus, workspaceStatus] = await Promise.all([
+      getCommitStatus(branch),
+      getWorkspaceChanges(branch)
+    ]);
+    
+    const header = document.getElementById('main-header');
+    const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
+    const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
+    const uncommittedStatusText = uncommittedIndicator.querySelector('.status-text');
+    const pendingStatusText = pendingCommitsIndicator.querySelector('.status-text');
+    
+    // Clear all header status classes first
+    header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+    
+    // Handle uncommitted changes (yellow indicator)
+    if (workspaceStatus.hasChanges) {
+      // Add yellow styling to header
+      header.classList.add('has-uncommitted-changes');
+      
+      // Show yellow indicator with change count
+      uncommittedIndicator.classList.remove('hidden');
+      const totalChanges = workspaceStatus.modifiedFiles;
+      uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
+    } else {
+      // Hide yellow indicator
+      uncommittedIndicator.classList.add('hidden');
+    }
+    
+    // Handle pending commits (red indicator)
+    if (commitStatus.hasPendingCommits) {
+      // Add red styling to header (red takes precedence for header color)
+      header.classList.add('has-pending-commits');
+      header.classList.remove('has-uncommitted-changes');
+      
+      // Show red indicator with count
+      pendingCommitsIndicator.classList.remove('hidden');
+      pendingStatusText.textContent = `${commitStatus.commitCount} commit(s) pendiente(s) de push`;
+    } else {
+      // Hide red indicator
+      pendingCommitsIndicator.classList.add('hidden');
+    }
+    
+    // If no indicators are showing, ensure header is clean
+    if (!workspaceStatus.hasChanges && !commitStatus.hasPendingCommits) {
+      header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+    }
+  } catch (error) {
+    console.error('Error updating commit status indicator:', error);
+    // Hide both indicators on error to avoid showing incorrect state
+    const header = document.getElementById('main-header');
+    const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
+    const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
+    
+    if (header) {
+      header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+    }
+    if (uncommittedIndicator) uncommittedIndicator.classList.add('hidden');
+    if (pendingCommitsIndicator) pendingCommitsIndicator.classList.add('hidden');
   }
 }
 
@@ -369,3 +544,4 @@ function initializeUiEventListeners(socket) {
     });
   });
 }
+

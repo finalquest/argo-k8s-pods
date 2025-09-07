@@ -632,6 +632,109 @@ app.post('/api/feature-content', async (req, res) => {
   }
 });
 
+app.get('/api/commit-status/:branch', async (req, res) => {
+  const { branch } = req.params;
+  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+    return res.status(404).json({
+      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
+    });
+  }
+
+  const sanitizedBranch = sanitize(branch);
+  const workspacePath = path.join(
+    process.env.PERSISTENT_WORKSPACES_ROOT,
+    sanitizedBranch,
+    'appium',
+  );
+
+  if (!fs.existsSync(workspacePath)) {
+    return res.json({ hasPendingCommits: false });
+  }
+
+  try {
+    // Check if there are commits that haven't been pushed
+    const command = `git -C ${workspacePath} log --oneline origin/${branch}..HEAD`;
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        // If the branch doesn't exist remotely or other error, assume no pending commits
+        return res.json({ hasPendingCommits: false });
+      }
+
+      const hasPendingCommits = stdout.trim().length > 0;
+      const commitCount = stdout.trim().split('\n').filter(Boolean).length;
+      
+      res.json({ 
+        hasPendingCommits, 
+        commitCount,
+        message: hasPendingCommits 
+          ? `Hay ${commitCount} commit(s) local(es) pendiente(s) de push` 
+          : 'No hay commits pendientes de push'
+      });
+    });
+  } catch (error) {
+    console.error(`Error al verificar estado de commits para la branch ${branch}:`, error);
+    res.status(500).json({
+      error: 'Error al verificar el estado de commits.',
+      details: error.message,
+    });
+  }
+});
+
+app.get('/api/workspace-changes/:branch', async (req, res) => {
+  const { branch } = req.params;
+  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+    return res.status(404).json({
+      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
+    });
+  }
+
+  const sanitizedBranch = sanitize(branch);
+  const workspacePath = path.join(
+    process.env.PERSISTENT_WORKSPACES_ROOT,
+    sanitizedBranch,
+    'appium',
+  );
+
+  if (!fs.existsSync(workspacePath)) {
+    return res.json({ hasUncommittedChanges: false });
+  }
+
+  try {
+    // Check if there are uncommitted changes only in the features path
+    const command = `git -C ${workspacePath} status --porcelain test/features/`;
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        // If there's an error, assume no uncommitted changes
+        return res.json({ hasUncommittedChanges: false });
+      }
+
+      const hasUncommittedChanges = stdout.trim().length > 0;
+      const changes = stdout.trim().split('\n').filter(Boolean);
+      const modifiedFiles = changes.length;
+      
+      // Count different types of changes
+      const stagedChanges = changes.filter(line => line.startsWith('M ') || line.startsWith('A ') || line.startsWith('D ')).length;
+      const unstagedChanges = changes.filter(line => line.startsWith(' M') || line.startsWith(' D') || line.startsWith('??')).length;
+      
+      res.json({ 
+        hasUncommittedChanges, 
+        modifiedFiles,
+        stagedChanges,
+        unstagedChanges,
+        message: hasUncommittedChanges 
+          ? `Hay ${modifiedFiles} archivo(s) con cambios sin commit` 
+          : 'No hay cambios sin commit'
+      });
+    });
+  } catch (error) {
+    console.error(`Error al verificar cambios sin commit para la branch ${branch}:`, error);
+    res.status(500).json({
+      error: 'Error al verificar cambios sin commit.',
+      details: error.message,
+    });
+  }
+});
+
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 app.get('/api/wiremock/mappings', async (req, res) => {
@@ -1764,7 +1867,7 @@ io.on('connection', (socket) => {
 
     io.emit('log_update', {
       ...logSlot,
-      logLine: `--- 🚀 Iniciando proceso de commit para la branch: ${branch} ---\n`,
+      logLine: `--- 🚀 Iniciando commit local para la branch: ${branch} ---\n`,
     });
 
     const sanitizedBranch = sanitize(branch);
@@ -1825,19 +1928,9 @@ io.on('connection', (socket) => {
     };
 
     try {
-      const authenticatedUrl = getAuthenticatedUrl();
-
       io.emit('log_update', {
         ...logSlot,
-        logLine: `${logPrefix} étape 1/5: Sincronizando con el repositorio remoto (git pull)...
-`,
-      });
-      await executeGitCommand('git', ['pull', '--rebase', 'origin', branch]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `
-${logPrefix} étape 2/5: Añadiendo archivos...
+        logLine: `${logPrefix} étape 1/3: Añadiendo archivos...
 `,
       });
       await executeGitCommand('git', ['add', ...files]);
@@ -1845,7 +1938,7 @@ ${logPrefix} étape 2/5: Añadiendo archivos...
       io.emit('log_update', {
         ...logSlot,
         logLine: `
-${logPrefix} étape 3/5: Realizando commit...
+${logPrefix} étape 2/3: Realizando commit local...
 `,
       });
       await executeGitCommand('git', ['commit', '-m', message]);
@@ -1853,7 +1946,101 @@ ${logPrefix} étape 3/5: Realizando commit...
       io.emit('log_update', {
         ...logSlot,
         logLine: `
-${logPrefix} étape 4/5: Configurando URL remota para el push...
+--- ✅ Commit local realizado con éxito para la branch: ${branch} ---
+`,
+      });
+
+      // Notificar al frontend que hay commits pendientes de push
+      io.emit('commit_status_update', { 
+        branch, 
+        hasPendingCommits: true,
+        message: 'Hay commits locales que no han sido subidos al repositorio remoto.'
+      });
+
+    } catch (error) {
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `\n--- ❌ Error durante el commit local: ${error.message} ---\n`,
+      });
+    }
+  });
+
+  socket.on('push_changes', async (data) => {
+    const { branch } = data;
+    const logPrefix = `[Git Push: ${branch}]`;
+    const logSlot = { slotId: 'system' }; // Use system log panel
+
+    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada.\n`,
+      });
+      return;
+    }
+
+    if (!branch) {
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `${logPrefix} ❌ Error: No se especificó una branch.\n`,
+      });
+      return;
+    }
+
+    io.emit('log_update', {
+      ...logSlot,
+      logLine: `--- 🚀 Iniciando push para la branch: ${branch} ---\n`,
+    });
+
+    const sanitizedBranch = sanitize(branch);
+    const workspacePath = path.join(
+      process.env.PERSISTENT_WORKSPACES_ROOT,
+      sanitizedBranch,
+      'appium',
+    );
+
+    if (!fs.existsSync(workspacePath)) {
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `${logPrefix} ❌ Error: No se encontró el workspace local.\n`,
+      });
+      return;
+    }
+
+    const executeGitCommand = (command, args) => {
+      return new Promise((resolve, reject) => {
+        const gitProcess = spawn(command, args, { cwd: workspacePath });
+
+        gitProcess.stdout.on('data', (data) => {
+          io.emit('log_update', { ...logSlot, logLine: data.toString() });
+        });
+
+        gitProcess.stderr.on('data', (data) => {
+          io.emit('log_update', {
+            ...logSlot,
+            logLine: `[stderr] ${data.toString()}`,
+          });
+        });
+
+        gitProcess.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`El comando de Git falló con código ${code}`));
+          }
+        });
+
+        gitProcess.on('error', (err) => {
+          reject(err);
+        });
+      });
+    };
+
+    try {
+      const authenticatedUrl = getAuthenticatedUrl();
+
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `${logPrefix} étape 1/4: Configurando URL remota para el push...
 `,
       });
       await executeGitCommand('git', [
@@ -1865,8 +2052,14 @@ ${logPrefix} étape 4/5: Configurando URL remota para el push...
 
       io.emit('log_update', {
         ...logSlot,
-        logLine: `
-${logPrefix} étape 5/5: Empujando cambios al repositorio remoto...
+        logLine: `${logPrefix} étape 2/4: Sincronizando con el repositorio remoto (git pull)...
+`,
+      });
+      await executeGitCommand('git', ['pull', '--rebase', 'origin', branch]);
+
+      io.emit('log_update', {
+        ...logSlot,
+        logLine: `${logPrefix} étape 3/4: Empujando cambios al repositorio remoto...
 `,
       });
       await executeGitCommand('git', ['push', 'origin', branch]);
@@ -1874,13 +2067,21 @@ ${logPrefix} étape 5/5: Empujando cambios al repositorio remoto...
       io.emit('log_update', {
         ...logSlot,
         logLine: `
---- ✅ Proceso de commit finalizado con éxito para la branch: ${branch} ---
+--- ✅ Push finalizado con éxito para la branch: ${branch} ---
 `,
       });
+
+      // Notificar al frontend que no hay commits pendientes
+      io.emit('commit_status_update', { 
+        branch, 
+        hasPendingCommits: false,
+        message: 'Todos los commits locales han sido subidos al repositorio remoto.'
+      });
+
     } catch (error) {
       io.emit('log_update', {
         ...logSlot,
-        logLine: `\n--- ❌ Error durante el proceso de commit: ${error.message} ---\n`,
+        logLine: `\n--- ❌ Error durante el push: ${error.message} ---\n`,
       });
     }
   });

@@ -40,6 +40,29 @@ body {
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid var(--gray-200);
   position: relative;
+  transition: all 0.3s ease;
+}
+
+.header.has-pending-commits {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom: 3px solid var(--danger-color);
+}
+
+.header.has-uncommitted-changes {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-bottom: 3px solid var(--warning-color);
+}
+
+.header-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header-indicators {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .header h1 {
@@ -48,6 +71,112 @@ body {
   font-weight: 700;
   color: var(--gray-900);
   letter-spacing: -0.025em;
+  transition: color 0.3s ease;
+}
+
+.header.has-pending-commits h1 {
+  color: var(--danger-color);
+}
+
+.header.has-uncommitted-changes h1 {
+  color: var(--warning-color);
+}
+
+.commit-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Uncommitted changes indicator (yellow) */
+#uncommitted-changes-indicator {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--warning-color);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+/* Pending commits indicator (red) */
+#pending-commits-indicator {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--danger-color);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+}
+
+.commit-status-indicator.hidden {
+  display: none;
+}
+
+.commit-status-indicator .warning-icon {
+  font-size: 1.25rem;
+  animation: bounce 1s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.2));
+}
+
+.commit-status-indicator .status-text {
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.025em;
+}
+
+.commit-status-indicator .commit-btn,
+.commit-status-indicator .push-btn {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.commit-status-indicator .commit-btn {
+  background: var(--warning-color);
+  color: white;
+}
+
+.commit-status-indicator .commit-btn:hover {
+  background: var(--warning-hover);
+  transform: translateY(-1px);
+}
+
+.commit-status-indicator .push-btn:hover {
+  background: var(--danger-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.commit-status-indicator .push-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
 }
 
 .container {

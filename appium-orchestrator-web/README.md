@@ -91,11 +91,15 @@ El `server.js` es el punto central que recibe las solicitudes del frontend y ges
 4.  **Creación de Worker (`createWorker(...)`):**
     - Se genera un nuevo proceso `worker.js` utilizando `child_process.fork(path.join(__dirname, 'worker.js'))`.
     - Se crea un objeto `worker` en `workerPool` para rastrear su estado (`id`, `process`, `branch`, `client`, `apkIdentifier`, `apkSourceType`, `deviceSerial`, `status`, `currentJob`).
-    - **Mensaje Interno (`server.js` a `worker.js` - vía `process.send`):** Envía un mensaje `INIT` al proceso `worker.js` recién creado. Este mensaje contiene:
-      - `type: 'INIT'`
-      - `branch`, `client`
-      - `apkVersion` o `localApkPath` (dependiendo de `apkSourceType`)
-      - `deviceSerial` (si `DEVICE_SOURCE` es `local`)
+          - **Mensaje Interno (`server.js` a `worker.js` - vía `process.send`):** Envía un mensaje `INIT` al proceso `worker.js` recién creado. Este mensaje contiene:
+        - `type: 'INIT'`
+        - `branch`, `client`
+        - `apkIdentifier`: La versión del APK o el nombre del archivo local.
+        - `apkSourceType`: `'registry'` o `'local'`.
+        - `localApkPath`: (Opcional) Ruta completa al APK si la fuente es `local`.
+        - `workerWorkspacePath`: La ruta al directorio del workspace que debe usar el worker.
+        - `isPersistent`: Un booleano que indica si el workspace es persistente.
+        - `deviceSerial`: (Opcional) El serial del dispositivo a usar si `DEVICE_SOURCE` es `local`.
     - Se configuran listeners para los mensajes que el worker enviará de vuelta (`message`, `close`, `error`).
 
 5.  **Gestión de Workers y Jobs (Eventos de `worker.js` recibidos por `server.js`):**
@@ -104,7 +108,7 @@ El `server.js` es el punto central que recibe las solicitudes del frontend y ges
         - **Acción de `server.js`:** Marca el worker como `'ready'` y llama a `processQueue()` para intentar asignarle un job.
       - `READY_FOR_NEXT_JOB`: El worker ha terminado la ejecución de un job y está listo para el siguiente.
         - **Datos:** `{ exitCode: number, reportPath: string | null }`.
-        - **Acción de `server.s`:** Si el job era de grabación, detiene la grabación de Wiremock. Marca el worker como `'ready'`, maneja el reporte (`handleReport`), emite `job_finished` a frontend y llama a `processQueue()`.
+        - **Acción de `server.js`:** Si el job era de grabación, detiene la grabación de Wiremock. Marca el worker como `'ready'`, maneja el reporte (`handleReport`), emite `job_finished` a frontend y llama a `processQueue()`.
       - `UNIFIED_REPORT_READY`: El worker ha terminado de generar su reporte unificado (cuando se le pide terminar).
         - **Datos:** `{ reportPath: string | null }`.
         - **Acción de `server.s`:** Maneja el reporte y envía un mensaje `TERMINATE` al worker.
@@ -175,13 +179,17 @@ Cada proceso `worker.js` es una instancia independiente que gestiona la ejecuci�
       - **Ejecuta `scripts/release-emulator.sh`:**
         - `bash <path_to_scripts>/release-emulator.sh <emulatorId> <adbHost>`
         - Libera el emulador/dispositivo para que pueda ser utilizado por otro worker.
-      - Elimina el `workspaceDir` temporal.
+      - Elimina el `workspaceDir` si no es persistente.
       - El proceso `worker.js` finaliza.
     - **Mensaje Interno (`worker.js` a `server.js`):** El evento `close` del proceso `worker.js` es capturado por `server.js`.
 
 ### 3.4. Scripts Shell (`scripts/`)
 
 Estos scripts son ejecutados por el `worker.js` para realizar tareas específicas.
+
+- **`logger.sh`:**
+  - **Descripción:** Script de utilidad que no se ejecuta directamente, sino que es importado (`source`) por los demás scripts. Define funciones de logging con colores (`header`, `success`, `warn`, `error`, `debug`, `info`) para estandarizar la salida de todos los scripts.
+  - **Argumentos:** Ninguno.
 
 - **`setup-workspace.sh <workspaceDir> <branch>`:**
   - **Descripción:** Clona el repositorio de tests de Appium en `<workspaceDir>/appium` y ejecuta `yarn install` para instalar las dependencias.
@@ -198,7 +206,10 @@ Estos scripts son ejecutados por el `worker.js` para realizar tareas específica
     - `$1`: `workspaceDir` (directorio de trabajo del worker, usado para el log de Appium).
   - **Salida (stdout):** Imprime `APPIUM_PID=<pid>` y `APPIUM_PORT=<port>` para que `worker.js` los capture.
 - **`install-apk.sh <workspaceDir> <adbHost> <client> <apkVersion> <localApkPath>`:**
-  - **Descripción:** Instala la APK del cliente en el dispositivo especificado por `adbHost`.
+  - **Descripción:** Se encarga de instalar la APK en el dispositivo. La lógica para obtener la APK sigue un orden de prioridad:
+    1.  **Ruta Local (`localApkPath`):** Si se provee esta ruta, se usa directamente.
+    2.  **Versión de ORAS (`apkVersion`):** Si no hay ruta local, intenta descargar la versión especificada desde el registro de ORAS.
+    3.  **Variable de Entorno (`APK_PATH`):** Como última opción, usa la variable de entorno (considerado legacy).
   - **Argumentos:**
     - `$1`: `workspaceDir` (directorio de trabajo del worker).
     - `$2`: `adbHost` (host o serial del dispositivo).
@@ -228,14 +239,88 @@ Estos scripts son ejecutados por el `worker.js` para realizar tareas específica
     - `$1`: `emulatorId` (ID del emulador).
     - `$2`: `adbHost` (host o serial del dispositivo).
 - **`teardown-worker.sh`:**
-  - **Descripción:** Realiza cualquier limpieza final específica del worker. (Actualmente, la limpieza principal la hace `worker.js` directamente).
+  - **Descripción:** **(LEGACY)** Script que realizaba la limpieza del worker. Esta lógica ha sido movida directamente al `worker.js` en la función `cleanupAndExit()` para un control más robusto. El script se conserva por motivos históricos pero no es invocado por el `worker.js`.
   - **Argumentos:** Ninguno.
 - **`generate-report.sh <workspaceDir>`:**
   - **Descripción:** Genera un reporte unificado de Allure a partir de los resultados de los tests.
   - **Argumentos:**
     - `$1`: `workspaceDir` (directorio de trabajo del worker).
 
-## 4. Consideraciones de Paralelismo
+## 4. Gestión de Workspaces
+
+El sistema introduce el concepto de **Workspaces Persistentes** para optimizar la ejecución de tests, especialmente en un entorno de desarrollo local. Esta funcionalidad está controlada por la variable de entorno `PERSISTENT_WORKSPACES_ROOT`.
+
+### 4.1. Funcionamiento
+
+- **Sin Workspaces Persistentes (Comportamiento por Defecto):**
+  - Si `PERSISTENT_WORKSPACES_ROOT` no está definida, cada worker crea un **directorio de trabajo temporal** para cada ejecución.
+  - En este directorio temporal, se clona el repositorio de tests y se instalan las dependencias (`yarn install`).
+  - Al finalizar el test, el directorio temporal se elimina por completo.
+  - **Ventaja:** Aislamiento total entre ejecuciones.
+  - **Desventaja:** Muy lento, ya que la clonación y la instalación de dependencias ocurren en cada ejecución.
+
+- **Con Workspaces Persistentes:**
+  - Si se define `PERSISTENT_WORKSPACES_ROOT` (ej. `PERSISTENT_WORKSPACES_ROOT=/tmp/appium_workspaces`), el comportamiento cambia:
+    - El `server.js` crea un subdirectorio único para cada `branch` dentro de esta ruta (ej. `/tmp/appium_workspaces/develop/`).
+    - Cuando se necesita un worker para una `branch` específica, se le asigna este directorio persistente.
+    - **`setup-workspace.sh`:** El script es inteligente. Si el repositorio ya está clonado en el directorio, no lo vuelve a clonar. Si las dependencias ya están instaladas (verifica la existencia de un archivo `.yarn_ok`), no las vuelve a instalar.
+    - **`worker.js`:** Al finalizar, el worker **no elimina** el directorio del workspace, permitiendo su reutilización.
+  - **Ventaja:** Las ejecuciones subsecuentes para la misma `branch` son mucho más rápidas, ya que se saltan los pasos de clonado y `yarn install`. Ideal para desarrollo y debugging.
+  - **Desventaja:** Menor aislamiento. Cambios en una `branch` podrían (en teoría) afectar a otra si no se gestionan correctamente, aunque el sistema crea un workspace por `branch` para mitigar esto.
+
+### 4.2. Interfaz de Usuario (UI)
+
+La UI expone funcionalidades relacionadas con los workspaces persistentes:
+
+- **Botón "Preparar Workspace":**
+  - Ejecuta el script `setup-workspace.sh` para una `branch` sin necesidad de iniciar un test. Esto permite "pre-calentar" un workspace, clonando el repo e instalando las dependencias para que la primera ejecución de un test sea más rápida.
+- **Botón "Refrescar Cambios (Git)":**
+  - Permite ver los archivos que han sido modificados localmente en el workspace de la `branch` seleccionada.
+
+## 6. Sistema de Indicadores de Estado Git
+
+El sistema incluye un sistema de indicadores visuales en el header para mostrar el estado de los workspaces persistentes, permitiendo a los usuarios identificar rápidamente acciones necesarias.
+
+### 6.1. Indicadores Duplicados
+
+El header puede mostrar hasta dos indicadores simultáneamente, cada uno con su propio color y acción:
+
+- **Indicador Amarillo (📝):** Cambios sin commit
+  - Muestra: "X archivo(s) modificado(s) sin commit"
+  - Acción: Botón "Commit" que abre el modal de commit
+  - Se activa cuando hay archivos modificados en el directorio `test/features/`
+  - El header adopta un fondo amarillo transparente
+
+- **Indicador Rojo (⬆️):** Commits pendientes de push
+  - Muestra: "X commit(s) pendiente(s) de push"
+  - Acción: Botón "Push" para enviar commits al remoto
+  - Se activa cuando hay commits locales que no han sido empujados
+  - El header adopta un fondo rojo transparente
+
+### 6.2. Comportamiento Visual
+
+- **Normal:** Header blanco sin indicadores (sin cambios)
+- **Amarillo:** Header amarillo con indicador de cambios sin commit
+- **Rojo:** Header rojo con indicador de commits pendientes (tiene prioridad sobre amarillo)
+- **Ambos:** Header rojo (prioridad) con ambos indicadores visibles
+
+### 6.3. Actualización en Tiempo Real
+
+Los indicadores se actualizan automáticamente en los siguientes casos:
+- Al cambiar de branch
+- Al hacer clic en "Buscar Features"
+- Después de guardar un archivo en el editor
+- Después de realizar operaciones Git (commit/push)
+- Via eventos Socket.IO para actualizaciones en tiempo real
+
+### 6.4. Precisión en la Detección
+
+El sistema limita la verificación de cambios al directorio `test/features/` para:
+- Evitar falsos positivos por cambios en archivos de configuración
+- Enfocarse únicamente en los archivos de features relevantes
+- Proporcionar conteos precisos de archivos modificados
+
+## 7. Consideraciones de Paralelismo
 
 El sistema está diseñado para soportar múltiples workers en paralelo, limitados por la variable `maxWorkers` en `server.js`.
 
@@ -247,7 +332,7 @@ El sistema está diseñado para soportar múltiples workers en paralelo, limitad
 
 - **Mejora para Dispositivos Locales:**
   - Actualmente, para dispositivos locales, el `server.js` espera que el `job` ya contenga el `deviceSerial` del dispositivo al que se debe asignar.
-  - Para un paralelismo más robusto con múltiples dispositivos locales, `server.s` debería:
+  - Para un paralelismo más robusto con múltiples dispositivos locales, `server.js` debería:
     1.  **Descubrir y mantener un pool de dispositivos locales disponibles** (utilizando `adb devices`).
     2.  **Asignar automáticamente un dispositivo disponible** a un nuevo worker cuando se encola un job para un dispositivo local y hay slots disponibles.
     3.  **Liberar el dispositivo de vuelta al pool** cuando el worker asociado termina o se vuelve inactivo.
