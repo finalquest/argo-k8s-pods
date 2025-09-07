@@ -169,7 +169,9 @@ export function updateCommitButtonState() {
   const selectedModified = document.querySelectorAll(
     'li.modified .feature-checkbox:checked',
   ).length;
+
   commitBtn.disabled = selectedModified === 0;
+  commitBtn.classList.toggle('hidden', selectedModified === 0);
 }
 
 export function toggleSelectAll(event) {
@@ -244,7 +246,8 @@ export function displayPrepareWorkspaceButton(isEnabled) {
   const button = document.getElementById('prepare-workspace-btn');
   if (button) {
     button.style.display = 'inline-flex';
-    button.title = 'Clona el repo y corre yarn install para la branch seleccionada, sin ejecutar un test.';
+    button.title =
+      'Clona el repo y corre yarn install para la branch seleccionada, sin ejecutar un test.';
   }
 }
 
@@ -254,7 +257,8 @@ export function displayGitControls(isEnabled) {
   const button = document.getElementById('refresh-git-status-btn');
   if (button) {
     button.style.display = 'inline-flex';
-    button.title = 'Comprueba los cambios locales en los features de esta branch contra Git.';
+    button.title =
+      'Comprueba los cambios locales en los features de esta branch contra Git.';
   }
 }
 
@@ -322,7 +326,9 @@ export function displayFeatureFilter(isEnabled) {
 export function filterFeatureList() {
   const statusFilterElement = document.getElementById('feature-filter-select');
   const filterValue = statusFilterElement ? statusFilterElement.value : 'all';
-  const textFilter = document.getElementById('features-filter').value.toLowerCase();
+  const textFilter = document
+    .getElementById('features-filter')
+    .value.toLowerCase();
   const featuresList = document.getElementById('features-list');
   const featureItems = featuresList.getElementsByTagName('li');
 
@@ -361,29 +367,36 @@ export function filterFeatureListByText() {
 }
 
 export function updateFeaturesWithGitStatus(modifiedFeatures) {
-  const modifiedSet = new Set(
-    modifiedFeatures.map((f) => {
-      const parts = f.split('/');
-      return parts[parts.length - 1];
-    }),
-  );
-
+  // The modifiedFeatures from server are full paths, e.g., test/features/nbch/feature/modulos/folder/file.feature
+  // The featureName in the dataset is relative to modulos, e.g., folder/file
+  const modifiedSet = new Set(modifiedFeatures);
   const featureItems = document.querySelectorAll('#features-list .file');
 
   featureItems.forEach((item) => {
-    const checkbox = item.querySelector('.feature-checkbox');
-    if (!checkbox) return;
+    const featureName = item.dataset.featureName;
+    if (!featureName) return;
 
-    const featureName = checkbox.dataset.featureName + '.feature';
+    // We can't know the full client/branch path here easily,
+    // so we check if any path in the modified set *ends with* our feature path.
+    const featurePathSuffix = `${featureName}.feature`;
 
-    item.classList.remove('modified');
-    if (modifiedSet.has(featureName)) {
+    let isModified = false;
+    for (const modifiedFile of modifiedSet) {
+      if (modifiedFile.endsWith(featurePathSuffix)) {
+        isModified = true;
+        break;
+      }
+    }
+
+    if (isModified) {
       item.classList.add('modified');
+    } else {
+      item.classList.remove('modified');
     }
   });
 }
 
-export function addFeatureControls(li, featureName, config) {
+export function addFeatureControls(li, featureName) {
   const buttonsDiv = document.createElement('div');
   buttonsDiv.className = 'feature-actions';
 
@@ -448,25 +461,6 @@ export function renderFeatureTree(parentElement, nodes, config) {
 
 let ideCodeMirror = null; // For the new IDE view
 
-
-
-export function displayCommitButton(isEnabled) {
-  if (!isEnabled) return;
-
-  const selectAllContainer = document.querySelector('.features-header div');
-  if (!selectAllContainer) return;
-
-  const button = document.createElement('button');
-  button.id = 'commit-changes-btn';
-  button.textContent = 'Hacer Commit de Cambios';
-  button.disabled = true; // Disabled by default
-  button.style.backgroundColor = 'var(--primary-color)';
-  button.style.borderColor = 'var(--primary-color)';
-  button.style.marginLeft = '2em';
-
-  selectAllContainer.appendChild(button);
-}
-
 export function createCommitModal() {
   const modalHTML = `
     <div id="commit-modal" class="modal">
@@ -487,7 +481,7 @@ export function createCommitModal() {
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-export function initIdeView(onSaveCallback) {
+export function initIdeView({ onSave, onCommit, onRun }) {
   // Initialize Split.js
   Split(['#feature-tree-panel', '#editor-panel'], {
     sizes: [30, 70],
@@ -500,7 +494,9 @@ export function initIdeView(onSaveCallback) {
   const editorPanel = document.getElementById('editor-panel');
   editorPanel.innerHTML = `
     <div class="editor-controls">
-      <button id="save-feature-ide-btn" class="execute-btn" style="display: none;" disabled>Guardar Cambios</button>
+      <button id="ide-run-btn" class="execute-btn" style="display: none;">Ejecutar</button>
+      <button id="ide-commit-btn" class="commit-btn" style="display: none;">Hacer Commit</button>
+      <button id="ide-save-btn" class="secondary-btn" style="display: none;" disabled>Guardar Cambios</button>
     </div>
     <div class="codemirror-wrapper"></div>
   `;
@@ -515,31 +511,50 @@ export function initIdeView(onSaveCallback) {
   });
   ideCodeMirror.setSize('100%', '100%');
 
-  // Enable save button on change
+  // --- Attach Listeners ---
   ideCodeMirror.on('change', () => {
-    const saveBtn = document.getElementById('save-feature-ide-btn');
-    if (saveBtn) {
-      saveBtn.disabled = false;
-    }
+    const saveBtn = document.getElementById('ide-save-btn');
+    if (saveBtn) saveBtn.disabled = false;
   });
 
-  // Attach the save callback to the button
-  const saveBtn = document.getElementById('save-feature-ide-btn');
-  if (saveBtn && typeof onSaveCallback === 'function') {
-    saveBtn.addEventListener('click', onSaveCallback);
+  const saveBtn = document.getElementById('ide-save-btn');
+  if (saveBtn && typeof onSave === 'function') {
+    saveBtn.addEventListener('click', onSave);
+  }
+
+  const commitBtn = document.getElementById('ide-commit-btn');
+  if (commitBtn && typeof onCommit === 'function') {
+    commitBtn.addEventListener('click', onCommit);
+  }
+
+  const runBtn = document.getElementById('ide-run-btn');
+  if (runBtn && typeof onRun === 'function') {
+    runBtn.addEventListener('click', onRun);
   }
 }
 
-export function setIdeEditorContent(content, isReadOnly = false) {
-  const saveBtn = document.getElementById('save-feature-ide-btn');
+export function setIdeEditorContent({ content, isReadOnly, isModified }) {
+  const saveBtn = document.getElementById('ide-save-btn');
+  const commitBtn = document.getElementById('ide-commit-btn');
+  const runBtn = document.getElementById('ide-run-btn');
+
   if (ideCodeMirror) {
-    ideCodeMirror.setValue(content);
+    ideCodeMirror.setValue(
+      content || '// Selecciona un archivo para ver su contenido.',
+    );
     ideCodeMirror.setOption('readOnly', isReadOnly);
-    ideCodeMirror.clearHistory(); // Clear history to ensure clean state
+    ideCodeMirror.clearHistory();
   }
+
   if (saveBtn) {
     saveBtn.style.display = isReadOnly ? 'none' : 'inline-block';
-    saveBtn.disabled = true; // Always disable on new content load
+    saveBtn.disabled = true;
+  }
+  if (runBtn) {
+    runBtn.style.display = isReadOnly ? 'none' : 'inline-block';
+  }
+  if (commitBtn) {
+    commitBtn.style.display = isModified ? 'inline-block' : 'none';
   }
 }
 
@@ -553,5 +568,3 @@ export function setSaveButtonState(enabled) {
     saveBtn.disabled = !enabled;
   }
 }
-
-

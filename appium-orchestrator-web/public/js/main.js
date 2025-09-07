@@ -29,7 +29,6 @@ import {
   displayFeatureFilter,
   filterFeatureList,
   filterFeatureListByText,
-  displayCommitButton,
   createCommitModal,
   initIdeView,
   setIdeEditorContent,
@@ -66,7 +65,7 @@ async function checkAuthStatus() {
 async function handleSave() {
   if (!activeFeature) {
     alert('No hay ningún archivo activo para guardar.');
-    return;
+    return false; // Return false on failure
   }
   const content = getIdeEditorContent();
   const { branch, client, featureName } = activeFeature;
@@ -83,23 +82,62 @@ async function handleSave() {
     setSaveButtonState(false); // Disable button after save
     // Auto-refresh git status to show the change
     document.getElementById('refresh-git-status-btn')?.click();
+    return true; // Return true on success
+  }
+  return false; // Return false on failure
+}
+
+async function handleIdeRun(socket) {
+  if (!activeFeature) {
+    alert('No hay ningún archivo activo para ejecutar.');
+    return;
+  }
+
+  // First, save any pending changes.
+  const saveSuccess = await handleSave();
+
+  // Only run if save was successful or not needed
+  if (saveSuccess || getIdeEditorContent() !== null) {
+    const { branch, client, featureName } = activeFeature;
+    runTest(socket, branch, client, featureName, false);
   }
 }
 
+function handleIdeCommit() {
+  if (!activeFeature) {
+    alert('No hay ningún archivo activo para commitear.');
+    return;
+  }
+
+  const modal = document.getElementById('commit-modal');
+  const filesList = document.getElementById('commit-files-list');
+  filesList.innerHTML = '';
+
+  const { featureName } = activeFeature;
+  const li = document.createElement('li');
+  li.textContent = featureName;
+  filesList.appendChild(li);
+
+  modal.style.display = 'block';
+}
+
 function initializeApp() {
-  // eslint-disable-next-line no-undef
   const socket = io();
   initializeSocketListeners(socket);
   initializeUiEventListeners(socket);
   initializeAppControls(socket);
   initializeWiremockTab();
-  initIdeView(handleSave); // Initialize the IDE view
+  initIdeView({
+    onSave: handleSave,
+    onCommit: handleIdeCommit,
+    onRun: () => handleIdeRun(socket), // Pass socket to the handler
+  });
 
   loadBranches();
   loadHistoryBranches();
   loadHistory();
   loadLocalDevices();
-  
+
   // Auto-fetch APK versions on page load
   fetchApkVersions();
 }
@@ -109,7 +147,6 @@ async function initializeAppControls(socket) {
   displayPrepareWorkspaceButton(config.persistentWorkspacesEnabled);
   displayGitControls(config.persistentWorkspacesEnabled);
   displayFeatureFilter(config.persistentWorkspacesEnabled);
-  displayCommitButton(config.persistentWorkspacesEnabled);
   createCommitModal();
 
   // --- Event Listeners for new controls ---
@@ -145,32 +182,6 @@ async function initializeAppControls(socket) {
     featuresFilterInput.addEventListener('input', filterFeatureListByText);
   }
 
-  const commitBtn = document.getElementById('commit-changes-btn');
-  if (commitBtn) {
-    commitBtn.addEventListener('click', () => {
-      const modal = document.getElementById('commit-modal');
-      const filesList = document.getElementById('commit-files-list');
-      filesList.innerHTML = '';
-
-      const selectedFiles = document.querySelectorAll(
-        'li.modified .feature-checkbox:checked',
-      );
-      if (selectedFiles.length === 0) {
-        alert('No hay features modificados seleccionados para el commit.');
-        return;
-      }
-
-      selectedFiles.forEach((cb) => {
-        const featureName = cb.dataset.featureName;
-        const li = document.createElement('li');
-        li.textContent = featureName;
-        filesList.appendChild(li);
-      });
-
-      modal.style.display = 'block';
-    });
-  }
-
   // --- Modal Listeners ---
   const commitModal = document.getElementById('commit-modal');
   const closeCommitModalBtn = document.getElementById('close-commit-modal');
@@ -187,11 +198,13 @@ async function initializeAppControls(socket) {
 
       const branch = document.getElementById('branch-select').value;
       const client = document.getElementById('client-select').value;
-      const files = Array.from(
-        document.querySelectorAll('li.modified .feature-checkbox:checked'),
-      ).map((cb) => {
-        return `test/features/${client}/feature/modulos/${cb.dataset.featureName}.feature`;
-      });
+      if (!activeFeature) {
+        alert('Error: No hay un feature activo para hacer commit.');
+        return;
+      }
+      const files = [
+        `test/features/${client}/feature/modulos/${activeFeature.featureName}.feature`,
+      ];
 
       commitChanges(socket, { branch, files, message });
       commitModal.style.display = 'none';
@@ -252,7 +265,9 @@ function initializeUiEventListeners(socket) {
   const historyBranchFilter = document.getElementById('history-branch-filter');
   const featuresList = document.getElementById('features-list');
   const refreshDevicesBtn = document.getElementById('refresh-devices-btn');
-  const refreshApkVersionsBtn = document.getElementById('refresh-apk-versions-btn');
+  const refreshApkVersionsBtn = document.getElementById(
+    'refresh-apk-versions-btn',
+  );
 
   fetchBtn.addEventListener('click', () => fetchFeatures());
   runSelectedBtn.addEventListener('click', () => runSelectedTests(socket));
@@ -304,13 +319,16 @@ function initializeUiEventListeners(socket) {
       );
 
       if (content !== null) {
-        setIdeEditorContent(content, false); // Make editor writable
+        const isModified =
+          fileItem.parentElement.classList.contains('modified');
+        setIdeEditorContent({ content, isReadOnly: false, isModified });
         activeFeature = { branch, client, featureName }; // Set active feature
       } else {
-        setIdeEditorContent(
-          '// No se pudo cargar el contenido del archivo.',
-          true,
-        );
+        setIdeEditorContent({
+          content: '// No se pudo cargar el contenido del archivo.',
+          isReadOnly: true,
+          isModified: false,
+        });
       }
       return;
     }
