@@ -461,6 +461,9 @@ export function renderFeatureTree(parentElement, nodes, config) {
 
 let ideCodeMirror = null; // For the new IDE view
 
+// Expose CodeMirror globally for progress indicators
+window.ideCodeMirror = null;
+
 export function createCommitModal() {
   const modalHTML = `
     <div id="commit-modal" class="modal">
@@ -508,8 +511,12 @@ export function initIdeView({ onSave, onCommit, onRun }) {
     mode: 'gherkin',
     theme: 'material-darker',
     readOnly: true,
+    gutters: ['CodeMirror-linenumbers', 'progress-gutter'],
   });
   ideCodeMirror.setSize('100%', '100%');
+  
+  // Update global reference for progress indicators
+  window.ideCodeMirror = ideCodeMirror;
 
   // --- Attach Listeners ---
   ideCodeMirror.on('change', () => {

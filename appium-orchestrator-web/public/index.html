@@ -13,8 +13,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css"
     />
-        <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/ide.css">
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ide.css" />
   </head>
   <body>
     <div id="auth-overlay">
@@ -29,12 +29,18 @@
       <div class="header-title-section">
         <h1 id="main-title">Appium Orchestrator Web</h1>
         <div class="header-indicators">
-          <div id="uncommitted-changes-indicator" class="commit-status-indicator hidden">
+          <div
+            id="uncommitted-changes-indicator"
+            class="commit-status-indicator hidden"
+          >
             <span class="warning-icon">📝</span>
             <span class="status-text">Archivos modificados sin commit</span>
             <button id="header-commit-btn" class="commit-btn">Commit</button>
           </div>
-          <div id="pending-commits-indicator" class="commit-status-indicator hidden">
+          <div
+            id="pending-commits-indicator"
+            class="commit-status-indicator hidden"
+          >
             <span class="warning-icon">⬆️</span>
             <span class="status-text">Commits pendientes de push</span>
             <button id="header-push-btn" class="push-btn">Push</button>
@@ -48,11 +54,7 @@
             <div id="user-name"></div>
             <div id="user-email"></div>
           </div>
-          <img
-            id="user-photo"
-            src="/placeholder.svg"
-            alt="User photo"
-          />
+          <img id="user-photo" src="/placeholder.svg" alt="User photo" />
           <a href="/auth/logout">Logout</a>
         </div>
       </div>
@@ -67,9 +69,7 @@
           <button class="tab-btn" data-tab="results">Resultados</button>
           <button class="tab-btn" data-tab="wiremock">Wiremock</button>
         </div>
-        <button id="stop-all-btn" class="danger-btn">
-          Parar Todo 🛑
-        </button>
+        <button id="stop-all-btn" class="danger-btn">Parar Todo 🛑</button>
       </div>
 
       <!-- Setup Tab -->
@@ -118,7 +118,11 @@
                   </button>
                 </div>
               </div>
-              <div class="config-item" id="device-selector-container" class="hidden">
+              <div
+                class="config-item"
+                id="device-selector-container"
+                class="hidden"
+              >
                 <label for="device-select">Device:</label>
                 <div class="input-with-button">
                   <select id="device-select"></select>
@@ -162,7 +166,6 @@
           </div>
         </div>
 
-
         <!-- Search and Execution Card -->
         <div class="config-card">
           <div class="card-header">
@@ -172,13 +175,12 @@
             </button>
           </div>
           <div class="card-content">
-            
             <div class="search-controls">
               <div class="search-input-group">
                 <label for="features-filter">Buscar:</label>
-                <input 
-                  type="text" 
-                  id="features-filter" 
+                <input
+                  type="text"
+                  id="features-filter"
                   placeholder="Filtrar por feature completa..."
                   class="features-filter-input"
                 />

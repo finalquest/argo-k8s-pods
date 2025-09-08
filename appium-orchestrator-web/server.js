@@ -654,7 +654,7 @@ app.get('/api/commit-status/:branch', async (req, res) => {
   try {
     // Check if there are commits that haven't been pushed
     const command = `git -C ${workspacePath} log --oneline origin/${branch}..HEAD`;
-    exec(command, (error, stdout, stderr) => {
+    exec(command, (error, stdout) => {
       if (error) {
         // If the branch doesn't exist remotely or other error, assume no pending commits
         return res.json({ hasPendingCommits: false });
@@ -662,17 +662,20 @@ app.get('/api/commit-status/:branch', async (req, res) => {
 
       const hasPendingCommits = stdout.trim().length > 0;
       const commitCount = stdout.trim().split('\n').filter(Boolean).length;
-      
-      res.json({ 
-        hasPendingCommits, 
+
+      res.json({
+        hasPendingCommits,
         commitCount,
-        message: hasPendingCommits 
-          ? `Hay ${commitCount} commit(s) local(es) pendiente(s) de push` 
-          : 'No hay commits pendientes de push'
+        message: hasPendingCommits
+          ? `Hay ${commitCount} commit(s) local(es) pendiente(s) de push`
+          : 'No hay commits pendientes de push',
       });
     });
   } catch (error) {
-    console.error(`Error al verificar estado de commits para la branch ${branch}:`, error);
+    console.error(
+      `Error al verificar estado de commits para la branch ${branch}:`,
+      error,
+    );
     res.status(500).json({
       error: 'Error al verificar el estado de commits.',
       details: error.message,
@@ -702,7 +705,7 @@ app.get('/api/workspace-changes/:branch', async (req, res) => {
   try {
     // Check if there are uncommitted changes only in the features path
     const command = `git -C ${workspacePath} status --porcelain test/features/`;
-    exec(command, (error, stdout, stderr) => {
+    exec(command, (error, stdout) => {
       if (error) {
         // If there's an error, assume no uncommitted changes
         return res.json({ hasUncommittedChanges: false });
@@ -711,23 +714,36 @@ app.get('/api/workspace-changes/:branch', async (req, res) => {
       const hasUncommittedChanges = stdout.trim().length > 0;
       const changes = stdout.trim().split('\n').filter(Boolean);
       const modifiedFiles = changes.length;
-      
+
       // Count different types of changes
-      const stagedChanges = changes.filter(line => line.startsWith('M ') || line.startsWith('A ') || line.startsWith('D ')).length;
-      const unstagedChanges = changes.filter(line => line.startsWith(' M') || line.startsWith(' D') || line.startsWith('??')).length;
-      
-      res.json({ 
-        hasUncommittedChanges, 
+      const stagedChanges = changes.filter(
+        (line) =>
+          line.startsWith('M ') ||
+          line.startsWith('A ') ||
+          line.startsWith('D '),
+      ).length;
+      const unstagedChanges = changes.filter(
+        (line) =>
+          line.startsWith(' M') ||
+          line.startsWith(' D') ||
+          line.startsWith('??'),
+      ).length;
+
+      res.json({
+        hasUncommittedChanges,
         modifiedFiles,
         stagedChanges,
         unstagedChanges,
-        message: hasUncommittedChanges 
-          ? `Hay ${modifiedFiles} archivo(s) con cambios sin commit` 
-          : 'No hay cambios sin commit'
+        message: hasUncommittedChanges
+          ? `Hay ${modifiedFiles} archivo(s) con cambios sin commit`
+          : 'No hay cambios sin commit',
       });
     });
   } catch (error) {
-    console.error(`Error al verificar cambios sin commit para la branch ${branch}:`, error);
+    console.error(
+      `Error al verificar cambios sin commit para la branch ${branch}:`,
+      error,
+    );
     res.status(500).json({
       error: 'Error al verificar cambios sin commit.',
       details: error.message,
@@ -1512,6 +1528,17 @@ function createWorker(
       case 'LOG':
         io.emit('log_update', { slotId, logLine: message.data });
         break;
+
+      case 'PROGRESS_UPDATE':
+        // Emitir evento de progreso al frontend con información del worker y job
+        io.emit('progress_update', {
+          slotId,
+          jobId: currentJob ? currentJob.id : null,
+          event: message.event,
+          data: message.data,
+          timestamp: message.timestamp,
+        });
+        break;
     }
   });
 
@@ -1951,12 +1978,12 @@ ${logPrefix} étape 2/3: Realizando commit local...
       });
 
       // Notificar al frontend que hay commits pendientes de push
-      io.emit('commit_status_update', { 
-        branch, 
+      io.emit('commit_status_update', {
+        branch,
         hasPendingCommits: true,
-        message: 'Hay commits locales que no han sido subidos al repositorio remoto.'
+        message:
+          'Hay commits locales que no han sido subidos al repositorio remoto.',
       });
-
     } catch (error) {
       io.emit('log_update', {
         ...logSlot,
@@ -2072,12 +2099,12 @@ ${logPrefix} étape 2/3: Realizando commit local...
       });
 
       // Notificar al frontend que no hay commits pendientes
-      io.emit('commit_status_update', { 
-        branch, 
+      io.emit('commit_status_update', {
+        branch,
         hasPendingCommits: false,
-        message: 'Todos los commits locales han sido subidos al repositorio remoto.'
+        message:
+          'Todos los commits locales han sido subidos al repositorio remoto.',
       });
-
     } catch (error) {
       io.emit('log_update', {
         ...logSlot,

@@ -90,16 +90,15 @@ El `server.js` es el punto central que recibe las solicitudes del frontend y ges
 
 4.  **Creación de Worker (`createWorker(...)`):**
     - Se genera un nuevo proceso `worker.js` utilizando `child_process.fork(path.join(__dirname, 'worker.js'))`.
-    - Se crea un objeto `worker` en `workerPool` para rastrear su estado (`id`, `process`, `branch`, `client`, `apkIdentifier`, `apkSourceType`, `deviceSerial`, `status`, `currentJob`).
-          - **Mensaje Interno (`server.js` a `worker.js` - vía `process.send`):** Envía un mensaje `INIT` al proceso `worker.js` recién creado. Este mensaje contiene:
-        - `type: 'INIT'`
-        - `branch`, `client`
-        - `apkIdentifier`: La versión del APK o el nombre del archivo local.
-        - `apkSourceType`: `'registry'` o `'local'`.
-        - `localApkPath`: (Opcional) Ruta completa al APK si la fuente es `local`.
-        - `workerWorkspacePath`: La ruta al directorio del workspace que debe usar el worker.
-        - `isPersistent`: Un booleano que indica si el workspace es persistente.
-        - `deviceSerial`: (Opcional) El serial del dispositivo a usar si `DEVICE_SOURCE` es `local`.
+    - Se crea un objeto `worker` en `workerPool` para rastrear su estado (`id`, `process`, `branch`, `client`, `apkIdentifier`, `apkSourceType`, `deviceSerial`, `status`, `currentJob`). - **Mensaje Interno (`server.js` a `worker.js` - vía `process.send`):** Envía un mensaje `INIT` al proceso `worker.js` recién creado. Este mensaje contiene:
+      - `type: 'INIT'`
+      - `branch`, `client`
+      - `apkIdentifier`: La versión del APK o el nombre del archivo local.
+      - `apkSourceType`: `'registry'` o `'local'`.
+      - `localApkPath`: (Opcional) Ruta completa al APK si la fuente es `local`.
+      - `workerWorkspacePath`: La ruta al directorio del workspace que debe usar el worker.
+      - `isPersistent`: Un booleano que indica si el workspace es persistente.
+      - `deviceSerial`: (Opcional) El serial del dispositivo a usar si `DEVICE_SOURCE` es `local`.
     - Se configuran listeners para los mensajes que el worker enviará de vuelta (`message`, `close`, `error`).
 
 5.  **Gestión de Workers y Jobs (Eventos de `worker.js` recibidos por `server.js`):**
@@ -307,6 +306,7 @@ El header puede mostrar hasta dos indicadores simultáneamente, cada uno con su 
 ### 6.3. Actualización en Tiempo Real
 
 Los indicadores se actualizan automáticamente en los siguientes casos:
+
 - Al cambiar de branch
 - Al hacer clic en "Buscar Features"
 - Después de guardar un archivo en el editor
@@ -316,6 +316,7 @@ Los indicadores se actualizan automáticamente en los siguientes casos:
 ### 6.4. Precisión en la Detección
 
 El sistema limita la verificación de cambios al directorio `test/features/` para:
+
 - Evitar falsos positivos por cambios en archivos de configuración
 - Enfocarse únicamente en los archivos de features relevantes
 - Proporcionar conteos precisos de archivos modificados

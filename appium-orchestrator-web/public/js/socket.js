@@ -44,7 +44,6 @@ export function runTest(
   jobPayload.persistentWorkspace = persistentWorkspaceCheckbox.checked;
 
   socket.emit('run_test', jobPayload);
-  switchTab('workers');
 }
 
 export function runSelectedTests(socket) {
@@ -100,7 +99,6 @@ export function runSelectedTests(socket) {
     usePreexistingMapping,
     persistentWorkspace,
   }); // Pass persistentWorkspace
-  switchTab('workers');
 }
 
 export function initializeSocketListeners(socket) {
@@ -121,6 +119,13 @@ export function initializeSocketListeners(socket) {
 
   socket.on('job_started', (data) => {
     runningJobs.set(data.slotId, data);
+
+    // Set this job as the current visible job in the progress indicator manager
+    if (window.progressIndicatorManager && data.jobId) {
+      const jobIdStr = data.jobId.toString();
+      window.progressIndicatorManager.setCurrentJob(jobIdStr);
+    }
+
     const panel = document.getElementById(`log-panel-${data.slotId}`);
     if (panel) {
       panel.querySelector('.panel-content').innerHTML = '';
@@ -146,9 +151,29 @@ export function initializeSocketListeners(socket) {
     }
   });
 
+  socket.on('progress_update', (data) => {
+    // Manejar eventos de progreso del worker
+    console.log('Progress update:', data);
+
+    // Si hay un indicador de progreso global, manejar el evento
+    if (window.progressIndicatorManager) {
+      window.progressIndicatorManager.handleProgressUpdate(data);
+    }
+  });
+
   socket.on('job_finished', (data) => {
     const jobDetails = runningJobs.get(data.slotId);
     if (!jobDetails) return;
+
+    // Clear the current job in progress indicator manager if this was the current job
+    if (window.progressIndicatorManager && data.jobId) {
+      const currentJobId = window.progressIndicatorManager.currentJobId;
+      if (currentJobId === data.jobId.toString()) {
+        window.progressIndicatorManager.highlightEditorBorder(false);
+        window.progressIndicatorManager.clearEditorDecorations();
+        window.progressIndicatorManager.updateRunButtonState(false);
+      }
+    }
 
     const panel = document.getElementById(`log-panel-${data.slotId}`);
     if (panel) {
@@ -189,16 +214,22 @@ export function initializeSocketListeners(socket) {
     if (data.branch === selectedBranch) {
       // Also check for workspace changes to determine the correct state
       const workspaceStatus = await getWorkspaceChanges(data.branch);
-      
+
       const header = document.getElementById('main-header');
-      const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
-      const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
-      const uncommittedStatusText = uncommittedIndicator.querySelector('.status-text');
-      const pendingStatusText = pendingCommitsIndicator.querySelector('.status-text');
-      
+      const uncommittedIndicator = document.getElementById(
+        'uncommitted-changes-indicator',
+      );
+      const pendingCommitsIndicator = document.getElementById(
+        'pending-commits-indicator',
+      );
+      const uncommittedStatusText =
+        uncommittedIndicator.querySelector('.status-text');
+      const pendingStatusText =
+        pendingCommitsIndicator.querySelector('.status-text');
+
       // Clear all header status classes first
       header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
-      
+
       // Handle uncommitted changes (yellow indicator)
       if (workspaceStatus.hasChanges) {
         header.classList.add('has-uncommitted-changes');
@@ -208,20 +239,24 @@ export function initializeSocketListeners(socket) {
       } else {
         uncommittedIndicator.classList.add('hidden');
       }
-      
+
       // Handle pending commits (red indicator)
       if (data.hasPendingCommits) {
         header.classList.add('has-pending-commits');
         header.classList.remove('has-uncommitted-changes');
         pendingCommitsIndicator.classList.remove('hidden');
-        pendingStatusText.textContent = data.message || 'Commits pendientes de push';
+        pendingStatusText.textContent =
+          data.message || 'Commits pendientes de push';
       } else {
         pendingCommitsIndicator.classList.add('hidden');
       }
-      
+
       // If no indicators are showing, ensure header is clean
       if (!workspaceStatus.hasChanges && !data.hasPendingCommits) {
-        header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+        header.classList.remove(
+          'has-pending-commits',
+          'has-uncommitted-changes',
+        );
       }
     }
   });
@@ -244,7 +279,6 @@ export function prepareWorkspace(socket, branch) {
     return;
   }
   socket.emit('prepare_workspace', { branch });
-  switchTab('workers'); // Cambiar a la pestaña de logs para ver el progreso
 }
 
 export function commitChanges(socket, data) {
@@ -253,7 +287,6 @@ export function commitChanges(socket, data) {
     return;
   }
   socket.emit('commit_changes', data);
-  switchTab('workers'); // Switch to log view to see progress
 }
 
 export function pushChanges(socket, branch) {
@@ -262,5 +295,4 @@ export function pushChanges(socket, branch) {
     return;
   }
   socket.emit('push_changes', { branch });
-  switchTab('workers'); // Switch to log view to see progress
 }
