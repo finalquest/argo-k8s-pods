@@ -63,6 +63,62 @@ config.hostname = 'localhost';
 config.port = ${APPIUM_PORT};
 config.path = '/wd/hub';
 
+// Reducir nivel de log para ver menos verbosidad de webdriver pero mantener algo de info
+config.logLevel = 'warn';
+config.logLevels = {
+  webdriver: 'warn',
+  '@wdio/cli': 'warn',
+  '@wdio/utils': 'warn',
+  '@wdio/config': 'warn'
+};
+
+// Usar reporters que muestren información en tiempo real
+config.reporters = ['spec'];
+
+// Modificar los formatos de cucumber para mostrar steps en tiempo real
+config.cucumberOpts = {
+  require: ['./test/steps-definitions/*.js'],
+  backtrace: true,
+  requireModule: [],
+  dryRun: false,
+  failFast: false,
+  // Usar format que muestra steps en tiempo real
+  format: ['@cucumber/pretty-formatter'],
+  colors: true,
+  snippets: true,
+  source: true,
+  profile: [],
+  strict: false,
+  tagExpression: '',
+  timeout: 120000,
+  ignoreUndefinedDefinitions: true
+};
+
+// Logs de escenario y steps en vivo (sin TS ni ?. ni ??)
+config.beforeScenario = function (world) {
+  var name = (world && world.pickle && world.pickle.name) ? world.pickle.name : 'Scenario';
+  console.log('\n📋 Scenario: ' + name);
+};
+
+config.beforeStep = function (step /*, scenario */) {
+  var k = (step && step.keyword) ? String(step.keyword).trim() : '';
+  var t = (step && step.text) ? step.text : '';
+  console.log('➡️  ' + k + ' ' + t);
+};
+
+config.afterStep = function (step, _scenario, result) {
+  var t = (step && step.text) ? step.text : '';
+  if (result && result.passed) {
+    var dur = (typeof result.duration === 'number') ? (' (' + result.duration + ' ms)') : '';
+    console.log('✅ Ok' + dur + ': ' + t);
+  } else {
+    console.error('❌ Fail: ' + t);
+    if (result && result.error) {
+      console.error('   → ' + (result.error.message || result.error));
+    }
+  }
+};
+
 config.capabilities = [{
     "appium:waitForIdleTimeout": 300,
     "appium:allowDelayAdb": true,
@@ -92,6 +148,8 @@ config.capabilities = [{
     "appium:hideKeyboard": true
 }];
 
+
+
 export { config };
 EOM
 
@@ -103,9 +161,11 @@ debug "---------------------------"
 
 debug "🎬 Ejecutando test..."
 
-# Ejecutar WDIO
+# Ejecutar WDIO con nivel de log reducido
 cd "$APPIUM_DIR"
 FEATURE_ARG="${CLIENT}/feature/modulos/${FEATURE_NAME}"
+# Configurar nivel de log para ver menos verbosity de webdriver
+export WDIO_LOG_LEVEL=error
 if ! env -u RESET -u HEADER -u SUCCESS -u WARN -u ERROR -u DEBUG yarn run env-cmd -x -f ./.env -- wdio "${CONFIG_FILE}" "${FEATURE_ARG}"; then
     EXIT_CODE=$?
     error "La ejecución de WDIO falló con código de salida $EXIT_CODE"

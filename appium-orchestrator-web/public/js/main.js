@@ -39,6 +39,7 @@ import {
   setSaveButtonState,
 } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
+import './progress-indicator-manager.js';
 
 let activeFeature = null; // Holds info about the currently open feature in the IDE
 
@@ -70,6 +71,13 @@ async function handleSave() {
     alert('No hay ningún archivo activo para guardar.');
     return false; // Return false on failure
   }
+  
+  const saveBtn = document.getElementById('ide-save-btn');
+  // If save button is disabled, there are no changes to save
+  if (saveBtn && saveBtn.disabled) {
+    return true; // Return true to indicate no save needed
+  }
+  
   const content = getIdeEditorContent();
   const { branch, client, featureName } = activeFeature;
 
@@ -99,14 +107,19 @@ async function handleIdeRun(socket) {
     return;
   }
 
-  // First, save any pending changes.
-  const saveSuccess = await handleSave();
-
-  // Only run if save was successful or not needed
-  if (saveSuccess || getIdeEditorContent() !== null) {
-    const { branch, client, featureName } = activeFeature;
-    runTest(socket, branch, client, featureName, false);
+  // Only save if there are actual changes
+  const saveBtn = document.getElementById('ide-save-btn');
+  if (saveBtn && !saveBtn.disabled) {
+    // There are unsaved changes, save them first
+    const saveSuccess = await handleSave();
+    if (!saveSuccess) {
+      return; // Don't run if save failed
+    }
   }
+
+  // Run the test
+  const { branch, client, featureName } = activeFeature;
+  runTest(socket, branch, client, featureName, false);
 }
 
 function handleIdeCommit() {
@@ -146,7 +159,7 @@ function initializeApp() {
 
   // Auto-fetch APK versions on page load
   fetchApkVersions();
-  
+
   // Listen for features loaded event to update commit status
   window.addEventListener('featuresLoaded', async (event) => {
     const { branch } = event.detail;
@@ -267,42 +280,49 @@ async function initializeAppControls(socket) {
     branchSelect.addEventListener('change', async () => {
       const selectedBranch = branchSelect.value;
       const selectedClient = document.getElementById('client-select').value;
-      
+
       // Reset active feature when branch changes
       activeFeature = null;
+      window.currentFeatureFile = null;
       
+      // Actualizar el estado del editor
+      if (window.progressIndicatorManager) {
+        window.progressIndicatorManager.updateEditorStateForCurrentFile();
+      }
+
       // Clear IDE editor
       const editorPanel = document.getElementById('editor-panel');
       if (editorPanel) {
         const saveBtn = editorPanel.querySelector('#ide-save-btn');
         const commitBtn = editorPanel.querySelector('#ide-commit-btn');
         const runBtn = editorPanel.querySelector('#ide-run-btn');
-        
+
         if (saveBtn) saveBtn.style.display = 'none';
         if (commitBtn) commitBtn.style.display = 'none';
         if (runBtn) runBtn.style.display = 'none';
-        
+
         // Clear editor content
         const ideEditorContent = getIdeEditorContent();
         if (ideEditorContent !== null) {
           setIdeEditorContent({
-            content: '// Selecciona una branch y luego un archivo para ver su contenido.',
+            content:
+              '// Selecciona una branch y luego un archivo para ver su contenido.',
             isReadOnly: true,
-            isModified: false
+            isModified: false,
           });
         }
       }
-      
+
       // Clear feature list and update git status for the new branch
       const featuresList = document.getElementById('features-list');
       if (featuresList) {
         featuresList.innerHTML = '<li>Cargando...</li>';
       }
-      
+
       // Update commit status indicator for the new branch
       if (selectedBranch && config.persistentWorkspacesEnabled) {
         await updateCommitStatusIndicator(selectedBranch);
-        
+
         // Also update git status for features if both branch and client are selected
         if (selectedClient) {
           const status = await getWorkspaceStatus(selectedBranch);
@@ -312,7 +332,7 @@ async function initializeAppControls(socket) {
         // Hide indicator if persistent workspaces are not enabled
         const header = document.getElementById('main-header');
         const indicator = document.getElementById('commit-status-indicator');
-        
+
         if (header) header.classList.remove('has-pending-commits');
         if (indicator) indicator.classList.add('hidden');
       }
@@ -351,27 +371,33 @@ async function updateCommitStatusIndicator(branch) {
   // Check if persistent workspaces are enabled by fetching config
   const config = await fetchConfig();
   if (!config.persistentWorkspacesEnabled) return;
-  
+
   try {
     const [commitStatus, workspaceStatus] = await Promise.all([
       getCommitStatus(branch),
-      getWorkspaceChanges(branch)
+      getWorkspaceChanges(branch),
     ]);
-    
+
     const header = document.getElementById('main-header');
-    const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
-    const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
-    const uncommittedStatusText = uncommittedIndicator.querySelector('.status-text');
-    const pendingStatusText = pendingCommitsIndicator.querySelector('.status-text');
-    
+    const uncommittedIndicator = document.getElementById(
+      'uncommitted-changes-indicator',
+    );
+    const pendingCommitsIndicator = document.getElementById(
+      'pending-commits-indicator',
+    );
+    const uncommittedStatusText =
+      uncommittedIndicator.querySelector('.status-text');
+    const pendingStatusText =
+      pendingCommitsIndicator.querySelector('.status-text');
+
     // Clear all header status classes first
     header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
-    
+
     // Handle uncommitted changes (yellow indicator)
     if (workspaceStatus.hasChanges) {
       // Add yellow styling to header
       header.classList.add('has-uncommitted-changes');
-      
+
       // Show yellow indicator with change count
       uncommittedIndicator.classList.remove('hidden');
       const totalChanges = workspaceStatus.modifiedFiles;
@@ -380,13 +406,13 @@ async function updateCommitStatusIndicator(branch) {
       // Hide yellow indicator
       uncommittedIndicator.classList.add('hidden');
     }
-    
+
     // Handle pending commits (red indicator)
     if (commitStatus.hasPendingCommits) {
       // Add red styling to header (red takes precedence for header color)
       header.classList.add('has-pending-commits');
       header.classList.remove('has-uncommitted-changes');
-      
+
       // Show red indicator with count
       pendingCommitsIndicator.classList.remove('hidden');
       pendingStatusText.textContent = `${commitStatus.commitCount} commit(s) pendiente(s) de push`;
@@ -394,7 +420,7 @@ async function updateCommitStatusIndicator(branch) {
       // Hide red indicator
       pendingCommitsIndicator.classList.add('hidden');
     }
-    
+
     // If no indicators are showing, ensure header is clean
     if (!workspaceStatus.hasChanges && !commitStatus.hasPendingCommits) {
       header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
@@ -403,14 +429,19 @@ async function updateCommitStatusIndicator(branch) {
     console.error('Error updating commit status indicator:', error);
     // Hide both indicators on error to avoid showing incorrect state
     const header = document.getElementById('main-header');
-    const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
-    const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
-    
+    const uncommittedIndicator = document.getElementById(
+      'uncommitted-changes-indicator',
+    );
+    const pendingCommitsIndicator = document.getElementById(
+      'pending-commits-indicator',
+    );
+
     if (header) {
       header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
     }
     if (uncommittedIndicator) uncommittedIndicator.classList.add('hidden');
-    if (pendingCommitsIndicator) pendingCommitsIndicator.classList.add('hidden');
+    if (pendingCommitsIndicator)
+      pendingCommitsIndicator.classList.add('hidden');
   }
 }
 
@@ -486,6 +517,7 @@ function initializeUiEventListeners(socket) {
 
       setIdeEditorContent('// Cargando...', true);
       activeFeature = null; // Reset active feature while loading
+      window.currentFeatureFile = null;
 
       const content = await getFeatureContent(
         branch,
@@ -498,6 +530,14 @@ function initializeUiEventListeners(socket) {
           fileItem.parentElement.classList.contains('modified');
         setIdeEditorContent({ content, isReadOnly: false, isModified });
         activeFeature = { branch, client, featureName }; // Set active feature
+        
+        // Establecer el archivo actual global para el progress indicator manager
+        window.currentFeatureFile = `${featureName}.feature`;
+        
+        // Actualizar el estado del editor para el archivo actual
+        if (window.progressIndicatorManager) {
+          window.progressIndicatorManager.updateEditorStateForCurrentFile();
+        }
       } else {
         setIdeEditorContent({
           content: '// No se pudo cargar el contenido del archivo.',
@@ -544,4 +584,3 @@ function initializeUiEventListeners(socket) {
     });
   });
 }
-

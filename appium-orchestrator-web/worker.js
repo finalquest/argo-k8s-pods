@@ -2,6 +2,358 @@ const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Parser de logs para detectar progreso de ejecución de tests de Appium
+ */
+class LogProgressParser {
+  constructor() {
+    this.currentState = {
+      feature: null,
+      scenario: null,
+      currentStep: null,
+      stepHistory: [],
+      startTime: null,
+    };
+    this.emitThrottle = null;
+    this.featureFileCache = new Map();
+    this.jobId = null;
+  }
+
+  /**
+   * Parsea una línea de log y extrae información de progreso
+   * @param {string} logLine - Línea de log a parsear
+   * @returns {Object|null} Evento de progreso o null si no aplica
+   */
+  parseLogLine(logLine) {
+    // Limpiar timestamp y prefijos comunes
+    const cleanLine = this.cleanLogLine(logLine);
+
+    // Intentar diferentes patrones en orden de prioridad
+    const patterns = [
+      this.tryStepPattern.bind(this),
+      this.tryScenarioPattern.bind(this),
+      this.tryFeaturePattern.bind(this),
+      this.tryErrorPattern.bind(this),
+    ];
+
+    for (const pattern of patterns) {
+      const result = pattern(cleanLine);
+      if (result) {
+        return result;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Limpia la línea de log para mejor parsing
+   */
+  cleanLogLine(logLine) {
+    // Remover timestamps comunes
+    return logLine
+      .replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\s*/, '')
+      .replace(/^\[INFO\]\s*/, '') // Nivel de log
+      .replace(/^\[DEBUG\]\s*/, '')
+      .replace(/^\[WARN\]\s*/, '')
+      .replace(/^\[ERROR\]\s*/, '')
+      .replace(/^\[stderr\]\s*/, '')
+      .replace(/^\[worker\]\s*/, '')
+      .replace(/^\[Android.*?\]\s*/, '') // Formato WDIO: [Android #0-0]
+      .replace(/^\s*[✖✓-]\s*/, '') // Caracteres de estado WDIO
+      .replace(/^\s*-\s*/, '') // Guiones de WDIO
+      .trim();
+  }
+
+  /**
+   * Intenta identificar un step en el log
+   */
+  tryStepPattern(logLine) {
+    // Patrones para el formato real de WDIO que observamos en los logs
+    const stepPatterns = [
+      // Formato con prefijo [0-0]: [0-0] ➡️  Given user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^\[0-0\]\s*➡️\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato con prefijo [0-0]: [0-0] ✅ Ok (147.370957 ms): user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^\[0-0\]\s*✅.*:\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato con prefijo [0-0]: [0-0] ❌ Fail: user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^\[0-0\]\s*❌ Fail:\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Nuevo formato sin prefijo: ➡️  Given user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^➡️\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato sin prefijo: ✅ Ok (147.370957 ms): user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^✅.*:\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato sin prefijo: ❌ Fail: user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^❌ Fail:\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato WDIO actual: [Android #0-0]    ✖ Given user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^\[Android.*\]\s*[✖✓-]?\s*(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato: [0-0] • Given user "romeroro" "Jaques1952" login secure NBCH mode "welcomeModeSelect.btnSimple"
+      /^\[0-0\]\s*[•✖✓-]?\s*(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato: STEP Given I am on the login page
+      /^STEP\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato: [STEP] Given I am on the login page
+      /^\[STEP\]\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato: • Given I am on the login page
+      /^•\s+(Given|When|Then|And|But)\s+(.+)$/i,
+      // Formato: Given I am on the login page (directo)
+      /^(Given|When|Then|And|But)\s+(.+)$/i,
+    ];
+
+    for (const pattern of stepPatterns) {
+      const match = logLine.match(pattern);
+      if (match) {
+        const [, keyword, stepText] = match;
+
+        // Determinar el estado basado en los caracteres especiales
+        let status = 'running';
+        if (logLine.includes('✖') || logLine.includes('❌')) {
+          status = 'failed';
+        } else if (
+          logLine.includes('✓') ||
+          logLine.includes('✔') ||
+          logLine.includes('✅')
+        ) {
+          status = 'passed';
+        } else if (logLine.includes('-') || logLine.includes('➡️')) {
+          status = 'running';
+        }
+
+        return this.handleStepStart(keyword, stepText, status);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Maneja el inicio de un step
+   */
+  handleStepStart(keyword, stepText, status = 'running') {
+    const location = this.estimateStepLocation();
+
+    this.currentState.currentStep = {
+      keyword,
+      text: stepText,
+      location,
+      feature: this.currentState.feature,
+      scenario: this.currentState.scenario,
+      startTime: Date.now(),
+      status: status,
+    };
+
+    this.emitProgress('step:start', this.currentState.currentStep);
+    return this.currentState.currentStep;
+  }
+
+  /**
+   * Maneja el final de un step
+   */
+  handleStepEnd(keyword, stepText, status) {
+    if (!this.currentState.currentStep) return null;
+
+    const duration = Date.now() - this.currentState.currentStep.startTime;
+
+    this.currentState.currentStep.status = status;
+    this.currentState.currentStep.duration = duration;
+
+    this.emitProgress('step:end', this.currentState.currentStep);
+
+    // Guardar en historial
+    this.currentState.stepHistory.push({
+      ...this.currentState.currentStep,
+      endTime: Date.now(),
+    });
+
+    this.currentState.currentStep = null;
+    return { type: 'step:end', status, duration };
+  }
+
+  /**
+   * Intenta identificar un scenario en el log
+   */
+  tryScenarioPattern(logLine) {
+    const scenarioPatterns = [
+      // Formato con prefijo [0-0]: [0-0] 📋 Scenario: [LOGIN - Historial de Operaciones btnSimple - Orden De Extracción ] Persona Física romeroro...
+      /^\[0-0\]\s*📋 Scenario:\s+(.+)$/i,
+      // Formato sin prefijo: 📋 Scenario: [LOGIN - Historial de Operaciones btnSimple - Orden De Extracción ] Persona Física romeroro...
+      /^📋 Scenario:\s+(.+)$/i,
+      // Formato: Scenario: Login user
+      /^Scenario:\s+(.+)$/i,
+      /^\[SCENARIO\]\s+(.+)$/i,
+      /^Scenario Outline:\s+(.+)$/i,
+    ];
+
+    for (const pattern of scenarioPatterns) {
+      const match = logLine.match(pattern);
+      if (match) {
+        const scenarioName = match[1];
+        this.currentState.scenario = scenarioName;
+        this.currentState.currentStep = null; // Reset step
+
+        this.emitProgress('scenario:start', {
+          name: scenarioName,
+          feature: this.currentState.feature,
+        });
+
+        return { type: 'scenario:start', name: scenarioName };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Intenta identificar un feature en el log
+   */
+  tryFeaturePattern(logLine) {
+    const featurePatterns = [
+      /^Feature:\s*(.+)$/i,
+      /^\[FEATURE\]\s*(.+)$/i,
+      // Patrón para cuando WDIO muestra qué feature está ejecutando
+      /^.*Executing\s+(.+)\.feature.*$/i,
+      /^.*Running\s+(.+)\.feature.*$/i,
+      /^.*Spec:\s*(.+)\.feature.*$/i,
+    ];
+
+    for (const pattern of featurePatterns) {
+      const match = logLine.match(pattern);
+      if (match) {
+        const featureName = match[1];
+        this.currentState.feature = featureName;
+        this.currentState.scenario = null;
+        this.currentState.currentStep = null;
+        this.currentState.stepHistory = [];
+
+        this.emitProgress('feature:start', { name: featureName });
+
+        return { type: 'feature:start', name: featureName };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Intenta identificar errores en el log
+   */
+  tryErrorPattern(logLine) {
+    const errorPatterns = [
+      /^Error:\s+(.+)$/i,
+      /^\[ERROR\]\s+(.+)$/i,
+      /^Failed:\s+(.+)$/i,
+      /AssertionError:\s+(.+)$/,
+      /TimeoutError:\s+(.+)$/,
+      /ElementNotInteractableError:\s+(.+)$/,
+      /NoSuchElementError:\s+(.+)$/,
+    ];
+
+    for (const pattern of errorPatterns) {
+      const match = logLine.match(pattern);
+      if (match) {
+        const error = match[1];
+
+        if (this.currentState.currentStep) {
+          this.currentState.currentStep.status = 'failed';
+          this.currentState.currentStep.error = error;
+
+          this.emitProgress('step:error', {
+            step: this.currentState.currentStep,
+            error: error,
+          });
+        }
+
+        return { type: 'error', error };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Estima la ubicación (línea) de un step en el archivo
+   */
+  estimateStepLocation() {
+    // Estrategia 1: Si conocemos el feature, intentar encontrar la línea
+    if (this.currentState.feature && this.currentState.scenario) {
+      const location = this.findStepInFeature();
+      if (location) {
+        return location;
+      }
+    }
+
+    // Estrategia 2: Estimación basada en el historial
+    const estimatedLine = this.currentState.stepHistory.length + 1;
+
+    return {
+      file: this.estimateFeatureFile(),
+      line: estimatedLine,
+      column: 1,
+      estimated: true,
+    };
+  }
+
+  /**
+   * Busca un step en el archivo de feature (implementación simplificada)
+   */
+  findStepInFeature() {
+    // En una implementación real, aquí se leería el archivo de feature
+    // y se buscaría el step exacto para obtener la línea correcta
+    // Por ahora, estimamos basado en el historial
+    return {
+      file: this.estimateFeatureFile(),
+      line: this.currentState.stepHistory.length + 1,
+      column: 1,
+      estimated: false,
+    };
+  }
+
+  /**
+   * Estima el nombre del archivo de feature
+   */
+  estimateFeatureFile() {
+    if (!this.currentState.feature) return 'unknown.feature';
+
+    // Convertir nombre de feature a nombre de archivo
+    return (
+      this.currentState.feature
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '') + '.feature'
+    );
+  }
+
+  /**
+   * Emite evento de progreso con throttling
+   */
+  emitProgress(type, data) {
+    if (this.emitThrottle) {
+      clearTimeout(this.emitThrottle);
+    }
+
+    this.emitThrottle = setTimeout(() => {
+      sendToParent({
+        type: 'PROGRESS_UPDATE',
+        event: type,
+        data: data,
+        timestamp: new Date().toISOString(),
+      });
+    }, 50); // 50ms de throttle para no sobrecargar
+  }
+
+  /**
+   * Reinicia el estado para una nueva ejecución
+   */
+  reset(jobId = null) {
+    this.currentState = {
+      feature: null,
+      scenario: null,
+      currentStep: null,
+      stepHistory: [],
+      startTime: null,
+    };
+    this.featureFileCache.clear();
+    this.jobId = jobId;
+  }
+}
+
 // Estado del worker
 let workspaceDir = '';
 let branch = '';
@@ -17,6 +369,9 @@ let environment = {
   emulatorId: null,
 };
 
+// Instancia global del parser de progreso
+let logProgressParser = null;
+
 function sendToParent(message) {
   if (process.send) {
     process.send(message);
@@ -25,7 +380,13 @@ function sendToParent(message) {
   }
 }
 
-function runScript(scriptPath, args, env, onDone) {
+function runScript(
+  scriptPath,
+  args,
+  env,
+  onDone,
+  enableProgressParsing = false,
+) {
   sendToParent({
     type: 'LOG',
     data: `[worker] Ejecutando: ${path.basename(scriptPath)} ${args.join(' ')}
@@ -38,14 +399,40 @@ function runScript(scriptPath, args, env, onDone) {
   scriptProcess.stdout.on('data', (data) => {
     const output = data.toString();
     scriptOutput += output;
+
+    // Enviar logs al padre como antes
     sendToParent({ type: 'LOG', data: output });
+
+    // Si el parsing de progreso está habilitado, procesar los logs
+    if (enableProgressParsing && logProgressParser) {
+      const lines = output.split('\n');
+      for (const line of lines) {
+        if (line.trim()) {
+          logProgressParser.parseLogLine(line);
+        }
+      }
+    }
   });
+
   scriptProcess.stderr.on('data', (data) => {
-    sendToParent({ type: 'LOG', data: `[stderr] ${data.toString()}` });
+    const errorOutput = data.toString();
+    sendToParent({ type: 'LOG', data: `[stderr] ${errorOutput}` });
+
+    // También procesar errores para el parsing de progreso
+    if (enableProgressParsing && logProgressParser) {
+      const lines = errorOutput.split('\n');
+      for (const line of lines) {
+        if (line.trim()) {
+          logProgressParser.parseLogLine(`[stderr] ${line}`);
+        }
+      }
+    }
   });
+
   scriptProcess.on('close', (code) => {
     onDone(code, scriptOutput);
   });
+
   scriptProcess.on('error', (err) => {
     sendToParent({
       type: 'LOG',
@@ -191,8 +578,12 @@ function finishSetup() {
 }
 
 function runTest(job) {
-  const { client, feature, mappingToLoad, deviceSerial } = job;
+  const { client, feature, mappingToLoad, deviceSerial, jobId } = job;
   const runnerScript = path.join(__dirname, 'scripts', 'feature-runner.sh');
+
+  // Inicializar el parser de progreso para este job
+  logProgressParser = new LogProgressParser();
+  logProgressParser.reset(jobId);
 
   // Si estamos en modo local (deviceSerial existe), lo usamos como identificador del dispositivo.
   // Si no, usamos el adbHost del emulador remoto que el worker bloqueó al iniciar.
@@ -214,12 +605,24 @@ function runTest(job) {
       env.ANDROID_SERIAL = deviceSerial;
     }
 
-    runScript(runnerScript, args, env, (code) => {
-      sendToParent({
-        type: 'READY_FOR_NEXT_JOB',
-        data: { exitCode: code, reportPath: null },
-      });
-    });
+    // Habilitar parsing de progreso para la ejecución del test
+    runScript(
+      runnerScript,
+      args,
+      env,
+      (code) => {
+        // Limpiar el parser después de la ejecución
+        if (logProgressParser) {
+          logProgressParser.reset();
+        }
+
+        sendToParent({
+          type: 'READY_FOR_NEXT_JOB',
+          data: { exitCode: code, reportPath: null },
+        });
+      },
+      true,
+    ); // true habilita el parsing de progreso
   };
 
   if (mappingToLoad) {
@@ -234,26 +637,32 @@ function runTest(job) {
       'scripts',
       'load-mapping.sh',
     );
-    runScript(loadMappingScript, [mappingToLoad], null, (code) => {
-      if (code !== 0) {
-        sendToParent({
-          type: 'LOG',
-          data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.
+    runScript(
+      loadMappingScript,
+      [mappingToLoad],
+      null,
+      (code) => {
+        if (code !== 0) {
+          sendToParent({
+            type: 'LOG',
+            data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.
 `,
-        });
-        sendToParent({
-          type: 'READY_FOR_NEXT_JOB',
-          data: { exitCode: code, reportPath: null },
-        });
-      } else {
-        sendToParent({
-          type: 'LOG',
-          data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test...
+          });
+          sendToParent({
+            type: 'READY_FOR_NEXT_JOB',
+            data: { exitCode: code, reportPath: null },
+          });
+        } else {
+          sendToParent({
+            type: 'LOG',
+            data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test...
 `,
-        });
-        executeTest();
-      }
-    });
+          });
+          executeTest();
+        }
+      },
+      false,
+    ); // No habilitar parsing para carga de mapping
   } else {
     // Es un job normal o de grabación sin carga de mapping
     executeTest();

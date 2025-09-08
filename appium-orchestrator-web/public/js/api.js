@@ -104,11 +104,16 @@ export async function getWorkspaceChanges(branch) {
       modifiedFiles: data.modifiedFiles || 0,
       stagedFiles: data.stagedChanges || 0,
       unstagedFiles: data.unstagedChanges || 0,
-      message: data.message || ''
+      message: data.message || '',
     };
   } catch (error) {
     console.error('Error getting workspace changes:', error);
-    return { hasChanges: false, modifiedFiles: 0, stagedFiles: 0, unstagedFiles: 0 };
+    return {
+      hasChanges: false,
+      modifiedFiles: 0,
+      stagedFiles: 0,
+      unstagedFiles: 0,
+    };
   }
 }
 
@@ -183,23 +188,32 @@ export async function fetchFeatures() {
     if (config.persistentWorkspacesEnabled) {
       const status = await getWorkspaceStatus(selectedBranch);
       updateFeaturesWithGitStatus(status.modified_features);
-      
+
       // Also check for both pending commits and uncommitted changes
       try {
         const [commitStatus, workspaceStatus] = await Promise.all([
           getCommitStatus(selectedBranch),
-          getWorkspaceChanges(selectedBranch)
+          getWorkspaceChanges(selectedBranch),
         ]);
-        
+
         const header = document.getElementById('main-header');
-        const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
-        const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
-        const uncommittedStatusText = uncommittedIndicator.querySelector('.status-text');
-        const pendingStatusText = pendingCommitsIndicator.querySelector('.status-text');
-        
+        const uncommittedIndicator = document.getElementById(
+          'uncommitted-changes-indicator',
+        );
+        const pendingCommitsIndicator = document.getElementById(
+          'pending-commits-indicator',
+        );
+        const uncommittedStatusText =
+          uncommittedIndicator.querySelector('.status-text');
+        const pendingStatusText =
+          pendingCommitsIndicator.querySelector('.status-text');
+
         // Clear all header status classes first
-        header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
-        
+        header.classList.remove(
+          'has-pending-commits',
+          'has-uncommitted-changes',
+        );
+
         // Handle uncommitted changes (yellow indicator)
         if (workspaceStatus.hasChanges) {
           header.classList.add('has-uncommitted-changes');
@@ -209,7 +223,7 @@ export async function fetchFeatures() {
         } else {
           uncommittedIndicator.classList.add('hidden');
         }
-        
+
         // Handle pending commits (red indicator)
         if (commitStatus.hasPendingCommits) {
           header.classList.add('has-pending-commits');
@@ -219,13 +233,19 @@ export async function fetchFeatures() {
         } else {
           pendingCommitsIndicator.classList.add('hidden');
         }
-        
+
         // If no indicators are showing, ensure header is clean
         if (!workspaceStatus.hasChanges && !commitStatus.hasPendingCommits) {
-          header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
+          header.classList.remove(
+            'has-pending-commits',
+            'has-uncommitted-changes',
+          );
         }
       } catch (error) {
-        console.error('Error checking commit status after fetching features:', error);
+        console.error(
+          'Error checking commit status after fetching features:',
+          error,
+        );
       }
     }
   } catch (error) {
