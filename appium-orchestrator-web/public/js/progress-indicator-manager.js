@@ -424,11 +424,17 @@ class ProgressIndicatorManager {
     const placeholderPattern = step.text.replace(/"[^"]*"/g, '"[^"]*"');
     const placeholderRegex = new RegExp(`^\\s*${step.keyword}\\s+${placeholderPattern}`, 'i');
     
-    // Estrategia 3: Buscar solo las primeras palabras clave
-    const keywords = step.text.split(' ').slice(0, 4).join(' ');
-    const keywordRegex = new RegExp(`^\\s*${step.keyword}\\s+${keywords.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}.*`, 'i');
+    // Estrategia 3: Buscar palabras clave más específicas (extraer sustantivos/verbos importantes)
+    const importantWords = this.extractImportantWords(step.text);
+    const importantWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${importantWords.join('.*')}.*`, 'i');
+    
+    // Estrategia 4: Último recurso - buscar palabras clave únicas en la línea
+    const uniqueWords = this.getUniqueWords(step.text);
+    const uniqueWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${uniqueWords.join('.*')}.*`, 'i');
     
     const lineCount = window.ideCodeMirror.lineCount();
+    const matches = [];
+    
     for (let i = 0; i < lineCount; i++) {
       const lineText = window.ideCodeMirror.getLine(i);
       
@@ -439,17 +445,66 @@ class ProgressIndicatorManager {
       
       if (placeholderRegex.test(lineText)) {
         console.log('[ProgressIndicatorManager] Found placeholder match at line:', i + 1);
-        return i;
+        matches.push({ line: i, priority: 2 });
       }
       
-      if (keywordRegex.test(lineText)) {
-        console.log('[ProgressIndicatorManager] Found keyword match at line:', i + 1);
-        return i;
+      if (importantWordsRegex.test(lineText)) {
+        console.log('[ProgressIndicatorManager] Found important words match at line:', i + 1);
+        matches.push({ line: i, priority: 1 });
       }
+      
+      if (uniqueWordsRegex.test(lineText)) {
+        console.log('[ProgressIndicatorManager] Found unique words match at line:', i + 1);
+        matches.push({ line: i, priority: 0 });
+      }
+    }
+    
+    // Devolver la coincidencia con mayor prioridad
+    if (matches.length > 0) {
+      matches.sort((a, b) => b.priority - a.priority);
+      console.log('[ProgressIndicatorManager] Selected best match at line:', matches[0].line + 1);
+      return matches[0].line;
     }
     
     console.log('[ProgressIndicatorManager] No match found for step:', step.text);
     return -1;
+  }
+
+  /**
+   * Extrae palabras importantes del texto (sustantivos/verbos clave)
+   * @param {string} text - Texto del step
+   * @returns {Array} Array de palabras importantes
+   */
+  extractImportantWords(text) {
+    // Eliminar palabras comunes y artículos
+    const stopWords = ['user', 'the', 'to', 'and', 'on', 'in', 'with', 'for', 'at', 'by', 'from', 'of', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'];
+    
+    // Extraer palabras significativas (eliminar comillas y palabras comunes)
+    const words = text.toLowerCase()
+      .replace(/"[^"]*"/g, '') // Eliminar quoted strings
+      .replace(/[^\w\s]/g, ' ') // Eliminar puntuación
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.includes(word));
+    
+    // Tomar las 3-5 palabras más distintivas
+    return words.slice(0, 5);
+  }
+
+  /**
+   * Obtiene palabras únicas que pueden ayudar a identificar el step
+   * @param {string} text - Texto del step
+   * @returns {Array} Array de palabras únicas
+   */
+  getUniqueWords(text) {
+    // Buscar palabras específicas que son únicas en cada step
+    const words = text.toLowerCase()
+      .replace(/"[^"]*"/g, '""') // Reemplazar quoted strings por placeholder
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && word !== 'user');
+    
+    // Tomar palabras que parecen ser nombres de elementos o acciones específicas
+    return words.slice(0, 3);
   }
 
   /**
