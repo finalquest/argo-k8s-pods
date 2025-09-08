@@ -283,6 +283,12 @@ async function initializeAppControls(socket) {
 
       // Reset active feature when branch changes
       activeFeature = null;
+      window.currentFeatureFile = null;
+      
+      // Actualizar el estado del editor
+      if (window.progressIndicatorManager) {
+        window.progressIndicatorManager.updateEditorStateForCurrentFile();
+      }
 
       // Clear IDE editor
       const editorPanel = document.getElementById('editor-panel');
@@ -511,6 +517,7 @@ function initializeUiEventListeners(socket) {
 
       setIdeEditorContent('// Cargando...', true);
       activeFeature = null; // Reset active feature while loading
+      window.currentFeatureFile = null;
 
       const content = await getFeatureContent(
         branch,
@@ -523,6 +530,14 @@ function initializeUiEventListeners(socket) {
           fileItem.parentElement.classList.contains('modified');
         setIdeEditorContent({ content, isReadOnly: false, isModified });
         activeFeature = { branch, client, featureName }; // Set active feature
+        
+        // Establecer el archivo actual global para el progress indicator manager
+        window.currentFeatureFile = `${featureName}.feature`;
+        
+        // Actualizar el estado del editor para el archivo actual
+        if (window.progressIndicatorManager) {
+          window.progressIndicatorManager.updateEditorStateForCurrentFile();
+        }
       } else {
         setIdeEditorContent({
           content: '// No se pudo cargar el contenido del archivo.',

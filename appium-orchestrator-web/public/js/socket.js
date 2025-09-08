@@ -124,6 +124,17 @@ export function initializeSocketListeners(socket) {
     if (window.progressIndicatorManager && data.jobId) {
       const jobIdStr = data.jobId.toString();
       window.progressIndicatorManager.setCurrentJob(jobIdStr);
+      
+      // Establecer el nombre del feature para el job (necesario para los highlights)
+      if (data.featureName) {
+        window.progressIndicatorManager.setJobFeature(jobIdStr, data.featureName);
+      }
+      
+      // Establecer el estado del test como RUNNING
+      if (data.featureName) {
+        const testFileName = data.featureName.endsWith('.feature') ? data.featureName : `${data.featureName}.feature`;
+        window.progressIndicatorManager.setTestState(testFileName, window.progressIndicatorManager.TEST_STATES.RUNNING, jobIdStr);
+      }
     }
 
     const panel = document.getElementById(`log-panel-${data.slotId}`);
@@ -172,6 +183,12 @@ export function initializeSocketListeners(socket) {
         window.progressIndicatorManager.highlightEditorBorder(false);
         window.progressIndicatorManager.clearEditorDecorations();
         window.progressIndicatorManager.updateRunButtonState(false);
+      }
+      
+      // Limpiar el estado del test
+      if (jobDetails.featureName) {
+        const testFileName = jobDetails.featureName.endsWith('.feature') ? jobDetails.featureName : `${jobDetails.featureName}.feature`;
+        window.progressIndicatorManager.clearTestState(testFileName);
       }
     }
 

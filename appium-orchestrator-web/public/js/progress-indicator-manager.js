@@ -107,13 +107,36 @@ class ProgressIndicatorManager {
     // Mostrar indicador de "inicializando" mientras esperamos el primer step
     this.showInitializingIndicator(jobId);
     
-    // Resaltar header del editor para indicar ejecución
-    this.highlightEditorBorder(true);
+    // Resaltar header del editor SOLO si el test actual está en ejecución
+    const shouldHighlight = this.isCurrentTestRunning();
+    this.highlightEditorBorder(shouldHighlight);
     
     // Actualizar estado del botón de ejecución
     this.updateRunButtonState(true);
     
     this.updateEditorDecorations(jobId);
+  }
+
+  /**
+   * Establece el nombre del feature para un job específico
+   * @param {string} jobId - ID del job
+   * @param {string} featureName - Nombre del feature
+   */
+  setJobFeature(jobId, featureName) {
+    if (!this.activeJobs.has(jobId)) {
+      // Crear el job si no existe
+      this.activeJobs.set(jobId, {
+        currentStep: null,
+        stepHistory: [],
+        feature: featureName,
+        scenario: null,
+        lastUpdate: Date.now(),
+      });
+    } else {
+      // Actualizar el feature del job existente
+      const jobState = this.activeJobs.get(jobId);
+      jobState.feature = featureName;
+    }
   }
 
   /**
@@ -219,7 +242,10 @@ class ProgressIndicatorManager {
     const runBtn = document.getElementById('ide-run-btn');
     if (!runBtn) return;
     
-    if (isRunning) {
+    // Verificar si el test actual en el editor es el que está en ejecución
+    const isCurrentTestRunning = this.isCurrentTestRunning();
+    
+    if (isCurrentTestRunning) {
       runBtn.textContent = 'Corriendo...';
       runBtn.disabled = true;
       runBtn.classList.add('disabled');
@@ -236,7 +262,13 @@ class ProgressIndicatorManager {
    */
   updateEditorDecorations(jobId) {
     if (!window.ideCodeMirror) {
-      console.log('[ProgressIndicatorManager] No CodeMirror editor available');
+      return;
+    }
+
+    // Solo mostrar decoraciones si el job actual corresponde al test abierto en el editor
+    if (!this.shouldShowDecorationsForJob(jobId)) {
+      // Si no corresponde, limpiar decoraciones existentes
+      this.clearEditorDecorations();
       return;
     }
 
@@ -390,6 +422,35 @@ class ProgressIndicatorManager {
       }
     }
     return null;
+  }
+
+  /**
+   * Verifica si el test actualmente abierto en el editor es el que está en ejecución
+   * @returns {boolean} True si el test actual está en ejecución
+   */
+  isCurrentTestRunning() {
+    if (!this.currentJobId) return false;
+    
+    // Obtener el archivo actual del editor (desde el dataset del editor)
+    const currentEditorFile = this.getCurrentEditorFileFromUI();
+    if (!currentEditorFile) return false;
+    
+    // Verificar si este archivo está en estado RUNNING
+    return this.isTestRunning(currentEditorFile);
+  }
+
+  /**
+   * Obtiene el archivo actualmente abierto en el editor desde la UI
+   * @returns {string|null} Ruta del archivo actual
+   */
+  getCurrentEditorFileFromUI() {
+    // Intentar obtener desde el dataset del editor o variables globales
+    if (window.currentFeatureFile) {
+      return window.currentFeatureFile;
+    }
+    
+    // Si no está disponible, intentar obtenerlo del job actual
+    return this.getCurrentEditorFile();
   }
 
   /**
@@ -552,7 +613,7 @@ class ProgressIndicatorManager {
    * @param {string} jobId - ID del job asociado (opcional)
    */
   setTestState(filePath, state, jobId = null) {
-    if (!filePath || !this.TEST_STATES[state]) {
+    if (!filePath || !Object.values(this.TEST_STATES).includes(state)) {
       console.warn('[ProgressIndicatorManager] Invalid test state parameters:', { filePath, state });
       return;
     }
@@ -560,7 +621,9 @@ class ProgressIndicatorManager {
     const previousState = this.testStates.get(filePath);
     this.testStates.set(filePath, { state, jobId, timestamp: Date.now() });
 
-    console.log(`[ProgressIndicatorManager] Test state changed: ${filePath} ${previousState?.state || 'unknown'} -> ${state}`);
+    if (previousState?.state !== state) {
+      console.log(`[ProgressIndicatorManager] Test state changed: ${filePath} ${previousState?.state || 'unknown'} -> ${state}`);
+    }
 
     // Si el test comienza a ejecutarse, establecerlo como job actual
     if (state === this.TEST_STATES.RUNNING && jobId) {
@@ -698,6 +761,46 @@ class ProgressIndicatorManager {
     
     document.dispatchEvent(event);
     console.log(`[ProgressIndicatorManager] Dispatched testStateChange event: ${filePath} ${oldState || 'unknown'} -> ${newState}`);
+  }
+
+  /**
+   * Verifica si se deben mostrar decoraciones para un job específico
+   * @param {string} jobId - ID del job a verificar
+   * @returns {boolean} True si se deben mostrar las decoraciones
+   */
+  shouldShowDecorationsForJob(jobId) {
+    if (!jobId) return false;
+    
+    // Obtener el estado del job
+    const jobState = this.activeJobs.get(jobId);
+    if (!jobState || !jobState.feature) return false;
+    
+    // Obtener el archivo actual del editor
+    const currentFile = this.getCurrentEditorFileFromUI();
+    if (!currentFile) return false;
+    
+    // Convertir el nombre del feature a nombre de archivo y comparar
+    const jobFileName = jobState.feature + '.feature';
+    
+    return this.isSameFile(currentFile, jobFileName);
+  }
+
+  /**
+   * Actualiza el estado del editor cuando se cambia de archivo
+   * Debe llamarse cuando se abre un nuevo archivo en el editor
+   */
+  updateEditorStateForCurrentFile() {
+    // Actualizar el estado del botón de ejecución
+    this.updateRunButtonState(true);
+    
+    // Actualizar el resaltado del header
+    const shouldHighlight = this.isCurrentTestRunning();
+    this.highlightEditorBorder(shouldHighlight);
+    
+    // Actualizar las decoraciones del editor para el job actual (si corresponde)
+    if (this.currentJobId) {
+      this.updateEditorDecorations(this.currentJobId);
+    }
   }
 }
 
