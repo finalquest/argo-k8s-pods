@@ -11,6 +11,14 @@ class ProgressIndicatorManager {
     this.editorDecorations = new Map(); // Decoraciones por job
     this.currentJobId = null; // Job actualmente visible en el editor
     this.throttleTimeout = null;
+    
+    // Sistema de estados por archivo de test
+    this.testStates = new Map(); // Mapa de estados por archivo: {filePath: state}
+    this.TEST_STATES = {
+      AVAILABLE: 'available',    // Test disponible para ejecutar
+      RUNNING: 'running',      // Test actualmente en ejecución
+      QUEUED: 'queued'         // Test en cola esperando ejecución
+    };
   }
 
   /**
@@ -531,6 +539,165 @@ class ProgressIndicatorManager {
    */
   startCleanupTimer() {
     setInterval(() => this.cleanup(), 60000); // Limpiar cada minuto
+  }
+
+  // =================================================================
+  // Métodos para gestión de estados por archivo de test
+  // =================================================================
+
+  /**
+   * Establece el estado de un test específico
+   * @param {string} filePath - Ruta del archivo de test
+   * @param {string} state - Estado del test (AVAILABLE, RUNNING, QUEUED)
+   * @param {string} jobId - ID del job asociado (opcional)
+   */
+  setTestState(filePath, state, jobId = null) {
+    if (!filePath || !this.TEST_STATES[state]) {
+      console.warn('[ProgressIndicatorManager] Invalid test state parameters:', { filePath, state });
+      return;
+    }
+
+    const previousState = this.testStates.get(filePath);
+    this.testStates.set(filePath, { state, jobId, timestamp: Date.now() });
+
+    console.log(`[ProgressIndicatorManager] Test state changed: ${filePath} ${previousState?.state || 'unknown'} -> ${state}`);
+
+    // Si el test comienza a ejecutarse, establecerlo como job actual
+    if (state === this.TEST_STATES.RUNNING && jobId) {
+      this.setCurrentJob(jobId);
+    }
+
+    // Disparar evento de cambio de estado para que otros componentes puedan reaccionar
+    this.dispatchTestStateChange(filePath, state, previousState?.state);
+  }
+
+  /**
+   * Obtiene el estado actual de un test
+   * @param {string} filePath - Ruta del archivo de test
+   * @returns {Object|null} Estado del test o null si no existe
+   */
+  getTestState(filePath) {
+    if (!filePath) return null;
+    return this.testStates.get(filePath) || null;
+  }
+
+  /**
+   * Verifica si un test está en un estado específico
+   * @param {string} filePath - Ruta del archivo de test
+   * @param {string} state - Estado a verificar
+   * @returns {boolean} True si el test está en el estado especificado
+   */
+  isTestState(filePath, state) {
+    const testState = this.getTestState(filePath);
+    return testState && testState.state === state;
+  }
+
+  /**
+   * Verifica si un test está disponible para ejecución
+   * @param {string} filePath - Ruta del archivo de test
+   * @returns {boolean} True si el test está disponible
+   */
+  isTestAvailable(filePath) {
+    return this.isTestState(filePath, this.TEST_STATES.AVAILABLE);
+  }
+
+  /**
+   * Verifica si un test está actualmente en ejecución
+   * @param {string} filePath - Ruta del archivo de test
+   * @returns {boolean} True si el test está en ejecución
+   */
+  isTestRunning(filePath) {
+    return this.isTestState(filePath, this.TEST_STATES.RUNNING);
+  }
+
+  /**
+   * Verifica si un test está en cola
+   * @param {string} filePath - Ruta del archivo de test
+   * @returns {boolean} True si el test está en cola
+   */
+  isTestQueued(filePath) {
+    return this.isTestState(filePath, this.TEST_STATES.QUEUED);
+  }
+
+  /**
+   * Obtiene todos los tests en un estado específico
+   * @param {string} state - Estado a filtrar
+   * @returns {Array} Array de objetos {filePath, stateData}
+   */
+  getTestsByState(state) {
+    const results = [];
+    for (const [filePath, stateData] of this.testStates.entries()) {
+      if (stateData.state === state) {
+        results.push({ filePath, stateData });
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Elimina el estado de un test (cuando se completa o se cancela)
+   * @param {string} filePath - Ruta del archivo de test
+   */
+  clearTestState(filePath) {
+    if (!filePath) return;
+    
+    const previousState = this.testStates.get(filePath);
+    this.testStates.delete(filePath);
+    
+    console.log(`[ProgressIndicatorManager] Test state cleared: ${filePath} was ${previousState?.state || 'unknown'}`);
+    
+    // Disparar evento de cambio de estado
+    this.dispatchTestStateChange(filePath, this.TEST_STATES.AVAILABLE, previousState?.state);
+  }
+
+  /**
+   * Limpia todos los estados de tests (para reinicio)
+   */
+  clearAllTestStates() {
+    this.testStates.clear();
+    console.log('[ProgressIndicatorManager] All test states cleared');
+  }
+
+  /**
+   * Obtiene información de depuración sobre los estados de tests
+   * @returns {Object} Información de depuración
+   */
+  getTestStatesDebugInfo() {
+    const debugInfo = {
+      totalTests: this.testStates.size,
+      states: {
+        available: this.getTestsByState(this.TEST_STATES.AVAILABLE).length,
+        running: this.getTestsByState(this.TEST_STATES.RUNNING).length,
+        queued: this.getTestsByState(this.TEST_STATES.QUEUED).length
+      },
+      tests: Array.from(this.testStates.entries()).map(([filePath, data]) => ({
+        filePath,
+        state: data.state,
+        jobId: data.jobId,
+        timestamp: new Date(data.timestamp).toISOString()
+      }))
+    };
+    return debugInfo;
+  }
+
+  /**
+   * Dispara un evento personalizado cuando cambia el estado de un test
+   * @param {string} filePath - Ruta del archivo de test
+   * @param {string} newState - Nuevo estado
+   * @param {string} oldState - Estado anterior
+   */
+  dispatchTestStateChange(filePath, newState, oldState) {
+    const event = new CustomEvent('testStateChange', {
+      detail: {
+        filePath,
+        newState,
+        oldState,
+        timestamp: Date.now()
+      }
+    });
+    
+    document.dispatchEvent(event);
+    console.log(`[ProgressIndicatorManager] Dispatched testStateChange event: ${filePath} ${oldState || 'unknown'} -> ${newState}`);
   }
 }
 
