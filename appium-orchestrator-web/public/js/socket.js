@@ -8,6 +8,19 @@ import {
 
 let runningJobs = new Map();
 
+// Función para establecer el estado de ejecución de una feature row
+function setFeatureRowExecutionState(featureName, isExecuting) {
+  // Buscar la row del feature en el tree view
+  const featureRow = document.querySelector(`li.file[data-feature-name="${featureName}"]`);
+  if (featureRow) {
+    if (isExecuting) {
+      featureRow.classList.add('executing');
+    } else {
+      featureRow.classList.remove('executing');
+    }
+  }
+}
+
 export function runTest(
   socket,
   branch,
@@ -119,6 +132,11 @@ export function initializeSocketListeners(socket) {
 
   socket.on('job_started', (data) => {
     runningJobs.set(data.slotId, data);
+    
+    // Marcar la row del feature como en ejecución
+    if (data.featureName) {
+      setFeatureRowExecutionState(data.featureName, true);
+    }
 
     // Set this job as the current visible job in the progress indicator manager
     if (window.progressIndicatorManager && data.jobId) {
@@ -175,6 +193,11 @@ export function initializeSocketListeners(socket) {
   socket.on('job_finished', (data) => {
     const jobDetails = runningJobs.get(data.slotId);
     if (!jobDetails) return;
+    
+    // Remover el estado de ejecución de la row del feature
+    if (jobDetails.featureName) {
+      setFeatureRowExecutionState(jobDetails.featureName, false);
+    }
 
     // Clear the current job in progress indicator manager if this was the current job
     if (window.progressIndicatorManager && data.jobId) {
