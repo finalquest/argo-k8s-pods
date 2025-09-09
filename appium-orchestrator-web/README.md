@@ -1,4 +1,178 @@
-# Appium Orchestrator Web - Documentación del Flujo de Ejecución de Tests
+# Appium Orchestrator Web
+
+Una plataforma web completa para orquestar y gestionar la ejecución de tests de automatización de Appium en dispositivos móviles, con soporte para ejecución paralela, gestión de dispositivos locales y remotos, e integración con WireMock para mocking de servicios.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js >= 18.0.0
+- Android SDK y ADB
+- Docker (opcional, para despliegue)
+
+### Instalación
+```bash
+# Clonar repositorio
+git clone <repositorio>
+cd appium-orchestrator-web
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con valores reales
+
+# Iniciar aplicación
+npm start
+```
+
+### Uso Básico
+1. Acceder a `http://localhost:3000`
+2. Seleccionar una branch, cliente y feature
+3. Configurar dispositivo y APK
+4. Ejecutar tests individualmente o en lote
+5. Monitorear progreso en tiempo real
+
+## 📋 Características Principales
+
+- **Ejecución Paralela**: Múltiples workers ejecutando tests simultáneamente
+- **Gestión de Dispositivos**: Soporte para dispositivos locales y emuladores remotos
+- **Integración Git**: Operaciones de commit y push desde la interfaz
+- **WireMock Integration**: Grabación y reproducción de mappings
+- **Indicadores de Progreso**: Visualización en tiempo real de la ejecución
+- **Workspaces Persistentes**: Optimización para desarrollo iterativo
+- **Reportes**: Generación automática de reportes con Allure
+
+## 📖 Documentación
+
+### 🏗️ Arquitectura
+- [Arquitectura General](docs/01-arquitectura-general.md) - Visión general del sistema
+- [Backend](docs/02-backend/01-server-architecture.md) - Servidor Express.js y API
+- [Frontend](docs/03-frontend/01-module-overview.md) - Módulos JavaScript vanilla
+- [Worker System](docs/02-backend/04-worker-system.md) - Sistema de workers paralelos
+
+### 🔧 Features
+- [Ejecución de Tests](docs/04-features/01-test-execution.md) - Individual y por lotes
+- [Gestión de Workspaces](docs/04-features/02-workspace-management.md) - Preparación y persistencia
+- [Integración Git](docs/04-features/03-git-integration.md) - Operaciones Git desde UI
+- [Gestión de Dispositivos](docs/04-features/04-device-management.md) - Locales y remotos
+- [Gestión de APKs](docs/04-features/05-apk-management.md) - Versionado e instalación
+- [WireMock Integration](docs/04-features/06-wiremock-integration.md) - Mocking de servicios
+- [Indicadores de Progreso](docs/04-features/07-real-time-progress-indicators.md) - Tiempo real
+- [Histórico y Reportes](docs/04-features/08-history-and-reports.md) - Allure y archivado
+- [Gestión de Archivos](docs/04-features/09-file-management-and-configuration.md) - Configuración
+- [Despliegue y Operaciones](docs/04-features/10-deployment-and-operations.md) - Docker y mantenimiento
+
+### 🚀 Despliegue
+- [Dockerización](docs/planning_docker.md) - Configuración Docker
+- [Problemas Conocidos](docs/issue-worker-deadlock.md) - Soluciones a problemas comunes
+
+## 🔌 Arquitectura del Sistema
+
+El sistema se compone de tres capas principales:
+
+### Frontend (UI Web)
+- **Tecnologías**: HTML5, CSS3, JavaScript vanilla
+- **Patrón**: Módulos ES6 con CodeMirror para edición de código
+- **Características**: 
+  - Interfaz modular con `main.js` como punto de entrada
+  - Integración con CodeMirror para edición de features
+  - Indicadores de progreso en tiempo real
+  - Gestión de archivos y configuración
+
+### Backend (Node.js + Express)
+- **Tecnologías**: Node.js, Express.js, Socket.IO, Passport.js
+- **Características**:
+  - API RESTful para gestión de tests y dispositivos
+  - Socket.IO para comunicación en tiempo real
+  - Autenticación con Google OAuth 2.0
+  - Gestión de colas y workers paralelos
+
+### Workers (Procesos Node.js)
+- **Tecnologías**: Node.js child processes, scripts shell
+- **Características**:
+  - Ejecución paralela de tests
+  - Gestión de dispositivos locales y remotos
+  - Integración con Appium y ADB
+  - Generación de reportes con Allure
+
+## 🔧 Configuración
+
+### Variables de Entorno
+```bash
+# Configuración del Servidor
+PORT=3000
+NODE_ENV=development
+APP_BASE_URL=http://localhost:3000
+
+# Autenticación Google OAuth
+GOOGLE_CLIENT_ID=tu-client-id-google
+GOOGLE_CLIENT_SECRET=tu-client-secret-google
+SESSION_SECRET=tu-session-secret-seguro
+
+# Integración Git
+GIT_REPO_URL=https://github.com/tu-usuario/tu-repo.git
+GIT_USER=tu-usuario-git
+GIT_PAT=tu-personal-access-token
+
+# Configuración de Dispositivos
+DEVICE_SOURCE=local
+LOCAL_APK_DIRECTORY=/app/apks
+ANDROID_ADB_SERVER_HOST=host.docker.internal
+ANDROID_ADB_SERVER_PORT=5555
+
+# Workspaces Persistentes
+PERSISTENT_WORKSPACES_ROOT=/app/workspaces
+
+# Configuración de Ejecución
+MAX_PARALLEL_TESTS=2
+MAX_REPORTS_PER_FEATURE=5
+
+# Redis (opcional)
+REDIS_URL=redis://redis:6379
+```
+
+## 🐳 Docker
+
+### Desarrollo
+```bash
+# Preparar entorno
+mkdir -p ./apks ./reports ./workspaces
+cp .env.example .env
+
+# Construir y levantar
+docker-compose up --build
+```
+
+### Producción
+```bash
+# Configurar para producción
+cp .env.example .env
+# Editar con valores de producción
+
+# Levantar en producción
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 🤝 Contribución
+
+1. Fork del repositorio
+2. Crear rama de feature (`git checkout -b feature/nueva-feature`)
+3. Commit de cambios (`git commit -am 'Añadir nueva feature'`)
+4. Push a la rama (`git push origin feature/nueva-feature`)
+5. Crear Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 🆘 Soporte
+
+Para reportar issues o solicitar nuevas features, por favor crear un issue en el repositorio.
+
+---
+
+### Documentación Detallada
 
 Este documento detalla el flujo completo de ejecución de un test en el sistema Appium Orchestrator Web, desde la interacción del usuario en la interfaz web hasta la finalización del test y la generación de reportes. Se describen los componentes principales, su interacción y los mensajes internos que se intercambian.
 
