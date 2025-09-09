@@ -572,12 +572,12 @@ function initializeUiEventListeners(socket) {
     ) {
       const featureName = target.dataset.feature;
       if (!featureName) return; // If no feature is associated, do nothing
-      
+
       const highPriority = target.classList.contains('priority-btn');
-      
+
       // Abrir el archivo en el editor primero
       await openFeatureFromTree(featureName);
-      
+
       // Luego ejecutar el test (con manejo de cambios no guardados)
       await executeTestWithSaveCheck(featureName, highPriority);
       return;

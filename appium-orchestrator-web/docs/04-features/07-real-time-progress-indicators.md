@@ -7,33 +7,35 @@ Los indicadores de progreso en tiempo real proporcionan una experiencia visual i
 ## 🏗️ Arquitectura del Sistema
 
 ### 1. Componentes Principales
+
 ```javascript
 // Arquitectura de indicadores de progreso
 const ProgressSystem = {
   Manager: 'ProgressIndicatorManager',
   States: {
     TEST_STATES: {
-      AVAILABLE: 'available',    // Test disponible para ejecutar
-      RUNNING: 'running',      // Test actualmente en ejecución
-      QUEUED: 'queued'         // Test en cola esperando ejecución
+      AVAILABLE: 'available', // Test disponible para ejecutar
+      RUNNING: 'running', // Test actualmente en ejecución
+      QUEUED: 'queued', // Test en cola esperando ejecución
     },
     STEP_STATES: {
       PENDING: 'pending',
       RUNNING: 'running',
       PASSED: 'passed',
       FAILED: 'failed',
-      SKIPPED: 'skipped'
-    }
+      SKIPPED: 'skipped',
+    },
   },
   UI: {
     Editor: 'CodeMirror Integration',
     Buttons: 'Run Button State',
-    Highlights: 'Visual Indicators'
-  }
+    Highlights: 'Visual Indicators',
+  },
 };
 ```
 
 ### 2. Flujo de Datos
+
 ```javascript
 // Flujo de eventos de progreso
 Socket.IO Event → Progress Manager → UI Updates
@@ -48,6 +50,7 @@ Socket.IO Event → Progress Manager → UI Updates
 ## 🔧 ProgressIndicatorManager
 
 ### 1. Inicialización y Configuración
+
 ```javascript
 // public/js/progress-indicator-manager.js - Clase principal
 class ProgressIndicatorManager {
@@ -56,19 +59,20 @@ class ProgressIndicatorManager {
     this.editorDecorations = new Map(); // Decoraciones por job
     this.currentJobId = null; // Job actualmente visible
     this.throttleTimeout = null;
-    
+
     // Sistema de estados por archivo
     this.testStates = new Map();
     this.TEST_STATES = {
       AVAILABLE: 'available',
       RUNNING: 'running',
-      QUEUED: 'queued'
+      QUEUED: 'queued',
     };
   }
 }
 ```
 
 ### 2. Manejo de Eventos de Progreso
+
 ```javascript
 // public/js/progress-indicator-manager.js - Manejo de eventos
 handleProgressUpdate(data) {
@@ -140,6 +144,7 @@ updateJobState(jobId, event, progressData, timestamp) {
 ## 🎨 Integración con CodeMirror
 
 ### 1. Decoraciones Visuales
+
 ```javascript
 // public/js/progress-indicator-manager.js - Creación de decoraciones
 createStepDecoration(step, status) {
@@ -155,7 +160,7 @@ createStepDecoration(step, status) {
 
   try {
     let lineNum = parseInt(line, 10) - 1; // CodeMirror usa 0-indexed
-    
+
     // Si la línea es 1, buscar el step real en el editor
     if (isNaN(lineNum) || lineNum < 0 || lineNum === 0) {
       lineNum = this.findStepInEditor(step);
@@ -197,7 +202,7 @@ createStepDecoration(step, status) {
         lineClass = 'step-failed-line';
         break;
     }
-    
+
     const lineDecoration = window.ideCodeMirror.addLineClass(
       lineNum,
       'background',
@@ -225,72 +230,73 @@ createStepDecoration(step, status) {
 ```
 
 ### 2. Búsqueda Inteligente de Steps
+
 ```javascript
 // public/js/progress-indicator-manager.js - Búsqueda de steps
 findStepInEditor(step) {
   if (!window.ideCodeMirror || !step.keyword || !step.text) return -1;
 
   console.log('[ProgressIndicatorManager] Searching for step in editor:', step);
-  
+
   // Estrategia 1: Coincidencia exacta
   const exactPattern = step.text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   const exactRegex = new RegExp(`^\\s*${step.keyword}\\s+${exactPattern}`, 'i');
-  
+
   // Estrategia 2: Con placeholders genéricos
   const placeholderPattern = step.text.replace(/"[^"]*"/g, '"[^"]*"');
   const placeholderRegex = new RegExp(`^\\s*${step.keyword}\\s+${placeholderPattern}`, 'i');
-  
+
   // Estrategia 3: Palabras importantes
   const importantWords = this.extractImportantWords(step.text);
   const importantWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${importantWords.join('.*')}.*`, 'i');
-  
+
   // Estrategia 4: Palabras únicas
   const uniqueWords = this.getUniqueWords(step.text);
   const uniqueWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${uniqueWords.join('.*')}.*`, 'i');
-  
+
   const lineCount = window.ideCodeMirror.lineCount();
   const matches = [];
-  
+
   for (let i = 0; i < lineCount; i++) {
     const lineText = window.ideCodeMirror.getLine(i);
-    
+
     if (exactRegex.test(lineText)) {
       console.log('[ProgressIndicatorManager] Found exact match at line:', i + 1);
       return i;
     }
-    
+
     if (placeholderRegex.test(lineText)) {
       matches.push({ line: i, priority: 2 });
     }
-    
+
     if (importantWordsRegex.test(lineText)) {
       matches.push({ line: i, priority: 1 });
     }
-    
+
     if (uniqueWordsRegex.test(lineText)) {
       matches.push({ line: i, priority: 0 });
     }
   }
-  
+
   // Devolver la coincidencia con mayor prioridad
   if (matches.length > 0) {
     matches.sort((a, b) => b.priority - a.priority);
     return matches[0].line;
   }
-  
+
   return -1;
 }
 
 // Extracción de palabras importantes
 extractImportantWords(text) {
   const stopWords = ['user', 'the', 'to', 'and', 'on', 'in', 'with', 'for', 'at', 'by', 'from', 'of', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'];
-  
+
   const words = text.toLowerCase()
     .replace(/"[^"]*"/g, '')
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
     .filter(word => word.length > 2 && !stopWords.includes(word));
-  
+
   return words.slice(0, 5);
 }
 ```
@@ -298,6 +304,7 @@ extractImportantWords(text) {
 ## 🎛️ Gestión de Estados
 
 ### 1. Estados de Tests
+
 ```javascript
 // public/js/progress-indicator-manager.js - Gestión de estados
 setTestState(filePath, state, jobId = null) {
@@ -337,14 +344,15 @@ isTestQueued(filePath) {
 ```
 
 ### 2. Actualización de UI
+
 ```javascript
 // public/js/progress-indicator-manager.js - Actualización de UI
 updateRunButtonState(isRunning) {
   const runBtn = document.getElementById('ide-run-btn');
   if (!runBtn) return;
-  
+
   const isCurrentTestRunning = this.isCurrentTestRunning();
-  
+
   if (isCurrentTestRunning) {
     runBtn.textContent = 'Corriendo...';
     runBtn.disabled = true;
@@ -359,7 +367,7 @@ updateRunButtonState(isRunning) {
 highlightEditorBorder(highlight) {
   const editorControls = document.querySelector('.editor-controls');
   if (!editorControls) return;
-  
+
   if (highlight) {
     editorControls.classList.add('test-execution-active');
   } else {
@@ -369,17 +377,17 @@ highlightEditorBorder(highlight) {
 
 setCurrentJob(jobId) {
   this.currentJobId = jobId;
-  
+
   // Mostrar indicador de inicialización
   this.showInitializingIndicator(jobId);
-  
+
   // Resaltar header del editor si el test actual está en ejecución
   const shouldHighlight = this.isCurrentTestRunning();
   this.highlightEditorBorder(shouldHighlight);
-  
+
   // Actualizar estado del botón
   this.updateRunButtonState(true);
-  
+
   this.updateEditorDecorations(jobId);
 }
 ```
@@ -387,6 +395,7 @@ setCurrentJob(jobId) {
 ## 🎨 Estilos Visuales
 
 ### 1. CSS para Indicadores
+
 ```css
 /* public/css/styles.css - Estilos de progreso */
 .step-indicator {
@@ -437,14 +446,24 @@ setCurrentJob(jobId) {
 
 /* Animaciones */
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Header del editor durante ejecución */
@@ -467,36 +486,37 @@ setCurrentJob(jobId) {
 ## 🔌 Integración con Socket.IO
 
 ### 1. Eventos de Progreso
+
 ```javascript
 // public/js/socket.js - Integración con progreso
 socket.on('test:progress', (data) => {
   console.log('[Socket] Received test progress:', data);
-  
+
   // Manejar con el ProgressIndicatorManager
   if (window.progressIndicatorManager) {
     window.progressIndicatorManager.handleProgressUpdate(data);
   }
-  
+
   // Actualizar UI adicional si es necesario
   updateTestProgressUI(data);
 });
 
 socket.on('test:start', (data) => {
   console.log('[Socket] Test started:', data);
-  
+
   // Establecer estado del test
   if (window.progressIndicatorManager && data.filePath) {
     window.progressIndicatorManager.setTestState(
       data.filePath,
       'running',
-      data.jobId
+      data.jobId,
     );
   }
 });
 
 socket.on('test:complete', (data) => {
   console.log('[Socket] Test completed:', data);
-  
+
   // Limpiar estado del test
   if (window.progressIndicatorManager && data.filePath) {
     window.progressIndicatorManager.clearTestState(data.filePath);
@@ -505,36 +525,37 @@ socket.on('test:complete', (data) => {
 ```
 
 ### 2. Inicialización del Sistema
+
 ```javascript
 // public/js/main.js - Inicialización
 document.addEventListener('DOMContentLoaded', () => {
   // Inicializar ProgressIndicatorManager
   if (window.progressIndicatorManager) {
     console.log('[Main] ProgressIndicatorManager initialized');
-    
+
     // Escuchar cambios de estado de tests
     document.addEventListener('testStateChange', (event) => {
       console.log('[Main] Test state changed:', event.detail);
       updateUIForTestState(event.detail);
     });
   }
-  
+
   // Configurar CodeMirror con gutter de progreso
   if (window.ideCodeMirror) {
     window.ideCodeMirror.setOption('gutters', [
       'CodeMirror-linenumbers',
       'progress-gutter',
-      'CodeMirror-foldgutter'
+      'CodeMirror-foldgutter',
     ]);
   }
 });
 
 function updateUIForTestState(testState) {
   const { filePath, newState, oldState } = testState;
-  
+
   // Actualizar botones de árbol si es necesario
   updateTreeButtonsForTestState(filePath, newState);
-  
+
   // Actualizar estado general de la UI
   updateApplicationState();
 }
@@ -543,6 +564,7 @@ function updateUIForTestState(testState) {
 ## 🧹 Limpieza y Mantenimiento
 
 ### 1. Limpieza Automática
+
 ```javascript
 // public/js/progress-indicator-manager.js - Limpieza
 cleanup() {
@@ -567,6 +589,7 @@ startCleanupTimer() {
 ```
 
 ### 2. Gestión de Memoria
+
 ```javascript
 // public/js/progress-indicator-manager.js - Gestión de memoria
 clearEditorDecorations() {
@@ -586,6 +609,7 @@ clearAllTestStates() {
 ## 📊 Depuración y Monitoreo
 
 ### 1. Información de Depuración
+
 ```javascript
 // public/js/progress-indicator-manager.js - Depuración
 getTestStatesDebugInfo() {
@@ -609,7 +633,7 @@ getTestStatesDebugInfo() {
 // Método para depuración en consola
 window.debugProgressSystem = () => {
   if (window.progressIndicatorManager) {
-    console.log('[Debug] Progress System State:', 
+    console.log('[Debug] Progress System State:',
       window.progressIndicatorManager.getTestStatesDebugInfo()
     );
   }
@@ -617,14 +641,15 @@ window.debugProgressSystem = () => {
 ```
 
 ### 2. Manejo de Errores
+
 ```javascript
 // public/js/progress-indicator-manager.js - Manejo de errores
 handleProgressError(error) {
   console.error('[ProgressIndicatorManager] Progress error:', error);
-  
+
   // Limpiar decoraciones si hay error
   this.clearEditorDecorations();
-  
+
   // Restablecer estados
   if (this.currentJobId) {
     const jobState = this.activeJobs.get(this.currentJobId);
@@ -632,7 +657,7 @@ handleProgressError(error) {
       this.clearTestState(jobState.feature + '.feature');
     }
   }
-  
+
   // Mostrar notificación de error
   showNotification('Error en el sistema de progreso', 'error');
 }
@@ -641,6 +666,7 @@ handleProgressError(error) {
 ## 🚀 Optimización de Rendimiento
 
 ### 1. Throttling y Debouncing
+
 ```javascript
 // public/js/progress-indicator-manager.js - Optimización
 updateEditorDecorations(jobId) {
@@ -648,7 +674,7 @@ updateEditorDecorations(jobId) {
   if (this.throttleTimeout) {
     clearTimeout(this.throttleTimeout);
   }
-  
+
   this.throttleTimeout = setTimeout(() => {
     this.performEditorDecorationUpdate(jobId);
     this.throttleTimeout = null;
@@ -657,11 +683,11 @@ updateEditorDecorations(jobId) {
 
 performEditorDecorationUpdate(jobId) {
   if (!window.ideCodeMirror) return;
-  
+
   // Lógica de actualización optimizada
   const jobState = this.activeJobs.get(jobId);
   if (!jobState) return;
-  
+
   // Solo actualizar si hay cambios significativos
   if (this.shouldUpdateDecorations(jobState)) {
     this.clearEditorDecorations();
@@ -671,6 +697,7 @@ performEditorDecorationUpdate(jobId) {
 ```
 
 ### 2. Memoización
+
 ```javascript
 // public/js/progress-indicator-manager.js - Memoización
 constructor() {
@@ -681,11 +708,11 @@ constructor() {
 shouldUpdateDecorations(jobState) {
   // Calcular hash del estado actual
   const currentStateHash = this.calculateStateHash(jobState);
-  
+
   if (currentStateHash === this.lastDecorationHash) {
     return false; // No hay cambios
   }
-  
+
   this.lastDecorationHash = currentStateHash;
   return true;
 }

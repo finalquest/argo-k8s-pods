@@ -5,11 +5,13 @@ Una plataforma web completa para orquestar y gestionar la ejecución de tests de
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js >= 18.0.0
 - Android SDK y ADB
 - Docker (opcional, para despliegue)
 
 ### Instalación
+
 ```bash
 # Clonar repositorio
 git clone <repositorio>
@@ -27,6 +29,7 @@ npm start
 ```
 
 ### Uso Básico
+
 1. Acceder a `http://localhost:3000`
 2. Seleccionar una branch, cliente y feature
 3. Configurar dispositivo y APK
@@ -46,12 +49,14 @@ npm start
 ## 📖 Documentación
 
 ### 🏗️ Arquitectura
+
 - [Arquitectura General](docs/01-arquitectura-general.md) - Visión general del sistema
 - [Backend](docs/02-backend/01-server-architecture.md) - Servidor Express.js y API
 - [Frontend](docs/03-frontend/01-module-overview.md) - Módulos JavaScript vanilla
 - [Worker System](docs/02-backend/04-worker-system.md) - Sistema de workers paralelos
 
 ### 🔧 Features
+
 - [Ejecución de Tests](docs/04-features/01-test-execution.md) - Individual y por lotes
 - [Gestión de Workspaces](docs/04-features/02-workspace-management.md) - Preparación y persistencia
 - [Integración Git](docs/04-features/03-git-integration.md) - Operaciones Git desde UI
@@ -64,6 +69,7 @@ npm start
 - [Despliegue y Operaciones](docs/04-features/10-deployment-and-operations.md) - Docker y mantenimiento
 
 ### 🚀 Despliegue
+
 - [Dockerización](docs/planning_docker.md) - Configuración Docker
 - [Problemas Conocidos](docs/issue-worker-deadlock.md) - Soluciones a problemas comunes
 
@@ -72,15 +78,17 @@ npm start
 El sistema se compone de tres capas principales:
 
 ### Frontend (UI Web)
+
 - **Tecnologías**: HTML5, CSS3, JavaScript vanilla
 - **Patrón**: Módulos ES6 con CodeMirror para edición de código
-- **Características**: 
+- **Características**:
   - Interfaz modular con `main.js` como punto de entrada
   - Integración con CodeMirror para edición de features
   - Indicadores de progreso en tiempo real
   - Gestión de archivos y configuración
 
 ### Backend (Node.js + Express)
+
 - **Tecnologías**: Node.js, Express.js, Socket.IO, Passport.js
 - **Características**:
   - API RESTful para gestión de tests y dispositivos
@@ -89,6 +97,7 @@ El sistema se compone de tres capas principales:
   - Gestión de colas y workers paralelos
 
 ### Workers (Procesos Node.js)
+
 - **Tecnologías**: Node.js child processes, scripts shell
 - **Características**:
   - Ejecución paralela de tests
@@ -99,6 +108,7 @@ El sistema se compone de tres capas principales:
 ## 🔧 Configuración
 
 ### Variables de Entorno
+
 ```bash
 # Configuración del Servidor
 PORT=3000
@@ -135,6 +145,7 @@ REDIS_URL=redis://redis:6379
 ## 🐳 Docker
 
 ### Desarrollo
+
 ```bash
 # Preparar entorno
 mkdir -p ./apks ./reports ./workspaces
@@ -145,6 +156,7 @@ docker-compose up --build
 ```
 
 ### Producción
+
 ```bash
 # Configurar para producción
 cp .env.example .env

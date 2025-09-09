@@ -7,6 +7,7 @@ El sistema de histórico y reportes permite almacenar, organizar y consultar los
 ## 🏗️ Arquitectura del Sistema
 
 ### 1. Estructura de Almacenamiento
+
 ```bash
 # Estructura de directorios de reportes
 public/reports/
@@ -26,30 +27,32 @@ public/reports/
 ```
 
 ### 2. Componentes del Sistema
+
 ```javascript
 // Arquitectura de histórico y reportes
 const HistorySystem = {
   Storage: {
     FileSystem: 'Estructura jerárquica',
     Archive: 'Compresión y almacenamiento',
-    Cleanup: 'Rotación automática'
+    Cleanup: 'Rotación automática',
   },
   Reports: {
     Allure: 'Generación de reportes',
     Index: 'Índice de ejecuciones',
-    Summary: 'Resúmenes y métricas'
+    Summary: 'Resúmenes y métricas',
   },
   API: {
     Endpoints: 'Servicios REST',
     Filtering: 'Filtros por branch/feature',
-    Download: 'Exportación de datos'
-  }
+    Download: 'Exportación de datos',
+  },
 };
 ```
 
 ## 🔧 Backend - Manejo de Reportes
 
 ### 1. Generación y Almacenamiento
+
 ```javascript
 // server.js - Manejo de reportes Allure
 function handleReport(job, reportPath) {
@@ -91,6 +94,7 @@ function handleReport(job, reportPath) {
 ```
 
 ### 2. Limpieza Automática
+
 ```javascript
 // server.js - Rotación de reportes
 function cleanupOldReports(featureReportDir) {
@@ -109,7 +113,10 @@ function cleanupOldReports(featureReportDir) {
     reportsToDelete.forEach((report) => {
       fs.rm(report.path, { recursive: true, force: true }, (err) => {
         if (err) {
-          console.error(`Error eliminando reporte antiguo ${report.path}:`, err);
+          console.error(
+            `Error eliminando reporte antiguo ${report.path}:`,
+            err,
+          );
         } else {
           console.log(`Reporte antiguo eliminado: ${report.name}`);
         }
@@ -120,6 +127,7 @@ function cleanupOldReports(featureReportDir) {
 ```
 
 ### 3. API Endpoints
+
 ```javascript
 // server.js - Endpoints de histórico
 app.get('/api/history/branches', (req, res) => {
@@ -127,7 +135,7 @@ app.get('/api/history/branches', (req, res) => {
   if (!fs.existsSync(reportsDir)) {
     return res.json([]);
   }
-  
+
   try {
     const branches = fs
       .readdirSync(reportsDir, { withFileTypes: true })
@@ -136,7 +144,9 @@ app.get('/api/history/branches', (req, res) => {
     res.json(branches);
   } catch (error) {
     console.error('Error al leer las branches del historial:', error);
-    res.status(500).json({ error: 'Error interno al leer las branches del historial.' });
+    res
+      .status(500)
+      .json({ error: 'Error interno al leer las branches del historial.' });
   }
 });
 
@@ -158,7 +168,7 @@ app.get('/api/history', (req, res) => {
       if (branchFilter && branch !== branchFilter) {
         continue;
       }
-      
+
       const branchPath = path.join(reportsDir, branch);
       const features = fs
         .readdirSync(branchPath, { withFileTypes: true })
@@ -182,7 +192,7 @@ app.get('/api/history', (req, res) => {
         }
       }
     }
-    
+
     // Ordenar por timestamp (más reciente primero)
     history.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     res.json(history);
@@ -196,6 +206,7 @@ app.get('/api/history', (req, res) => {
 ## 🎨 Frontend - Interfaz de Histórico
 
 ### 1. Carga de Histórico
+
 ```javascript
 // public/js/api.js - Carga de datos
 export async function loadHistoryBranches() {
@@ -204,12 +215,12 @@ export async function loadHistoryBranches() {
     const response = await fetch('/api/history/branches');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const branches = await response.json();
-    
+
     // Limpiar opciones existentes excepto la primera ("Todas")
     while (historyBranchFilter.options.length > 1) {
       historyBranchFilter.remove(1);
     }
-    
+
     branches.forEach((branch) => {
       const option = document.createElement('option');
       option.value = branch;
@@ -224,17 +235,18 @@ export async function loadHistoryBranches() {
 export async function loadHistory(branch = '') {
   const historyList = document.getElementById('history-list');
   historyList.innerHTML = '<li>Cargando historial...</li>';
-  
+
   try {
     const url = branch ? `/api/history?branch=${branch}` : '/api/history';
     const response = await fetch(url);
     const history = await response.json();
-    
+
     historyList.innerHTML = '';
     if (history.length === 0) {
-      historyList.innerHTML = '<li>No hay historial de reportes para esta selección.</li>';
+      historyList.innerHTML =
+        '<li>No hay historial de reportes para esta selección.</li>';
     }
-    
+
     history.forEach((item) => {
       const li = renderHistoryItem(item);
       historyList.appendChild(li);
@@ -247,11 +259,12 @@ export async function loadHistory(branch = '') {
 ```
 
 ### 2. Renderizado de Items
+
 ```javascript
 // public/js/ui.js - Componente de histórico
 export function renderHistoryItem(item) {
   const li = document.createElement('li');
-  
+
   const infoDiv = document.createElement('div');
   infoDiv.style.display = 'flex';
   infoDiv.style.alignItems = 'center';
@@ -259,7 +272,7 @@ export function renderHistoryItem(item) {
 
   const textSpan = document.createElement('span');
   textSpan.textContent = `${item.feature} (${item.branch}) - ${item.timestamp}`;
-  
+
   infoDiv.appendChild(textSpan);
   li.appendChild(infoDiv);
 
@@ -276,18 +289,19 @@ export function renderHistoryItem(item) {
     };
     li.appendChild(reportButton);
   }
-  
+
   return li;
 }
 ```
 
 ### 3. Integración con la UI Principal
+
 ```javascript
 // public/js/main.js - Inicialización
 document.addEventListener('DOMContentLoaded', () => {
   // Inicializar componentes de histórico
   initializeHistoryComponents();
-  
+
   // Cargar datos iniciales
   loadHistoryBranches();
   loadHistory();
@@ -296,13 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeHistoryComponents() {
   const historyBranchFilter = document.getElementById('history-branch-filter');
   const refreshHistoryBtn = document.getElementById('refresh-history-btn');
-  
+
   // Evento de cambio de filtro
   historyBranchFilter.addEventListener('change', () => {
     const selectedBranch = historyBranchFilter.value;
     loadHistory(selectedBranch);
   });
-  
+
   // Evento de refresco
   refreshHistoryBtn.addEventListener('click', () => {
     const selectedBranch = historyBranchFilter.value;
@@ -315,6 +329,7 @@ function initializeHistoryComponents() {
 ## 📊 Visualización de Reportes
 
 ### 1. Visor de Reportes Allure
+
 ```javascript
 // public/js/report-viewer.js - Visor de reportes
 class ReportViewer {
@@ -333,7 +348,7 @@ class ReportViewer {
     this.viewerWindow = window.open(
       reportUrl,
       'reportViewer',
-      'width=1200,height=800,scrollbars=yes,resizable=yes'
+      'width=1200,height=800,scrollbars=yes,resizable=yes',
     );
 
     // Monitorear cierre de ventana
@@ -356,6 +371,7 @@ window.reportViewer = reportViewer;
 ```
 
 ### 2. Estilos para Histórico
+
 ```css
 /* public/css/styles.css - Estilos de histórico */
 .history-container {
@@ -413,7 +429,7 @@ window.reportViewer = reportViewer;
 }
 
 .history-item:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -468,6 +484,7 @@ window.reportViewer = reportViewer;
 ## 📈 Análisis y Métricas
 
 ### 1. Extracción de Métricas
+
 ```javascript
 // public/js/analytics.js - Análisis de histórico
 class HistoryAnalytics {
@@ -490,9 +507,9 @@ class HistoryAnalytics {
   getExecutionTrends(featureName, days = 30) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
-    
+
     return this.historyData
-      .filter(item => {
+      .filter((item) => {
         const itemDate = new Date(item.timestamp.replace(/-/g, ':'));
         return item.feature === featureName && itemDate > cutoff;
       })
@@ -500,16 +517,16 @@ class HistoryAnalytics {
   }
 
   getSuccessRate(branch = '') {
-    const filteredData = branch 
-      ? this.historyData.filter(item => item.branch === branch)
+    const filteredData = branch
+      ? this.historyData.filter((item) => item.branch === branch)
       : this.historyData;
-    
+
     // Aquí se podría integrar con datos de resultados de tests
     // Por ahora, devuelve estadísticas básicas
     return {
       total: filteredData.length,
       byBranch: this.groupByBranch(filteredData),
-      byFeature: this.groupByFeature(filteredData)
+      byFeature: this.groupByFeature(filteredData),
     };
   }
 
@@ -534,6 +551,7 @@ window.historyAnalytics = historyAnalytics;
 ```
 
 ### 2. Visualización de Tendencias
+
 ```javascript
 // public/js/charts.js - Gráficos de histórico
 function renderExecutionChart(canvasId, data) {
@@ -541,10 +559,10 @@ function renderExecutionChart(canvasId, data) {
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
-  
+
   // Preparar datos para el gráfico
   const chartData = prepareChartData(data);
-  
+
   // Renderizar gráfico simple (puede reemplazarse con Chart.js o similar)
   renderSimpleChart(ctx, chartData);
 }
@@ -552,15 +570,17 @@ function renderExecutionChart(canvasId, data) {
 function prepareChartData(data) {
   // Agrupar ejecuciones por día
   const dailyExecutions = {};
-  
-  data.forEach(item => {
+
+  data.forEach((item) => {
     const date = item.timestamp.split('T')[0];
     dailyExecutions[date] = (dailyExecutions[date] || 0) + 1;
   });
-  
+
   return {
     labels: Object.keys(dailyExecutions).sort(),
-    values: Object.keys(dailyExecutions).sort().map(date => dailyExecutions[date])
+    values: Object.keys(dailyExecutions)
+      .sort()
+      .map((date) => dailyExecutions[date]),
   };
 }
 
@@ -568,33 +588,33 @@ function renderSimpleChart(ctx, data) {
   const padding = 40;
   const width = ctx.canvas.width - 2 * padding;
   const height = ctx.canvas.height - 2 * padding;
-  
+
   // Limpiar canvas
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  
+
   if (data.values.length === 0) return;
-  
+
   // Encontrar valor máximo
   const maxValue = Math.max(...data.values);
   const barWidth = width / data.values.length;
-  
+
   // Dibujar barras
   data.values.forEach((value, index) => {
     const barHeight = (value / maxValue) * height;
     const x = padding + index * barWidth;
     const y = padding + height - barHeight;
-    
+
     // Dibujar barra
     ctx.fillStyle = '#007bff';
     ctx.fillRect(x, y, barWidth - 2, barHeight);
-    
+
     // Dibujar valor
     ctx.fillStyle = '#333';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(value.toString(), x + barWidth / 2, y - 5);
   });
-  
+
   // Dibujar etiquetas
   ctx.fillStyle = '#666';
   ctx.font = '10px Arial';
@@ -609,46 +629,50 @@ function renderSimpleChart(ctx, data) {
 ## 🗄️ Archivo y Exportación
 
 ### 1. Sistema de Archivo
+
 ```javascript
 // server.js - Archivo de reportes antiguos
 function archiveOldReports() {
   const reportsDir = path.join(__dirname, 'public', 'reports');
   const archiveDir = path.join(reportsDir, 'archive');
   const archiveThreshold = 30; // Días
-  
+
   if (!fs.existsSync(reportsDir)) return;
-  
+
   const now = new Date();
-  
+
   // Recorrer branches
-  const branches = fs.readdirSync(reportsDir, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
-  
-  branches.forEach(branch => {
+  const branches = fs
+    .readdirSync(reportsDir, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+  branches.forEach((branch) => {
     const branchPath = path.join(reportsDir, branch);
-    
+
     // Recorrer features
-    const features = fs.readdirSync(branchPath, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name);
-    
-    features.forEach(feature => {
+    const features = fs
+      .readdirSync(branchPath, { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
+
+    features.forEach((feature) => {
       const featurePath = path.join(branchPath, feature);
-      
+
       // Encontrar reportes antiguos
-      const reports = fs.readdirSync(featurePath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => ({
+      const reports = fs
+        .readdirSync(featurePath, { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => ({
           name: dirent.name,
           path: path.join(featurePath, dirent.name),
-          stat: fs.statSync(path.join(featurePath, dirent.name))
+          stat: fs.statSync(path.join(featurePath, dirent.name)),
         }))
-        .filter(report => {
+        .filter((report) => {
           const reportAge = (now - report.stat.mtime) / (1000 * 60 * 60 * 24);
           return reportAge > archiveThreshold;
         });
-      
+
       if (reports.length > 0) {
         archiveReports(branch, feature, reports);
       }
@@ -658,24 +682,27 @@ function archiveOldReports() {
 
 function archiveReports(branch, feature, reports) {
   const archiveDir = path.join(__dirname, 'public', 'reports', 'archive');
-  const archivePath = path.join(archiveDir, `${branch}-${feature}-${Date.now()}.zip`);
-  
+  const archivePath = path.join(
+    archiveDir,
+    `${branch}-${feature}-${Date.now()}.zip`,
+  );
+
   fs.mkdirSync(archiveDir, { recursive: true });
-  
+
   const output = fs.createWriteStream(archivePath);
   const archive = archiver('zip', { zlib: { level: 9 } });
-  
+
   archive.pipe(output);
-  
-  reports.forEach(report => {
+
+  reports.forEach((report) => {
     archive.directory(report.path, `${branch}/${feature}/${report.name}`);
   });
-  
+
   archive.finalize();
-  
+
   output.on('close', () => {
     // Eliminar reportes originales
-    reports.forEach(report => {
+    reports.forEach((report) => {
       fs.rmSync(report.path, { recursive: true, force: true });
     });
     console.log(`Reportes archivados: ${archivePath}`);
@@ -684,14 +711,15 @@ function archiveReports(branch, feature, reports) {
 ```
 
 ### 2. Exportación de Datos
+
 ```javascript
 // server.js - Exportación de histórico
 app.get('/api/history/export', (req, res) => {
   const { branch, format = 'json' } = req.query;
-  
+
   try {
     const history = getHistoryData(branch);
-    
+
     switch (format) {
       case 'csv':
         exportAsCSV(res, history);
@@ -709,19 +737,28 @@ app.get('/api/history/export', (req, res) => {
 
 function exportAsJSON(res, history) {
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', `attachment; filename="history-${Date.now()}.json"`);
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="history-${Date.now()}.json"`,
+  );
   res.json(history);
 }
 
 function exportAsCSV(res, history) {
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', `attachment; filename="history-${Date.now()}.csv"`);
-  
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="history-${Date.now()}.csv"`,
+  );
+
   const header = 'Branch,Feature,Timestamp,Report URL\n';
-  const rows = history.map(item => 
-    `${item.branch},${item.feature},${item.timestamp},${item.reportUrl}`
-  ).join('\n');
-  
+  const rows = history
+    .map(
+      (item) =>
+        `${item.branch},${item.feature},${item.timestamp},${item.reportUrl}`,
+    )
+    .join('\n');
+
   res.send(header + rows);
 }
 ```
@@ -729,6 +766,7 @@ function exportAsCSV(res, history) {
 ## 🔍 Búsqueda y Filtrado
 
 ### 1. Búsqueda Avanzada
+
 ```javascript
 // public/js/history-search.js - Búsqueda en histórico
 class HistorySearch {
@@ -748,30 +786,30 @@ class HistorySearch {
     const searchTerm = this.searchInput.value.toLowerCase();
     const dateFilter = this.filterDate.value;
     const statusFilter = this.filterStatus.value;
-    
+
     try {
       const response = await fetch('/api/history');
       let history = await response.json();
-      
+
       // Aplicar filtros
       if (searchTerm) {
-        history = history.filter(item => 
-          item.feature.toLowerCase().includes(searchTerm) ||
-          item.branch.toLowerCase().includes(searchTerm)
+        history = history.filter(
+          (item) =>
+            item.feature.toLowerCase().includes(searchTerm) ||
+            item.branch.toLowerCase().includes(searchTerm),
         );
       }
-      
+
       if (dateFilter) {
         const filterDate = new Date(dateFilter);
-        history = history.filter(item => {
+        history = history.filter((item) => {
           const itemDate = new Date(item.timestamp.replace(/-/g, ':'));
           return itemDate.toDateString() === filterDate.toDateString();
         });
       }
-      
+
       // Actualizar UI con resultados filtrados
       this.displaySearchResults(history);
-      
     } catch (error) {
       console.error('Error en búsqueda de histórico:', error);
     }
@@ -780,13 +818,13 @@ class HistorySearch {
   displaySearchResults(results) {
     const historyList = document.getElementById('history-list');
     historyList.innerHTML = '';
-    
+
     if (results.length === 0) {
       historyList.innerHTML = '<li>No se encontraron resultados.</li>';
       return;
     }
-    
-    results.forEach(item => {
+
+    results.forEach((item) => {
       const li = renderHistoryItem(item);
       historyList.appendChild(li);
     });

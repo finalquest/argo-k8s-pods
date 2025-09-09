@@ -1342,7 +1342,6 @@ textarea {
   animation: pulse 2s infinite;
 }
 
-
 /* Clases para resaltar líneas según estado */
 .step-running-line {
   background-color: rgba(217, 119, 6, 0.3) !important;
@@ -1502,7 +1501,6 @@ textarea {
   justify-content: center;
   font-size: 8px;
 }
-
 
 /* Simple yellow background for test execution indication */
 .test-execution-active {

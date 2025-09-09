@@ -11,13 +11,13 @@ class ProgressIndicatorManager {
     this.editorDecorations = new Map(); // Decoraciones por job
     this.currentJobId = null; // Job actualmente visible en el editor
     this.throttleTimeout = null;
-    
+
     // Sistema de estados por archivo de test
     this.testStates = new Map(); // Mapa de estados por archivo: {filePath: state}
     this.TEST_STATES = {
-      AVAILABLE: 'available',    // Test disponible para ejecutar
-      RUNNING: 'running',      // Test actualmente en ejecución
-      QUEUED: 'queued'         // Test en cola esperando ejecución
+      AVAILABLE: 'available', // Test disponible para ejecutar
+      RUNNING: 'running', // Test actualmente en ejecución
+      QUEUED: 'queued', // Test en cola esperando ejecución
     };
   }
 
@@ -103,17 +103,17 @@ class ProgressIndicatorManager {
    */
   setCurrentJob(jobId) {
     this.currentJobId = jobId;
-    
+
     // Mostrar indicador de "inicializando" mientras esperamos el primer step
     this.showInitializingIndicator(jobId);
-    
+
     // Resaltar header del editor SOLO si el test actual está en ejecución
     const shouldHighlight = this.isCurrentTestRunning();
     this.highlightEditorBorder(shouldHighlight);
-    
+
     // Actualizar estado del botón de ejecución
-    this.updateRunButtonState(true);
-    
+    this.updateRunButtonState();
+
     this.updateEditorDecorations(jobId);
   }
 
@@ -145,11 +145,11 @@ class ProgressIndicatorManager {
    */
   showInitializingIndicator(jobId) {
     if (!window.ideCodeMirror) return;
-    
+
     // Buscar la primera línea que contenga "Feature:" o "Scenario:"
     const lineCount = window.ideCodeMirror.lineCount();
     let targetLine = 0; // Por defecto, primera línea
-    
+
     for (let i = 0; i < lineCount; i++) {
       const lineText = window.ideCodeMirror.getLine(i);
       if (lineText.match(/^\s*(Feature:|Scenario:)/i)) {
@@ -157,9 +157,10 @@ class ProgressIndicatorManager {
         break;
       }
     }
-    
+
     // Crear indicador de inicialización
-    const initializingDecoration = this.createInitializingDecoration(targetLine, jobId);
+    const initializingDecoration =
+      this.createInitializingDecoration(targetLine);
     if (initializingDecoration) {
       if (!this.editorDecorations.has(jobId)) {
         this.editorDecorations.set(jobId, []);
@@ -171,34 +172,38 @@ class ProgressIndicatorManager {
   /**
    * Crea una decoración de inicialización
    */
-  createInitializingDecoration(lineNum, jobId) {
+  createInitializingDecoration(lineNum) {
     if (!window.ideCodeMirror) return null;
-    
+
     try {
       // Crear marcador en el gutter
       const gutterMarker = document.createElement('div');
       gutterMarker.className = 'step-indicator step-initializing';
       gutterMarker.title = 'Inicializando test...';
       gutterMarker.innerHTML = '⏳';
-      
+
       // NO crear decoración de línea por ahora - solo gutter markers
       // const lineDecoration = window.ideCodeMirror.addLineClass(
       //   lineNum,
       //   'background',
       //   'step-line step-line-initializing'
       // );
-      
+
       // Agregar al gutter
       window.ideCodeMirror.setGutterMarker(
         lineNum,
         'progress-gutter',
         gutterMarker,
       );
-      
+
       return {
         clear: () => {
           // window.ideCodeMirror.removeLineClass(lineNum, 'background', 'step-line step-line-initializing');
-          window.ideCodeMirror.setGutterMarker(lineNum, 'progress-gutter', null);
+          window.ideCodeMirror.setGutterMarker(
+            lineNum,
+            'progress-gutter',
+            null,
+          );
         },
       };
     } catch (error) {
@@ -226,7 +231,7 @@ class ProgressIndicatorManager {
   highlightEditorBorder(highlight) {
     const editorControls = document.querySelector('.editor-controls');
     if (!editorControls) return;
-    
+
     if (highlight) {
       editorControls.classList.add('test-execution-active');
     } else {
@@ -238,13 +243,13 @@ class ProgressIndicatorManager {
    * Actualiza el estado del botón de ejecución
    * @param {boolean} isRunning - Si el test está corriendo
    */
-  updateRunButtonState(isRunning) {
+  updateRunButtonState() {
     const runBtn = document.getElementById('ide-run-btn');
     if (!runBtn) return;
-    
+
     // Verificar si el test actual en el editor es el que está en ejecución
     const isCurrentTestRunning = this.isCurrentTestRunning();
-    
+
     if (isCurrentTestRunning) {
       runBtn.textContent = 'Corriendo...';
       runBtn.disabled = true;
@@ -321,22 +326,31 @@ class ProgressIndicatorManager {
     // Verificar si el archivo actual coincide con el archivo del step
     const currentFile = this.getCurrentEditorFile();
     if (currentFile && file && !this.isSameFile(currentFile, file)) {
-      console.log('[ProgressIndicatorManager] File mismatch:', { currentFile, file });
+      console.log('[ProgressIndicatorManager] File mismatch:', {
+        currentFile,
+        file,
+      });
       // Por ahora, mostrar indicadores en cualquier archivo abierto
       // return null;
     }
 
     try {
       let lineNum = parseInt(line, 10) - 1; // CodeMirror usa 0-indexed
-      
+
       // Si la línea es 1 (que es lo que el parser siempre da), intentar encontrar el step real en el editor
-      if (isNaN(lineNum) || lineNum < 0 || lineNum === 0) { // 0 es línea 1 en 1-indexed
+      if (isNaN(lineNum) || lineNum < 0 || lineNum === 0) {
+        // 0 es línea 1 en 1-indexed
         lineNum = this.findStepInEditor(step);
         if (lineNum === -1) {
-          console.log('[ProgressIndicatorManager] Could not find step in editor, using line 1 as fallback');
+          console.log(
+            '[ProgressIndicatorManager] Could not find step in editor, using line 1 as fallback',
+          );
           lineNum = 0; // Usar línea 1 como fallback
         } else {
-          console.log('[ProgressIndicatorManager] Found step at line:', lineNum + 1);
+          console.log(
+            '[ProgressIndicatorManager] Found step at line:',
+            lineNum + 1,
+          );
         }
       }
 
@@ -375,14 +389,17 @@ class ProgressIndicatorManager {
         default:
           lineClass = 'step-running-line';
       }
-      
-      const lineDecoration = window.ideCodeMirror.addLineClass(
-        lineNum,
-        'background',
-        lineClass
+
+      // Aplicar clase de fondo directamente al editor en lugar de usar addLineClass
+      // que no funciona correctamente en todas las versiones de CodeMirror
+      const editorElement = window.ideCodeMirror.getWrapperElement();
+      if (editorElement) {
+        editorElement.classList.add('step-active-background');
+      }
+
+      console.log(
+        `[ProgressIndicatorManager] Added ${lineClass} to line ${lineNum + 1}`,
       );
-      
-      console.log(`[ProgressIndicatorManager] Added ${lineClass} to line ${lineNum + 1}`);
 
       // Agregar al gutter
       window.ideCodeMirror.setGutterMarker(
@@ -394,7 +411,11 @@ class ProgressIndicatorManager {
       return {
         clear: () => {
           // Remover la clase de la línea
-          window.ideCodeMirror.removeLineClass(lineNum, 'background', lineClass);
+          window.ideCodeMirror.removeLineClass(
+            lineNum,
+            'background',
+            lineClass,
+          );
           window.ideCodeMirror.setGutterMarker(
             lineNum,
             'progress-gutter',
@@ -418,7 +439,12 @@ class ProgressIndicatorManager {
       const jobState = this.activeJobs.get(this.currentJobId);
       if (jobState && jobState.feature) {
         // Convertir el nombre del feature a nombre de archivo
-        return jobState.feature.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '.feature';
+        return (
+          jobState.feature
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '') + '.feature'
+        );
       }
     }
     return null;
@@ -430,11 +456,11 @@ class ProgressIndicatorManager {
    */
   isCurrentTestRunning() {
     if (!this.currentJobId) return false;
-    
+
     // Obtener el archivo actual del editor (desde el dataset del editor)
     const currentEditorFile = this.getCurrentEditorFileFromUI();
     if (!currentEditorFile) return false;
-    
+
     // Verificar si este archivo está en estado RUNNING
     return this.isTestRunning(currentEditorFile);
   }
@@ -448,7 +474,7 @@ class ProgressIndicatorManager {
     if (window.currentFeatureFile) {
       return window.currentFeatureFile;
     }
-    
+
     // Si no está disponible, intentar obtenerlo del job actual
     return this.getCurrentEditorFile();
   }
@@ -483,59 +509,92 @@ class ProgressIndicatorManager {
   findStepInEditor(step) {
     if (!window.ideCodeMirror || !step.keyword || !step.text) return -1;
 
-    console.log('[ProgressIndicatorManager] Searching for step in editor:', step);
-    
+    console.log(
+      '[ProgressIndicatorManager] Searching for step in editor:',
+      step,
+    );
+
     // Estrategia 1: Buscar coincidencia exacta primero
-    const exactPattern = step.text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const exactRegex = new RegExp(`^\\s*${step.keyword}\\s+${exactPattern}`, 'i');
-    
+    const exactPattern = step.text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const exactRegex = new RegExp(
+      `^\\s*${step.keyword}\\s+${exactPattern}`,
+      'i',
+    );
+
     // Estrategia 2: Buscar con placeholders genéricos
     const placeholderPattern = step.text.replace(/"[^"]*"/g, '"[^"]*"');
-    const placeholderRegex = new RegExp(`^\\s*${step.keyword}\\s+${placeholderPattern}`, 'i');
-    
+    const placeholderRegex = new RegExp(
+      `^\\s*${step.keyword}\\s+${placeholderPattern}`,
+      'i',
+    );
+
     // Estrategia 3: Buscar palabras clave más específicas (extraer sustantivos/verbos importantes)
     const importantWords = this.extractImportantWords(step.text);
-    const importantWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${importantWords.join('.*')}.*`, 'i');
-    
+    const importantWordsRegex = new RegExp(
+      `^\\s*${step.keyword}\\s+.*${importantWords.join('.*')}.*`,
+      'i',
+    );
+
     // Estrategia 4: Último recurso - buscar palabras clave únicas en la línea
     const uniqueWords = this.getUniqueWords(step.text);
-    const uniqueWordsRegex = new RegExp(`^\\s*${step.keyword}\\s+.*${uniqueWords.join('.*')}.*`, 'i');
-    
+    const uniqueWordsRegex = new RegExp(
+      `^\\s*${step.keyword}\\s+.*${uniqueWords.join('.*')}.*`,
+      'i',
+    );
+
     const lineCount = window.ideCodeMirror.lineCount();
     const matches = [];
-    
+
     for (let i = 0; i < lineCount; i++) {
       const lineText = window.ideCodeMirror.getLine(i);
-      
+
       if (exactRegex.test(lineText)) {
-        console.log('[ProgressIndicatorManager] Found exact match at line:', i + 1);
+        console.log(
+          '[ProgressIndicatorManager] Found exact match at line:',
+          i + 1,
+        );
         return i;
       }
-      
+
       if (placeholderRegex.test(lineText)) {
-        console.log('[ProgressIndicatorManager] Found placeholder match at line:', i + 1);
+        console.log(
+          '[ProgressIndicatorManager] Found placeholder match at line:',
+          i + 1,
+        );
         matches.push({ line: i, priority: 2 });
       }
-      
+
       if (importantWordsRegex.test(lineText)) {
-        console.log('[ProgressIndicatorManager] Found important words match at line:', i + 1);
+        console.log(
+          '[ProgressIndicatorManager] Found important words match at line:',
+          i + 1,
+        );
         matches.push({ line: i, priority: 1 });
       }
-      
+
       if (uniqueWordsRegex.test(lineText)) {
-        console.log('[ProgressIndicatorManager] Found unique words match at line:', i + 1);
+        console.log(
+          '[ProgressIndicatorManager] Found unique words match at line:',
+          i + 1,
+        );
         matches.push({ line: i, priority: 0 });
       }
     }
-    
+
     // Devolver la coincidencia con mayor prioridad
     if (matches.length > 0) {
       matches.sort((a, b) => b.priority - a.priority);
-      console.log('[ProgressIndicatorManager] Selected best match at line:', matches[0].line + 1);
+      console.log(
+        '[ProgressIndicatorManager] Selected best match at line:',
+        matches[0].line + 1,
+      );
       return matches[0].line;
     }
-    
-    console.log('[ProgressIndicatorManager] No match found for step:', step.text);
+
+    console.log(
+      '[ProgressIndicatorManager] No match found for step:',
+      step.text,
+    );
     return -1;
   }
 
@@ -546,15 +605,55 @@ class ProgressIndicatorManager {
    */
   extractImportantWords(text) {
     // Eliminar palabras comunes y artículos
-    const stopWords = ['user', 'the', 'to', 'and', 'on', 'in', 'with', 'for', 'at', 'by', 'from', 'of', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'];
-    
+    const stopWords = [
+      'user',
+      'the',
+      'to',
+      'and',
+      'on',
+      'in',
+      'with',
+      'for',
+      'at',
+      'by',
+      'from',
+      'of',
+      'as',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'being',
+      'have',
+      'has',
+      'had',
+      'do',
+      'does',
+      'did',
+      'will',
+      'would',
+      'could',
+      'should',
+      'may',
+      'might',
+      'must',
+      'can',
+      'this',
+      'that',
+      'these',
+      'those',
+    ];
+
     // Extraer palabras significativas (eliminar comillas y palabras comunes)
-    const words = text.toLowerCase()
+    const words = text
+      .toLowerCase()
       .replace(/"[^"]*"/g, '') // Eliminar quoted strings
       .replace(/[^\w\s]/g, ' ') // Eliminar puntuación
       .split(/\s+/)
-      .filter(word => word.length > 2 && !stopWords.includes(word));
-    
+      .filter((word) => word.length > 2 && !stopWords.includes(word));
+
     // Tomar las 3-5 palabras más distintivas
     return words.slice(0, 5);
   }
@@ -566,12 +665,13 @@ class ProgressIndicatorManager {
    */
   getUniqueWords(text) {
     // Buscar palabras específicas que son únicas en cada step
-    const words = text.toLowerCase()
+    const words = text
+      .toLowerCase()
       .replace(/"[^"]*"/g, '""') // Reemplazar quoted strings por placeholder
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter(word => word.length > 3 && word !== 'user');
-    
+      .filter((word) => word.length > 3 && word !== 'user');
+
     // Tomar palabras que parecen ser nombres de elementos o acciones específicas
     return words.slice(0, 3);
   }
@@ -614,7 +714,10 @@ class ProgressIndicatorManager {
    */
   setTestState(filePath, state, jobId = null) {
     if (!filePath || !Object.values(this.TEST_STATES).includes(state)) {
-      console.warn('[ProgressIndicatorManager] Invalid test state parameters:', { filePath, state });
+      console.warn(
+        '[ProgressIndicatorManager] Invalid test state parameters:',
+        { filePath, state },
+      );
       return;
     }
 
@@ -622,7 +725,9 @@ class ProgressIndicatorManager {
     this.testStates.set(filePath, { state, jobId, timestamp: Date.now() });
 
     if (previousState?.state !== state) {
-      console.log(`[ProgressIndicatorManager] Test state changed: ${filePath} ${previousState?.state || 'unknown'} -> ${state}`);
+      console.log(
+        `[ProgressIndicatorManager] Test state changed: ${filePath} ${previousState?.state || 'unknown'} -> ${state}`,
+      );
     }
 
     // Si el test comienza a ejecutarse, establecerlo como job actual
@@ -703,14 +808,20 @@ class ProgressIndicatorManager {
    */
   clearTestState(filePath) {
     if (!filePath) return;
-    
+
     const previousState = this.testStates.get(filePath);
     this.testStates.delete(filePath);
-    
-    console.log(`[ProgressIndicatorManager] Test state cleared: ${filePath} was ${previousState?.state || 'unknown'}`);
-    
+
+    console.log(
+      `[ProgressIndicatorManager] Test state cleared: ${filePath} was ${previousState?.state || 'unknown'}`,
+    );
+
     // Disparar evento de cambio de estado
-    this.dispatchTestStateChange(filePath, this.TEST_STATES.AVAILABLE, previousState?.state);
+    this.dispatchTestStateChange(
+      filePath,
+      this.TEST_STATES.AVAILABLE,
+      previousState?.state,
+    );
   }
 
   /**
@@ -731,14 +842,14 @@ class ProgressIndicatorManager {
       states: {
         available: this.getTestsByState(this.TEST_STATES.AVAILABLE).length,
         running: this.getTestsByState(this.TEST_STATES.RUNNING).length,
-        queued: this.getTestsByState(this.TEST_STATES.QUEUED).length
+        queued: this.getTestsByState(this.TEST_STATES.QUEUED).length,
       },
       tests: Array.from(this.testStates.entries()).map(([filePath, data]) => ({
         filePath,
         state: data.state,
         jobId: data.jobId,
-        timestamp: new Date(data.timestamp).toISOString()
-      }))
+        timestamp: new Date(data.timestamp).toISOString(),
+      })),
     };
     return debugInfo;
   }
@@ -755,12 +866,14 @@ class ProgressIndicatorManager {
         filePath,
         newState,
         oldState,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     });
-    
+
     document.dispatchEvent(event);
-    console.log(`[ProgressIndicatorManager] Dispatched testStateChange event: ${filePath} ${oldState || 'unknown'} -> ${newState}`);
+    console.log(
+      `[ProgressIndicatorManager] Dispatched testStateChange event: ${filePath} ${oldState || 'unknown'} -> ${newState}`,
+    );
   }
 
   /**
@@ -770,18 +883,18 @@ class ProgressIndicatorManager {
    */
   shouldShowDecorationsForJob(jobId) {
     if (!jobId) return false;
-    
+
     // Obtener el estado del job
     const jobState = this.activeJobs.get(jobId);
     if (!jobState || !jobState.feature) return false;
-    
+
     // Obtener el archivo actual del editor
     const currentFile = this.getCurrentEditorFileFromUI();
     if (!currentFile) return false;
-    
+
     // Convertir el nombre del feature a nombre de archivo y comparar
     const jobFileName = jobState.feature + '.feature';
-    
+
     return this.isSameFile(currentFile, jobFileName);
   }
 
@@ -792,11 +905,11 @@ class ProgressIndicatorManager {
   updateEditorStateForCurrentFile() {
     // Actualizar el estado del botón de ejecución
     this.updateRunButtonState(true);
-    
+
     // Actualizar el resaltado del header
     const shouldHighlight = this.isCurrentTestRunning();
     this.highlightEditorBorder(shouldHighlight);
-    
+
     // Actualizar las decoraciones del editor para el job actual (si corresponde)
     if (this.currentJobId) {
       this.updateEditorDecorations(this.currentJobId);

@@ -41,7 +41,7 @@ const sessionMiddleware = session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 horas
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 horas
 });
 
 // Middleware stack
@@ -55,17 +55,23 @@ app.use(express.static('public'));
 ### 2. Sistema de Autenticación
 
 #### Google OAuth 2.0 Strategy
+
 ```javascript
 // server.js - Configuración de Passport
-passport.use(new GoogleStrategy({
-  clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: '/auth/google/callback',
-  hostedDomain: GOOGLE_HOSTED_DOMAIN // Restringe al dominio de la empresa
-}, (accessToken, refreshToken, profile, done) => {
-  // El perfil contiene información del usuario
-  return done(null, profile);
-}));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: '/auth/google/callback',
+      hostedDomain: GOOGLE_HOSTED_DOMAIN, // Restringe al dominio de la empresa
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // El perfil contiene información del usuario
+      return done(null, profile);
+    },
+  ),
+);
 
 // Serialización de usuario para sesiones
 passport.serializeUser((user, done) => {
@@ -78,17 +84,20 @@ passport.deserializeUser((obj, done) => {
 ```
 
 #### Rutas de Autenticación
+
 ```javascript
 // server.js - Rutas de autenticación
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+app.get(
+  '/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] }),
 );
 
-app.get('/auth/google/callback',
+app.get(
+  '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     res.redirect('/');
-  }
+  },
 );
 
 app.get('/logout', (req, res) => {
@@ -109,6 +118,7 @@ function requireAuth(req, res, next) {
 ### 3. API REST Endpoints
 
 #### Gestión de Workspaces
+
 ```javascript
 // server.js - Endpoints de workspace
 // Obtener estado del workspace
@@ -135,6 +145,7 @@ app.post('/api/workspace/:branch/prepare', requireAuth, async (req, res) => {
 ```
 
 #### Gestión de Features
+
 ```javascript
 // server.js - Endpoints de features
 // Obtener lista de features
@@ -149,30 +160,39 @@ app.get('/api/features/:branch/:client', requireAuth, async (req, res) => {
 });
 
 // Obtener contenido de un feature
-app.get('/api/features/:branch/:client/:feature', requireAuth, async (req, res) => {
-  try {
-    const { branch, client, feature } = req.params;
-    const content = await getFeatureContent(branch, client, feature);
-    res.json({ content });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+app.get(
+  '/api/features/:branch/:client/:feature',
+  requireAuth,
+  async (req, res) => {
+    try {
+      const { branch, client, feature } = req.params;
+      const content = await getFeatureContent(branch, client, feature);
+      res.json({ content });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
 // Guardar cambios en un feature
-app.put('/api/features/:branch/:client/:feature', requireAuth, async (req, res) => {
-  try {
-    const { branch, client, feature } = req.params;
-    const { content } = req.body;
-    const result = await saveFeatureContent(branch, client, feature, content);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+app.put(
+  '/api/features/:branch/:client/:feature',
+  requireAuth,
+  async (req, res) => {
+    try {
+      const { branch, client, feature } = req.params;
+      const { content } = req.body;
+      const result = await saveFeatureContent(branch, client, feature, content);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 ```
 
 #### Gestión Git
+
 ```javascript
 // server.js - Endpoints de Git
 // Obtener estado de commits
@@ -213,6 +233,7 @@ app.post('/api/git/:branch/push', requireAuth, async (req, res) => {
 ### 4. Socket.IO Integration
 
 #### Configuración de Socket.IO con Session
+
 ```javascript
 // server.js - Integración de Socket.IO con sesiones
 io.use((socket, next) => {
@@ -225,7 +246,7 @@ io.use((socket, next) => {
 
 io.use((socket, next) => {
   passport.session()(socket.request, {}, next);
-  
+
   if (socket.request.user) {
     socket.userId = socket.request.user.id;
     next();
@@ -236,17 +257,18 @@ io.use((socket, next) => {
 ```
 
 #### Eventos de Conexión
+
 ```javascript
 // server.js - Manejo de conexiones Socket.IO
 io.on('connection', (socket) => {
   console.log(`Usuario conectado: ${socket.userId}`);
-  
+
   // Enviar estado inicial
   socket.emit('init', {
     user: socket.request.user,
-    config: getAppConfig()
+    config: getAppConfig(),
   });
-  
+
   // Manejar desconexión
   socket.on('disconnect', () => {
     console.log(`Usuario desconectado: ${socket.userId}`);
@@ -257,6 +279,7 @@ io.on('connection', (socket) => {
 ### 5. Sistema de Worker Pool
 
 #### Gestión de Workers
+
 ```javascript
 // server.js - Sistema de workers
 const workerPool = new Map();
@@ -266,7 +289,7 @@ const maxWorkers = 5;
 // Función para crear worker
 function createWorker(slotId) {
   const worker = fork('./worker.js', [slotId]);
-  
+
   worker.on('message', (msg) => {
     switch (msg.type) {
       case 'log':
@@ -283,12 +306,12 @@ function createWorker(slotId) {
         break;
     }
   });
-  
+
   worker.on('exit', (code) => {
     workerPool.delete(slotId);
     io.emit('worker_pool_update', getWorkerPoolStatus());
   });
-  
+
   return worker;
 }
 
@@ -308,6 +331,7 @@ function assignJob(job) {
 ### 6. Manejo de Jobs
 
 #### Recepción y Procesamiento de Jobs
+
 ```javascript
 // server.js - Manejo de jobs de ejecución
 socket.on('run_test', (data) => {
@@ -320,26 +344,26 @@ socket.on('run_test', (data) => {
     highPriority: data.highPriority || false,
     deviceSerial: data.deviceSerial,
     userId: socket.userId,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
-  
+
   // Agregar a la cola o ejecutar directamente
   if (!assignJob(job)) {
     jobQueue.push(job);
     io.emit('queue_status_update', getQueueStatus());
   }
-  
+
   // Notificar inicio del job
   io.emit('job_started', {
     jobId: job.id,
     slotId: getWorkerSlotForJob(job.id),
     featureName: job.feature,
-    userId: job.userId
+    userId: job.userId,
   });
 });
 
 socket.on('run_selected_tests', (data) => {
-  const jobs = data.features.map(feature => ({
+  const jobs = data.features.map((feature) => ({
     id: generateJobId(),
     type: 'batch',
     branch: data.branch,
@@ -348,16 +372,16 @@ socket.on('run_selected_tests', (data) => {
     highPriority: data.highPriority || false,
     deviceSerial: data.deviceSerial,
     userId: socket.userId,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   }));
-  
+
   // Procesar cada job
-  jobs.forEach(job => {
+  jobs.forEach((job) => {
     if (!assignJob(job)) {
       jobQueue.push(job);
     }
   });
-  
+
   io.emit('queue_status_update', getQueueStatus());
 });
 ```
@@ -365,6 +389,7 @@ socket.on('run_selected_tests', (data) => {
 ### 7. Sistema de Logging
 
 #### Logger Centralizado
+
 ```javascript
 // server.js - Sistema de logging
 const fs = require('fs');
@@ -373,14 +398,10 @@ const path = require('path');
 function logToFile(message, level = 'info') {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}\n`;
-  
-  fs.appendFile(
-    path.join(__dirname, 'logs', 'app.log'),
-    logMessage,
-    (err) => {
-      if (err) console.error('Error writing to log file:', err);
-    }
-  );
+
+  fs.appendFile(path.join(__dirname, 'logs', 'app.log'), logMessage, (err) => {
+    if (err) console.error('Error writing to log file:', err);
+  });
 }
 
 // Middleware de logging para requests
@@ -393,19 +414,20 @@ app.use((req, res, next) => {
 ### 8. Manejo de Errores
 
 #### Error Handler Global
+
 ```javascript
 // server.js - Manejo de errores
 app.use((err, req, res, next) => {
   logToFile(`Error: ${err.message}`, 'error');
-  
+
   if (err.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
   }
-  
+
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({ error: 'No autorizado' });
   }
-  
+
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
@@ -423,6 +445,7 @@ process.on('unhandledRejection', (reason, promise) => {
 ### 9. Configuración y Variables de Entorno
 
 #### Variables de Entorno Requeridas
+
 ```javascript
 // server.js - Configuración de entorno
 require('dotenv').config();
@@ -433,18 +456,18 @@ const {
   SESSION_SECRET,
   GOOGLE_HOSTED_DOMAIN,
   PORT = 3000,
-  NODE_ENV = 'development'
+  NODE_ENV = 'development',
 } = process.env;
 
 // Validación de variables requeridas
 const requiredEnvVars = [
   'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET', 
+  'GOOGLE_CLIENT_SECRET',
   'SESSION_SECRET',
-  'GOOGLE_HOSTED_DOMAIN'
+  'GOOGLE_HOSTED_DOMAIN',
 ];
 
-requiredEnvVars.forEach(varName => {
+requiredEnvVars.forEach((varName) => {
   if (!process.env[varName]) {
     console.error(`Error: La variable de entorno ${varName} es requerida`);
     process.exit(1);
@@ -455,6 +478,7 @@ requiredEnvVars.forEach(varName => {
 ### 10. Inicialización del Servidor
 
 #### Arranque del Servidor
+
 ```javascript
 // server.js - Inicialización
 const server = http.createServer(app);
@@ -516,6 +540,7 @@ sequenceDiagram
 ## 📊 Monitoreo y Métricas
 
 #### Health Check Endpoint
+
 ```javascript
 // server.js - Health check
 app.get('/health', (req, res) => {
@@ -525,9 +550,9 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     workers: workerPool.size,
-    queue: jobQueue.length
+    queue: jobQueue.length,
   };
-  
+
   res.json(health);
 });
 ```

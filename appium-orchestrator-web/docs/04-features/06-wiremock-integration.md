@@ -7,6 +7,7 @@ La integración WireMock permite gestionar servidores mock para simular respuest
 ## 🏗️ Arquitectura de WireMock
 
 ### 1. Componentes Principales
+
 ```javascript
 // Estructura de módulos WireMock
 const WireMockModule = {
@@ -15,53 +16,55 @@ const WireMockModule = {
     create: '/api/wiremock/mappings',
     delete: '/api/wiremock/mappings',
     reset: '/api/wiremock/mappings/reset',
-    import: '/api/wiremock/mappings/import'
+    import: '/api/wiremock/mappings/import',
   },
   requests: {
     list: '/api/wiremock/requests',
     delete: '/api/wiremock/requests',
-    live: '/api/wiremock/requests/live'
+    live: '/api/wiremock/requests/live',
   },
   recordings: {
     start: '/api/wiremock/recordings/start',
     stop: '/api/wiremock/recordings/stop',
-    status: '/api/wiremock/recordings/status'
+    status: '/api/wiremock/recordings/status',
   },
   storage: {
     list: '/api/mappings/list',
     download: '/api/mappings/download/:name',
-    downloadBatch: '/api/mappings/download-batch'
-  }
+    downloadBatch: '/api/mappings/download-batch',
+  },
 };
 ```
 
 ### 2. Estados del Sistema
+
 ```javascript
 // Estados de grabación
 const RECORDING_STATES = {
   IDLE: 'idle',
   RECORDING: 'recording',
   PROCESSING: 'processing',
-  ERROR: 'error'
+  ERROR: 'error',
 };
 
 // Estados de mappings
 const MAPPING_STATES = {
   ACTIVE: 'active',
   INACTIVE: 'inactive',
-  DRAFT: 'draft'
+  DRAFT: 'draft',
 };
 ```
 
 ## 🔧 Gestión de Mappings
 
 ### 1. Listado de Mappings
+
 ```javascript
 // public/js/wiremock.js - Listado de mappings
 export async function listWiremockMappings() {
   const output = document.getElementById('wiremock-mappings-output');
   output.textContent = 'Cargando...';
-  
+
   try {
     const response = await fetch('/api/wiremock/mappings');
     const data = await response.json();
@@ -73,21 +76,22 @@ export async function listWiremockMappings() {
 ```
 
 ### 2. Eliminación de Mappings
+
 ```javascript
 // public/js/wiremock.js - Eliminación con confirmación
 export async function deleteWiremockMappings() {
   if (!confirm('¿Estás seguro de que quieres eliminar todos los mappings?')) {
     return;
   }
-  
+
   const output = document.getElementById('wiremock-mappings-output');
   output.textContent = 'Eliminando...';
-  
+
   try {
     const response = await fetch('/api/wiremock/mappings', {
       method: 'DELETE',
     });
-    
+
     if (response.ok) {
       output.textContent = 'Todos los mappings han sido eliminados.';
     } else {
@@ -101,23 +105,26 @@ export async function deleteWiremockMappings() {
 ```
 
 ### 3. Reset de Mappings
+
 ```javascript
 // public/js/wiremock.js - Reset a estado por defecto
 export async function resetWiremockMappings() {
-  if (!confirm(
-    '¿Estás seguro de que quieres resetear los mappings a su estado por defecto?',
-  )) {
+  if (
+    !confirm(
+      '¿Estás seguro de que quieres resetear los mappings a su estado por defecto?',
+    )
+  ) {
     return;
   }
-  
+
   const output = document.getElementById('wiremock-mappings-output');
   output.textContent = 'Reseteando...';
-  
+
   try {
     const response = await fetch('/api/wiremock/mappings/reset', {
       method: 'POST',
     });
-    
+
     if (response.ok) {
       output.textContent = 'Los mappings han sido reseteados.';
     } else {
@@ -133,18 +140,21 @@ export async function resetWiremockMappings() {
 ## 📤 Importación y Exportación
 
 ### 1. Carga de Base Mappings
+
 ```javascript
 // public/js/wiremock.js - Carga de mappings base
 export async function loadBaseMappings() {
-  if (!confirm(
-    '¿Estás seguro de que quieres cargar los base mappings? Esto reemplazará los mappings actuales.',
-  )) {
+  if (
+    !confirm(
+      '¿Estás seguro de que quieres cargar los base mappings? Esto reemplazará los mappings actuales.',
+    )
+  ) {
     return;
   }
-  
+
   const output = document.getElementById('wiremock-mappings-output');
   output.textContent = 'Cargando base mappings...';
-  
+
   try {
     // Cargar archivo base
     const baseMappingResp = await fetch('/js/base_mapping.json');
@@ -175,12 +185,13 @@ export async function loadBaseMappings() {
 ```
 
 ### 2. Importación Personalizada
+
 ```javascript
 // public/js/wiremock.js - Importación desde JSON
 export async function importWiremockMappings() {
   const importTextarea = document.getElementById('wiremock-import-textarea');
   const mappingsJson = importTextarea.value;
-  
+
   if (!mappingsJson) {
     alert('Por favor, pega el JSON de los mappings en el área de texto.');
     return;
@@ -196,14 +207,14 @@ export async function importWiremockMappings() {
 
   const output = document.getElementById('wiremock-mappings-output');
   output.textContent = 'Importando...';
-  
+
   try {
     const response = await fetch('/api/wiremock/mappings/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(mappings),
     });
-    
+
     if (response.ok) {
       output.textContent = 'Mappings importados correctamente.';
       importTextarea.value = '';
@@ -218,12 +229,13 @@ export async function importWiremockMappings() {
 ```
 
 ### 3. Manejo de Archivos
+
 ```javascript
 // public/js/wiremock.js - Upload de archivos
 export function handleMappingsFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  
+
   const reader = new FileReader();
   reader.onload = (e) => {
     document.getElementById('wiremock-import-textarea').value = e.target.result;
@@ -235,6 +247,7 @@ export function handleMappingsFileUpload(event) {
 ## 🔍 Monitoreo de Solicitudes
 
 ### 1. Listado de Solicitudes
+
 ```javascript
 // public/js/wiremock.js - Listado con renderizado dinámico
 export async function listWiremockRequests() {
@@ -305,17 +318,18 @@ export async function listWiremockRequests() {
 ```
 
 ### 2. Vista en Vivo
+
 ```javascript
 // public/js/wiremock.js - Monitoreo en tiempo real
 let wiremockLiveViewInterval = null;
 
 export function startLiveView() {
   if (wiremockLiveViewInterval) return;
-  
+
   lastKnownRequests = [];
   const output = document.getElementById('wiremock-requests-output');
   output.textContent = '';
-  
+
   listWiremockRequests();
   wiremockLiveViewInterval = setInterval(listWiremockRequests, 2000);
 }
@@ -331,17 +345,18 @@ export function stopLiveView() {
 ## 🎥 Sistema de Grabación
 
 ### 1. Iniciar Grabación
+
 ```javascript
 // public/js/wiremock.js - Inicio de grabación
 export async function startWiremockRecording() {
   const output = document.getElementById('wiremock-recording-output');
   output.textContent = 'Iniciando grabación...';
-  
+
   try {
     const response = await fetch('/api/wiremock/recordings/start', {
       method: 'POST',
     });
-    
+
     if (response.ok) {
       output.textContent = 'Grabación iniciada.';
     } else {
@@ -355,13 +370,14 @@ export async function startWiremockRecording() {
 ```
 
 ### 2. Detener Grabación
+
 ```javascript
 // public/js/wiremock.js - Detención y procesamiento
 export async function stopWiremockRecording() {
   const recordingName = document.getElementById(
     'wiremock-recording-name',
   ).value;
-  
+
   if (!recordingName) {
     alert('Por favor, introduce un nombre para la grabación.');
     return;
@@ -373,14 +389,14 @@ export async function stopWiremockRecording() {
 
   const output = document.getElementById('wiremock-recording-output');
   output.textContent = 'Deteniendo grabación y procesando mappings...';
-  
+
   try {
     const response = await fetch('/api/wiremock/recordings/stop', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recordingName, saveAsSingleFile }),
     });
-    
+
     const data = await response.json();
     if (response.ok) {
       output.textContent = `${data.message}\n\n${JSON.stringify(data.summary, null, 2)}`;
@@ -394,12 +410,13 @@ export async function stopWiremockRecording() {
 ```
 
 ### 3. Estado de Grabación
+
 ```javascript
 // public/js/wiremock.js - Consulta de estado
 export async function getWiremockRecordingStatus() {
   const output = document.getElementById('wiremock-recording-output');
   output.textContent = 'Consultando estado...';
-  
+
   try {
     const response = await fetch('/api/wiremock/recordings/status');
     const data = await response.json();
@@ -413,6 +430,7 @@ export async function getWiremockRecordingStatus() {
 ## 💾 Gestión de Almacenamiento
 
 ### 1. Modal de Descarga
+
 ```javascript
 // public/js/wiremock.js - Gestión de descargas
 export async function openDownloadMappingsModal() {
@@ -450,13 +468,14 @@ export async function openDownloadMappingsModal() {
 ```
 
 ### 2. Descarga Seleccionada
+
 ```javascript
 // public/js/wiremock.js - Descarga batch
 export async function downloadSelectedMappings() {
   const selected = document.querySelectorAll(
     '#mappings-list-container .mapping-checkbox:checked',
   );
-  
+
   if (selected.length === 0) {
     alert('Por favor, selecciona al menos un mapping para descargar.');
     return;
@@ -502,35 +521,58 @@ export async function downloadSelectedMappings() {
 ## 🎛️ Inicialización y Eventos
 
 ### 1. Configuración de Eventos
+
 ```javascript
 // public/js/wiremock.js - Inicialización completa
 export function initializeWiremockTab() {
   // Botones de mappings
   const listMappingsBtn = document.getElementById('wiremock-list-mappings-btn');
-  const deleteMappingsBtn = document.getElementById('wiremock-delete-mappings-btn');
-  const resetMappingsBtn = document.getElementById('wiremock-reset-mappings-btn');
+  const deleteMappingsBtn = document.getElementById(
+    'wiremock-delete-mappings-btn',
+  );
+  const resetMappingsBtn = document.getElementById(
+    'wiremock-reset-mappings-btn',
+  );
   const baseMappingsBtn = document.getElementById('wiremock-base-mappings-btn');
-  const importMappingsBtn = document.getElementById('wiremock-import-mappings-btn');
-  const uploadMappingsBtn = document.getElementById('wiremock-upload-mappings-btn');
+  const importMappingsBtn = document.getElementById(
+    'wiremock-import-mappings-btn',
+  );
+  const uploadMappingsBtn = document.getElementById(
+    'wiremock-upload-mappings-btn',
+  );
   const uploadInput = document.getElementById('wiremock-upload-input');
 
   // Botones de requests
   const listRequestsBtn = document.getElementById('wiremock-list-requests-btn');
-  const deleteRequestsBtn = document.getElementById('wiremock-delete-requests-btn');
+  const deleteRequestsBtn = document.getElementById(
+    'wiremock-delete-requests-btn',
+  );
 
   // Botones de recording
-  const startRecordingBtn = document.getElementById('wiremock-start-recording-btn');
-  const stopRecordingBtn = document.getElementById('wiremock-stop-recording-btn');
-  const statusRecordingBtn = document.getElementById('wiremock-status-recording-btn');
+  const startRecordingBtn = document.getElementById(
+    'wiremock-start-recording-btn',
+  );
+  const stopRecordingBtn = document.getElementById(
+    'wiremock-stop-recording-btn',
+  );
+  const statusRecordingBtn = document.getElementById(
+    'wiremock-status-recording-btn',
+  );
 
   // Live view toggle
   const liveViewToggle = document.getElementById('wiremock-live-view-toggle');
   const requestsOutput = document.getElementById('wiremock-requests-output');
 
   // Modal de descarga
-  const openModalBtn = document.getElementById('open-mappings-download-modal-btn');
-  const closeModalBtn = document.querySelector('#mappings-download-modal .close-btn');
-  const downloadSelectedBtn = document.getElementById('download-selected-mappings-btn');
+  const openModalBtn = document.getElementById(
+    'open-mappings-download-modal-btn',
+  );
+  const closeModalBtn = document.querySelector(
+    '#mappings-download-modal .close-btn',
+  );
+  const downloadSelectedBtn = document.getElementById(
+    'download-selected-mappings-btn',
+  );
   const selectAllCheckbox = document.getElementById('mappings-select-all');
 
   // Asignar event listeners
@@ -541,10 +583,10 @@ export function initializeWiremockTab() {
   importMappingsBtn.addEventListener('click', importWiremockMappings);
   uploadMappingsBtn.addEventListener('click', () => uploadInput.click());
   uploadInput.addEventListener('change', handleMappingsFileUpload);
-  
+
   listRequestsBtn.addEventListener('click', listWiremockRequests);
   deleteRequestsBtn.addEventListener('click', deleteWiremockRequests);
-  
+
   startRecordingBtn.addEventListener('click', startWiremockRecording);
   stopRecordingBtn.addEventListener('click', stopWiremockRecording);
   statusRecordingBtn.addEventListener('click', getWiremockRecordingStatus);
@@ -598,6 +640,7 @@ export function initializeWiremockTab() {
 ## 🎨 UI y Experiencia de Usuario
 
 ### 1. Estados Visuales
+
 ```css
 /* public/css/styles.css - Estilos WireMock */
 .log-entry {
@@ -629,8 +672,12 @@ export function initializeWiremockTab() {
 }
 
 @keyframes highlightNew {
-  0% { background-color: #d4edda; }
-  100% { background-color: transparent; }
+  0% {
+    background-color: #d4edda;
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .mapping-item {
@@ -664,6 +711,7 @@ export function initializeWiremockTab() {
 ```
 
 ### 2. Manejo de Estados
+
 ```javascript
 // public/js/wiremock.js - Gestión de estados UI
 function updateWiremockUIState(component, state) {
@@ -685,10 +733,10 @@ function updateMappingsState(state) {
   const buttons = [
     'wiremock-delete-mappings-btn',
     'wiremock-reset-mappings-btn',
-    'wiremock-import-mappings-btn'
+    'wiremock-import-mappings-btn',
   ];
-  
-  buttons.forEach(btnId => {
+
+  buttons.forEach((btnId) => {
     const btn = document.getElementById(btnId);
     btn.disabled = state === 'loading';
   });
@@ -697,7 +745,7 @@ function updateMappingsState(state) {
 function updateRecordingState(state) {
   const startBtn = document.getElementById('wiremock-start-recording-btn');
   const stopBtn = document.getElementById('wiremock-stop-recording-btn');
-  
+
   switch (state) {
     case 'recording':
       startBtn.disabled = true;
@@ -714,12 +762,15 @@ function updateRecordingState(state) {
 ## 🔧 Backend - API Endpoints
 
 ### 1. Endpoints de Mappings
+
 ```javascript
 // server.js - API de WireMock mappings
 // Listar mappings
 app.get('/api/wiremock/mappings', requireAuth, async (req, res) => {
   try {
-    const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/mappings`);
+    const response = await fetch(
+      `${process.env.WIREMOCK_URL}/__admin/mappings`,
+    );
     const data = await response.json();
     res.json(data);
   } catch (error) {
@@ -732,12 +783,15 @@ app.get('/api/wiremock/mappings', requireAuth, async (req, res) => {
 app.post('/api/wiremock/mappings/import', requireAuth, async (req, res) => {
   try {
     const mappings = req.body;
-    const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/mappings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mappings)
-    });
-    
+    const response = await fetch(
+      `${process.env.WIREMOCK_URL}/__admin/mappings`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mappings),
+      },
+    );
+
     const data = await response.json();
     res.json(data);
   } catch (error) {
@@ -748,14 +802,18 @@ app.post('/api/wiremock/mappings/import', requireAuth, async (req, res) => {
 ```
 
 ### 2. Endpoints de Grabación
+
 ```javascript
 // server.js - API de recordings
 app.post('/api/wiremock/recordings/start', requireAuth, async (req, res) => {
   try {
-    const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/recordings/start`, {
-      method: 'POST'
-    });
-    
+    const response = await fetch(
+      `${process.env.WIREMOCK_URL}/__admin/recordings/start`,
+      {
+        method: 'POST',
+      },
+    );
+
     if (response.ok) {
       res.json({ message: 'Recording started successfully' });
     } else {
@@ -771,28 +829,31 @@ app.post('/api/wiremock/recordings/start', requireAuth, async (req, res) => {
 app.post('/api/wiremock/recordings/stop', requireAuth, async (req, res) => {
   try {
     const { recordingName, saveAsSingleFile } = req.body;
-    
-    const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/recordings/stop`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        outputFormat: saveAsSingleFile ? 'single' : 'list'
-      })
-    });
-    
+
+    const response = await fetch(
+      `${process.env.WIREMOCK_URL}/__admin/recordings/stop`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outputFormat: saveAsSingleFile ? 'single' : 'list',
+        }),
+      },
+    );
+
     const data = await response.json();
-    
+
     // Guardar mappings si se proporcionó nombre
     if (recordingName && data.mappings) {
       await saveMappings(recordingName, data.mappings);
     }
-    
+
     res.json({
       message: 'Recording stopped successfully',
       summary: {
         mappingsCount: data.mappings?.length || 0,
-        recordingName
-      }
+        recordingName,
+      },
     });
   } catch (error) {
     console.error('Error stopping WireMock recording:', error);
@@ -804,6 +865,7 @@ app.post('/api/wiremock/recordings/stop', requireAuth, async (req, res) => {
 ## 🛡️ Seguridad y Validaciones
 
 ### 1. Validación de Mappings
+
 ```javascript
 // server.js - Validaciones de seguridad
 function validateWireMockMapping(mapping) {
@@ -811,43 +873,44 @@ function validateWireMockMapping(mapping) {
   if (!mapping.request || !mapping.response) {
     throw new Error('Mapping must contain request and response objects');
   }
-  
+
   // Validar URL
   if (!mapping.request.url || !mapping.request.method) {
     throw new Error('Mapping must specify URL and method');
   }
-  
+
   // Validar que no haya patrones peligrosos
   const dangerousPatterns = [
-    /\$\{.*\}/,  // Expresiones que podrían ser inyección
+    /\$\{.*\}/, // Expresiones que podrían ser inyección
     /javascript:/, // Protocolos peligrosos
-    /file:\/\//   // Acceso a archivos locales
+    /file:\/\//, // Acceso a archivos locales
   ];
-  
+
   const urlStr = mapping.request.url.toString();
   for (const pattern of dangerousPatterns) {
     if (pattern.test(urlStr)) {
       throw new Error('Invalid URL pattern in mapping');
     }
   }
-  
+
   return true;
 }
 ```
 
 ### 2. Control de Acceso
+
 ```javascript
 // server.js - Middleware de autorización WireMock
 const requireWireMockAccess = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
-  
+
   // Verificar permisos de WireMock
   if (!req.user.permissions?.includes('wiremock')) {
     return res.status(403).json({ error: 'WireMock access denied' });
   }
-  
+
   next();
 };
 ```
@@ -855,13 +918,14 @@ const requireWireMockAccess = (req, res, next) => {
 ## 📊 Monitoreo y Métricas
 
 ### 1. Estadísticas de Uso
+
 ```javascript
 // server.js - Métricas de WireMock
 const wireMockMetrics = {
   totalRequests: 0,
   totalMappings: 0,
   recordingsCount: 0,
-  activeRecordings: new Set()
+  activeRecordings: new Set(),
 };
 
 // Middleware para métricas
@@ -874,28 +938,29 @@ app.use('/api/wiremock/*', (req, res, next) => {
 ```
 
 ### 2. Health Check
+
 ```javascript
 // server.js - Health check de WireMock
 app.get('/api/wiremock/health', async (req, res) => {
   try {
     const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/`);
-    
+
     if (response.ok) {
       res.json({
         status: 'healthy',
         url: process.env.WIREMOCK_URL,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     } else {
       res.status(503).json({
         status: 'unhealthy',
-        error: 'WireMock service unavailable'
+        error: 'WireMock service unavailable',
       });
     }
   } catch (error) {
     res.status(503).json({
       status: 'unhealthy',
-      error: error.message
+      error: error.message,
     });
   }
 });

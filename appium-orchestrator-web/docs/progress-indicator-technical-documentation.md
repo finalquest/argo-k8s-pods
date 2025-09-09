@@ -40,13 +40,16 @@ class LogProgressParser {
 ```
 
 **Patrones de Regex:**
+
 - `➡️` - Inicio de step (running)
 - `✅` - Step completado exitosamente (passed)
 - `❌ Fail` - Step fallido (failed)
 
 **Procesamiento:**
+
 1. Cada línea de log es evaluada contra los patrones de regex
 2. Cuando se detecta un evento, se genera un objeto de progreso:
+
 ```javascript
 {
   jobId: string,
@@ -74,9 +77,9 @@ worker.on('message', (msg) => {
       ...msg.data,
       slotId: currentSlot.slotId,
       jobId: currentJob.id,
-      featureName: currentJob.featureName
+      featureName: currentJob.featureName,
     };
-    
+
     // Enviar a todos los clientes conectados
     io.emit('progress_update', progressData);
   }
@@ -84,6 +87,7 @@ worker.on('message', (msg) => {
 ```
 
 **Contexto Añadido:**
+
 - `slotId`: Identificador del worker
 - `jobId`: ID único del job de ejecución
 - `featureName`: Nombre del feature being ejecutado
@@ -97,10 +101,10 @@ worker.on('message', (msg) => {
 ```javascript
 class ProgressIndicatorManager {
   constructor() {
-    this.activeJobs = new Map();        // Jobs activos con sus estados
+    this.activeJobs = new Map(); // Jobs activos con sus estados
     this.editorDecorations = new Map(); // Decoraciones por job
-    this.currentJobId = null;          // Job actualmente visible
-    this.throttleTimeout = null;       // Para optimización de rendimiento
+    this.currentJobId = null; // Job actualmente visible
+    this.throttleTimeout = null; // Para optimización de rendimiento
   }
 }
 ```
@@ -108,13 +112,14 @@ class ProgressIndicatorManager {
 #### Manejo de Eventos
 
 **handleProgressUpdate(data):**
+
 ```javascript
 handleProgressUpdate(data) {
   const { jobId, event, data: progressData, timestamp } = data;
-  
+
   // 1. Actualizar estado del job
   this.updateJobState(jobId, event, progressData, timestamp);
-  
+
   // 2. Si este job está visible, actualizar decoraciones
   if (this.currentJobId === jobId) {
     this.updateEditorDecorations(jobId);
@@ -123,6 +128,7 @@ handleProgressUpdate(data) {
 ```
 
 **updateJobState():**
+
 - Mantiene el estado actual del step siendo ejecutado
 - Almacena historial de steps completados
 - Maneja eventos de feature/scenario start/end
@@ -139,6 +145,7 @@ handleProgressUpdate(data) {
 3. **Palabras Clave:** Busca las primeras 4 palabras del step
 
 **Ejemplo:**
+
 - Step en log: `Given the user is on "login" page`
 - Pattern 1: `Given the user is on "login" page`
 - Pattern 2: `Given the user is on "[^"]*" page`
@@ -147,12 +154,13 @@ handleProgressUpdate(data) {
 #### Decoraciones Visuales
 
 **createStepDecoration(step, status):**
+
 ```javascript
 // 1. Crear marcador en el gutter
 const gutterMarker = document.createElement('div');
 gutterMarker.className = `step-indicator step-${status}`;
-gutterMarker.innerHTML = status === 'running' ? '▶️' : 
-                        status === 'passed' ? '✅' : '❌';
+gutterMarker.innerHTML =
+  status === 'running' ? '▶️' : status === 'passed' ? '✅' : '❌';
 
 // 2. Resaltar línea completa
 const lineClass = `step-${status}-line`;
@@ -165,6 +173,7 @@ window.ideCodeMirror.setGutterMarker(lineNum, 'progress-gutter', gutterMarker);
 ### 4. CodeMirror Integration (ui.js)
 
 **Configuración del Editor:**
+
 ```javascript
 ideCodeMirror = CodeMirror(wrapper, {
   gutters: ['CodeMirror-linenumbers', 'progress-gutter'],
@@ -176,6 +185,7 @@ window.ideCodeMirror = ideCodeMirror;
 ```
 
 **Gutter Personalizado:**
+
 - Se registra un gutter llamado 'progress-gutter'
 - Los indicadores se muestran junto a los números de línea
 - Soporta múltiples indicadores simultáneos
@@ -183,6 +193,7 @@ window.ideCodeMirror = ideCodeMirror;
 ### 5. CSS Visual Indicators (styles.css)
 
 #### Gutter Indicators
+
 ```css
 .step-indicator {
   width: 20px;
@@ -195,17 +206,32 @@ window.ideCodeMirror = ideCodeMirror;
   margin: 2px auto;
 }
 
-.step-running { background-color: rgba(217, 119, 6, 0.8); }
-.step-passed { background-color: rgba(5, 150, 105, 0.8); }
-.step-failed { background-color: rgba(220, 38, 38, 0.8); }
-.step-initializing { background-color: rgba(107, 114, 128, 0.8); }
+.step-running {
+  background-color: rgba(217, 119, 6, 0.8);
+}
+.step-passed {
+  background-color: rgba(5, 150, 105, 0.8);
+}
+.step-failed {
+  background-color: rgba(220, 38, 38, 0.8);
+}
+.step-initializing {
+  background-color: rgba(107, 114, 128, 0.8);
+}
 ```
 
 #### Line Highlighting
+
 ```css
-.step-running-line { background-color: rgba(217, 119, 6, 0.3) !important; }
-.step-passed-line { background-color: rgba(5, 150, 105, 0.2) !important; }
-.step-failed-line { background-color: rgba(220, 38, 38, 0.3) !important; }
+.step-running-line {
+  background-color: rgba(217, 119, 6, 0.3) !important;
+}
+.step-passed-line {
+  background-color: rgba(5, 150, 105, 0.2) !important;
+}
+.step-failed-line {
+  background-color: rgba(220, 38, 38, 0.3) !important;
+}
 ```
 
 ## Manejo de Estados
@@ -248,12 +274,14 @@ Feature Start → Scenario Start → Step Start → Step End → ... → Scenari
 ## Configuración Requerida
 
 ### Worker Configuration
+
 ```javascript
 // Habilitar progreso en runScript
 const progressParser = new LogProgressParser(jobId, featureName);
 ```
 
 ### WDIO Configuration
+
 ```javascript
 // Configuración para logs detallados
 {
@@ -267,6 +295,7 @@ const progressParser = new LogProgressParser(jobId, featureName);
 ```
 
 ### Frontend Dependencies
+
 ```javascript
 // Socket.IO listener
 socket.on('progress_update', (data) => {
@@ -310,6 +339,7 @@ socket.on('progress_update', (data) => {
 ### Debug
 
 Los logs principales se encuentran en:
+
 - **Worker Console:** Logs de parsing y detección de steps
 - **Server Console:** Eventos de Socket.IO y retransmisión
 - **Browser Console:** Eventos recibidos y estado del progress manager

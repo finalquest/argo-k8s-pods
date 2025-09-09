@@ -7,52 +7,55 @@ El sistema de despliegue y operaciones proporciona las herramientas y procedimie
 ## 🏗️ Arquitectura de Despliegue
 
 ### 1. Componentes de Despliegue
+
 ```javascript
 // Arquitectura de despliegue
 const DeploymentArchitecture = {
   Containerization: {
     Docker: 'Contenedores para desarrollo y producción',
     Compose: 'Orquestación multi-servicio',
-    Configuration: 'Gestión de variables de entorno'
+    Configuration: 'Gestión de variables de entorno',
   },
   Infrastructure: {
     Dependencies: 'Herramientas del sistema',
     Networking: 'Configuración de red',
-    Storage: 'Gestión de volúmenes y archivos'
+    Storage: 'Gestión de volúmenes y archivos',
   },
   Operations: {
     Monitoring: 'Monitoreo de salud y rendimiento',
     Maintenance: 'Tareas de mantenimiento',
-    Troubleshooting: 'Diagnóstico y resolución de problemas'
-  }
+    Troubleshooting: 'Diagnóstico y resolución de problemas',
+  },
 };
 ```
 
 ### 2. Estrategias de Despliegue
+
 ```javascript
 // Estrategias disponibles
 const DeploymentStrategies = {
   Local: {
     Development: 'npm start',
     Dependencies: 'Node.js local',
-    Environment: 'Variables de entorno locales'
+    Environment: 'Variables de entorno locales',
   },
   Docker: {
     Development: 'docker-compose up --build',
     Production: 'Docker Swarm / Kubernetes',
-    Environment: 'Configuración en contenedor'
+    Environment: 'Configuración en contenedor',
   },
   Cloud: {
     Providers: ['AWS', 'GCP', 'Azure'],
     Services: ['Container Registry', 'Load Balancer', 'Database'],
-    Environment: 'Configuración en la nube'
-  }
+    Environment: 'Configuración en la nube',
+  },
 };
 ```
 
 ## 🐳 Dockerización
 
 ### 1. Dockerfile
+
 ```dockerfile
 # Dockerfile para la aplicación
 FROM node:18-bullseye
@@ -95,6 +98,7 @@ CMD ["node", "server.js"]
 ```
 
 ### 2. Docker Compose
+
 ```yaml
 # docker-compose.yml
 version: '3.8'
@@ -103,7 +107,7 @@ services:
   orchestrator:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - DEVICE_SOURCE=local
@@ -123,7 +127,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -131,7 +135,7 @@ services:
   wiremock:
     image: wiremock/wiremock:latest
     ports:
-      - "8080:8080"
+      - '8080:8080'
     volumes:
       - ./wiremock/mappings:/home/wiremock/mappings
       - ./wiremock/files:/home/wiremock/__files
@@ -143,6 +147,7 @@ volumes:
 ```
 
 ### 3. Archivo de Entorno
+
 ```bash
 # .env.example - Variables de entorno
 # ========================================
@@ -189,6 +194,7 @@ ENABLE_REQUEST_LOGGING=true
 ## 🚀 Procedimientos de Despliegue
 
 ### 1. Despliegue Local
+
 ```bash
 # 1. Clonar repositorio
 git clone <repositorio>
@@ -209,6 +215,7 @@ open http://localhost:3000
 ```
 
 ### 2. Despliegue con Docker
+
 ```bash
 # 1. Preparar entorno
 mkdir -p ./apks ./reports ./workspaces ./wiremock/mappings
@@ -232,6 +239,7 @@ open http://localhost:3000
 ```
 
 ### 3. Despliegue en Producción
+
 ```bash
 # 1. Preparar servidor
 sudo apt update
@@ -252,7 +260,7 @@ sudo tee /etc/nginx/sites-available/appium-orchestrator > /dev/null <<EOF
 server {
     listen 80;
     server_name tu-dominio.com;
-    
+
     location / {
         proxy_pass http://localhost:3000;
         proxy_set_header Host \$host;
@@ -260,7 +268,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
-    
+
     location /socket.io/ {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -290,6 +298,7 @@ docker-compose up -d
 ## 🔧 Gestión de Dependencias
 
 ### 1. Dependencias del Sistema
+
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -322,6 +331,7 @@ brew install node git android-platform-tools
 ```
 
 ### 2. Dependencias de Node.js
+
 ```json
 {
   "name": "appium-orchestrator-web",
@@ -363,6 +373,7 @@ brew install node git android-platform-tools
 ```
 
 ### 3. Configuración de Android SDK
+
 ```bash
 # Configurar ANDROID_HOME
 echo 'export ANDROID_HOME=$HOME/Android/Sdk' >> ~/.bashrc
@@ -376,6 +387,7 @@ adb version
 ## 📊 Monitoreo y Mantenimiento
 
 ### 1. Monitoreo de Salud
+
 ```javascript
 // server.js - Endpoints de monitoreo
 app.get('/health', (req, res) => {
@@ -385,9 +397,9 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     version: process.version,
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
   };
-  
+
   res.json(health);
 });
 
@@ -403,13 +415,15 @@ app.get('/health/detailed', async (req, res) => {
       database: await checkDatabase(),
       redis: await checkRedis(),
       wiremock: await checkWiremock(),
-      git: await checkGit()
-    }
+      git: await checkGit(),
+    },
   };
-  
-  const allHealthy = Object.values(health.checks).every(check => check.healthy);
+
+  const allHealthy = Object.values(health.checks).every(
+    (check) => check.healthy,
+  );
   health.status = allHealthy ? 'healthy' : 'degraded';
-  
+
   res.status(allHealthy ? 200 : 503).json(health);
 });
 
@@ -434,7 +448,10 @@ async function checkRedis() {
 async function checkWiremock() {
   try {
     const response = await fetch(`${process.env.WIREMOCK_URL}/__admin/`);
-    return { healthy: response.ok, message: response.ok ? 'WireMock OK' : 'WireMock not responding' };
+    return {
+      healthy: response.ok,
+      message: response.ok ? 'WireMock OK' : 'WireMock not responding',
+    };
   } catch (error) {
     return { healthy: false, message: `WireMock error: ${error.message}` };
   }
@@ -453,6 +470,7 @@ async function checkGit() {
 ```
 
 ### 2. Logs y Auditoría
+
 ```javascript
 // server.js - Configuración de logging
 const winston = require('winston');
@@ -462,16 +480,16 @@ const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   defaultMeta: { service: 'appium-orchestrator' },
   transports: [
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' }),
     new winston.transports.Console({
-      format: winston.format.simple()
-    })
-  ]
+      format: winston.format.simple(),
+    }),
+  ],
 });
 
 // Middleware de logging
@@ -482,7 +500,7 @@ const requestLogger = (req, res, next) => {
       url: req.url,
       ip: req.ip,
       userAgent: req.get('User-Agent'),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
   next();
@@ -492,6 +510,7 @@ app.use(requestLogger);
 ```
 
 ### 3. Tareas de Mantenimiento
+
 ```bash
 #!/bin/bash
 # scripts/maintenance.sh
@@ -531,64 +550,66 @@ echo "Mantenimiento completado."
 ## 🚨 Resolución de Problemas
 
 ### 1. Problemas Comunes y Soluciones
+
 ```javascript
 // docs/troubleshooting.md - Guía de solución de problemas
 const troubleshooting = {
   // Problemas de Conexión
   connection: {
-    "adb devices not found": {
-      symptoms: ["Error: No devices found", "adb: command not found"],
+    'adb devices not found': {
+      symptoms: ['Error: No devices found', 'adb: command not found'],
       solutions: [
-        "Verificar instalación de Android SDK",
-        "Configurar ANDROID_HOME en PATH",
-        "Reiniciar servidor ADB: adb kill-server && adb start-server"
-      ]
+        'Verificar instalación de Android SDK',
+        'Configurar ANDROID_HOME en PATH',
+        'Reiniciar servidor ADB: adb kill-server && adb start-server',
+      ],
     },
-    "WireMock connection failed": {
-      symptoms: ["ECONNREFUSED", "WireMock service unavailable"],
+    'WireMock connection failed': {
+      symptoms: ['ECONNREFUSED', 'WireMock service unavailable'],
       solutions: [
-        "Verificar que WireMock está corriendo: docker-compose ps wiremock",
-        "Revisar configuración de WIREMOCK_URL",
-        "Reiniciar WireMock: docker-compose restart wiremock"
-      ]
-    }
+        'Verificar que WireMock está corriendo: docker-compose ps wiremock',
+        'Revisar configuración de WIREMOCK_URL',
+        'Reiniciar WireMock: docker-compose restart wiremock',
+      ],
+    },
   },
-  
+
   // Problemas de Rendimiento
   performance: {
-    "High memory usage": {
-      symptoms: ["Node.js out of memory", "Slow response times"],
+    'High memory usage': {
+      symptoms: ['Node.js out of memory', 'Slow response times'],
       solutions: [
-        "Aumentar límite de memoria: node --max-old-space-size=4096 server.js",
-        "Optimizar uso de workers",
-        "Monitorear y limpiar memoria periódicamente"
-      ]
+        'Aumentar límite de memoria: node --max-old-space-size=4096 server.js',
+        'Optimizar uso de workers',
+        'Monitorear y limpiar memoria periódicamente',
+      ],
     },
-    "Worker deadlock": {
-      symptoms: ["Tests stuck in queue", "Workers inactive"],
+    'Worker deadlock': {
+      symptoms: ['Tests stuck in queue', 'Workers inactive'],
       solutions: [
-        "Implementar lógica de detección de deadlock",
-        "Reiniciar workers bloqueados",
-        "Configurar timeout para jobs"
-      ]
-    }
+        'Implementar lógica de detección de deadlock',
+        'Reiniciar workers bloqueados',
+        'Configurar timeout para jobs',
+      ],
+    },
   },
-  
+
   // Problemas de Autenticación
   authentication: {
-    "Google OAuth failing": {
-      symptoms: ["Authentication error", "Redirect loop"],
+    'Google OAuth failing': {
+      symptoms: ['Authentication error', 'Redirect loop'],
       solutions: [
-        "Verificar GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET",
-        "Configurar correctamente APP_BASE_URL",
-        "Verificar configuración de OAuth en Google Cloud Console"
-      ]
-    }
-  }
+        'Verificar GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET',
+        'Configurar correctamente APP_BASE_URL',
+        'Verificar configuración de OAuth en Google Cloud Console',
+      ],
+    },
+  },
 };
 ```
 
 ### 2. Monitoreo de Recursos
+
 ```bash
 #!/bin/bash
 # scripts/monitor.sh
@@ -629,6 +650,7 @@ fi
 ```
 
 ### 3. Recuperación ante Desastres
+
 ```bash
 #!/bin/bash
 # scripts/backup.sh
@@ -669,6 +691,7 @@ echo "Backup completado: $BACKUP_PATH.tar.gz"
 ## 📈 Métricas y Optimización
 
 ### 1. Métricas Clave
+
 ```javascript
 // public/js/metrics.js - Sistema de métricas
 class MetricsCollector {
@@ -678,50 +701,50 @@ class MetricsCollector {
         total: 0,
         passed: 0,
         failed: 0,
-        averageDuration: 0
+        averageDuration: 0,
       },
       system: {
         uptime: 0,
         memoryUsage: [],
-        cpuUsage: []
+        cpuUsage: [],
       },
       userActivity: {
         activeUsers: 0,
         testsPerHour: [],
-        popularFeatures: {}
-      }
+        popularFeatures: {},
+      },
     };
   }
 
   recordTestExecution(duration, status) {
     this.metrics.testExecution.total++;
-    
+
     if (status === 'passed') {
       this.metrics.testExecution.passed++;
     } else if (status === 'failed') {
       this.metrics.testExecution.failed++;
     }
-    
+
     // Calcular duración promedio
     const current = this.metrics.testExecution.averageDuration;
     const total = this.metrics.testExecution.total;
-    this.metrics.testExecution.averageDuration = 
+    this.metrics.testExecution.averageDuration =
       (current * (total - 1) + duration) / total;
   }
 
   recordSystemMetrics() {
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
-    
+
     this.metrics.system.uptime = uptime;
     this.metrics.system.memoryUsage.push({
       timestamp: Date.now(),
-      ...memUsage
+      ...memUsage,
     });
-    
+
     // Mantener solo últimos 1000 registros
     if (this.metrics.system.memoryUsage.length > 1000) {
-      this.metrics.system.memoryUsage = 
+      this.metrics.system.memoryUsage =
         this.metrics.system.memoryUsage.slice(-1000);
     }
   }
@@ -731,9 +754,9 @@ class MetricsCollector {
       testExecution: this.metrics.testExecution,
       systemHealth: {
         uptime: this.formatUptime(this.metrics.system.uptime),
-        memoryUsage: this.getLatestMemoryUsage()
+        memoryUsage: this.getLatestMemoryUsage(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -745,19 +768,21 @@ class MetricsCollector {
 
   getLatestMemoryUsage() {
     const latest = this.metrics.system.memoryUsage.slice(-1)[0];
-    return latest ? {
-      rss: this.formatBytes(latest.rss),
-      heapTotal: this.formatBytes(latest.heapTotal),
-      heapUsed: this.formatBytes(latest.heapUsed),
-      external: this.formatBytes(latest.external)
-    } : null;
+    return latest
+      ? {
+          rss: this.formatBytes(latest.rss),
+          heapTotal: this.formatBytes(latest.heapTotal),
+          heapUsed: this.formatBytes(latest.heapUsed),
+          external: this.formatBytes(latest.external),
+        }
+      : null;
   }
 
   formatBytes(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }
 

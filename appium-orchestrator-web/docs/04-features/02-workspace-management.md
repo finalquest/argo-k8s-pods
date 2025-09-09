@@ -7,6 +7,7 @@ La gestión de workspaces es una feature fundamental que permite preparar y mant
 ## 🏗️ Arquitectura de Workspaces
 
 ### 1. Estructura de Directorios
+
 ```bash
 # Estructura típica de workspace
 workspace-<branch>-<timestamp>/
@@ -25,6 +26,7 @@ workspace-<branch>-<timestamp>/
 ```
 
 ### 2. Ciclo de Vida del Workspace
+
 ```javascript
 // Estados del workspace
 const WORKSPACE_STATES = {
@@ -33,13 +35,14 @@ const WORKSPACE_STATES = {
   READY: 'ready',
   DIRTY: 'dirty',
   STALE: 'stale',
-  ERROR: 'error'
+  ERROR: 'error',
 };
 ```
 
 ## 🚀 Preparación de Workspace
 
 ### 1. Inicio desde el Frontend
+
 ```javascript
 // public/js/main.js - Eventos de preparación
 function initializeAppControls(socket) {
@@ -55,27 +58,26 @@ async function handlePrepareWorkspace(socket) {
     alert('Por favor selecciona una branch primero');
     return;
   }
-  
+
   // Confirmar preparación
   const confirmed = confirm(`¿Preparar workspace para la branch "${branch}"?`);
   if (!confirmed) return;
-  
+
   try {
     // Deshabilitar botón durante preparación
     const prepareBtn = document.getElementById('prepare-workspace-btn');
     prepareBtn.disabled = true;
     prepareBtn.textContent = 'Preparando...';
-    
+
     // Enviar solicitud de preparación
     prepareWorkspace(socket, branch);
-    
+
     // Iniciar monitoreo de progreso
     monitorWorkspacePreparation(branch);
-    
   } catch (error) {
     console.error('Error preparando workspace:', error);
     showError('Error al preparar workspace');
-    
+
     // Restaurar botón
     const prepareBtn = document.getElementById('prepare-workspace-btn');
     prepareBtn.disabled = false;
@@ -85,52 +87,58 @@ async function handlePrepareWorkspace(socket) {
 ```
 
 ### 2. Monitoreo de Preparación
+
 ```javascript
 // public/js/api.js - Monitoreo asíncrono
-export async function monitorWorkspacePreparation(branch, onProgress, onComplete) {
+export async function monitorWorkspacePreparation(
+  branch,
+  onProgress,
+  onComplete,
+) {
   const maxAttempts = 60; // 5 minutos máximo
   const interval = 5000; // 5 segundos entre chequeos
-  
+
   let attempts = 0;
-  
+
   const checkStatus = async () => {
     try {
       const status = await getWorkspaceStatus(branch);
-      
+
       if (status.ready) {
         onComplete({ success: true, status });
         return;
       }
-      
+
       if (status.error) {
         onComplete({ success: false, error: status.error });
         return;
       }
-      
+
       attempts++;
       onProgress({ attempts, maxAttempts, status });
-      
+
       if (attempts >= maxAttempts) {
-        onComplete({ 
-          success: false, 
-          error: 'Tiempo de espera agotado para la preparación del workspace' 
+        onComplete({
+          success: false,
+          error: 'Tiempo de espera agotado para la preparación del workspace',
         });
         return;
       }
-      
+
       // Continuar monitoreando
       setTimeout(checkStatus, interval);
     } catch (error) {
       onComplete({ success: false, error: error.message });
     }
   };
-  
+
   // Iniciar monitoreo
   checkStatus();
 }
 ```
 
 ### 3. Comunicación con Backend
+
 ```javascript
 // public/js/socket.js - Envío de preparación
 export function prepareWorkspace(socket, branch) {
@@ -138,9 +146,9 @@ export function prepareWorkspace(socket, branch) {
     alert('Por favor, selecciona una branch para preparar el workspace.');
     return;
   }
-  
+
   socket.emit('prepare_workspace', { branch });
-  
+
   // Mostrar indicador de progreso
   showNotification(`Preparando workspace para ${branch}...`, 'info');
 }
@@ -148,17 +156,17 @@ export function prepareWorkspace(socket, branch) {
 // Manejo de respuesta
 socket.on('workspace_ready', (data) => {
   console.log(`Workspace para la branch ${data.branch} está listo.`);
-  
+
   const selectedBranch = document.getElementById('branch-select').value;
   if (data.branch === selectedBranch) {
     console.log('Refrescando features automáticamente...');
     document.getElementById('fetch-features-btn').click();
   }
-  
+
   // Actualizar UI
   updateWorkspaceStatus(data.branch, 'ready');
   showNotification(`Workspace para ${data.branch} está listo`, 'success');
-  
+
   // Restaurar botón
   const prepareBtn = document.getElementById('prepare-workspace-btn');
   prepareBtn.disabled = false;
@@ -168,7 +176,7 @@ socket.on('workspace_ready', (data) => {
 socket.on('workspace_error', (data) => {
   console.error(`Error en workspace para ${data.branch}:`, data.error);
   showError(`Error en workspace: ${data.error}`);
-  
+
   // Restaurar botón
   const prepareBtn = document.getElementById('prepare-workspace-btn');
   prepareBtn.disabled = false;
@@ -179,39 +187,41 @@ socket.on('workspace_error', (data) => {
 ## 🔧 Backend - Manejo de Workspaces
 
 ### 1. Endpoint de Preparación
+
 ```javascript
 // server.js - API de workspaces
 app.post('/api/workspace/:branch/prepare', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
     const userId = req.user.id;
-    
-    console.log(`[${req.user.displayName}] Preparando workspace para branch: ${branch}`);
-    
+
+    console.log(
+      `[${req.user.displayName}] Preparando workspace para branch: ${branch}`,
+    );
+
     // Validar branch
     if (!branch || !/^[a-zA-Z0-9_\-\/]+$/.test(branch)) {
-      return res.status(400).json({ 
-        error: 'Nombre de branch inválido' 
+      return res.status(400).json({
+        error: 'Nombre de branch inválido',
       });
     }
-    
+
     // Verificar si ya existe un workspace en preparación
     const existingWorkspace = workspaceManager.getWorkspace(branch);
     if (existingWorkspace && existingWorkspace.status === 'preparing') {
-      return res.status(409).json({ 
-        error: 'Ya hay un workspace en preparación para esta branch' 
+      return res.status(409).json({
+        error: 'Ya hay un workspace en preparación para esta branch',
       });
     }
-    
+
     // Iniciar preparación asíncrona
     const workspaceId = await workspaceManager.prepareWorkspace(branch, userId);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       workspaceId,
-      message: `Workspace para ${branch} en preparación` 
+      message: `Workspace para ${branch} en preparación`,
     });
-    
   } catch (error) {
     console.error('Error preparando workspace:', error);
     res.status(500).json({ error: error.message });
@@ -220,6 +230,7 @@ app.post('/api/workspace/:branch/prepare', requireAuth, async (req, res) => {
 ```
 
 ### 2. Gestor de Workspaces
+
 ```javascript
 // server.js - WorkspaceManager
 class WorkspaceManager {
@@ -228,11 +239,11 @@ class WorkspaceManager {
     this.basePath = path.join(__dirname, 'workspaces');
     this.maxWorkspaces = parseInt(process.env.MAX_WORKSPACES) || 10;
   }
-  
+
   async prepareWorkspace(branch, userId) {
     const workspaceId = this.generateWorkspaceId(branch);
     const workspacePath = path.join(this.basePath, workspaceId);
-    
+
     // Registrar workspace
     this.workspaces.set(workspaceId, {
       id: workspaceId,
@@ -241,36 +252,36 @@ class WorkspaceManager {
       path: workspacePath,
       status: 'preparing',
       createdAt: Date.now(),
-      lastUsed: Date.now()
+      lastUsed: Date.now(),
     });
-    
+
     // Limpiar workspaces antiguos si es necesario
     await this.cleanupOldWorkspaces();
-    
+
     // Iniciar preparación en background
     this.prepareWorkspaceAsync(workspaceId, branch, workspacePath);
-    
+
     return workspaceId;
   }
-  
+
   async prepareWorkspaceAsync(workspaceId, branch, workspacePath) {
     try {
       const workspace = this.workspaces.get(workspaceId);
       if (!workspace) return;
-      
+
       // Crear directorio
       await fs.promises.mkdir(workspacePath, { recursive: true });
-      
+
       // Clonar repositorio
       await this.cloneRepository(workspacePath, branch);
-      
+
       // Instalar dependencias
       await this.installDependencies(workspacePath);
-      
+
       // Actualizar estado
       workspace.status = 'ready';
       workspace.readyAt = Date.now();
-      
+
       // Notificar via Socket.IO
       const io = app.get('io');
       io.emit('workspace_ready', {
@@ -278,61 +289,60 @@ class WorkspaceManager {
         workspaceId,
         status: 'ready',
         message: `Workspace para ${branch} está listo`,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      
+
       console.log(`Workspace ${workspaceId} para branch ${branch} está listo`);
-      
     } catch (error) {
       console.error(`Error preparando workspace ${workspaceId}:`, error);
-      
+
       // Actualizar estado a error
       const workspace = this.workspaces.get(workspaceId);
       if (workspace) {
         workspace.status = 'error';
         workspace.error = error.message;
       }
-      
+
       // Notificar error
       const io = app.get('io');
       io.emit('workspace_error', {
         branch,
         workspaceId,
         error: error.message,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   }
-  
+
   async cloneRepository(workspacePath, branch) {
     const repoUrl = process.env.GIT_REPO_URL;
     const git = simpleGit();
-    
+
     console.log(`Clonando repositorio en ${workspacePath}`);
-    
+
     await git.clone(repoUrl, workspacePath, {
       '--branch': branch,
-      '--depth': 1 // Clon superficial para velocidad
+      '--depth': 1, // Clon superficial para velocidad
     });
-    
+
     console.log(`Repositoritorio clonado para branch ${branch}`);
   }
-  
+
   async installDependencies(workspacePath) {
     console.log(`Instalando dependencias en ${workspacePath}`);
-    
+
     // Ejecutar npm install
     await new Promise((resolve, reject) => {
       const npm = spawn('npm', ['install'], {
         cwd: workspacePath,
-        stdio: 'pipe'
+        stdio: 'pipe',
       });
-      
+
       let output = '';
-      npm.stdout.on('data', data => output += data.toString());
-      npm.stderr.on('data', data => output += data.toString());
-      
-      npm.on('close', code => {
+      npm.stdout.on('data', (data) => (output += data.toString()));
+      npm.stderr.on('data', (data) => (output += data.toString()));
+
+      npm.on('close', (code) => {
         if (code === 0) {
           console.log('Dependencias instaladas correctamente');
           resolve();
@@ -340,46 +350,46 @@ class WorkspaceManager {
           reject(new Error(`npm install failed with code ${code}`));
         }
       });
-      
+
       npm.on('error', reject);
     });
   }
-  
+
   async cleanupOldWorkspaces() {
     const now = Date.now();
     const maxAge = 24 * 60 * 60 * 1000; // 24 horas
-    
+
     const workspacesToDelete = [];
-    
+
     for (const [id, workspace] of this.workspaces) {
       if (now - workspace.lastUsed > maxAge) {
         workspacesToDelete.push(id);
       }
     }
-    
+
     // Eliminar workspaces antiguos
     for (const id of workspacesToDelete) {
       await this.deleteWorkspace(id);
     }
   }
-  
+
   async deleteWorkspace(id) {
     const workspace = this.workspaces.get(id);
     if (!workspace) return;
-    
+
     try {
       // Eliminar directorio
       await fs.promises.rm(workspace.path, { recursive: true, force: true });
-      
+
       // Remover del registro
       this.workspaces.delete(id);
-      
+
       console.log(`Workspace ${id} eliminado`);
     } catch (error) {
       console.error(`Error eliminando workspace ${id}:`, error);
     }
   }
-  
+
   generateWorkspaceId(branch) {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 6);
@@ -391,6 +401,7 @@ class WorkspaceManager {
 ## 🔧 Worker - Configuración del Entorno
 
 ### 1. Script de Preparación
+
 ```bash
 #!/bin/bash
 # scripts/setup-workspace.sh
@@ -457,27 +468,28 @@ echo "[SETUP] ✅ Workspace preparado correctamente"
 ```
 
 ### 2. Integración con Worker
+
 ```javascript
 // worker.js - Configuración del workspace
 function setupWorkerEnvironment() {
   const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
-  
+
   sendToParent({
     type: 'LOG',
-    data: `[worker] Usando workspace asignado: ${workspaceDir}`
+    data: `[worker] Usando workspace asignado: ${workspaceDir}`,
   });
-  
+
   runScript(setupScript, [workspaceDir, branch], null, (code) => {
     if (code !== 0) {
       sendToParent({
         type: 'LOG',
-        data: `[worker] ❌ Falló la preparación del workspace. Terminando.`
+        data: `[worker] ❌ Falló la preparación del workspace. Terminando.`,
       });
       return process.exit(1);
     }
-    
+
     sendToParent({ type: 'LOG', data: '[worker] ✅ Workspace listo.' });
-    
+
     // Continuar con la configuración del dispositivo y Appium
     setupDeviceAndAppium();
   });
@@ -487,26 +499,27 @@ function setupWorkerEnvironment() {
 ## 📊 Estados y Monitoreo
 
 ### 1. Verificación de Estado
+
 ```javascript
 // server.js - Endpoint de estado
 app.get('/api/workspace/:branch/status', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
-    
+
     // Buscar workspace para la branch
     const workspace = workspaceManager.getWorkspaceByBranch(branch);
-    
+
     if (!workspace) {
-      return res.json({ 
-        exists: false, 
+      return res.json({
+        exists: false,
         ready: false,
-        status: 'not_exists'
+        status: 'not_exists',
       });
     }
-    
+
     // Verificar si el workspace está listo
     let isReady = workspace.status === 'ready';
-    
+
     // Verificación adicional del sistema de archivos
     if (isReady) {
       try {
@@ -519,7 +532,7 @@ app.get('/api/workspace/:branch/status', requireAuth, async (req, res) => {
         workspace.status = 'stale';
       }
     }
-    
+
     res.json({
       exists: true,
       ready: isReady,
@@ -528,9 +541,8 @@ app.get('/api/workspace/:branch/status', requireAuth, async (req, res) => {
       createdAt: workspace.createdAt,
       readyAt: workspace.readyAt,
       lastUsed: workspace.lastUsed,
-      error: workspace.error
+      error: workspace.error,
     });
-    
   } catch (error) {
     console.error('Error getting workspace status:', error);
     res.status(500).json({ error: error.message });
@@ -539,15 +551,21 @@ app.get('/api/workspace/:branch/status', requireAuth, async (req, res) => {
 ```
 
 ### 2. Actualización de Estados
+
 ```javascript
 // public/js/ui.js - Actualización visual de workspace
 function updateWorkspaceStatus(branch, status) {
   const statusIndicator = document.getElementById('workspace-status');
   if (!statusIndicator) return;
-  
+
   // Limpiar todas las clases de estado
-  statusIndicator.classList.remove('status-ready', 'status-preparing', 'status-error', 'status-stale');
-  
+  statusIndicator.classList.remove(
+    'status-ready',
+    'status-preparing',
+    'status-error',
+    'status-stale',
+  );
+
   // Actualizar según estado
   switch (status) {
     case 'ready':
@@ -575,60 +593,61 @@ function updateWorkspaceStatus(branch, status) {
 ## 🛡️ Manejo de Errores y Recuperación
 
 ### 1. Estrategias de Recuperación
+
 ```javascript
 // server.js - Recuperación de workspaces
 async function recoverWorkspace(workspaceId) {
   const workspace = workspaceManager.workspaces.get(workspaceId);
   if (!workspace) return false;
-  
+
   try {
     // Verificar integridad del sistema de archivos
     await fs.promises.access(workspace.path);
-    
+
     // Verificar archivos críticos
     const criticalFiles = [
       path.join(workspace.path, 'package.json'),
-      path.join(workspace.path, '.git')
+      path.join(workspace.path, '.git'),
     ];
-    
+
     for (const filePath of criticalFiles) {
       await fs.promises.access(filePath);
     }
-    
+
     // Si todo está bien, marcar como listo
     workspace.status = 'ready';
     workspace.readyAt = Date.now();
-    
+
     return true;
-    
   } catch (error) {
     console.error(`Workspace ${workspaceId} necesita recreación:`, error);
-    
+
     // Eliminar workspace dañado
     await workspaceManager.deleteWorkspace(workspaceId);
-    
+
     return false;
   }
 }
 ```
 
 ### 2. Validaciones de Seguridad
+
 ```javascript
 // server.js - Validaciones de workspace
 function validateWorkspacePath(workspacePath) {
   // Evitar path traversal
   const resolvedPath = path.resolve(workspacePath);
   const basePath = path.resolve(__dirname, 'workspaces');
-  
+
   if (!resolvedPath.startsWith(basePath)) {
     throw new Error('Ruta de workspace inválida');
   }
-  
+
   // Validar caracteres permitidos
   if (!/^[a-zA-Z0-9_\-\/]+$/.test(workspacePath)) {
     throw new Error('Caracteres no permitidos en la ruta del workspace');
   }
-  
+
   return true;
 }
 ```

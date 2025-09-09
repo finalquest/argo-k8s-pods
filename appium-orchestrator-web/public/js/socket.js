@@ -1,6 +1,5 @@
 import { apkSource, loadHistory, getWorkspaceChanges } from './api.js';
 import {
-  switchTab,
   updateQueueStatus,
   renderWorkerPool,
   renderWorkerStatus,
@@ -11,7 +10,9 @@ let runningJobs = new Map();
 // Función para establecer el estado de ejecución de una feature row
 function setFeatureRowExecutionState(featureName, isExecuting) {
   // Buscar la row del feature en el tree view
-  const featureRow = document.querySelector(`li.file[data-feature-name="${featureName}"]`);
+  const featureRow = document.querySelector(
+    `li.file[data-feature-name="${featureName}"]`,
+  );
   if (featureRow) {
     if (isExecuting) {
       featureRow.classList.add('executing');
@@ -132,7 +133,7 @@ export function initializeSocketListeners(socket) {
 
   socket.on('job_started', (data) => {
     runningJobs.set(data.slotId, data);
-    
+
     // Marcar la row del feature como en ejecución
     if (data.featureName) {
       setFeatureRowExecutionState(data.featureName, true);
@@ -142,16 +143,25 @@ export function initializeSocketListeners(socket) {
     if (window.progressIndicatorManager && data.jobId) {
       const jobIdStr = data.jobId.toString();
       window.progressIndicatorManager.setCurrentJob(jobIdStr);
-      
+
       // Establecer el nombre del feature para el job (necesario para los highlights)
       if (data.featureName) {
-        window.progressIndicatorManager.setJobFeature(jobIdStr, data.featureName);
+        window.progressIndicatorManager.setJobFeature(
+          jobIdStr,
+          data.featureName,
+        );
       }
-      
+
       // Establecer el estado del test como RUNNING
       if (data.featureName) {
-        const testFileName = data.featureName.endsWith('.feature') ? data.featureName : `${data.featureName}.feature`;
-        window.progressIndicatorManager.setTestState(testFileName, window.progressIndicatorManager.TEST_STATES.RUNNING, jobIdStr);
+        const testFileName = data.featureName.endsWith('.feature')
+          ? data.featureName
+          : `${data.featureName}.feature`;
+        window.progressIndicatorManager.setTestState(
+          testFileName,
+          window.progressIndicatorManager.TEST_STATES.RUNNING,
+          jobIdStr,
+        );
       }
     }
 
@@ -193,7 +203,7 @@ export function initializeSocketListeners(socket) {
   socket.on('job_finished', (data) => {
     const jobDetails = runningJobs.get(data.slotId);
     if (!jobDetails) return;
-    
+
     // Remover el estado de ejecución de la row del feature
     if (jobDetails.featureName) {
       setFeatureRowExecutionState(jobDetails.featureName, false);
@@ -207,10 +217,12 @@ export function initializeSocketListeners(socket) {
         window.progressIndicatorManager.clearEditorDecorations();
         window.progressIndicatorManager.updateRunButtonState(false);
       }
-      
+
       // Limpiar el estado del test
       if (jobDetails.featureName) {
-        const testFileName = jobDetails.featureName.endsWith('.feature') ? jobDetails.featureName : `${jobDetails.featureName}.feature`;
+        const testFileName = jobDetails.featureName.endsWith('.feature')
+          ? jobDetails.featureName
+          : `${jobDetails.featureName}.feature`;
         window.progressIndicatorManager.clearTestState(testFileName);
       }
     }

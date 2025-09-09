@@ -514,7 +514,7 @@ export function initIdeView({ onSave, onCommit, onRun }) {
     gutters: ['CodeMirror-linenumbers', 'progress-gutter'],
   });
   ideCodeMirror.setSize('100%', '100%');
-  
+
   // Update global reference for progress indicators
   window.ideCodeMirror = ideCodeMirror;
 
@@ -551,7 +551,7 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
     );
     ideCodeMirror.setOption('readOnly', isReadOnly);
     ideCodeMirror.clearHistory();
-    
+
     // Marcar como limpio si no está modificado
     if (!isModified) {
       ideCodeMirror.markClean();

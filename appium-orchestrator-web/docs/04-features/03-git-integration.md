@@ -7,6 +7,7 @@ La integración Git permite a los usuarios gestionar el control de versiones dir
 ## 🏗️ Arquitectura de Git Integration
 
 ### 1. Componentes de Git
+
 ```javascript
 // Arquitectura de integración Git
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -24,6 +25,7 @@ La integración Git permite a los usuarios gestionar el control de versiones dir
 ```
 
 ### 2. Estados Git
+
 ```javascript
 // Estados de archivos y repositorio
 const GIT_STATES = {
@@ -31,30 +33,31 @@ const GIT_STATES = {
   MODIFIED: 'modified',
   ADDED: 'added',
   DELETED: 'deleted',
-  UNTRACKED: 'untracked'
+  UNTRACKED: 'untracked',
 };
 
 const REPO_STATES = {
   SYNCED: 'synced',
   AHEAD: 'ahead',
   BEHIND: 'behind',
-  DIVERGED: 'diverged'
+  DIVERGED: 'diverged',
 };
 ```
 
 ## 🔄 Operaciones Git Básicas
 
 ### 1. Verificación de Estado
+
 ```javascript
 // public/js/api.js - Funciones de estado Git
 export async function getCommitStatus(branch) {
   try {
     const response = await fetch(`/api/git/${branch}/commit-status`);
-    
+
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error getting commit status:', error);
@@ -65,11 +68,11 @@ export async function getCommitStatus(branch) {
 export async function getWorkspaceChanges(branch) {
   try {
     const response = await fetch(`/api/workspace/${branch}/changes`);
-    
+
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error getting workspace changes:', error);
@@ -79,29 +82,30 @@ export async function getWorkspaceChanges(branch) {
 ```
 
 ### 2. Backend - Endpoints Git
+
 ```javascript
 // server.js - Endpoints de Git
 // Obtener estado de commits
 app.get('/api/git/:branch/commit-status', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
-    
+
     // Obtener workspace para la branch
     const workspace = await workspaceManager.getWorkspaceByBranch(branch);
     if (!workspace || workspace.status !== 'ready') {
-      return res.status(404).json({ 
-        error: 'Workspace no encontrado o no está listo' 
+      return res.status(404).json({
+        error: 'Workspace no encontrado o no está listo',
       });
     }
-    
+
     const git = simpleGit(workspace.path);
-    
+
     // Obtener estado vs remoto
     const status = await git.status();
     const logSummary = await git.log({ maxCount: 10 });
-    
+
     const hasPendingCommits = status.behind > 0 || status.ahead > 0;
-    
+
     res.json({
       hasPendingCommits,
       behind: status.behind,
@@ -114,9 +118,8 @@ app.get('/api/git/:branch/commit-status', requireAuth, async (req, res) => {
       staged: status.staged,
       not_added: status.not_added,
       deleted: status.deleted,
-      created: status.created
+      created: status.created,
     });
-    
   } catch (error) {
     console.error('Error getting commit status:', error);
     res.status(500).json({ error: error.message });
@@ -128,16 +131,16 @@ app.get('/api/git/:branch/diff', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
     const { path: filePath } = req.query;
-    
+
     const workspace = await workspaceManager.getWorkspaceByBranch(branch);
     if (!workspace || workspace.status !== 'ready') {
-      return res.status(404).json({ 
-        error: 'Workspace no encontrado o no está listo' 
+      return res.status(404).json({
+        error: 'Workspace no encontrado o no está listo',
       });
     }
-    
+
     const git = simpleGit(workspace.path);
-    
+
     let diff;
     if (filePath) {
       // Diff de archivo específico
@@ -146,12 +149,11 @@ app.get('/api/git/:branch/diff', requireAuth, async (req, res) => {
       // Diff completo del working directory
       diff = await git.diff();
     }
-    
+
     res.json({
       diff,
-      hasChanges: diff && diff.length > 0
+      hasChanges: diff && diff.length > 0,
     });
-    
   } catch (error) {
     console.error('Error getting git diff:', error);
     res.status(500).json({ error: error.message });
@@ -162,6 +164,7 @@ app.get('/api/git/:branch/diff', requireAuth, async (req, res) => {
 ## 💾 Operaciones de Commit
 
 ### 1. Frontend - Interface de Commit
+
 ```javascript
 // public/js/main.js - Manejo de commits
 function initializeAppControls(socket) {
@@ -177,31 +180,34 @@ async function handleCommit(socket) {
     alert('Por favor selecciona una branch primero');
     return;
   }
-  
+
   // Obtener cambios
   const changes = await getWorkspaceChanges(branch);
   if (!changes.hasChanges) {
     alert('No hay cambios para commitear');
     return;
   }
-  
+
   // Mostrar diálogo de commit
   const message = prompt('Mensaje del commit:');
   if (!message || message.trim() === '') {
     alert('El mensaje del commit es requerido');
     return;
   }
-  
+
   try {
     // Realizar commit
-    const result = await commitChanges(branch, changes.modifiedFiles, message.trim());
-    
+    const result = await commitChanges(
+      branch,
+      changes.modifiedFiles,
+      message.trim(),
+    );
+
     // Actualizar UI
     updateCommitStatus(branch);
     updateGitIndicator('clean');
-    
+
     showNotification(`Cambios commiteados: ${result.hash}`, 'success');
-    
   } catch (error) {
     console.error('Error en commit:', error);
     showError(`Error al realizar commit: ${error.message}`);
@@ -214,7 +220,7 @@ export async function commitChanges(branch, files, message) {
     if (!message || message.trim() === '') {
       throw new Error('El mensaje de commit es requerido');
     }
-    
+
     const response = await fetch(`/api/git/${branch}/commit`, {
       method: 'POST',
       headers: {
@@ -222,17 +228,19 @@ export async function commitChanges(branch, files, message) {
       },
       body: JSON.stringify({ files, message: message.trim() }),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      throw new Error(
+        errorData.error || `Error ${response.status}: ${response.statusText}`,
+      );
     }
-    
+
     const result = await response.json();
-    
+
     // Actualizar cache y estado local
     apiCache.clearPattern(`git:${branch}:*`);
-    
+
     return result;
   } catch (error) {
     console.error('Error committing changes:', error);
@@ -242,65 +250,70 @@ export async function commitChanges(branch, files, message) {
 ```
 
 ### 2. Backend - Procesamiento de Commit
+
 ```javascript
 // server.js - Endpoint de commit
 app.post('/api/git/:branch/commit', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
     const { files, message } = req.body;
-    
+
     if (!message || message.trim() === '') {
-      return res.status(400).json({ 
-        error: 'El mensaje de commit es requerido' 
+      return res.status(400).json({
+        error: 'El mensaje de commit es requerido',
       });
     }
-    
+
     if (!files || files.length === 0) {
-      return res.status(400).json({ 
-        error: 'No hay archivos para commitear' 
+      return res.status(400).json({
+        error: 'No hay archivos para commitear',
       });
     }
-    
-    console.log(`[${req.user.displayName}] Commit en branch ${branch}: ${message}`);
-    
+
+    console.log(
+      `[${req.user.displayName}] Commit en branch ${branch}: ${message}`,
+    );
+
     // Obtener workspace
     const workspace = await workspaceManager.getWorkspaceByBranch(branch);
     if (!workspace || workspace.status !== 'ready') {
-      return res.status(404).json({ 
-        error: 'Workspace no encontrado o no está listo' 
+      return res.status(404).json({
+        error: 'Workspace no encontrado o no está listo',
       });
     }
-    
+
     const git = simpleGit(workspace.path);
-    
+
     // Verificar estado actual
     const status = await git.status();
-    
+
     // Validar que los archivos especificados tengan cambios
-    const validFiles = files.filter(file => {
-      return status.modified.includes(file) || 
-             status.not_added.includes(file) ||
-             status.created.includes(file);
+    const validFiles = files.filter((file) => {
+      return (
+        status.modified.includes(file) ||
+        status.not_added.includes(file) ||
+        status.created.includes(file)
+      );
     });
-    
+
     if (validFiles.length === 0) {
-      return res.status(400).json({ 
-        error: 'Los archivos especificados no tienen cambios' 
+      return res.status(400).json({
+        error: 'Los archivos especificados no tienen cambios',
       });
     }
-    
+
     // Agregar archivos al staging area
     await git.add(validFiles);
-    
+
     // Realizar commit
     const commitResult = await git.commit(message);
-    
+
     console.log(`Commit realizado: ${commitResult.hash}`);
-    
+
     // Obtener estado actualizado
     const newStatus = await git.status();
     const logSummary = await git.log({ maxCount: 1 });
-    
+
     res.json({
       success: true,
       hash: commitResult.hash,
@@ -308,9 +321,9 @@ app.post('/api/git/:branch/commit', requireAuth, async (req, res) => {
       files: validFiles,
       isClean: newStatus.isClean(),
       hasPendingCommits: newStatus.ahead > 0,
-      commit: logSummary.latest
+      commit: logSummary.latest,
     });
-    
+
     // Notificar via Socket.IO
     const io = app.get('io');
     io.emit('commit_completed', {
@@ -320,9 +333,8 @@ app.post('/api/git/:branch/commit', requireAuth, async (req, res) => {
       files: validFiles,
       timestamp: Date.now(),
       userId: req.user.id,
-      userName: req.user.displayName
+      userName: req.user.displayName,
     });
-    
   } catch (error) {
     console.error('Error en commit:', error);
     res.status(500).json({ error: error.message });
@@ -333,6 +345,7 @@ app.post('/api/git/:branch/commit', requireAuth, async (req, res) => {
 ## 📤 Operaciones de Push
 
 ### 1. Frontend - Interface de Push
+
 ```javascript
 // public/js/main.js - Manejo de push
 function initializeAppControls(socket) {
@@ -348,28 +361,27 @@ async function handlePush(socket) {
     alert('Por favor selecciona una branch primero');
     return;
   }
-  
+
   // Verificar si hay commits para push
   const status = await getCommitStatus(branch);
   if (!status.hasPendingCommits) {
     alert('No hay commits pendientes para push');
     return;
   }
-  
+
   // Confirmar operación
   const confirmed = confirm(`¿Push commits al repositorio remoto (${branch})?`);
   if (!confirmed) return;
-  
+
   try {
     // Realizar push
     const result = await pushChanges(branch);
-    
+
     // Actualizar UI
     updateCommitStatus(branch);
     updateGitIndicator('synced');
-    
+
     showNotification('Cambios pushados correctamente', 'success');
-    
   } catch (error) {
     console.error('Error en push:', error);
     showError(`Error al realizar push: ${error.message}`);
@@ -380,19 +392,21 @@ async function handlePush(socket) {
 export async function pushChanges(branch) {
   try {
     const response = await fetch(`/api/git/${branch}/push`, {
-      method: 'POST'
+      method: 'POST',
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      throw new Error(
+        errorData.error || `Error ${response.status}: ${response.statusText}`,
+      );
     }
-    
+
     const result = await response.json();
-    
+
     // Actualizar cache
     apiCache.clearPattern(`git:${branch}:*`);
-    
+
     return result;
   } catch (error) {
     console.error('Error pushing changes:', error);
@@ -402,60 +416,60 @@ export async function pushChanges(branch) {
 ```
 
 ### 2. Backend - Procesamiento de Push
+
 ```javascript
 // server.js - Endpoint de push
 app.post('/api/git/${branch}/push', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
-    
+
     console.log(`[${req.user.displayName}] Push de branch ${branch}`);
-    
+
     // Obtener workspace
     const workspace = await workspaceManager.getWorkspaceByBranch(branch);
     if (!workspace || workspace.status !== 'ready') {
-      return res.status(404).json({ 
-        error: 'Workspace no encontrado o no está listo' 
+      return res.status(404).json({
+        error: 'Workspace no encontrado o no está listo',
       });
     }
-    
+
     const git = simpleGit(workspace.path);
-    
+
     // Verificar si hay commits para push
     const status = await git.status();
     if (status.ahead === 0) {
-      return res.status(400).json({ 
-        error: 'No hay commits pendientes para push' 
+      return res.status(400).json({
+        error: 'No hay commits pendientes para push',
       });
     }
-    
+
     // Realizar push
     await git.push('origin', branch);
-    
+
     console.log(`Push completado para branch ${branch}`);
-    
+
     // Obtener estado actualizado
     const newStatus = await git.status();
-    
+
     res.json({
       success: true,
       branch,
       pushedCommits: status.ahead,
-      isSynced: newStatus.ahead === 0 && newStatus.behind === 0
+      isSynced: newStatus.ahead === 0 && newStatus.behind === 0,
     });
-    
+
     // Notificar via Socket.IO
     const io = app.get('io');
     io.emit('push_completed', {
       branch,
       result: {
         pushedCommits: status.ahead,
-        isSynced: newStatus.ahead === 0 && newStatus.behind === 0
+        isSynced: newStatus.ahead === 0 && newStatus.behind === 0,
       },
       timestamp: Date.now(),
       userId: req.user.id,
-      userName: req.user.displayName
+      userName: req.user.displayName,
     });
-    
   } catch (error) {
     console.error('Error en push:', error);
     res.status(500).json({ error: error.message });
@@ -466,49 +480,57 @@ app.post('/api/git/${branch}/push', requireAuth, async (req, res) => {
 ## 📊 Monitoreo en Tiempo Real
 
 ### 1. Actualizaciones Socket.IO
+
 ```javascript
 // public/js/socket.js - Manejo de eventos Git
 socket.on('commit_status_update', async (data) => {
   console.log(`Commit status update for branch ${data.branch}:`, data);
-  
+
   const selectedBranch = document.getElementById('branch-select').value;
   if (data.branch === selectedBranch) {
     // Actualizar indicadores visuales
     updateGitIndicators(data);
-    
+
     // Actualizar estado de workspace
     const workspaceStatus = await getWorkspaceChanges(data.branch);
-    updateWorkspaceStatus(data.branch, workspaceStatus.hasChanges ? 'dirty' : 'clean');
+    updateWorkspaceStatus(
+      data.branch,
+      workspaceStatus.hasChanges ? 'dirty' : 'clean',
+    );
   }
 });
 
 function updateGitIndicators(data) {
   const header = document.getElementById('main-header');
-  const uncommittedIndicator = document.getElementById('uncommitted-changes-indicator');
-  const pendingCommitsIndicator = document.getElementById('pending-commits-indicator');
-  
+  const uncommittedIndicator = document.getElementById(
+    'uncommitted-changes-indicator',
+  );
+  const pendingCommitsIndicator = document.getElementById(
+    'pending-commits-indicator',
+  );
+
   // Limpiar todas las clases
   header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
-  
+
   // Indicador de commits pendientes (rojo)
   if (data.hasPendingCommits) {
     header.classList.add('has-pending-commits');
     header.classList.remove('has-uncommitted-changes');
-    
+
     pendingCommitsIndicator.classList.remove('hidden');
-    pendingCommitsIndicator.querySelector('.status-text').textContent = 
+    pendingCommitsIndicator.querySelector('.status-text').textContent =
       data.message || 'Commits pendientes de push';
   } else {
     pendingCommitsIndicator.classList.add('hidden');
   }
-  
+
   // Indicador de cambios sin commitear (amarillo)
   if (data.hasUncommittedChanges) {
     header.classList.add('has-uncommitted-changes');
-    
+
     uncommittedIndicator.classList.remove('hidden');
     const totalChanges = data.modifiedFiles + data.stagedFiles;
-    uncommittedIndicator.querySelector('.status-text').textContent = 
+    uncommittedIndicator.querySelector('.status-text').textContent =
       `${totalChanges} archivo(s) modificado(s) sin commit`;
   } else {
     uncommittedIndicator.classList.add('hidden');
@@ -517,6 +539,7 @@ function updateGitIndicators(data) {
 ```
 
 ### 2. Indicadores Visuales
+
 ```css
 /* public/css/styles.css - Indicadores Git */
 .has-uncommitted-changes {
@@ -555,16 +578,17 @@ function updateGitIndicators(data) {
 ## 📜 Historial y Log
 
 ### 1. Visualización de Historial
+
 ```javascript
 // public/js/api.js - Funciones de historial
 export async function getGitLog(branch, limit = 10) {
   try {
     const response = await fetch(`/api/git/${branch}/log?limit=${limit}`);
-    
+
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error getting git log:', error);
@@ -575,18 +599,19 @@ export async function getGitLog(branch, limit = 10) {
 // public/js/ui.js - Renderizado de historial
 export function renderGitHistory(commits, container) {
   container.innerHTML = '';
-  
+
   if (commits.length === 0) {
-    container.innerHTML = '<p class="no-commits">No hay commits disponibles</p>';
+    container.innerHTML =
+      '<p class="no-commits">No hay commits disponibles</p>';
     return;
   }
-  
-  commits.forEach(commit => {
+
+  commits.forEach((commit) => {
     const commitElement = document.createElement('div');
     commitElement.className = 'commit-item';
-    
+
     const date = new Date(commit.date).toLocaleString();
-    
+
     commitElement.innerHTML = `
       <div class="commit-header">
         <span class="commit-hash">${commit.hash.substring(0, 7)}</span>
@@ -595,36 +620,36 @@ export function renderGitHistory(commits, container) {
       <div class="commit-message">${commit.message}</div>
       <div class="commit-author">${commit.author_name}</div>
     `;
-    
+
     container.appendChild(commitElement);
   });
 }
 ```
 
 ### 2. Backend - Endpoint de Log
+
 ```javascript
 // server.js - Endpoint de historial
 app.get('/api/git/:branch/log', requireAuth, async (req, res) => {
   try {
     const { branch } = req.params;
     const limit = parseInt(req.query.limit) || 10;
-    
+
     const workspace = await workspaceManager.getWorkspaceByBranch(branch);
     if (!workspace || workspace.status !== 'ready') {
-      return res.status(404).json({ 
-        error: 'Workspace no encontrado o no está listo' 
+      return res.status(404).json({
+        error: 'Workspace no encontrado o no está listo',
       });
     }
-    
+
     const git = simpleGit(workspace.path);
     const logSummary = await git.log({ maxCount: limit });
-    
+
     res.json({
       commits: logSummary.all,
       total: logSummary.total,
-      latest: logSummary.latest
+      latest: logSummary.latest,
     });
-    
   } catch (error) {
     console.error('Error getting git log:', error);
     res.status(500).json({ error: error.message });
@@ -635,6 +660,7 @@ app.get('/api/git/:branch/log', requireAuth, async (req, res) => {
 ## 🛡️ Seguridad y Validaciones
 
 ### 1. Validaciones de Seguridad
+
 ```javascript
 // server.js - Validaciones Git
 function validateGitBranch(branch) {
@@ -642,23 +668,23 @@ function validateGitBranch(branch) {
   if (!branch || !/^[a-zA-Z0-9_\-\/]+$/.test(branch)) {
     throw new Error('Nombre de branch inválido');
   }
-  
+
   // Evitar branches peligrosas
   const dangerousPatterns = [
-    /^\//,          // Path traversal
-    /\.\./,         // Parent directory
-    /^\.git/,       // Git internal
-    /^\/etc/,       // System paths
-    /^c:\\\\/,      // Windows paths
-    /^\\\\/,        // Network paths
+    /^\//, // Path traversal
+    /\.\./, // Parent directory
+    /^\.git/, // Git internal
+    /^\/etc/, // System paths
+    /^c:\\\\/, // Windows paths
+    /^\\\\/, // Network paths
   ];
-  
+
   for (const pattern of dangerousPatterns) {
     if (pattern.test(branch)) {
       throw new Error('Nombre de branch no permitido');
     }
   }
-  
+
   return true;
 }
 
@@ -666,57 +692,59 @@ function validateGitMessage(message) {
   if (!message || message.trim().length === 0) {
     throw new Error('El mensaje de commit no puede estar vacío');
   }
-  
+
   if (message.length > 1000) {
     throw new Error('El mensaje de commit es demasiado largo');
   }
-  
+
   // Validar caracteres peligrosos
   const dangerousChars = /[\x00-\x1f\x7f]/;
   if (dangerousChars.test(message)) {
     throw new Error('El mensaje de commit contiene caracteres inválidos');
   }
-  
+
   return true;
 }
 ```
 
 ### 2. Manejo de Conflictos
+
 ```javascript
 // server.js - Manejo de conflictos de Git
 async function handleGitConflict(error, branch, operation) {
   console.error(`Git conflict en ${operation} para branch ${branch}:`, error);
-  
+
   // Detectar tipos comunes de conflictos
   if (error.message.includes('non-fast-forward')) {
     return {
       type: 'NON_FAST_FORWARD',
-      message: 'El repositorio remoto tiene cambios que no están locales. Haga pull primero.',
-      solution: 'git pull origin ' + branch
+      message:
+        'El repositorio remoto tiene cambios que no están locales. Haga pull primero.',
+      solution: 'git pull origin ' + branch,
     };
   }
-  
+
   if (error.message.includes('merge conflict')) {
     return {
       type: 'MERGE_CONFLICT',
       message: 'Hay conflictos de merge que deben resolverse manualmente.',
-      solution: 'Resolver conflictos manualmente y hacer commit'
+      solution: 'Resolver conflictos manualmente y hacer commit',
     };
   }
-  
+
   if (error.message.includes('detached HEAD')) {
     return {
       type: 'DETACHED_HEAD',
       message: 'HEAD está detached. Checkout a una branch.',
-      solution: 'git checkout ' + branch
+      solution: 'git checkout ' + branch,
     };
   }
-  
+
   // Error genérico
   return {
     type: 'UNKNOWN',
     message: error.message,
-    solution: 'Verificar el estado del repositorio'
+    solution: 'Verificar el estado del repositorio',
   };
 }
 ```

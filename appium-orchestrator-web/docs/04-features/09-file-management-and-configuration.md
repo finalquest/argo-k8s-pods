@@ -7,6 +7,7 @@ El sistema de gestión de archivos y configuración permite la manipulación seg
 ## 🏗️ Arquitectura del Sistema
 
 ### 1. Componentes Principales
+
 ```javascript
 // Arquitectura de gestión de archivos y configuración
 const FileConfigSystem = {
@@ -14,23 +15,24 @@ const FileConfigSystem = {
     Read: 'Lectura de archivos de features',
     Write: 'Escritura segura de archivos',
     Validate: 'Validación de rutas y contenido',
-    Organize: 'Estructura jerárquica'
+    Organize: 'Estructura jerárquica',
   },
   ConfigManager: {
     Environment: 'Variables de entorno',
     API: 'Endpoints de configuración',
     Validation: 'Validación de configuración',
-    Defaults: 'Valores por defecto'
+    Defaults: 'Valores por defecto',
   },
   Security: {
     PathValidation: 'Prevención de path traversal',
     Authorization: 'Control de acceso',
-    Sanitization: 'Limpieza de entradas'
-  }
+    Sanitization: 'Limpieza de entradas',
+  },
 };
 ```
 
 ### 2. Flujo de Operaciones
+
 ```javascript
 // Flujo de gestión de archivos
 User Request → Path Validation → File Operation → Response
@@ -43,6 +45,7 @@ User Request → Path Validation → File Operation → Response
 ## 🔧 Backend - Gestión de Archivos
 
 ### 1. Lectura de Archivos de Features
+
 ```javascript
 // server.js - Endpoint de lectura de archivos
 app.get('/api/feature-content', async (req, res) => {
@@ -90,6 +93,7 @@ app.get('/api/feature-content', async (req, res) => {
 ```
 
 ### 2. Escritura de Archivos de Features
+
 ```javascript
 // server.js - Endpoint de escritura de archivos
 app.post('/api/feature-content', async (req, res) => {
@@ -129,10 +133,10 @@ app.post('/api/feature-content', async (req, res) => {
   try {
     // Asegurar que el directorio existe
     await fs.promises.mkdir(path.dirname(featurePath), { recursive: true });
-    
+
     // Escribir contenido
     await fs.promises.writeFile(featurePath, content, 'utf-8');
-    
+
     console.log(`Feature actualizado: ${feature}`);
     res.json({ success: true, message: 'Feature guardado correctamente.' });
   } catch (error) {
@@ -143,6 +147,7 @@ app.post('/api/feature-content', async (req, res) => {
 ```
 
 ### 3. Validación de Seguridad
+
 ```javascript
 // server.js - Funciones de seguridad
 function sanitize(name) {
@@ -152,17 +157,17 @@ function sanitize(name) {
 function validateFilePath(requestedPath, basePath) {
   const resolvedPath = path.resolve(requestedPath);
   const resolvedBase = path.resolve(basePath);
-  
+
   // Verificar que la ruta está dentro del directorio base
   if (!resolvedPath.startsWith(resolvedBase)) {
     throw new Error('Path traversal detectado');
   }
-  
+
   // Verificar caracteres permitidos
   if (!/^[a-zA-Z0-9_\-\/.]+$/.test(requestedPath)) {
     throw new Error('Caracteres no permitidos en la ruta');
   }
-  
+
   return true;
 }
 
@@ -171,12 +176,12 @@ function validateFileContent(content) {
   if (typeof content !== 'string') {
     throw new Error('El contenido debe ser una cadena de texto');
   }
-  
+
   // Limitar tamaño del archivo (1MB)
   if (content.length > 1024 * 1024) {
     throw new Error('El archivo es demasiado grande');
   }
-  
+
   return true;
 }
 ```
@@ -184,6 +189,7 @@ function validateFileContent(content) {
 ## ⚙️ Sistema de Configuración
 
 ### 1. Gestión de Variables de Entorno
+
 ```javascript
 // server.js - Configuración del servidor
 require('dotenv').config();
@@ -201,7 +207,7 @@ const {
   PERSISTENT_WORKSPACES_ROOT,
   WIREMOCK_URL,
   MAX_PARALLEL_TESTS,
-  MAX_REPORTS_PER_FEATURE
+  MAX_REPORTS_PER_FEATURE,
 } = process.env;
 
 // Validación crítica
@@ -226,11 +232,12 @@ const config = {
   hasPersistentWorkspaces: !!PERSISTENT_WORKSPACES_ROOT,
   maxWorkers: parseInt(MAX_PARALLEL_TESTS, 10) || 2,
   maxReports: parseInt(MAX_REPORTS_PER_FEATURE, 10) || 5,
-  wireMockUrl: WIREMOCK_URL || 'http://localhost:8080'
+  wireMockUrl: WIREMOCK_URL || 'http://localhost:8080',
 };
 ```
 
 ### 2. API de Configuración
+
 ```javascript
 // server.js - Endpoints de configuración
 app.get('/api/config', (req, res) => {
@@ -242,73 +249,75 @@ app.get('/api/config', (req, res) => {
     wireMockEnabled: !!process.env.WIREMOCK_URL,
     gitIntegration: {
       repoUrl: process.env.GIT_REPO_URL,
-      user: process.env.GIT_USER
-    }
+      user: process.env.GIT_USER,
+    },
   });
 });
 
 // Endpoint para validar configuración
 app.post('/api/config/validate', (req, res) => {
   const { configKey, configValue } = req.body;
-  
+
   try {
     const validationResult = validateConfiguration(configKey, configValue);
     res.json({
       valid: validationResult.valid,
       message: validationResult.message,
-      normalizedValue: validationResult.normalizedValue
+      normalizedValue: validationResult.normalizedValue,
     });
   } catch (error) {
     res.status(400).json({
       valid: false,
-      message: error.message
+      message: error.message,
     });
   }
 });
 
 function validateConfiguration(key, value) {
   const validators = {
-    'MAX_PARALLEL_TESTS': (val) => {
+    MAX_PARALLEL_TESTS: (val) => {
       const num = parseInt(val, 10);
       return {
         valid: !isNaN(num) && num > 0 && num <= 10,
-        message: num > 0 && num <= 10 ? 'Válido' : 'Debe ser un número entre 1 y 10',
-        normalizedValue: num.toString()
+        message:
+          num > 0 && num <= 10 ? 'Válido' : 'Debe ser un número entre 1 y 10',
+        normalizedValue: num.toString(),
       };
     },
-    'MAX_REPORTS_PER_FEATURE': (val) => {
+    MAX_REPORTS_PER_FEATURE: (val) => {
       const num = parseInt(val, 10);
       return {
         valid: !isNaN(num) && num > 0 && num <= 20,
-        message: num > 0 && num <= 20 ? 'Válido' : 'Debe ser un número entre 1 y 20',
-        normalizedValue: num.toString()
+        message:
+          num > 0 && num <= 20 ? 'Válido' : 'Debe ser un número entre 1 y 20',
+        normalizedValue: num.toString(),
       };
     },
-    'WIREMOCK_URL': (val) => {
+    WIREMOCK_URL: (val) => {
       try {
         new URL(val);
         return {
           valid: true,
           message: 'URL válida',
-          normalizedValue: val
+          normalizedValue: val,
         };
       } catch {
         return {
           valid: false,
-          message: 'URL inválida'
+          message: 'URL inválida',
         };
       }
-    }
+    },
   };
-  
+
   const validator = validators[key];
   if (validator) {
     return validator(value);
   }
-  
+
   return {
     valid: false,
-    message: 'Clave de configuración no reconocida'
+    message: 'Clave de configuración no reconocida',
   };
 }
 ```
@@ -316,6 +325,7 @@ function validateConfiguration(key, value) {
 ## 🎨 Frontend - Integración con Editor
 
 ### 1. Carga y Guardado de Archivos
+
 ```javascript
 // public/js/file-manager.js - Gestión de archivos
 class FileManager {
@@ -329,28 +339,28 @@ class FileManager {
   async loadFile(branch, client, feature) {
     try {
       const response = await fetch(
-        `/api/feature-content?branch=${encodeURIComponent(branch)}&client=${encodeURIComponent(client)}&feature=${encodeURIComponent(feature)}`
+        `/api/feature-content?branch=${encodeURIComponent(branch)}&client=${encodeURIComponent(client)}&feature=${encodeURIComponent(feature)}`,
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const content = await response.text();
-      
+
       // Actualizar editor
       if (window.ideCodeMirror) {
         window.ideCodeMirror.setValue(content);
         window.ideCodeMirror.clearHistory();
       }
-      
+
       // Guardar estado actual
       this.currentFile = { branch, client, feature };
       this.lastSavedContent = content;
-      
+
       // Actualizar UI
       this.updateFileStatus('loaded');
-      
+
       return content;
     } catch (error) {
       console.error('Error loading file:', error);
@@ -363,7 +373,7 @@ class FileManager {
     if (!this.currentFile) {
       throw new Error('No file currently open');
     }
-    
+
     try {
       const response = await fetch('/api/feature-content', {
         method: 'POST',
@@ -372,20 +382,20 @@ class FileManager {
         },
         body: JSON.stringify({
           ...this.currentFile,
-          content: content
-        })
+          content: content,
+        }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       // Actualizar estado
       this.lastSavedContent = content;
       this.updateFileStatus('saved');
-      
+
       return result;
     } catch (error) {
       console.error('Error saving file:', error);
@@ -396,11 +406,11 @@ class FileManager {
 
   enableAutoSave(interval = 30000) {
     this.autoSave = true;
-    
+
     if (this.autoSaveInterval) {
       clearInterval(this.autoSaveInterval);
     }
-    
+
     this.autoSaveInterval = setInterval(() => {
       this.performAutoSave();
     }, interval);
@@ -408,7 +418,7 @@ class FileManager {
 
   disableAutoSave() {
     this.autoSave = false;
-    
+
     if (this.autoSaveInterval) {
       clearInterval(this.autoSaveInterval);
       this.autoSaveInterval = null;
@@ -417,9 +427,9 @@ class FileManager {
 
   async performAutoSave() {
     if (!this.currentFile || !window.ideCodeMirror) return;
-    
+
     const currentContent = window.ideCodeMirror.getValue();
-    
+
     // Solo guardar si el contenido ha cambiado
     if (currentContent !== this.lastSavedContent) {
       try {
@@ -434,28 +444,28 @@ class FileManager {
   updateFileStatus(status) {
     const statusIndicator = document.getElementById('file-status');
     if (!statusIndicator) return;
-    
+
     statusIndicator.className = `file-status status-${status}`;
-    
+
     const statusMessages = {
-      'loaded': 'Archivo cargado',
-      'saving': 'Guardando...',
-      'saved': 'Guardado',
-      'error': 'Error',
-      'modified': 'Modificado'
+      loaded: 'Archivo cargado',
+      saving: 'Guardando...',
+      saved: 'Guardado',
+      error: 'Error',
+      modified: 'Modificado',
     };
-    
+
     statusIndicator.textContent = statusMessages[status] || status;
   }
 
   checkForModifications() {
     if (!window.ideCodeMirror || !this.lastSavedContent) return;
-    
+
     const currentContent = window.ideCodeMirror.getValue();
     const isModified = currentContent !== this.lastSavedContent;
-    
+
     this.updateFileStatus(isModified ? 'modified' : 'saved');
-    
+
     return isModified;
   }
 }
@@ -466,16 +476,17 @@ window.fileManager = fileManager;
 ```
 
 ### 2. Integración con CodeMirror
+
 ```javascript
 // public/js/editor-integration.js - Integración con el editor
 function initializeEditorIntegration() {
   if (!window.ideCodeMirror) return;
-  
+
   // Eventos de cambio
   window.ideCodeMirror.on('change', () => {
     fileManager.checkForModifications();
   });
-  
+
   // Atajos de teclado
   window.ideCodeMirror.setOption('extraKeys', {
     'Ctrl-S': () => {
@@ -483,14 +494,15 @@ function initializeEditorIntegration() {
     },
     'Cmd-S': () => {
       saveCurrentFile();
-    }
+    },
   });
-  
+
   // Manejar eventos de cierre de pestaña
   window.addEventListener('beforeunload', (event) => {
     if (fileManager.checkForModifications()) {
       event.preventDefault();
-      event.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+      event.returnValue =
+        'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
     }
   });
 }
@@ -500,7 +512,7 @@ async function saveCurrentFile() {
     showNotification('No hay ningún archivo abierto', 'warning');
     return;
   }
-  
+
   try {
     fileManager.updateFileStatus('saving');
     const content = window.ideCodeMirror.getValue();
@@ -520,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ## 🔍 Explorador de Archivos
 
 ### 1. Componente de Explorador
+
 ```javascript
 // public/js/file-explorer.js - Explorador de archivos
 class FileExplorer {
@@ -531,13 +544,16 @@ class FileExplorer {
 
   async loadFileTree(branch) {
     try {
-      const response = await fetch(`/api/features?branch=${encodeURIComponent(branch)}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      const response = await fetch(
+        `/api/features?branch=${encodeURIComponent(branch)}`,
+      );
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const features = await response.json();
       this.fileTree = this.buildFileTree(features);
       this.renderFileTree();
-      
+
       return this.fileTree;
     } catch (error) {
       console.error('Error loading file tree:', error);
@@ -550,33 +566,33 @@ class FileExplorer {
       name: 'features',
       type: 'folder',
       children: {},
-      path: ''
+      path: '',
     };
-    
-    features.forEach(feature => {
+
+    features.forEach((feature) => {
       const parts = feature.split('/');
       let current = tree;
-      
+
       parts.forEach((part, index) => {
         if (!current.children[part]) {
           current.children[part] = {
             name: part,
             type: index === parts.length - 1 ? 'file' : 'folder',
             children: {},
-            path: parts.slice(0, index + 1).join('/')
+            path: parts.slice(0, index + 1).join('/'),
           };
         }
         current = current.children[part];
       });
     });
-    
+
     return tree;
   }
 
   renderFileTree() {
     const container = document.getElementById('file-explorer');
     if (!container) return;
-    
+
     container.innerHTML = '';
     const treeElement = this.createTreeElement(this.fileTree);
     container.appendChild(treeElement);
@@ -586,46 +602,48 @@ class FileExplorer {
     const element = document.createElement('div');
     element.className = `file-tree-item file-tree-${node.type}`;
     element.style.paddingLeft = `${level * 20}px`;
-    
+
     const icon = document.createElement('span');
     icon.className = 'file-tree-icon';
     icon.textContent = node.type === 'folder' ? '📁' : '📄';
-    
+
     const name = document.createElement('span');
     name.className = 'file-tree-name';
     name.textContent = node.name;
-    
+
     element.appendChild(icon);
     element.appendChild(name);
-    
+
     if (node.type === 'folder') {
       element.addEventListener('click', () => {
         this.toggleFolder(element);
       });
-      
+
       const childrenContainer = document.createElement('div');
       childrenContainer.className = 'file-tree-children';
       childrenContainer.style.display = 'none';
-      
-      Object.values(node.children).forEach(child => {
+
+      Object.values(node.children).forEach((child) => {
         const childElement = this.createTreeElement(child, level + 1);
         childrenContainer.appendChild(childElement);
       });
-      
+
       element.appendChild(childrenContainer);
     } else if (node.type === 'file') {
       element.addEventListener('click', () => {
         this.selectFile(node);
       });
     }
-    
+
     return element;
   }
 
   toggleFolder(folderElement) {
-    const childrenContainer = folderElement.querySelector('.file-tree-children');
+    const childrenContainer = folderElement.querySelector(
+      '.file-tree-children',
+    );
     const icon = folderElement.querySelector('.file-tree-icon');
-    
+
     if (childrenContainer.style.display === 'none') {
       childrenContainer.style.display = 'block';
       icon.textContent = '📂';
@@ -637,20 +655,20 @@ class FileExplorer {
 
   selectFile(fileNode) {
     // Remover selección anterior
-    document.querySelectorAll('.file-tree-item.selected').forEach(item => {
+    document.querySelectorAll('.file-tree-item.selected').forEach((item) => {
       item.classList.remove('selected');
     });
-    
+
     // Seleccionar nuevo archivo
     const fileElement = event.currentTarget;
     fileElement.classList.add('selected');
-    
+
     this.selectedFile = fileNode;
-    
+
     // Disparar evento de selección
     this.dispatchEvent('fileSelected', {
       path: fileNode.path,
-      name: fileNode.name
+      name: fileNode.name,
     });
   }
 
@@ -666,6 +684,7 @@ window.fileExplorer = fileExplorer;
 ```
 
 ### 2. Estilos para Explorador
+
 ```css
 /* public/css/styles.css - Estilos de explorador de archivos */
 .file-explorer {
@@ -747,6 +766,7 @@ window.fileExplorer = fileExplorer;
 ## 🛡️ Seguridad y Validaciones
 
 ### 1. Middleware de Seguridad
+
 ```javascript
 // server.js - Middleware para operaciones de archivos
 const fileSecurityMiddleware = (req, res, next) => {
@@ -754,18 +774,20 @@ const fileSecurityMiddleware = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
-  
+
   // Validar método HTTP
   const allowedMethods = ['GET', 'POST'];
   if (!allowedMethods.includes(req.method)) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
+
   // Para POST, validar Content-Type
   if (req.method === 'POST' && !req.is('application/json')) {
-    return res.status(400).json({ error: 'Content-Type must be application/json' });
+    return res
+      .status(400)
+      .json({ error: 'Content-Type must be application/json' });
   }
-  
+
   next();
 };
 
@@ -774,6 +796,7 @@ app.use('/api/feature-content', fileSecurityMiddleware);
 ```
 
 ### 2. Validaciones Adicionales
+
 ```javascript
 // server.js - Validaciones de contenido
 function validateFeatureContent(content) {
@@ -781,27 +804,27 @@ function validateFeatureContent(content) {
   if (typeof content !== 'string') {
     throw new Error('Content must be a string');
   }
-  
+
   // Validar tamaño máximo (1MB)
   if (content.length > 1024 * 1024) {
     throw new Error('Content too large (max 1MB)');
   }
-  
+
   // Validar caracteres peligrosos (inyección de comandos)
   const dangerousPatterns = [
     /<script/i,
     /javascript:/i,
     /data:/i,
     /vbscript:/i,
-    /on\w+\s*=/i
+    /on\w+\s*=/i,
   ];
-  
+
   for (const pattern of dangerousPatterns) {
     if (pattern.test(content)) {
       throw new Error('Content contains potentially dangerous patterns');
     }
   }
-  
+
   return true;
 }
 
@@ -811,12 +834,12 @@ function validateFeatureName(name) {
   if (!featureNamePattern.test(name)) {
     throw new Error('Invalid feature name format');
   }
-  
+
   // Validar longitud
   if (name.length > 100) {
     throw new Error('Feature name too long (max 100 characters)');
   }
-  
+
   return true;
 }
 ```
