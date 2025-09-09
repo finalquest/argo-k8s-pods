@@ -797,6 +797,7 @@ apiEvents.on(API_EVENTS.FEATURE_SAVED, (data) => {
 ## 📖 Documentos Relacionados
 
 - [01-module-overview.md](./01-module-overview.md) - Visión general de los módulos
-- [03-worker-integration.md](./03-worker-integration.md) - Integración con el sistema de workers
-- [04-ui-components.md](./04-ui-components.md) - Componentes de UI reutilizables
+- [04-features/01-test-execution.md](../04-features/01-test-execution.md) - Ejecución de tests
+- [01-arquitectura-general.md](../01-arquitectura-general.md) - Arquitectura general
+- [04-features/01-test-execution.md](../04-features/01-test-execution.md) - Ejecución de tests
 - [02-backend/01-server-architecture.md](../02-backend/01-server-architecture.md) - Arquitectura del backend

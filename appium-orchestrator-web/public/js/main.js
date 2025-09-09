@@ -40,8 +40,20 @@ import {
 } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
 import './progress-indicator-manager.js';
+import { StateManager } from './state/state-manager.js';
+import { globalEvents } from './state/event-manager.js';
 
-let activeFeature = null; // Holds info about the currently open feature in the IDE
+// Application state manager
+const appState = new StateManager({
+  activeFeature: null,
+  currentUser: null,
+  selectedBranch: '',
+  selectedClient: '',
+  localDevices: [],
+  config: null,
+  isLoading: false,
+  lastError: null,
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthStatus();
@@ -51,9 +63,16 @@ async function checkAuthStatus() {
   const authOverlay = document.getElementById('auth-overlay');
   const userInfoDiv = document.getElementById('user-info');
 
+  appState.setState({ isLoading: true });
+  globalEvents.emit('auth:checking');
+
   const user = await getCurrentUser();
+  appState.setState({ isLoading: false });
 
   if (user) {
+    appState.setState({ currentUser: user });
+    globalEvents.emit('auth:success', user);
+
     authOverlay.style.display = 'none';
     document.getElementById('user-name').textContent = user.name;
     document.getElementById('user-email').textContent = user.email;
@@ -61,12 +80,16 @@ async function checkAuthStatus() {
     userInfoDiv.style.display = 'block';
     initializeApp();
   } else {
+    appState.setState({ currentUser: null });
+    globalEvents.emit('auth:failed');
+
     authOverlay.style.display = 'flex';
     userInfoDiv.style.display = 'none';
   }
 }
 
 async function handleSave() {
+  const activeFeature = appState.getState().activeFeature;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para guardar.');
     return false; // Return false on failure
@@ -81,6 +104,9 @@ async function handleSave() {
   const content = getIdeEditorContent();
   const { branch, client, featureName } = activeFeature;
 
+  appState.setState({ isLoading: true });
+  globalEvents.emit('feature:saving', { branch, client, featureName });
+
   const result = await saveFeatureContent(
     branch,
     client,
@@ -88,7 +114,10 @@ async function handleSave() {
     content,
   );
 
+  appState.setState({ isLoading: false });
+
   if (result) {
+    globalEvents.emit('feature:saved', { branch, client, featureName, result });
     alert('Feature guardado con éxito!');
     setSaveButtonState(false); // Disable button after save
     // Auto-refresh git status to show the change
@@ -97,11 +126,15 @@ async function handleSave() {
       refreshBtn.click();
     }
     return true; // Return true on success
+  } else {
+    appState.setState({ lastError: 'Failed to save feature' });
+    globalEvents.emit('feature:save_failed', { branch, client, featureName });
+    return false; // Return false on failure
   }
-  return false; // Return false on failure
 }
 
 async function handleIdeRun(socket) {
+  const activeFeature = appState.getState().activeFeature;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para ejecutar.');
     return;
@@ -119,10 +152,12 @@ async function handleIdeRun(socket) {
 
   // Run the test
   const { branch, client, featureName } = activeFeature;
+  globalEvents.emit('test:running', { branch, client, featureName });
   runTest(socket, branch, client, featureName, false);
 }
 
 function handleIdeCommit() {
+  const activeFeature = appState.getState().activeFeature;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para commitear.');
     return;
@@ -146,6 +181,7 @@ function initializeApp() {
   initializeUiEventListeners(socket);
   initializeAppControls(socket);
   initializeWiremockTab();
+  initializeEventListeners(); // Initialize event-based listeners
   initIdeView({
     onSave: handleSave,
     onCommit: handleIdeCommit,
@@ -171,7 +207,11 @@ function initializeApp() {
 }
 
 async function initializeAppControls(socket) {
+  appState.setState({ isLoading: true });
   const config = await fetchConfig();
+  appState.setState({ isLoading: false });
+  appState.setState({ config });
+
   displayPrepareWorkspaceButton(config.persistentWorkspacesEnabled);
   displayGitControls(config.persistentWorkspacesEnabled);
   displayFeatureFilter(config.persistentWorkspacesEnabled);
@@ -206,6 +246,7 @@ async function initializeAppControls(socket) {
   const headerCommitBtn = document.getElementById('header-commit-btn');
   if (headerCommitBtn) {
     headerCommitBtn.addEventListener('click', () => {
+      const activeFeature = appState.getState().activeFeature;
       if (!activeFeature) {
         alert('No hay ningún archivo activo para commitear.');
         return;
@@ -253,6 +294,7 @@ async function initializeAppControls(socket) {
 
       const branch = document.getElementById('branch-select').value;
       const client = document.getElementById('client-select').value;
+      const activeFeature = appState.getState().activeFeature;
       if (!activeFeature) {
         alert('Error: No hay un feature activo para hacer commit.');
         return;
@@ -281,9 +323,15 @@ async function initializeAppControls(socket) {
       const selectedBranch = branchSelect.value;
       const selectedClient = document.getElementById('client-select').value;
 
-      // Reset active feature when branch changes
-      activeFeature = null;
+      // Update state with selected branch
+      appState.setState({
+        selectedBranch,
+        selectedClient,
+        activeFeature: null,
+      });
       window.currentFeatureFile = null;
+
+      globalEvents.emit('branch:changed', { selectedBranch, selectedClient });
 
       // Actualizar el estado del editor
       if (window.progressIndicatorManager) {
@@ -326,7 +374,8 @@ async function initializeAppControls(socket) {
       }
 
       // Update commit status indicator for the new branch
-      if (selectedBranch && config.persistentWorkspacesEnabled) {
+      const config = appState.getState().config;
+      if (selectedBranch && config && config.persistentWorkspacesEnabled) {
         await updateCommitStatusIndicator(selectedBranch);
 
         // Also update git status for features if both branch and client are selected
@@ -348,14 +397,19 @@ async function initializeAppControls(socket) {
   // Initial commit status check after a short delay to ensure DOM is ready
   setTimeout(async () => {
     const initialBranch = document.getElementById('branch-select').value;
-    if (initialBranch && config.persistentWorkspacesEnabled) {
+    const config = appState.getState().config;
+    if (initialBranch && config && config.persistentWorkspacesEnabled) {
       await updateCommitStatusIndicator(initialBranch);
     }
   }, 500);
 }
 
 async function loadLocalDevices() {
+  appState.setState({ isLoading: true });
   const devices = await getLocalDevices();
+  appState.setState({ isLoading: false });
+  appState.setState({ localDevices: devices || [] });
+
   const container = document.getElementById('device-selector-container');
   const select = document.getElementById('device-select');
 
@@ -377,6 +431,8 @@ async function updateCommitStatusIndicator(branch) {
   // Check if persistent workspaces are enabled by fetching config
   const config = await fetchConfig();
   if (!config.persistentWorkspacesEnabled) return;
+
+  appState.setState({ config });
 
   try {
     const [commitStatus, workspaceStatus] = await Promise.all([
@@ -463,6 +519,7 @@ async function refreshLocalDevices() {
     await loadLocalDevices();
   } catch (error) {
     console.error('Failed to refresh local devices:', error);
+    appState.setState({ lastError: 'Failed to refresh local devices' });
   } finally {
     refreshBtn.disabled = false;
     refreshBtn.innerHTML = originalContent;
@@ -508,8 +565,10 @@ function initializeUiEventListeners(socket) {
     }
 
     setIdeEditorContent('// Cargando...', true);
-    activeFeature = null;
+    appState.setState({ activeFeature: null });
     window.currentFeatureFile = null;
+
+    globalEvents.emit('feature:opening', { branch, client, featureName });
 
     const content = await getFeatureContent(
       branch,
@@ -518,16 +577,26 @@ function initializeUiEventListeners(socket) {
     );
 
     if (content !== null) {
+      const newActiveFeature = { branch, client, featureName };
+      appState.setState({ activeFeature: newActiveFeature });
       setIdeEditorContent({ content, isReadOnly: false, isModified: false });
-      activeFeature = { branch, client, featureName };
       window.currentFeatureFile = `${featureName}.feature`;
+
+      globalEvents.emit('feature:opened', {
+        branch,
+        client,
+        featureName,
+        content,
+      });
 
       if (window.progressIndicatorManager) {
         window.progressIndicatorManager.updateEditorStateForCurrentFile();
       }
       return true;
+    } else {
+      globalEvents.emit('feature:open_failed', { branch, client, featureName });
+      return false;
     }
-    return false;
   }
 
   // Función para verificar si hay cambios no guardados
@@ -615,5 +684,59 @@ function initializeUiEventListeners(socket) {
         loadHistory();
       }
     });
+  });
+}
+
+function initializeEventListeners() {
+  // Listen for auth events
+  globalEvents.on('auth:success', (user) => {
+    console.log('User authenticated:', user.name);
+    // Could update UI elements that depend on auth state
+  });
+
+  globalEvents.on('auth:failed', () => {
+    console.log('Authentication failed');
+    // Could update UI elements that depend on auth state
+  });
+
+  // Listen for feature events
+  globalEvents.on('feature:opened', (data) => {
+    console.log('Feature opened:', data.featureName);
+    // Could update UI elements that depend on active feature
+  });
+
+  globalEvents.on('feature:saved', (data) => {
+    console.log('Feature saved:', data.featureName);
+    // Could update UI elements that depend on saved state
+  });
+
+  globalEvents.on('feature:save_failed', (data) => {
+    console.error('Feature save failed:', data.featureName);
+    // Could show error indicators
+  });
+
+  // Listen for test events
+  globalEvents.on('test:running', (data) => {
+    console.log('Test running:', data.featureName);
+    // Could update UI elements that depend on test state
+  });
+
+  // Listen for branch change events
+  globalEvents.on('branch:changed', (data) => {
+    console.log('Branch changed:', data.selectedBranch);
+    // Could update UI elements that depend on branch
+  });
+
+  // Listen for state changes
+  appState.subscribe('isLoading', (isLoading) => {
+    console.log('Loading state changed:', isLoading);
+    // Could update loading indicators
+  });
+
+  appState.subscribe('lastError', (error) => {
+    if (error) {
+      console.error('Application error:', error);
+      // Could show error notifications
+    }
   });
 }

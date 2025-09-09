@@ -6,22 +6,22 @@ module.exports = {
   verbose: true,
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup/setup.js'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   testTimeout: 10000,
   collectCoverageFrom: [
     'src/js/**/*.js',
     '!src/js/**/*.test.js',
-    '!src/js/**/index.js'
+    '!src/js/**/index.js',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   transform: {
-    '^.+\\.js$': 'babel-jest'
+    '^.+\\.js$': 'babel-jest',
   },
   transformIgnorePatterns: [
     '/node_modules/',
     '^.+\\.module\\.css$',
-    '^.+\\.module\\.scss$'
-  ]
+    '^.+\\.module\\.scss$',
+  ],
 };

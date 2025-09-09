@@ -1,12 +1,11 @@
 describe('Smoke Tests - Sistema Básico', () => {
-  
   test('el entorno de testing está configurado correctamente', () => {
     // Verificar que Jest y los mocks están disponibles
     expect(jest).toBeDefined();
     expect(document).toBeDefined();
     expect(window).toBeDefined();
     expect(console).toBeDefined();
-    
+
     // Verificar funciones mockeadas
     expect(document.getElementById).toBeDefined();
     expect(document.querySelector).toBeDefined();
@@ -45,10 +44,10 @@ describe('Smoke Tests - Sistema Básico', () => {
     // Probar que los mocks de console funcionan
     console.log('test message');
     expect(console.log).toHaveBeenCalledWith('test message');
-    
+
     console.error('test error');
     expect(console.error).toHaveBeenCalledWith('test error');
-    
+
     console.warn('test warning');
     expect(console.warn).toHaveBeenCalledWith('test warning');
   });
@@ -56,16 +55,16 @@ describe('Smoke Tests - Sistema Básico', () => {
   test('CodeMirror mock funciona correctamente', () => {
     // Probar que el mock de CodeMirror funciona
     const mockEditor = new CodeMirror();
-    
+
     expect(mockEditor.setValue).toBeDefined();
     expect(mockEditor.getValue).toBeDefined();
     expect(mockEditor.on).toBeDefined();
     expect(mockEditor.setOption).toBeDefined();
-    
+
     // Simular algunas operaciones
     mockEditor.setValue('test content');
     expect(mockEditor.setValue).toHaveBeenCalledWith('test content');
-    
+
     mockEditor.on('change', jest.fn());
     expect(mockEditor.on).toHaveBeenCalledWith('change', expect.any(Function));
   });
