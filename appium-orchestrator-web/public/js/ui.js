@@ -551,6 +551,11 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
     );
     ideCodeMirror.setOption('readOnly', isReadOnly);
     ideCodeMirror.clearHistory();
+    
+    // Marcar como limpio si no está modificado
+    if (!isModified) {
+      ideCodeMirror.markClean();
+    }
   }
 
   if (saveBtn) {

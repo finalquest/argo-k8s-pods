@@ -71,13 +71,13 @@ async function handleSave() {
     alert('No hay ningún archivo activo para guardar.');
     return false; // Return false on failure
   }
-  
+
   const saveBtn = document.getElementById('ide-save-btn');
   // If save button is disabled, there are no changes to save
   if (saveBtn && saveBtn.disabled) {
     return true; // Return true to indicate no save needed
   }
-  
+
   const content = getIdeEditorContent();
   const { branch, client, featureName } = activeFeature;
 
@@ -284,7 +284,7 @@ async function initializeAppControls(socket) {
       // Reset active feature when branch changes
       activeFeature = null;
       window.currentFeatureFile = null;
-      
+
       // Actualizar el estado del editor
       if (window.progressIndicatorManager) {
         window.progressIndicatorManager.updateEditorStateForCurrentFile();
@@ -310,6 +310,12 @@ async function initializeAppControls(socket) {
             isReadOnly: true,
             isModified: false,
           });
+          // Marcar como limpio después de establecer el texto por defecto
+          setTimeout(() => {
+            if (window.ideCodeMirror) {
+              window.ideCodeMirror.markClean();
+            }
+          }, 100);
         }
       }
 
@@ -491,6 +497,62 @@ function initializeUiEventListeners(socket) {
     }
   });
 
+  // Función para abrir un feature desde el tree view
+  async function openFeatureFromTree(featureName) {
+    const branch = document.getElementById('branch-select').value;
+    const client = document.getElementById('client-select').value;
+
+    // Si hay cambios no guardados, marcar el editor como limpio para evitar el popup
+    if (window.ideCodeMirror && !window.ideCodeMirror.isClean()) {
+      window.ideCodeMirror.markClean();
+    }
+
+    setIdeEditorContent('// Cargando...', true);
+    activeFeature = null;
+    window.currentFeatureFile = null;
+
+    const content = await getFeatureContent(
+      branch,
+      client,
+      featureName + '.feature',
+    );
+
+    if (content !== null) {
+      setIdeEditorContent({ content, isReadOnly: false, isModified: false });
+      activeFeature = { branch, client, featureName };
+      window.currentFeatureFile = `${featureName}.feature`;
+
+      if (window.progressIndicatorManager) {
+        window.progressIndicatorManager.updateEditorStateForCurrentFile();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Función para verificar si hay cambios no guardados
+  function hasUnsavedChanges() {
+    if (!window.ideCodeMirror) return false;
+    return window.ideCodeMirror.isClean() === false;
+  }
+
+  // Función para ejecutar test con verificación de cambios no guardados
+  async function executeTestWithSaveCheck(featureName, highPriority) {
+    if (hasUnsavedChanges()) {
+      const shouldSave = confirm(
+        'Hay cambios no guardados. ¿Guardar antes de ejecutar?',
+      );
+      if (shouldSave) {
+        const saved = await handleSave();
+        if (!saved) return;
+      }
+    }
+
+    const branch = document.getElementById('branch-select').value;
+    const client = document.getElementById('client-select').value;
+    runTest(socket, branch, client, featureName, highPriority);
+  }
+
   featuresList.addEventListener('click', async (e) => {
     const target = e.target;
 
@@ -503,6 +565,24 @@ function initializeUiEventListeners(socket) {
       return;
     }
 
+    // Handle tree view buttons (Run and Priority) - MOVED BEFORE FILE HANDLER
+    if (
+      target.classList.contains('run-btn') ||
+      target.classList.contains('priority-btn')
+    ) {
+      const featureName = target.dataset.feature;
+      if (!featureName) return; // If no feature is associated, do nothing
+      
+      const highPriority = target.classList.contains('priority-btn');
+      
+      // Abrir el archivo en el editor primero
+      await openFeatureFromTree(featureName);
+      
+      // Luego ejecutar el test (con manejo de cambios no guardados)
+      await executeTestWithSaveCheck(featureName, highPriority);
+      return;
+    }
+
     // Handle file click to open in editor
     const fileItem = target.closest('.file > .feature-item');
     if (fileItem) {
@@ -512,55 +592,8 @@ function initializeUiEventListeners(socket) {
       }
 
       const featureName = fileItem.parentElement.dataset.featureName;
-      const branch = document.getElementById('branch-select').value;
-      const client = document.getElementById('client-select').value;
-
-      setIdeEditorContent('// Cargando...', true);
-      activeFeature = null; // Reset active feature while loading
-      window.currentFeatureFile = null;
-
-      const content = await getFeatureContent(
-        branch,
-        client,
-        featureName + '.feature',
-      );
-
-      if (content !== null) {
-        const isModified =
-          fileItem.parentElement.classList.contains('modified');
-        setIdeEditorContent({ content, isReadOnly: false, isModified });
-        activeFeature = { branch, client, featureName }; // Set active feature
-        
-        // Establecer el archivo actual global para el progress indicator manager
-        window.currentFeatureFile = `${featureName}.feature`;
-        
-        // Actualizar el estado del editor para el archivo actual
-        if (window.progressIndicatorManager) {
-          window.progressIndicatorManager.updateEditorStateForCurrentFile();
-        }
-      } else {
-        setIdeEditorContent({
-          content: '// No se pudo cargar el contenido del archivo.',
-          isReadOnly: true,
-          isModified: false,
-        });
-      }
+      await openFeatureFromTree(featureName);
       return;
-    }
-
-    // This part handles the old buttons, which are direct children of feature-item
-    const featureName = target.dataset.feature;
-    if (!featureName) return; // If no feature is associated, do nothing
-
-    const branch = document.getElementById('branch-select').value;
-    const client = document.getElementById('client-select').value;
-
-    if (
-      target.classList.contains('run-btn') ||
-      target.classList.contains('priority-btn')
-    ) {
-      const highPriority = target.classList.contains('priority-btn');
-      runTest(socket, branch, client, featureName, highPriority);
     }
   });
 
