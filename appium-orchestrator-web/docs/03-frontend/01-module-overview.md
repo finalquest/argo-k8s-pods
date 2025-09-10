@@ -16,7 +16,12 @@ public/js/
 ├── ui.js               # Componentes de UI y manipulación DOM
 ├── socket.js           # Eventos Socket.IO
 ├── wiremock.js         # Gestión de WireMock
-└── progress-indicator-manager.js  # Indicadores de progreso
+├── progress-indicator-manager.js  # Indicadores de progreso
+├── state/              # Sistema de gestión de estado
+│   ├── state-manager.js    # Gestor centralizado de estado
+│   └── event-manager.js    # Sistema de eventos desacoplado
+└── utils/              # Utilidades centralizadas
+    └── error-handling.js  # Manejo de errores
 ```
 
 ### 2. Patrón de Módulos ES6
@@ -841,5 +846,5 @@ class ProgressIndicatorManager {
 
 - [01-module-overview.md](./01-module-overview.md) - Visión general de los módulos
 - [02-api-integration.md](./02-api-integration.md) - Integración con API del backend
-- [03-worker-integration.md](./03-worker-integration.md) - Integración con el sistema de workers
+- [04-features/01-test-execution.md](../04-features/01-test-execution.md) - Ejecución de tests
 - [02-backend/01-server-architecture.md](../02-backend/01-server-architecture.md) - Arquitectura del backend

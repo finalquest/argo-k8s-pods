@@ -18,6 +18,10 @@
 │  │   API Module    │  │ Progress Ind.   │  │  WireMock Mod.  │ │
 │  │   (api.js)      │  │  (progress.js)  │  │  (wiremock.js)  │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │ State Manager   │  │ Event Manager   │  │ Error Utils     │ │
+│  │ (state/)       │  │ (state/)       │  │ (utils/)        │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
                          ┌─────────────────┐
@@ -107,6 +111,14 @@ sequenceDiagram
 ```
 appium-orchestrator-web/
 ├── docs/                           # Documentación
+│   ├── 01-arquitectura-general.md   # Este documento
+│   ├── 02-backend/                  # Documentación backend
+│   ├── 03-frontend/                 # Documentación frontend
+│   ├── 04-features/                 # Documentación de features
+│   ├── 05-tech-planning/            # Planificación técnica
+│   │   ├── REFACTOR_PLAN.md        # Plan de refactorización
+│   │   └── TESTING_PLAN.md         # Plan de testing
+│   └── ...                         # Otros documentos
 ├── public/                         # Frontend
 │   ├── index.html                  # Página principal
 │   ├── css/                        # Estilos
@@ -118,8 +130,26 @@ appium-orchestrator-web/
 │   │   ├── ui.js                  # Componentes UI
 │   │   ├── socket.js              # Eventos Socket.IO
 │   │   ├── progress-indicator-manager.js # Indicadores de progreso
-│   │   └── wiremock.js            # Gestión WireMock
+│   │   ├── wiremock.js            # Gestión WireMock
+│   │   ├── state/                 # Sistema de gestión de estado
+│   │   │   ├── state-manager.js   # Gestor de estado centralizado
+│   │   │   └── event-manager.js   # Sistema de eventos
+│   │   └── utils/                 # Utilidades centralizadas
+│   │       └── error-handling.js  # Manejo de errores
 │   └── reports/                   # Reportes generados
+├── src/                            # Código fuente (testing y desarrollo)
+│   ├── js/                         # Módulos JavaScript (fuente)
+│   │   ├── state/                 # State management (fuente)
+│   │   │   ├── state-manager.js   # Versión fuente
+│   │   │   └── event-manager.js   # Versión fuente
+│   │   └── utils/                 # Utilidades (fuente)
+│   │       └── error-handling.js  # Versión fuente
+│   └── tests/                      # Suite de pruebas
+│       ├── setup/                  # Configuración de testing
+│       ├── phase0/                 # Tests de humo
+│       ├── phase1/                 # Tests de utilidades
+│       ├── phase2/                 # Tests de state management
+│       └── phase3/                 # Tests de API
 ├── scripts/                        # Scripts de sistema
 │   ├── feature-runner.sh          # Ejecutor de features
 │   ├── setup-workspace.sh         # Configuración de workspace
@@ -130,6 +160,8 @@ appium-orchestrator-web/
 ├── server.js                       # Servidor backend
 ├── worker.js                       # Sistema de workers
 ├── package.json                    # Dependencias
+├── jest.config.js                  # Configuración Jest
+├── babel.config.js                 # Configuración Babel
 └── docker-compose.yml              # Configuración Docker
 ```
 
@@ -216,9 +248,28 @@ export function stopAllExecution(socket) {
 #### **Módulo Main** (`main.js`)
 
 ```javascript
-// Orquestación principal
+// Orquestación principal con State Management
 function initializeApp() {
-  /* ... */
+  // Inicializar State Manager con estado inicial
+  window.appState = new StateManager({
+    activeFeature: null,
+    currentUser: null,
+    selectedBranch: '',
+    selectedClient: '',
+    isLoading: false,
+    config: null,
+    localDevices: [],
+    lastError: null,
+  });
+  
+  // Inicializar Event Manager
+  window.globalEvents = new EventManager();
+  
+  // Configurar suscripciones a estado
+  appState.subscribe('isLoading', updateLoadingUI);
+  appState.subscribe('lastError', handleError);
+  
+  /* ... resto de inicialización ... */
 }
 function initializeAppControls(socket) {
   /* ... */
@@ -228,6 +279,76 @@ function handleSave() {
 }
 function handleIdeRun(socket) {
   /* ... */
+}
+```
+
+#### **State Manager** (`src/js/state/state-manager.js`)
+
+```javascript
+// Gestión centralizada de estado
+class StateManager {
+  constructor(initialState = {}) {
+    this.state = { ...initialState };
+    this.subscribers = new Map();
+  }
+  
+  getState() {
+    return { ...this.state };
+  }
+  
+  setState(stateObject, options = {}) {
+    const oldState = { ...this.state };
+    this.state = { ...this.state, ...stateObject };
+    
+    if (!options.silent) {
+      this.notifySubscribers(stateObject, oldState);
+    }
+  }
+  
+  subscribe(path, callback) {
+    // Suscripción a cambios de estado
+  }
+}
+```
+
+#### **Event Manager** (`src/js/state/event-manager.js`)
+
+```javascript
+// Sistema de eventos desacoplado
+class EventManager {
+  constructor() {
+    this.events = new Map();
+  }
+  
+  emit(eventName, data) {
+    // Emitir eventos a componentes suscritos
+  }
+  
+  on(eventName, callback) {
+    // Suscribirse a eventos
+  }
+}
+```
+
+#### **Error Handling Utils** (`src/js/utils/error-handling.js`)
+
+```javascript
+// Utilidades centralizadas de manejo de errores
+export function handleApiError(error, context = 'API call') {
+  console.error(`${context} failed:`, error);
+  // Manejo estandarizado de errores
+}
+
+export function logError(message, error) {
+  // Logging estructurado para errores
+}
+
+// Clases de error especializadas
+export class ApiError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 ```
 
@@ -418,6 +539,75 @@ function requireAuth(req, res, next) {
 }
 ```
 
+## 🧪 Sistema de Testing
+
+### Infraestructura de Testing
+
+El proyecto implementa un sistema de testing completo con Jest + Babel:
+
+```javascript
+// Configuración principal
+// jest.config.js
+module.exports = {
+  testEnvironment: 'jsdom',
+  roots: ['<rootDir>/src/tests'],
+  testMatch: ['**/*.test.js'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup/setup.js'],
+};
+```
+
+### Estructura de Tests
+
+```
+src/tests/
+├── setup/                    # Configuración global
+│   ├── jest.config.js       # Configuración Jest
+│   └── setup.js             # Setup global y mocks
+├── phase0/                   # Tests de humo (9 tests)
+├── phase1/                   # Tests de utilidades (66 tests)
+├── phase2/                   # Tests de state management (25 tests)
+└── phase3/                   # Tests de API (18 tests)
+```
+
+### Métricas de Testing
+
+- **Total Tests**: 118 tests funcionando
+- **Cobertura**: 75% en módulos relevantes
+- **Tiempo de ejecución**: <2 segundos
+- **Mock System**: Completo con DOM, APIs, y eventos
+
+## 🔄 Sistema de Gestión de Estado
+
+### Arquitectura Reactiva
+
+El sistema implementa un patrón reactivo con:
+
+- **State Manager**: Gestión centralizada e inmutable del estado
+- **Event Manager**: Sistema pub/sub para comunicación desacoplada
+- **Suscripciones**: Componentes reactivos a cambios de estado
+
+### Flujo de Datos
+
+```javascript
+// 1. Estado centralizado
+const appState = new StateManager({
+  activeFeature: null,
+  currentUser: null,
+  isLoading: false
+});
+
+// 2. Suscripciones reactivas
+appState.subscribe('isLoading', (loading) => {
+  updateUI(loading);
+});
+
+// 3. Eventos desacoplados
+globalEvents.emit('feature:selected', { name: 'test.feature' });
+globalEvents.on('feature:selected', (data) => {
+  // Manejar selección
+});
+```
+
 ## 🚀 Próximos Pasos
 
 Esta documentación general sirve como base para los documentos detallados:
@@ -432,3 +622,5 @@ Esta documentación general sirve como base para los documentos detallados:
 - [02-backend/01-server-architecture.md](./02-backend/01-server-architecture.md)
 - [03-frontend/01-module-overview.md](./03-frontend/01-module-overview.md)
 - [04-features/03-test-execution.md](./04-features/03-test-execution.md)
+- [05-tech-planning/REFACTOR_PLAN.md](./05-tech-planning/REFACTOR_PLAN.md)
+- [05-tech-planning/TESTING_PLAN.md](./05-tech-planning/TESTING_PLAN.md)

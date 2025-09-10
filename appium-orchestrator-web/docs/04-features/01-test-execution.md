@@ -729,7 +729,7 @@ socket.on('stop_all_execution', () => {
 
 ## 📖 Documentos Relacionados
 
-- [01-overview.md](./01-overview.md) - Visión general de features
+- [02-workspace-management.md](./02-workspace-management.md) - Gestión de workspaces
 - [02-workspace-management.md](./02-workspace-management.md) - Gestión de workspaces
 - [03-git-integration.md](./03-git-integration.md) - Integración Git
 - [04-real-time-progress.md](./04-real-time-progress.md) - Progreso en tiempo real
