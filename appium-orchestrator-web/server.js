@@ -1440,6 +1440,7 @@ function createWorker(
   apkIdentifier,
   apkSourceType,
   deviceSerial,
+  persistentWorkspace = false,
 ) {
   const workerId =
     workerPool.length > 0 ? Math.max(...workerPool.map((w) => w.id)) + 1 : 0;
@@ -1485,16 +1486,25 @@ function createWorker(
 
   // --- Lógica de Workspace Persistente ---
   const sanitizedBranch = sanitize(branch);
-  const workerWorkspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT || os.tmpdir(),
-    sanitizedBranch,
-  );
+  let workerWorkspacePath;
+  let isPersistent = false;
+  
+  // Determinar si usar workspace persistente basado en:
+  // 1. El checkbox del frontend (persistentWorkspace)
+  // 2. Que PERSISTENT_WORKSPACES_ROOT esté configurado
+  if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
+    // Usar workspace persistente
+    workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+    isPersistent = true;
+    console.log(`[SERVER] Usando workspace persistente para worker ${workerId}: ${workerWorkspacePath}`);
+  } else {
+    // Usar workspace temporal
+    workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`);
+    isPersistent = false;
+    console.log(`[SERVER] Usando workspace temporal para worker ${workerId}: ${workerWorkspacePath}`);
+  }
+  
   fs.mkdirSync(workerWorkspacePath, { recursive: true });
-  console.log(
-    `[SERVER] Asignando workspace a worker ${workerId}: ${workerWorkspacePath}`,
-  );
-
-  const isPersistent = !!process.env.PERSISTENT_WORKSPACES_ROOT;
   const initMessage = {
     type: 'INIT',
     branch,
