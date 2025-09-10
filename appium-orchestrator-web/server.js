@@ -517,7 +517,11 @@ app.get('/api/workspace-status/:branch', (req, res) => {
   );
 
   if (!fs.existsSync(workspacePath)) {
-    return res.json({ modified_features: [] }); // No hay workspace, no hay cambios
+    return res.json({
+      exists: false,
+      modified_features: [],
+      message: 'No existe workspace local para esta branch',
+    });
   }
 
   const command = `git -C ${workspacePath} diff --name-only HEAD`;
@@ -538,7 +542,11 @@ app.get('/api/workspace-status/:branch', (req, res) => {
       (file) => file.includes('/feature/modulos/') && file.endsWith('.feature'),
     );
 
-    res.json({ modified_features: modifiedFeatures });
+    res.json({
+      exists: true,
+      modified_features: modifiedFeatures,
+      message: 'Workspace local existe y está disponible para edición',
+    });
   });
 });
 
@@ -549,40 +557,117 @@ app.get('/api/feature-content', async (req, res) => {
       .status(400)
       .json({ error: 'Se requieren los parámetros branch, client y feature.' });
   }
-  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-    return res.status(404).json({
-      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
-    });
+
+  let featurePath = null;
+  let foundInPersistent = false;
+  let tmpDir = null;
+  const isLocalWorkspace = !!process.env.PERSISTENT_WORKSPACES_ROOT;
+
+  // Lógica para leer features desde un workspace persistente si existe
+  if (isLocalWorkspace) {
+    const sanitizedBranch = sanitize(branch);
+    const workspacePath = path.join(
+      process.env.PERSISTENT_WORKSPACES_ROOT,
+      sanitizedBranch,
+      'appium',
+    );
+    const potentialFeaturePath = path.join(
+      workspacePath,
+      'test',
+      'features',
+      client,
+      'feature',
+      'modulos',
+      feature,
+    );
+
+    if (fs.existsSync(potentialFeaturePath)) {
+      featurePath = potentialFeaturePath;
+      foundInPersistent = true;
+      console.log(
+        `[API Feature-Content] Leyendo feature desde el workspace local para la branch: ${branch}`,
+      );
+    }
   }
 
-  const sanitizedBranch = sanitize(branch);
-  const workspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT,
-    sanitizedBranch,
-    'appium',
-  );
-  const featurePath = path.join(
-    workspacePath,
-    'test',
-    'features',
-    client,
-    'feature',
-    'modulos',
-    feature,
-  );
+  // Si no se encontró en el workspace persistente o no está habilitado, intentar clonar remotamente
+  if (!foundInPersistent) {
+    console.log(
+      `[API Feature-Content] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`,
+    );
+    tmpDir = path.join(
+      os.tmpdir(),
+      `appium-feature-content-${crypto.randomBytes(16).toString('hex')}`,
+    );
+    const authenticatedUrl = getAuthenticatedUrl();
+    try {
+      await fs.promises.mkdir(tmpDir, { recursive: true });
+      const git = simpleGit(tmpDir);
+      await git.clone(authenticatedUrl, tmpDir, [
+        '--branch',
+        branch,
+        '--depth',
+        '1',
+        '--no-checkout',
+      ]);
+      const featureFileForCheckout = path.join(
+        'test',
+        'features',
+        client,
+        'feature',
+        'modulos',
+        feature,
+      );
+      await git.checkout(branch, ['--', featureFileForCheckout]);
+      featurePath = path.join(tmpDir, featureFileForCheckout);
+    } catch (error) {
+      console.error(
+        `Error al clonar o hacer checkout para la branch '${branch}':`,
+        error,
+      );
+      res
+        .status(500)
+        .json({ error: 'Error interno al leer el contenido del feature.' });
+      return;
+    }
+  }
 
   // Security check
+  const basePath = foundInPersistent
+    ? path.join(
+        process.env.PERSISTENT_WORKSPACES_ROOT,
+        sanitize(branch),
+        'appium',
+      )
+    : tmpDir;
   const resolvedPath = path.resolve(featurePath);
-  if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
+  if (!resolvedPath.startsWith(path.resolve(basePath))) {
     return res.status(403).json({ error: 'Acceso a archivo no autorizado.' });
   }
 
   try {
     const content = await fs.promises.readFile(featurePath, 'utf-8');
-    res.type('text/plain').send(content);
+
+    // Devolver contenido con metadata sobre si es editable
+    res.json({
+      content: content,
+      isLocal: foundInPersistent,
+      workspaceExists: foundInPersistent,
+      message: foundInPersistent
+        ? 'Contenido cargado desde workspace local (editable)'
+        : 'Contenido cargado desde repositorio remoto (solo lectura)',
+    });
   } catch (error) {
     console.error(`Error al leer el archivo del feature ${feature}:`, error);
     res.status(500).json({ error: 'No se pudo leer el archivo del feature.' });
+  } finally {
+    // Clean up temporary directory if it was used
+    if (!foundInPersistent && tmpDir) {
+      await fs.promises.rm(tmpDir, {
+        recursive: true,
+        force: true,
+      });
+    }
   }
 });
 
@@ -615,6 +700,16 @@ app.post('/api/feature-content', async (req, res) => {
     feature,
   );
 
+  // Verificar si el workspace local existe antes de permitir guardar
+  if (!fs.existsSync(workspacePath)) {
+    return res.status(403).json({
+      error:
+        'No se puede guardar el feature porque no existe un workspace local para esta branch. Prepare el workspace local primero.',
+      workspaceExists: false,
+      actionRequired: 'prepare_workspace',
+    });
+  }
+
   // Security check
   const resolvedPath = path.resolve(featurePath);
   if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
@@ -623,7 +718,10 @@ app.post('/api/feature-content', async (req, res) => {
 
   try {
     await fs.promises.writeFile(featurePath, content, 'utf-8');
-    res.status(200).json({ message: 'Feature guardado con éxito.' });
+    res.status(200).json({
+      message: 'Feature guardado con éxito.',
+      workspaceExists: true,
+    });
   } catch (error) {
     console.error(`Error al guardar el archivo del feature ${feature}:`, error);
     res

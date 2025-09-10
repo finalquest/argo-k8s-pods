@@ -37,6 +37,8 @@ import {
   setIdeEditorContent,
   getIdeEditorContent,
   setSaveButtonState,
+  showLoadingSpinner,
+  hideLoadingSpinner,
 } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
 import './progress-indicator-manager.js';
@@ -570,32 +572,59 @@ function initializeUiEventListeners(socket) {
 
     globalEvents.emit('feature:opening', { branch, client, featureName });
 
-    const content = await getFeatureContent(
-      branch,
-      client,
-      featureName + '.feature',
-    );
+    // Mostrar spinner mientras carga el contenido
+    showLoadingSpinner('Cargando feature desde repositorio...');
 
-    if (content !== null) {
-      const newActiveFeature = { branch, client, featureName };
-      appState.setState({ activeFeature: newActiveFeature });
-      setIdeEditorContent({ content, isReadOnly: false, isModified: false });
-      window.currentFeatureFile = `${featureName}.feature`;
+    try {
+      const contentData = await getFeatureContent(
+        branch,
+        client,
+        featureName + '.feature',
+      );
 
-      globalEvents.emit('feature:opened', {
+      if (contentData !== null) {
+        const newActiveFeature = { branch, client, featureName };
+        appState.setState({ activeFeature: newActiveFeature });
+        setIdeEditorContent({
+          content: contentData.content,
+          isReadOnly: !contentData.isLocal,
+          isModified: false,
+        });
+        window.currentFeatureFile = `${featureName}.feature`;
+
+        globalEvents.emit('feature:opened', {
+          branch,
+          client,
+          featureName,
+          content: contentData.content,
+          isLocal: contentData.isLocal,
+          workspaceExists: contentData.workspaceExists,
+        });
+
+        if (window.progressIndicatorManager) {
+          window.progressIndicatorManager.updateEditorStateForCurrentFile();
+        }
+        return true;
+      } else {
+        globalEvents.emit('feature:open_failed', {
+          branch,
+          client,
+          featureName,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Error al cargar feature:', error);
+      globalEvents.emit('feature:open_failed', {
         branch,
         client,
         featureName,
-        content,
+        error,
       });
-
-      if (window.progressIndicatorManager) {
-        window.progressIndicatorManager.updateEditorStateForCurrentFile();
-      }
-      return true;
-    } else {
-      globalEvents.emit('feature:open_failed', { branch, client, featureName });
       return false;
+    } finally {
+      // Ocultar spinner siempre, sin importar el resultado
+      hideLoadingSpinner();
     }
   }
 

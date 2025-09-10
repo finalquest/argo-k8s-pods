@@ -544,6 +544,26 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
   const saveBtn = document.getElementById('ide-save-btn');
   const commitBtn = document.getElementById('ide-commit-btn');
   const runBtn = document.getElementById('ide-run-btn');
+  const editorControls = document.querySelector('.editor-controls');
+
+  // Remove existing read-only indicator
+  const existingIndicator = editorControls?.querySelector(
+    '.read-only-indicator',
+  );
+  if (existingIndicator) {
+    existingIndicator.remove();
+  }
+
+  // Add read-only indicator if needed
+  if (isReadOnly && editorControls) {
+    const indicator = document.createElement('div');
+    indicator.className = 'read-only-indicator';
+    indicator.innerHTML = `
+      <span class="read-only-icon">🔒</span>
+      <span class="read-only-text">Solo lectura - El contenido se carga desde el repositorio remoto</span>
+    `;
+    editorControls.insertBefore(indicator, editorControls.firstChild);
+  }
 
   if (ideCodeMirror) {
     ideCodeMirror.setValue(
@@ -563,7 +583,7 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
     saveBtn.disabled = true;
   }
   if (runBtn) {
-    runBtn.style.display = isReadOnly ? 'none' : 'inline-block';
+    runBtn.style.display = 'inline-block';
   }
   if (commitBtn) {
     commitBtn.style.display = isModified ? 'inline-block' : 'none';
@@ -578,5 +598,42 @@ export function setSaveButtonState(enabled) {
   const saveBtn = document.getElementById('save-feature-ide-btn');
   if (saveBtn) {
     saveBtn.disabled = !enabled;
+  }
+}
+
+export function showLoadingSpinner(message = 'Cargando contenido...') {
+  const ideContainer = document.getElementById('ide-container');
+  if (!ideContainer) return;
+
+  // Remove existing spinner if any
+  hideLoadingSpinner();
+
+  // Add loading class to IDE container
+  ideContainer.classList.add('loading');
+
+  // Create spinner overlay
+  const spinnerOverlay = document.createElement('div');
+  spinnerOverlay.className = 'loading-spinner';
+  spinnerOverlay.innerHTML = `
+    <div style="text-align: center;">
+      <div class="spinner"></div>
+      <div class="loading-text">${message}</div>
+    </div>
+  `;
+
+  ideContainer.appendChild(spinnerOverlay);
+}
+
+export function hideLoadingSpinner() {
+  const ideContainer = document.getElementById('ide-container');
+  if (!ideContainer) return;
+
+  // Remove loading class
+  ideContainer.classList.remove('loading');
+
+  // Remove spinner overlay if exists
+  const spinnerOverlay = ideContainer.querySelector('.loading-spinner');
+  if (spinnerOverlay) {
+    spinnerOverlay.remove();
   }
 }

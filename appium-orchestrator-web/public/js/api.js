@@ -53,7 +53,8 @@ export async function getFeatureContent(branch, client, feature) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Error del servidor');
     }
-    return await response.text();
+    const data = await response.json();
+    return data; // Return the full object with content, isLocal, workspaceExists, message
   } catch (error) {
     console.error('Error fetching feature content:', error);
     alert(`No se pudo cargar el contenido del feature: ${error.message}`);
@@ -72,6 +73,22 @@ export async function saveFeatureContent(branch, client, feature, content) {
     });
     if (!response.ok) {
       const errorData = await response.json();
+
+      // Handle specific error for missing workspace
+      if (errorData.actionRequired === 'prepare_workspace') {
+        const confirmPrepare = confirm(
+          'No existe un workspace local para esta branch. ¿Desea preparar el workspace local para poder editar features?',
+        );
+        if (confirmPrepare) {
+          // Trigger workspace preparation
+          const prepareBtn = document.getElementById('prepare-workspace-btn');
+          if (prepareBtn) {
+            prepareBtn.click();
+          }
+        }
+        return null;
+      }
+
       throw new Error(errorData.error || 'Error del servidor');
     }
     return await response.json();
