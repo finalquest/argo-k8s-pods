@@ -372,7 +372,7 @@ export class EventManager {
     });
   }
 
-  debounce(event, delay, options = {}) {
+  debounce(event, delay) {
     let timeoutId;
     let lastArgs;
 

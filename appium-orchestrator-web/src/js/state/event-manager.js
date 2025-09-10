@@ -5,11 +5,7 @@
  * la comunicación entre componentes de manera desacoplada.
  */
 
-import {
-  logDebug,
-  logError,
-  AppError,
-} from '../utils/error-handling.js';
+import { logDebug, logError, AppError } from '../utils/error-handling.js';
 
 /**
  * Clase principal para manejo de eventos
@@ -376,7 +372,7 @@ export class EventManager {
     });
   }
 
-  debounce(event, delay, options = {}) {
+  debounce(event, delay) {
     let timeoutId;
     let lastArgs;
 

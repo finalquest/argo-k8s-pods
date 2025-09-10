@@ -6,7 +6,7 @@ import pluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 export default [
   // 1) Ignora primero (afecta a todo)
   {
-    ignores: ['**/wiremock/**', 'public/reports/**'],
+    ignores: ['**/wiremock/**', 'public/reports/**', 'src/tests/**'],
   },
 
   // 2) Resto de la configuración

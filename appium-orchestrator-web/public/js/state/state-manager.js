@@ -31,13 +31,13 @@ export class StateManager {
 
     try {
       const oldState = { ...this.state };
-      
+
       // Actualizar el estado
       this.state = { ...this.state, ...stateObject };
 
       if (!silent) {
         // Notificar a los listeners de las propiedades que cambiaron
-        Object.keys(stateObject).forEach(key => {
+        Object.keys(stateObject).forEach((key) => {
           if (oldState[key] !== stateObject[key]) {
             this.notifyListeners(key, stateObject[key], oldState[key]);
           }
@@ -45,9 +45,9 @@ export class StateManager {
       }
 
       if (this.debugMode) {
-        logDebug('State updated:', { 
-          changed: Object.keys(stateObject), 
-          newState: this.state 
+        logDebug('State updated:', {
+          changed: Object.keys(stateObject),
+          newState: this.state,
         });
       }
 
