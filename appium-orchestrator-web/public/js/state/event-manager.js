@@ -16,30 +16,6 @@ export class EventManager {
     this.onceEvents = new Set();
     this.maxListeners = options.maxListeners || 100;
     this.debugMode = options.debug || false;
-    this.eventHistory = [];
-    this.maxHistorySize = options.maxHistorySize || 1000;
-
-    // Eventos del sistema predefinidos
-    this.setupSystemEvents();
-  }
-
-  /**
-   * Configura eventos del sistema
-   */
-  setupSystemEvents() {
-    this.systemEvents = [
-      'state:changed',
-      'test:started',
-      'test:completed',
-      'test:failed',
-      'progress:updated',
-      'connection:established',
-      'connection:lost',
-      'ui:tab_changed',
-      'ui:file_selected',
-      'socket:message',
-      'socket:error',
-    ];
   }
 
   /**
@@ -133,7 +109,7 @@ export class EventManager {
    * Emite un evento
    */
   emit(event, data = null, options = {}) {
-    const { async = false, timestamp = Date.now() } = options;
+    const { timestamp = Date.now() } = options;
 
     this.validateEventName(event);
 
@@ -144,9 +120,6 @@ export class EventManager {
       emitter: options.emitter || 'system',
     };
 
-    // Guardar en historial
-    this.saveToHistory(eventData);
-
     if (this.debugMode) {
       logDebug(`Event emitted: ${event}`, eventData);
     }
@@ -156,13 +129,7 @@ export class EventManager {
       return 0;
     }
 
-    if (async) {
-      // Ejecutar listeners asíncronamente
-      return this.executeAsyncListeners(listeners, eventData);
-    } else {
-      // Ejecutar listeners síncronamente
-      return this.executeSyncListeners(listeners, eventData);
-    }
+    return this.executeSyncListeners(listeners, eventData);
   }
 
   /**
@@ -188,31 +155,6 @@ export class EventManager {
         errors,
       );
     }
-
-    return executedCount;
-  }
-
-  /**
-   * Ejecuta listeners de forma asíncrona
-   */
-  async executeAsyncListeners(listeners, eventData) {
-    const promises = Array.from(listeners).map(async (listener) => {
-      try {
-        await listener(eventData.data, eventData);
-        return { success: true };
-      } catch (error) {
-        logError(
-          `Error in async listener for event: ${eventData.event}`,
-          error,
-        );
-        return { success: false, error };
-      }
-    });
-
-    const results = await Promise.allSettled(promises);
-    const executedCount = results.filter(
-      (r) => r.status === 'fulfilled',
-    ).length;
 
     return executedCount;
   }
@@ -280,45 +222,6 @@ export class EventManager {
   }
 
   /**
-   * Guarda evento en el historial
-   */
-  saveToHistory(eventData) {
-    this.eventHistory.push(eventData);
-
-    if (this.eventHistory.length > this.maxHistorySize) {
-      this.eventHistory.shift();
-    }
-  }
-
-  /**
-   * Obtiene el historial de eventos
-   */
-  getHistory(filter = {}) {
-    let history = [...this.eventHistory];
-
-    if (filter.event) {
-      history = history.filter((h) => h.event === filter.event);
-    }
-
-    if (filter.since) {
-      history = history.filter((h) => h.timestamp >= filter.since);
-    }
-
-    if (filter.until) {
-      history = history.filter((h) => h.timestamp <= filter.until);
-    }
-
-    return history;
-  }
-
-  /**
-   * Limpia el historial de eventos
-   */
-  clearHistory() {
-    this.eventHistory = [];
-  }
-
-  /**
    * Activa/desactiva modo debug
    */
   setDebugMode(enabled) {
@@ -346,58 +249,6 @@ export class EventManager {
       throw new EventError('Listener must be a function', '', 'validate');
     }
   }
-
-  /**
-   * Métodos de utilidad para eventos comunes
-   */
-  waitFor(event, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.off(event, handler);
-        reject(
-          new EventError(
-            `Timeout waiting for event: ${event}`,
-            event,
-            'waitFor',
-          ),
-        );
-      }, timeout);
-
-      const handler = (data) => {
-        clearTimeout(timer);
-        resolve(data);
-      };
-
-      this.once(event, handler);
-    });
-  }
-
-  debounce(event, delay) {
-    let timeoutId;
-    let lastArgs;
-
-    return (...args) => {
-      lastArgs = args;
-
-      clearTimeout(timeoutId);
-
-      timeoutId = setTimeout(() => {
-        this.emit(event, ...lastArgs);
-      }, delay);
-    };
-  }
-
-  throttle(event, limit) {
-    let inThrottle;
-
-    return (...args) => {
-      if (!inThrottle) {
-        this.emit(event, ...args);
-        inThrottle = true;
-        setTimeout(() => (inThrottle = false), limit);
-      }
-    };
-  }
 }
 
 /**
@@ -406,7 +257,6 @@ export class EventManager {
 export const globalEvents = new EventManager({
   debug: false,
   maxListeners: 50,
-  maxHistorySize: 500,
 });
 
 /**
@@ -425,38 +275,3 @@ export class EventError extends AppError {
     this.operation = operation;
   }
 }
-
-/**
- * Decorador para manejo de eventos en clases
- */
-export function EventEmitter(target) {
-  const eventManager = new EventManager();
-
-  target.prototype.emit = function (event, data) {
-    return eventManager.emit(event, data, { emitter: this.constructor.name });
-  };
-
-  target.prototype.on = function (event, listener) {
-    return eventManager.on(event, listener, this);
-  };
-
-  target.prototype.once = function (event, listener) {
-    return eventManager.once(event, listener, this);
-  };
-
-  target.prototype.off = function (event, listener) {
-    return eventManager.off(event, listener);
-  };
-
-  return target;
-}
-
-/**
- * Hook para usar eventos en componentes
- */
-export const useEvent = (event, callback) => {
-  const unsubscribe = globalEvents.on(event, callback);
-
-  // Retornar función de limpieza
-  return () => unsubscribe();
-};

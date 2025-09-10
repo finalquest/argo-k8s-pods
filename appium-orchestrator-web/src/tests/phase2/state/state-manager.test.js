@@ -1,4 +1,4 @@
-import { StateManager } from '../../../js/state/state-manager.js';
+import { StateManager } from '@public/js/state/state-manager.js';
 
 describe('Simple State Manager', () => {
   let stateManager;

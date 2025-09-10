@@ -2,9 +2,7 @@ import {
   EventManager,
   globalEvents,
   EventError,
-  EventEmitter,
-  useEvent,
-} from '../../../js/state/event-manager.js';
+} from '@public/js/state/event-manager.js';
 
 describe('Event Manager', () => {
   let eventManager;
@@ -26,12 +24,10 @@ describe('Event Manager', () => {
       const manager = new EventManager({
         maxListeners: 50,
         debug: true,
-        maxHistorySize: 500,
       });
 
       expect(manager.maxListeners).toBe(50);
       expect(manager.debugMode).toBe(true);
-      expect(manager.maxHistorySize).toBe(500);
     });
   });
 
@@ -134,15 +130,6 @@ describe('Event Manager', () => {
       expect(result).toBe(1); // Solo el listener exitoso
       expect(normalListener).toHaveBeenCalled();
     });
-
-    test('guarda en historial', () => {
-      eventManager.emit('test:event', 'data');
-
-      const history = eventManager.getHistory();
-      expect(history.length).toBe(1);
-      expect(history[0].event).toBe('test:event');
-      expect(history[0].data).toBe('data');
-    });
   });
 
   describe('off()', () => {
@@ -217,49 +204,6 @@ describe('Event Manager', () => {
 
       expect(eventManager.hasListeners('test:event')).toBe(true);
       expect(eventManager.hasListeners('nonexistent')).toBe(false);
-    });
-  });
-
-  describe('history', () => {
-    test('getHistory() retorna historial', () => {
-      eventManager.emit('event1', 'data1');
-      eventManager.emit('event2', 'data2');
-
-      const history = eventManager.getHistory();
-
-      expect(history.length).toBe(2);
-      expect(history[0].event).toBe('event1');
-      expect(history[1].event).toBe('event2');
-    });
-
-    test('getHistory() con filtros', () => {
-      const now = Date.now();
-      eventManager.emit('event1', 'data1');
-      eventManager.emit('event2', 'data2');
-
-      const filtered = eventManager.getHistory({ event: 'event1' });
-
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].event).toBe('event1');
-    });
-
-    test('clearHistory() limpia historial', () => {
-      eventManager.emit('test:event', 'data');
-      eventManager.clearHistory();
-
-      expect(eventManager.getHistory().length).toBe(0);
-    });
-  });
-
-  describe('waitFor()', () => {
-    test.skip('resuelve cuando evento es emitido - requires async test setup', () => {
-      // Test omitido por complejidad de async testing en entorno actual
-      expect(true).toBe(true);
-    });
-
-    test.skip('rechaza con timeout - requires async test setup', () => {
-      // Test omitido por complejidad de async testing en entorno actual
-      expect(true).toBe(true);
     });
   });
 

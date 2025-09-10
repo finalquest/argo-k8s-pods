@@ -15,7 +15,7 @@ import {
   ValidationError,
   NetworkError,
   ApiError,
-} from '../../../js/utils/error-handling.js';
+} from '@public/js/utils/error-handling.js';
 
 describe('Error Handling Utilities', () => {
   let consoleSpy;

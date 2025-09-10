@@ -13,7 +13,7 @@ import {
   getWorkspaceStatus,
   getFeatureContent,
   saveFeatureContent,
-} from '../../../public/js/api.js';
+} from '@public/js/api.js';
 
 describe('API Functions', () => {
   beforeEach(() => {
@@ -162,12 +162,22 @@ describe('API Functions', () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        text: async () => mockContent,
+        json: async () => ({
+          content: mockContent,
+          isLocal: true,
+          workspaceExists: true,
+          message: 'Contenido cargado desde workspace local (editable)'
+        }),
       });
 
       const result = await getFeatureContent('main', 'client1', 'test');
 
-      expect(result).toBe(mockContent);
+      expect(result).toEqual({
+        content: mockContent,
+        isLocal: true,
+        workspaceExists: true,
+        message: 'Contenido cargado desde workspace local (editable)'
+      });
       expect(fetch).toHaveBeenCalledWith(
         '/api/feature-content?branch=main&client=client1&feature=test',
       );
@@ -206,12 +216,22 @@ describe('API Functions', () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        text: async () => mockContent,
+        json: async () => ({
+          content: mockContent,
+          isLocal: false,
+          workspaceExists: false,
+          message: 'Contenido cargado desde repositorio remoto (solo lectura)'
+        }),
       });
 
       const result = await getFeatureContent('main', 'client with spaces', 'test-feature');
 
-      expect(result).toBe(mockContent);
+      expect(result).toEqual({
+        content: mockContent,
+        isLocal: false,
+        workspaceExists: false,
+        message: 'Contenido cargado desde repositorio remoto (solo lectura)'
+      });
       // El navegador no codifica automáticamente los espacios en URLs construidos manualmente
       expect(fetch).toHaveBeenCalledWith(
         '/api/feature-content?branch=main&client=client with spaces&feature=test-feature',

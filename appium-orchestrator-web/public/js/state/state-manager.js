@@ -104,7 +104,3 @@ export class StateManager {
   }
 }
 
-/**
- * Estado global de la aplicación
- */
-export const globalState = new StateManager();
