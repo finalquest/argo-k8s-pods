@@ -27,6 +27,38 @@
     0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
+/* Dark Mode Theme */
+[data-theme="dark"] {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --success-color: #10b981;
+  --success-hover: #059669;
+  --warning-color: #f59e0b;
+  --warning-hover: #d97706;
+  --danger-color: #ef4444;
+  --danger-hover: #dc2626;
+  --info-color: #06b6d4;
+  --info-hover: #0891b2;
+  
+  /* Background colors */
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #64748b;
+  --gray-600: #94a3b8;
+  --gray-700: #cbd5e1;
+  --gray-800: #e2e8f0;
+  --gray-900: #f1f5f9;
+  
+  /* Shadows for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
@@ -36,6 +68,12 @@ body {
   color: var(--gray-900);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode body styles */
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
 }
 
 .header {
@@ -45,6 +83,12 @@ body {
   border-bottom: 1px solid var(--gray-200);
   position: relative;
   transition: all 0.3s ease;
+}
+
+/* Dark mode header styles */
+[data-theme="dark"] .header {
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-50) 100%);
+  border-bottom: 1px solid var(--gray-300);
 }
 
 .header.has-pending-commits {
@@ -76,6 +120,11 @@ body {
   color: var(--gray-900);
   letter-spacing: -0.025em;
   transition: color 0.3s ease;
+}
+
+/* Dark mode header title */
+[data-theme="dark"] .header h1 {
+  color: var(--gray-900);
 }
 
 .header.has-pending-commits h1 {
@@ -202,6 +251,12 @@ body {
   align-items: center;
 }
 
+/* Dark mode tabs */
+[data-theme="dark"] .tabs {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
 .tab-btn {
   background: none;
   border: none;
@@ -225,6 +280,21 @@ body {
   border-bottom-color: var(--primary-color);
   background: var(--gray-50);
   font-weight: 600;
+}
+
+/* Dark mode tab buttons */
+[data-theme="dark"] .tab-btn {
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .tab-btn:hover {
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .tab-btn.active {
+  background: var(--gray-200);
+  color: var(--primary-color);
 }
 
 .tabs-container {
@@ -256,6 +326,13 @@ body {
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);
+}
+
+/* Dark mode controls */
+[data-theme="dark"] .controls,
+[data-theme="dark"] .controls-row {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
 }
 
 /* New Controls Layout */
@@ -313,6 +390,11 @@ label {
   font-size: 0.875rem;
 }
 
+/* Dark mode labels */
+[data-theme="dark"] label {
+  color: var(--gray-200);
+}
+
 select,
 input[type='text'],
 textarea {
@@ -322,6 +404,7 @@ textarea {
   font-size: 0.875rem;
   transition: all 0.2s ease;
   background: white;
+  color: var(--gray-900);
 }
 
 select:focus,
@@ -330,6 +413,22 @@ textarea:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+/* Dark mode inputs */
+[data-theme="dark"] select,
+[data-theme="dark"] input[type='text'],
+[data-theme="dark"] textarea {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--gray-900);
+}
+
+[data-theme="dark"] select:focus,
+[data-theme="dark"] input[type='text']:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.2);
 }
 
 /* Enhanced Buttons */
@@ -462,6 +561,21 @@ button[style*='17a2b8']:hover:not(:disabled) {
   border: 1px solid var(--gray-200);
   margin-bottom: 1.5rem;
   overflow: hidden;
+}
+
+/* Dark mode cards */
+[data-theme="dark"] .config-card {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
+[data-theme="dark"] .card-header {
+  background: var(--gray-200);
+  border-bottom-color: var(--gray-400);
+}
+
+[data-theme="dark"] .card-header h3 {
+  color: var(--gray-900);
 }
 
 .card-header {
@@ -630,6 +744,24 @@ button[style*='17a2b8']:hover:not(:disabled) {
   border-radius: 12px;
   background: white;
   box-shadow: var(--shadow-sm);
+}
+
+/* Dark mode lists */
+[data-theme="dark"] #features-list,
+[data-theme="dark"] #history-list,
+[data-theme="dark"] #queued-tests-list {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+[data-theme="dark"] #history-list li,
+[data-theme="dark"] #queued-tests-list li {
+  border-bottom-color: var(--gray-400);
+}
+
+[data-theme="dark"] #history-list li:hover,
+[data-theme="dark"] #queued-tests-list li:hover {
+  background: var(--gray-200);
 }
 
 #history-list li,
@@ -866,6 +998,17 @@ h3 {
   line-height: 1.5;
 }
 
+/* Dark mode log panels */
+[data-theme="dark"] .log-panel {
+  border-color: var(--gray-400);
+}
+
+[data-theme="dark"] .panel-header {
+  background: var(--gray-800);
+  border-bottom-color: var(--gray-600);
+  color: var(--gray-100);
+}
+
 /* Enhanced Sub-tabs */
 .sub-tabs {
   display: flex;
@@ -986,6 +1129,20 @@ h3 {
   box-shadow: var(--shadow-xl);
 }
 
+/* Dark mode modal */
+[data-theme="dark"] .modal-content {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--gray-400);
+}
+
+[data-theme="dark"] .modal-header h2 {
+  color: var(--gray-900);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -1079,6 +1236,24 @@ h3 {
   border: 1px solid var(--gray-200);
 }
 
+/* Dark mode auth overlay */
+[data-theme="dark"] #auth-overlay {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+[data-theme="dark"] #auth-overlay > div {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+[data-theme="dark"] #auth-overlay h2 {
+  color: var(--gray-900);
+}
+
+[data-theme="dark"] #auth-overlay p {
+  color: var(--gray-700);
+}
+
 #auth-overlay h2 {
   margin-bottom: 0.5rem;
   color: var(--gray-900);
@@ -1112,6 +1287,7 @@ h3 {
   top: 1.5rem;
   right: 2rem;
   text-align: right;
+  z-index: 101; /* Por encima del toggle */
 }
 
 #user-info img {
@@ -1217,6 +1393,69 @@ textarea {
 .filter-group select {
   min-width: 200px;
   max-width: 300px;
+}
+
+/* Theme Toggle Component */
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+.theme-toggle-btn {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--gray-200);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+  border-color: var(--primary-color);
+}
+
+.theme-icon {
+  font-size: 1rem;
+  transition: transform 0.5s ease;
+  display: inline-block;
+}
+
+.theme-text {
+  font-weight: 500;
+  min-width: 45px;
+}
+
+/* Dark mode toggle styles */
+[data-theme="dark"] .theme-toggle-btn {
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--gray-200);
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+  background: var(--gray-600);
+  border-color: var(--gray-500);
+}
+
+/* Animación de rotación para el icono */
+[data-theme="dark"] .theme-icon {
+  transform: rotate(180deg);
 }
 
 /* Responsive Design */

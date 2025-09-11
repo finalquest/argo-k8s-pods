@@ -57,6 +57,14 @@
           <img id="user-photo" src="/placeholder.svg" alt="User photo" />
           <a href="/auth/logout">Logout</a>
         </div>
+        
+        <!-- Theme Toggle -->
+        <div class="theme-toggle-container">
+          <button id="theme-toggle" class="theme-toggle-btn" title="Cambiar tema" aria-label="Cambiar tema">
+            <span class="theme-icon" aria-hidden="true">🌞</span>
+            <span class="theme-text">Light</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -456,6 +464,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/gherkin/gherkin.min.js"></script>
     <!-- Split.js for resizable panels -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+    <!-- Theme Manager -->
+    <script type="module" src="js/theme-manager.js"></script>
     <script type="module" src="js/main.js"></script>
 
     <!-- Mappings Download Modal -->
