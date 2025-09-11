@@ -10,197 +10,94 @@ const { fork, exec, spawn } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');
-const session = require('express-session');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-require('dotenv').config();
+// Import security modules
+const AuthenticationManager = require('./src/modules/security/authentication');
+const ConfigurationManager = require('./src/modules/security/configuration');
+const ValidationManager = require('./src/modules/security/validation');
+
+// Import core API modules
+const BranchManager = require('./src/modules/core/branch-manager');
+const DeviceManager = require('./src/modules/core/device-manager');
+const ApkManager = require('./src/modules/core/apk-manager');
+const FeatureManager = require('./src/modules/core/feature-manager');
+const WorkspaceManager = require('./src/modules/core/workspace-manager');
+
+// Import worker management modules
+const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
+const JobQueueManager = require('./src/modules/worker-management/job-queue-manager');
+const ProcessManager = require('./src/modules/worker-management/process-manager');
+const ResourceManager = require('./src/modules/worker-management/resource-manager');
+const SocketIOManager = require('./src/modules/socketio/socketio-manager');
+
+// Import services and utils modules
+const GitOperationsService = require('./src/modules/services/git-operations');
+const FileOperationsService = require('./src/modules/services/file-operations');
+const PathUtilities = require('./src/modules/utils/path-utilities');
+const StringUtilities = require('./src/modules/utils/string-utilities');
+const LoggingUtilities = require('./src/modules/utils/logging-utilities');
+
+// Initialize security modules
+const configManager = new ConfigurationManager();
+const authManager = new AuthenticationManager();
+const validationManager = new ValidationManager();
+
+// Initialize core API modules
+const branchManager = new BranchManager(configManager, validationManager);
+const deviceManager = new DeviceManager(configManager, validationManager);
+const apkManager = new ApkManager(configManager, validationManager);
+const featureManager = new FeatureManager(configManager, validationManager);
+const workspaceManager = new WorkspaceManager(configManager, validationManager);
+
+// Initialize worker management modules
+const processManager = new ProcessManager(configManager, validationManager);
+const resourceManager = new ResourceManager(configManager, validationManager);
+const jobQueueManager = new JobQueueManager();
+const workerPoolManager = new WorkerPoolManager(configManager, validationManager, processManager, jobQueueManager);
+
+// Initialize socket.io manager
+const socketIOManager = new SocketIOManager(authManager, workerPoolManager, jobQueueManager, configManager, validationManager);
+
+// Initialize services and utils modules
+const gitOperationsService = new GitOperationsService(configManager, validationManager);
+const fileOperationsService = new FileOperationsService(configManager);
+const pathUtilities = new PathUtilities(configManager);
+const stringUtilities = new StringUtilities(validationManager);
+const loggingUtilities = new LoggingUtilities(configManager, pathUtilities);
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = configManager.get('PORT');
 
-// --- Configuración de Autenticación ---
-const {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  SESSION_SECRET,
-  GOOGLE_HOSTED_DOMAIN,
-} = process.env;
-if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
-  console.error(
-    'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
-  );
-  process.exit(1);
-}
+// Initialize socket.io manager first to get io instance
+socketIOManager.initialize(server, sessionMiddleware, passport);
+const io = socketIOManager.getIO();
 
-const sessionMiddleware = session({
-  secret: SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 horas
-});
+// Initialize worker management modules with dependencies
+processManager.initialize(io);
+resourceManager.initialize();
+jobQueueManager.initialize(io);
+workerPoolManager.initialize(io, workspaceManager);
 
-app.use(sessionMiddleware);
+// Apply authentication middleware
+authManager.applyMiddleware(app);
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.APP_BASE_URL}/auth/google/callback`,
-      hd: GOOGLE_HOSTED_DOMAIN,
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // En este punto, el perfil de Google ha sido verificado.
-      // Puedes buscar en tu base de datos si el usuario existe, o crearlo.
-      // Por ahora, simplemente pasamos el perfil.
-      // Asegúrate de que el usuario pertenece al dominio correcto si `hd` no es suficiente.
-      if (GOOGLE_HOSTED_DOMAIN && profile._json.hd !== GOOGLE_HOSTED_DOMAIN) {
-        return done(new Error('Dominio de Google no autorizado'));
-      }
-      return done(null, profile);
-    },
-  ),
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser((obj, done) => {
-  done(null, obj);
-});
-
-// Middleware para proteger rutas
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ error: 'No autenticado' });
-}
-
-// --- Rutas de Autenticación ---
-app.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
-);
-
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    // Redirección exitosa a la página principal.
-    res.redirect('/');
-  },
-);
-
-app.get('/auth/logout', (req, res, next) => {
-  req.logout(function (err) {
-    if (err) {
-      return next(err);
-    }
-    res.redirect('/');
-  });
-});
-
-app.get('/api/current-user', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({
-      name: req.user.displayName,
-      email: req.user.emails[0].value,
-      photo: req.user.photos[0].value,
-    });
-  } else {
-    res.json(null);
-  }
-});
-
+// Add configuration endpoint (must be before authentication middleware)
 app.get('/api/config', (req, res) => {
-  res.json({
-    persistentWorkspacesEnabled: !!process.env.PERSISTENT_WORKSPACES_ROOT,
-  });
+  res.json(configManager.getClientConfig());
 });
 
-// Proteger todos los endpoints /api subsiguientes. /api/current-user está definido antes y permanece público.
-app.use('/api', ensureAuthenticated);
-
-app.get('/api/local-devices', (req, res) => {
-  if (process.env.DEVICE_SOURCE !== 'local') {
-    // Si no estamos en modo local, devolvemos una lista vacía.
-    // El frontend usará esto como señal para no mostrar el dropdown de dispositivos.
-    return res.json([]);
+app.get('/api/local-devices', async (req, res) => {
+  const result = await deviceManager.getLocalDevices();
+  if (result.success) {
+    res.json(result.devices);
+  } else {
+    res.status(500).json({ error: result.error });
   }
-
-  exec('adb devices', (error, stdout) => {
-    if (error) {
-      console.error(`Error al ejecutar "adb devices": ${error.message}`);
-      return res.status(500).json({
-        error:
-          'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.',
-      });
-    }
-
-    const devices = stdout
-      .split('\n')
-      .slice(1)
-      .map((line) => line.split('\t'))
-      .filter((parts) => parts.length === 2 && parts[1] === 'device')
-      .map((parts) => parts[0]);
-
-    res.json(devices);
-  });
 });
 
-app.get('/api/local-devices', (req, res) => {
-  if (process.env.DEVICE_SOURCE !== 'local') {
-    return res.json([]);
-  }
 
-  exec('adb devices', (error, stdout) => {
-    if (error) {
-      console.error(`Error al ejecutar "adb devices": ${error.message}`);
-      return res.status(500).json({
-        error:
-          'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.',
-      });
-    }
-
-    const devices = stdout
-      .split('\n')
-      .slice(1)
-      .map((line) => line.split('\t'))
-      .filter((parts) => parts.length === 2 && parts[1] === 'device')
-      .map((parts) => parts[0]);
-
-    res.json(devices);
-  });
-});
-
-const { GIT_REPO_URL, GIT_USER, GIT_PAT } = process.env;
-if (!GIT_REPO_URL || !GIT_USER || !GIT_PAT) {
-  console.error(
-    'Error: Debes definir GIT_REPO_URL, GIT_USER y GIT_PAT en el archivo .env',
-  );
-  process.exit(1);
-}
-
-const getAuthenticatedUrl = () => {
-  try {
-    const url = new URL(GIT_REPO_URL);
-    url.username = GIT_USER;
-    url.password = GIT_PAT;
-    return url.toString();
-  } catch {
-    console.error('La GIT_REPO_URL no es una URL válida.');
-    process.exit(1);
-  }
-};
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '50mb' }));
@@ -209,583 +106,121 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // --- Endpoints de la API ---
 
 app.get('/api/branches', async (req, res) => {
-  try {
-    const git = simpleGit();
-    const authenticatedUrl = getAuthenticatedUrl();
-    const remoteInfo = await git.listRemote(['--heads', authenticatedUrl]);
-    if (!remoteInfo) {
-      return res
-        .status(500)
-        .json({ error: 'No se pudo obtener información del repositorio.' });
-    }
-    const branches = remoteInfo
-      .split('\n')
-      .filter(Boolean)
-      .map((line) => {
-        const parts = line.split('/');
-        return parts[parts.length - 1];
-      });
-    res.json(branches);
-  } catch (error) {
-    console.error('Error al listar branches:', error);
-    res.status(500).json({
-      error:
-        'Error interno al listar branches. Revisa la URL del repo y el PAT.',
-    });
+  const result = await branchManager.getBranches();
+  if (result.success) {
+    res.json(result.branches);
+  } else {
+    res.status(500).json({ error: result.error });
   }
 });
 
-app.get('/api/apk/versions', (req, res) => {
-  // Modo 1: Directorio Local de APKs
-  if (process.env.LOCAL_APK_DIRECTORY) {
-    const apkDir = process.env.LOCAL_APK_DIRECTORY;
-    if (!fs.existsSync(apkDir)) {
-      console.error(
-        `El directorio de APKs locales especificado no existe: ${apkDir}`,
-      );
-      return res
-        .status(500)
-        .json({ error: 'El directorio de APKs locales no existe.' });
-    }
-    try {
-      const files = fs.readdirSync(apkDir);
-      const apkFiles = files.filter(
-        (file) => path.extname(file).toLowerCase() === '.apk',
-      );
-      return res.json({ source: 'local', versions: apkFiles });
-    } catch (error) {
-      console.error(
-        `Error al leer el directorio de APKs locales: ${error.message}`,
-      );
-      return res
-        .status(500)
-        .json({ error: 'Error al leer el directorio de APKs locales.' });
-    }
+app.get('/api/apk/versions', async (req, res) => {
+  const { client } = req.query;
+  const result = await apkManager.getApkVersions(client);
+  if (result.success) {
+    res.json(result.versions);
+  } else {
+    res.status(500).json({ error: result.error });
   }
-
-  // Modo 2: Registro ORAS (comportamiento anterior)
-  const { repo } = req.query;
-  if (!repo) {
-    return res.status(400).json({ error: "Se requiere el parámetro 'repo'." });
-  }
-
-  const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-/.]/g, '');
-  if (sanitizedRepo !== repo) {
-    return res
-      .status(400)
-      .json({ error: "Parámetro 'repo' contiene caracteres inválidos." });
-  }
-
-  const command = `oras repo tags harbor:8080/${sanitizedRepo} --plain-http`;
-
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error al ejecutar oras: ${error.message}`);
-      console.error(`Stderr: ${stderr}`);
-      return res.status(500).json({
-        error: 'Error al obtener las versiones del APK.',
-        details: stderr,
-      });
-    }
-
-    const versions = stdout.trim().split('\n').filter(Boolean);
-    res.json({ source: 'registry', versions: versions });
-  });
 });
 
-async function readFeaturesRecursive(basePath, currentDirectory) {
-  const entries = await fs.promises.readdir(currentDirectory, {
-    withFileTypes: true,
-  });
-  const nodes = [];
-
-  for (const dirent of entries) {
-    const fullPath = path.join(currentDirectory, dirent.name);
-    if (dirent.isDirectory()) {
-      nodes.push({
-        type: 'folder',
-        name: dirent.name,
-        children: await readFeaturesRecursive(basePath, fullPath),
-      });
-    } else if (dirent.isFile() && dirent.name.endsWith('.feature')) {
-      // Calculate the relative path from the basePath to the feature file
-      const relativePath = path.relative(basePath, fullPath);
-      nodes.push({
-        type: 'file',
-        name: dirent.name, // Keep original file name for display
-        featureName: relativePath.replace(/\.feature$/, ''), // This is the full relative path without extension
-      });
-    }
-  }
-  // Opcional: Ordenar para que las carpetas aparezcan antes que los archivos
-  return nodes.sort((a, b) => {
-    if (a.type === b.type) {
-      return a.name.localeCompare(b.name);
-    }
-    return a.type === 'folder' ? -1 : 1;
-  });
-}
-
+  
 app.get('/api/features', async (req, res) => {
   const { branch, client } = req.query;
-  if (!branch || !client) {
-    return res
-      .status(400)
-      .json({ error: "Se requieren los parámetros 'branch' y 'client'." });
+  const result = await featureManager.getFeatures(branch, client);
+  if (result.success) {
+    res.json(result.features);
+  } else {
+    res.status(500).json({ error: result.error });
   }
-
-  let featuresPath = null;
-  let foundInPersistent = false;
-
-  // Lógica para leer features desde un workspace persistente si existe
-  if (process.env.PERSISTENT_WORKSPACES_ROOT) {
-    const sanitizedBranch = sanitize(branch);
-    const workspacePath = path.join(
-      process.env.PERSISTENT_WORKSPACES_ROOT,
-      sanitizedBranch,
-      'appium',
-    );
-    const potentialFeaturesPath = path.join(
-      workspacePath,
-      'test',
-      'features',
-      client,
-      'feature',
-      'modulos',
-    );
-
-    if (fs.existsSync(potentialFeaturesPath)) {
-      featuresPath = potentialFeaturesPath;
-      foundInPersistent = true;
-      console.log(
-        `[API Features] Leyendo features desde el workspace local para la branch: ${branch}`,
-      );
-    }
+});
+      
+app.get('/api/history/branches', async (req, res) => {
+  const result = await branchManager.getBranchHistory();
+  if (result.success) {
+    res.json(result.branches.map(b => b.name));
+  } else {
+    res.status(500).json({ error: result.error });
   }
+});
 
-  // Si no se encontró en el workspace persistente o no está habilitado, intentar clonar remotamente
-  if (!foundInPersistent) {
-    console.log(
-      `[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`,
-    );
-    const tmpDir = path.join(
-      os.tmpdir(),
-      `appium-features-${crypto.randomBytes(16).toString('hex')}`,
-    );
-    const authenticatedUrl = getAuthenticatedUrl();
-    try {
-      await fs.promises.mkdir(tmpDir, { recursive: true });
-      const git = simpleGit(tmpDir);
-      await git.clone(authenticatedUrl, tmpDir, [
-        '--branch',
-        branch,
-        '--depth',
-        '1',
-        '--no-checkout',
-      ]);
-      const featureDirForCheckout = path.join(
-        'test',
-        'features',
-        client,
-        'feature',
-        'modulos',
-      );
-      await git.checkout(branch, ['--', featureDirForCheckout]);
-      featuresPath = path.join(tmpDir, featureDirForCheckout);
-    } catch (error) {
-      console.error(
-        `Error al clonar o hacer checkout para la branch '${branch}':`,
-        error,
-      );
-      res.status(500).json({ error: 'Error interno al listar features.' });
-      return; // Exit if cloning/checkout fails
-    } finally {
-      // Cleanup tmpDir will happen later if featuresPath is valid
-    }
+app.get('/api/history', async (req, res) => {
+  const { branch: branchFilter } = req.query;
+  const result = await branchManager.getBranchDetailedHistory(branchFilter);
+  if (result.success) {
+    res.json(result.history);
+  } else {
+    res.status(500).json({ error: result.error });
   }
+});
 
-  // Now, featuresPath should be set to a valid directory or null if no features found/cloned
-  if (featuresPath && fs.existsSync(featuresPath)) {
-    try {
-      const featureTree = await readFeaturesRecursive(
-        featuresPath,
-        featuresPath,
-      ); // Adjusted to match original_old_string's call signature
-      res.json(featureTree);
-    } catch (error) {
-      console.error(
-        `Error al leer la estructura de features desde ${featuresPath}:`,
-        error,
+app.get('/api/workspace-status/:branch', async (req, res) => {
+  const { branch } = req.params;
+  const result = await workspaceManager.getWorkspaceStatus(branch);
+  if (result.success) {
+    const workspace = result.workspace;
+    if (result.status === 'not_found') {
+      res.json({
+        exists: false,
+        modified_features: [],
+        message: 'No existe workspace local para esta branch',
+      });
+    } else if (result.status === 'ready') {
+      const modifiedFeatures = workspace.modified.filter(
+        (file) => file.includes('/feature/modulos/') && file.endsWith('.feature'),
       );
-      res.status(500).json({ error: 'Error interno al leer features.' });
-    } finally {
-      // Clean up temporary directory if it was used
-      if (!foundInPersistent && featuresPath.startsWith(os.tmpdir())) {
-        await fs.promises.rm(path.dirname(featuresPath), {
-          recursive: true,
-          force: true,
-        }); // Clean up tmpDir
-      }
+      res.json({
+        exists: true,
+        modified_features: modifiedFeatures,
+        message: 'Workspace local existe y está disponible para edición',
+      });
+    } else {
+      res.status(500).json({ error: result.message });
     }
   } else {
-    // No features found in persistent workspace and no features cloned/checked out
-    res.json([]);
+    res.status(500).json({ error: result.error });
   }
-});
-
-app.get('/api/history/branches', (req, res) => {
-  const reportsDir = path.join(__dirname, 'public', 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    return res.json([]);
-  }
-  try {
-    const branches = fs
-      .readdirSync(reportsDir, { withFileTypes: true })
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
-    res.json(branches);
-  } catch (error) {
-    console.error('Error al leer las branches del historial:', error);
-    res
-      .status(500)
-      .json({ error: 'Error interno al leer las branches del historial.' });
-  }
-});
-
-app.get('/api/history', (req, res) => {
-  const { branch: branchFilter } = req.query;
-  const reportsDir = path.join(__dirname, 'public', 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    return res.json([]);
-  }
-
-  try {
-    const history = [];
-    const branches = fs
-      .readdirSync(reportsDir, { withFileTypes: true })
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
-
-    for (const branch of branches) {
-      if (branchFilter && branch !== branchFilter) {
-        continue;
-      }
-      const branchPath = path.join(reportsDir, branch);
-      const features = fs
-        .readdirSync(branchPath, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name);
-
-      for (const feature of features) {
-        const featurePath = path.join(branchPath, feature);
-        const timestamps = fs
-          .readdirSync(featurePath, { withFileTypes: true })
-          .filter((dirent) => dirent.isDirectory())
-          .map((dirent) => dirent.name);
-
-        for (const timestamp of timestamps) {
-          history.push({
-            branch: branch,
-            feature: feature,
-            timestamp: timestamp,
-            reportUrl: `/reports/${branch}/${feature}/${timestamp}/`,
-          });
-        }
-      }
-    }
-    history.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-    res.json(history);
-  } catch (error) {
-    console.error('Error al leer el historial de reportes:', error);
-    res.status(500).json({ error: 'Error interno al leer el historial.' });
-  }
-});
-
-app.get('/api/workspace-status/:branch', (req, res) => {
-  const { branch } = req.params;
-  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-    return res.status(404).json({
-      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
-    });
-  }
-
-  const sanitizedBranch = sanitize(branch);
-  const workspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT,
-    sanitizedBranch,
-    'appium',
-  );
-
-  if (!fs.existsSync(workspacePath)) {
-    return res.json({
-      exists: false,
-      modified_features: [],
-      message: 'No existe workspace local para esta branch',
-    });
-  }
-
-  const command = `git -C ${workspacePath} diff --name-only HEAD`;
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(
-        `Error al ejecutar git diff para la branch ${branch}:`,
-        stderr,
-      );
-      return res.status(500).json({
-        error: 'Error al comprobar el estado del workspace.',
-        details: stderr,
-      });
-    }
-
-    const modifiedFiles = stdout.trim().split('\n').filter(Boolean);
-    const modifiedFeatures = modifiedFiles.filter(
-      (file) => file.includes('/feature/modulos/') && file.endsWith('.feature'),
-    );
-
-    res.json({
-      exists: true,
-      modified_features: modifiedFeatures,
-      message: 'Workspace local existe y está disponible para edición',
-    });
-  });
 });
 
 app.get('/api/feature-content', async (req, res) => {
   const { branch, client, feature } = req.query;
-  if (!branch || !client || !feature) {
-    return res
-      .status(400)
-      .json({ error: 'Se requieren los parámetros branch, client y feature.' });
+  const result = await featureManager.getFeatureContent(branch, client, feature);
+  if (result.success) {
+    res.json({ content: result.content });
+  } else {
+    res.status(500).json({ error: result.error });
   }
-
-  let featurePath = null;
-  let foundInPersistent = false;
-  let tmpDir = null;
-  const isLocalWorkspace = !!process.env.PERSISTENT_WORKSPACES_ROOT;
-
-  // Lógica para leer features desde un workspace persistente si existe
-  if (isLocalWorkspace) {
-    const sanitizedBranch = sanitize(branch);
-    const workspacePath = path.join(
-      process.env.PERSISTENT_WORKSPACES_ROOT,
-      sanitizedBranch,
-      'appium',
-    );
-    const potentialFeaturePath = path.join(
-      workspacePath,
-      'test',
-      'features',
-      client,
-      'feature',
-      'modulos',
-      feature,
-    );
-
-    if (fs.existsSync(potentialFeaturePath)) {
-      featurePath = potentialFeaturePath;
-      foundInPersistent = true;
-      console.log(
-        `[API Feature-Content] Leyendo feature desde el workspace local para la branch: ${branch}`,
-      );
-    }
-  }
-
-  // Si no se encontró en el workspace persistente o no está habilitado, intentar clonar remotamente
-  if (!foundInPersistent) {
-    console.log(
-      `[API Feature-Content] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`,
-    );
-    tmpDir = path.join(
-      os.tmpdir(),
-      `appium-feature-content-${crypto.randomBytes(16).toString('hex')}`,
-    );
-    const authenticatedUrl = getAuthenticatedUrl();
-    try {
-      await fs.promises.mkdir(tmpDir, { recursive: true });
-      const git = simpleGit(tmpDir);
-      await git.clone(authenticatedUrl, tmpDir, [
-        '--branch',
-        branch,
-        '--depth',
-        '1',
-        '--no-checkout',
-      ]);
-      const featureFileForCheckout = path.join(
-        'test',
-        'features',
-        client,
-        'feature',
-        'modulos',
-        feature,
-      );
-      await git.checkout(branch, ['--', featureFileForCheckout]);
-      featurePath = path.join(tmpDir, featureFileForCheckout);
-    } catch (error) {
-      console.error(
-        `Error al clonar o hacer checkout para la branch '${branch}':`,
-        error,
-      );
-      res
-        .status(500)
-        .json({ error: 'Error interno al leer el contenido del feature.' });
-      return;
-    }
-  }
-
-  // Security check
-  const basePath = foundInPersistent
-    ? path.join(
-        process.env.PERSISTENT_WORKSPACES_ROOT,
-        sanitize(branch),
-        'appium',
-      )
-    : tmpDir;
-  const resolvedPath = path.resolve(featurePath);
-  if (!resolvedPath.startsWith(path.resolve(basePath))) {
-    return res.status(403).json({ error: 'Acceso a archivo no autorizado.' });
-  }
-
-  try {
-    const content = await fs.promises.readFile(featurePath, 'utf-8');
-
-    // Devolver contenido con metadata sobre si es editable
-    res.json({
-      content: content,
-      isLocal: foundInPersistent,
-      workspaceExists: foundInPersistent,
-      message: foundInPersistent
-        ? 'Contenido cargado desde workspace local (editable)'
-        : 'Contenido cargado desde repositorio remoto (solo lectura)',
-    });
-  } catch (error) {
-    console.error(`Error al leer el archivo del feature ${feature}:`, error);
-    res.status(500).json({ error: 'No se pudo leer el archivo del feature.' });
-  } finally {
-    // Clean up temporary directory if it was used
-    if (!foundInPersistent && tmpDir) {
-      await fs.promises.rm(tmpDir, {
-        recursive: true,
-        force: true,
-      });
-    }
-  }
-});
+    
+  });
 
 app.post('/api/feature-content', async (req, res) => {
   const { branch, client, feature, content } = req.body;
-  if (!branch || !client || !feature || content === undefined) {
-    return res
-      .status(400)
-      .json({ error: 'Faltan parámetros (branch, client, feature, content).' });
+  const result = await featureManager.saveFeatureContent(branch, client, feature, content);
+  if (result.success) {
+    res.json({ message: result.message });
+  } else {
+    res.status(500).json({ error: result.error });
   }
-  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-    return res.status(404).json({
-      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
-    });
-  }
-
-  const sanitizedBranch = sanitize(branch);
-  const workspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT,
-    sanitizedBranch,
-    'appium',
-  );
-  const featurePath = path.join(
-    workspacePath,
-    'test',
-    'features',
-    client,
-    'feature',
-    'modulos',
-    feature,
-  );
-
-  // Verificar si el workspace local existe antes de permitir guardar
-  if (!fs.existsSync(workspacePath)) {
-    return res.status(403).json({
-      error:
-        'No se puede guardar el feature porque no existe un workspace local para esta branch. Prepare el workspace local primero.',
-      workspaceExists: false,
-      actionRequired: 'prepare_workspace',
-    });
-  }
-
-  // Security check
-  const resolvedPath = path.resolve(featurePath);
-  if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
-    return res.status(403).json({ error: 'Acceso a archivo no autorizado.' });
-  }
-
-  try {
-    await fs.promises.writeFile(featurePath, content, 'utf-8');
-    res.status(200).json({
-      message: 'Feature guardado con éxito.',
-      workspaceExists: true,
-    });
-  } catch (error) {
-    console.error(`Error al guardar el archivo del feature ${feature}:`, error);
-    res
-      .status(500)
-      .json({ error: 'No se pudo guardar el archivo del feature.' });
-  }
-});
+  });
 
 app.get('/api/commit-status/:branch', async (req, res) => {
   const { branch } = req.params;
-  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-    return res.status(404).json({
-      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
-    });
-  }
-
-  const sanitizedBranch = sanitize(branch);
-  const workspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT,
-    sanitizedBranch,
-    'appium',
-  );
-
-  if (!fs.existsSync(workspacePath)) {
-    return res.json({ hasPendingCommits: false });
-  }
-
-  try {
-    // Check if there are commits that haven't been pushed
-    const command = `git -C ${workspacePath} log --oneline origin/${branch}..HEAD`;
-    exec(command, (error, stdout) => {
-      if (error) {
-        // If the branch doesn't exist remotely or other error, assume no pending commits
-        return res.json({ hasPendingCommits: false });
-      }
-
-      const hasPendingCommits = stdout.trim().length > 0;
-      const commitCount = stdout.trim().split('\n').filter(Boolean).length;
-
-      res.json({
-        hasPendingCommits,
-        commitCount,
-        message: hasPendingCommits
-          ? `Hay ${commitCount} commit(s) local(es) pendiente(s) de push`
-          : 'No hay commits pendientes de push',
-      });
-    });
-  } catch (error) {
-    console.error(
-      `Error al verificar estado de commits para la branch ${branch}:`,
-      error,
-    );
-    res.status(500).json({
-      error: 'Error al verificar el estado de commits.',
-      details: error.message,
-    });
+  const result = await branchManager.getCommitStatus(branch);
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(500).json({ error: result.error });
   }
 });
 
 app.get('/api/workspace-changes/:branch', async (req, res) => {
   const { branch } = req.params;
-  if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-    return res.status(404).json({
-      error: 'La funcionalidad de workspaces persistentes no está habilitada.',
+  const result = await branchManager.getWorkspaceChanges(branch);
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(500).json({ error: result.error });
+  }
     });
   }
 
@@ -1173,265 +608,65 @@ app.post('/api/mappings/download-batch', (req, res) => {
 
 // --- Lógica de Workers ---
 
-const jobQueue = [];
-let jobIdCounter = 0;
-const maxWorkers = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
-const workerPool = [];
-
-function sanitize(name) {
-  return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-}
+// Worker management now handled by dedicated modules
+// All worker operations use the new modular system
 
 function cleanupOldReports(featureReportDir) {
-  const maxReports = parseInt(process.env.MAX_REPORTS_PER_FEATURE, 10) || 5;
-  if (!fs.existsSync(featureReportDir)) return;
-
-  const reports = fs
-    .readdirSync(featureReportDir)
-    .map((name) => ({ name, path: path.join(featureReportDir, name) }))
-    .filter((item) => fs.statSync(item.path).isDirectory())
-    .map((item) => ({ ...item, time: fs.statSync(item.path).mtime.getTime() }))
-    .sort((a, b) => a.time - b.time); // Sort oldest first
-
-  if (reports.length > maxReports) {
-    const reportsToDelete = reports.slice(0, reports.length - maxReports);
-    reportsToDelete.forEach((report) => {
-      fs.rm(report.path, { recursive: true, force: true }, (err) => {
-        if (err)
-          console.error(
-            `Error eliminando reporte antiguo ${report.path}:`,
-            err,
-          );
-        else console.log(`Reporte antiguo eliminado: ${report.name}`);
-      });
-    });
-  }
+  // Delegated to ProcessManager
+  return processManager.cleanupOldReports(featureReportDir);
 }
 
 function handleReport(job, reportPath) {
-  try {
-    const branch = sanitize(job.branch);
-    const feature = sanitize(job.feature);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const destDir = path.join(
-      __dirname,
-      'public',
-      'reports',
-      branch,
-      feature,
-      timestamp,
-    );
-
-    fs.mkdirSync(destDir, { recursive: true });
-    fs.cpSync(reportPath, destDir, { recursive: true });
-
-    console.log(`Reporte copiado a ${destDir}`);
-
-    const featureReportDir = path.join(
-      __dirname,
-      'public',
-      'reports',
-      branch,
-      feature,
-    );
-    cleanupOldReports(featureReportDir);
-
-    return `/reports/${branch}/${feature}/${timestamp}/`;
-  } catch (error) {
-    console.error('Error al manejar el reporte de Allure:', error);
-    return null;
-  }
+  // Delegated to ProcessManager
+  return processManager.handleReport(job, reportPath);
 }
 
 function broadcastStatus() {
-  const activeJobs = workerPool.filter((w) => w.status === 'busy').length;
+  // Delegated to JobQueueManager and WorkerPoolManager
+  const stats = jobQueueManager.getStatistics();
+  const workerStats = workerPoolManager.getStatistics();
+  
   io.emit('queue_status_update', {
-    active: activeJobs,
-    queued: jobQueue.length,
-    limit: maxWorkers,
-    queue: jobQueue,
+    active: workerStats.busyWorkers,
+    queued: stats.totalJobs,
+    limit: workerStats.maxWorkers,
+    queue: jobQueueManager.getQueuedJobs(),
   });
-  const slots = workerPool.map((worker) => ({
-    slotId: worker.id,
-    job: worker.currentJob
-      ? { id: worker.currentJob.id, featureName: worker.currentJob.feature }
-      : null,
-    status: worker.status,
-    branch: worker.branch,
-    client: worker.client,
-    apkIdentifier: worker.apkIdentifier,
-    apkSourceType: worker.apkSourceType,
-  }));
-  io.emit('worker_pool_update', slots);
+  
+  workerPoolManager.broadcastStatus();
 }
 
 function checkIdleAndCleanup() {
-  const isQueueEmpty = jobQueue.length === 0;
-  const idleWorkers = workerPool.filter((w) => w.status === 'ready');
-
-  if (isQueueEmpty && idleWorkers.length > 0) {
+  // Delegated to JobQueueManager and WorkerPoolManager
+  const stats = jobQueueManager.getStatistics();
+  
+  if (stats.totalJobs === 0) {
     io.emit('log_update', {
       logLine: `--- 🧹 Cola vacía. Generando reportes finales para workers inactivos... ---
 `,
     });
-
-    idleWorkers.forEach((worker) => {
-      if (!worker.terminating) {
-        worker.terminating = true;
-        worker.process.send({ type: 'GENERATE_UNIFIED_REPORT' });
-      }
-    });
+    workerPoolManager.generateReportsForIdleWorkers();
   }
 }
 
 function processQueue() {
-  if (jobQueue.length === 0) {
-    checkIdleAndCleanup();
-    return;
-  }
-
-  console.log(`Procesando cola con ${jobQueue.length} trabajos...`);
-
-  const jobsToProcess = jobQueue.length;
-  for (let i = 0; i < jobsToProcess; i++) {
-    const job = jobQueue.shift();
-    const assigned = assignJobToWorker(job);
-    if (!assigned) {
-      jobQueue.push(job);
-    }
-  }
-  broadcastStatus();
+  // Delegated to JobQueueManager
+  jobQueueManager.processQueue();
 }
 
 function assignJobToWorker(job) {
-  const apkSourceType = job.localApk ? 'local' : 'registry';
-  const apkIdentifier = job.localApk || job.apkVersion || process.env.APK_PATH;
-
-  // Para workers locales, el deviceSerial es un criterio de búsqueda.
-  const isLocal = process.env.DEVICE_SOURCE === 'local';
-
-  let worker = workerPool.find((w) => {
-    const baseMatch =
-      w.branch === job.branch &&
-      w.client === job.client &&
-      w.apkIdentifier === apkIdentifier &&
-      w.apkSourceType === apkSourceType &&
-      w.status === 'ready';
-    if (!baseMatch) return false;
-    // Si es local, también debe coincidir el serial del dispositivo.
-    if (isLocal) {
-      return w.deviceSerial === job.deviceSerial;
-    }
-    return true;
-  });
-
-  if (worker) {
-    runJobOnWorker(job, worker);
-    return true;
-  }
-
-  if (workerPool.length < maxWorkers) {
-    // Pasamos el deviceSerial al crear el worker.
-    const newWorker = createWorker(
-      job.branch,
-      job.client,
-      apkIdentifier,
-      apkSourceType,
-      job.deviceSerial,
-      job.persistentWorkspace,
-    );
-    runJobOnWorker(job, newWorker);
-    return true;
-  }
-
-  return false;
+  // Delegated to JobQueueManager
+  return jobQueueManager.assignJobToWorker(job);
 }
 
 async function startRecordingSequence(job, worker) {
-  const { id, feature } = job;
-  const { id: slotId } = worker;
-  try {
-    console.log(`Iniciando secuencia de grabación para el job ${id}`);
-    io.emit('log_update', {
-      slotId,
-      logLine: `--- 🔴 Iniciando secuencia de grabación para ${feature} ---
-`,
-    });
-
-    io.emit('log_update', {
-      slotId,
-      logLine: `   -> Reseteando mappings...
-`,
-    });
-    await fetch(`http://localhost:${PORT}/api/wiremock/mappings/reset`, {
-      method: 'POST',
-    });
-
-    io.emit('log_update', {
-      slotId,
-      logLine: `   -> Cargando mappings base...
-`,
-    });
-    await fetch(`http://localhost:${PORT}/api/wiremock/load-base-mappings`, {
-      method: 'POST',
-    });
-
-    io.emit('log_update', {
-      slotId,
-      logLine: `   -> Iniciando grabación...
-`,
-    });
-    await fetch(`http://localhost:${PORT}/api/wiremock/recordings/start`, {
-      method: 'POST',
-    });
-
-    io.emit('log_update', {
-      slotId,
-      logLine: `--- ▶️ Grabación iniciada. Ejecutando test... ---
-`,
-    });
-  } catch (error) {
-    console.error(
-      `Error durante la secuencia de grabación para el job ${id}:`,
-      error,
-    );
-    io.emit('log_update', {
-      slotId,
-      logLine: `--- ❌ Error al iniciar la grabación para ${feature}: ${error.message} ---
-`,
-    });
-    throw error;
-  }
+  // Delegated to ProcessManager
+  return await processManager.startRecordingSequence(job, worker);
 }
 
 async function runJobOnWorker(job, worker) {
-  const wasReady = worker.status === 'ready';
-  worker.status = 'busy';
-  worker.currentJob = job;
-  job.slotId = worker.id;
-
-  io.emit('job_started', {
-    slotId: worker.id,
-    featureName: job.feature,
-    jobId: job.id,
-    branch: worker.branch,
-  });
-
-  if (wasReady) {
-    try {
-      if (job.record) {
-        await startRecordingSequence(job, worker);
-      }
-      console.log(
-        `Enviando job ${job.id} a worker ${worker.id} que ya estaba listo.`,
-      );
-      worker.process.send({ type: 'START', job });
-    } catch {
-      // Handle recording sequence error
-    }
-  }
-
-  broadcastStatus();
+  // Delegated to WorkerPoolManager
+  return await workerPoolManager.runJobOnWorker(job, worker);
 }
 
 function createWorker(
@@ -1442,790 +677,23 @@ function createWorker(
   deviceSerial,
   persistentWorkspace = false,
 ) {
-  const workerId =
-    workerPool.length > 0 ? Math.max(...workerPool.map((w) => w.id)) + 1 : 0;
-
-  const forkOptions = {};
-  // Cuando se ejecuta en modo local DENTRO de Docker, necesitamos decirle al worker
-  // dónde encontrar el servidor ADB del host. 'host.docker.internal' es un DNS
-  // especial de Docker que resuelve a la IP del host.
-  if (process.env.DEVICE_SOURCE === 'local' && process.env.IS_DOCKER) {
-    console.log(
-      `[SERVER] Docker local mode detected. Injecting ANDROID_ADB_SERVER_HOST=host.docker.internal for worker ${workerId}`,
-    );
-    forkOptions.env = {
-      ...process.env,
-      ANDROID_ADB_SERVER_HOST: 'host.docker.internal',
-    };
-  }
-  const workerProcess = fork(
-    path.join(__dirname, 'worker.js'),
-    [],
-    forkOptions,
-  );
-
-  const worker = {
-    id: workerId,
-    process: workerProcess,
-    branch: branch,
-    client: client,
-    apkIdentifier: apkIdentifier,
-    apkSourceType: apkSourceType,
-    deviceSerial: deviceSerial, // Se almacena el serial en el worker
-    status: 'initializing',
-    currentJob: null,
-    terminating: false,
-  };
-
-  workerPool.push(worker);
-  let logMessage = `Worker ${worker.id} creado para la branch ${branch}, cliente ${client}, APK: ${apkIdentifier} (source: ${apkSourceType})`;
-  if (deviceSerial) {
-    logMessage += `, Dispositivo: ${deviceSerial}`;
-  }
-  console.log(logMessage);
-
-  // --- Lógica de Workspace Persistente ---
-  const sanitizedBranch = sanitize(branch);
-  let workerWorkspacePath;
-  let isPersistent = false;
-  
-  // Determinar si usar workspace persistente basado en:
-  // 1. El checkbox del frontend (persistentWorkspace)
-  // 2. Que PERSISTENT_WORKSPACES_ROOT esté configurado
-  if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
-    // Usar workspace persistente
-    workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
-    isPersistent = true;
-    console.log(`[SERVER] Usando workspace persistente para worker ${workerId}: ${workerWorkspacePath}`);
-  } else {
-    // Usar workspace temporal
-    workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`);
-    isPersistent = false;
-    console.log(`[SERVER] Usando workspace temporal para worker ${workerId}: ${workerWorkspacePath}`);
-  }
-  
-  fs.mkdirSync(workerWorkspacePath, { recursive: true });
-  const initMessage = {
-    type: 'INIT',
+  // Delegated to WorkerPoolManager
+  return workerPoolManager.createWorker(
     branch,
     client,
-    workerWorkspacePath,
-    isPersistent,
-  }; // Pass persistent workspace path and flag
-  if (apkSourceType === 'local') {
-    initMessage.localApkPath = path.join(
-      process.env.LOCAL_APK_DIRECTORY,
-      apkIdentifier,
-    );
-  } else {
-    initMessage.apkVersion = apkIdentifier;
-  }
-
-  // Si es un worker para un dispositivo local, enviamos el serial en el mensaje INIT.
-  if (process.env.DEVICE_SOURCE === 'local') {
-    initMessage.deviceSerial = deviceSerial;
-  }
-
-  worker.process.send(initMessage);
-
-  workerProcess.on('message', async (message) => {
-    const currentJob = worker.currentJob;
-    const slotId = worker.id;
-
-    switch (message.type) {
-      case 'READY':
-        console.log(`Worker ${worker.id} reportó READY.`);
-        worker.status = 'ready';
-
-        if (worker.currentJob) {
-          try {
-            if (worker.currentJob.record) {
-              await startRecordingSequence(worker.currentJob, worker);
-            }
-            console.log(
-              `Worker ${worker.id} está listo, iniciando job ${worker.currentJob.id}.`,
-            );
-            worker.status = 'busy';
-            worker.process.send({ type: 'START', job: worker.currentJob });
-          } catch {
-            // Handle recording sequence error
-          }
-        } else {
-          processQueue();
-        }
-        broadcastStatus();
-        break;
-
-      case 'READY_FOR_NEXT_JOB': {
-        console.log(`Worker ${worker.id} reportó READY_FOR_NEXT_JOB.`);
-
-        if (currentJob && currentJob.record) {
-          try {
-            console.log(
-              `Finalizando secuencia de grabación para el job ${currentJob.id}`,
-            );
-            io.emit('log_update', {
-              slotId,
-              logLine: `--- ⏹ Deteniendo grabación para ${currentJob.feature}... ---
-`,
-            });
-            const featureName = path.basename(currentJob.feature, '.feature');
-            const response = await fetch(
-              `http://localhost:${PORT}/api/wiremock/recordings/stop`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  recordingName: featureName,
-                  saveAsSingleFile: true,
-                }),
-              },
-            );
-            if (!response.ok) throw new Error(`Status ${response.status}`);
-            const result = await response.json();
-            io.emit('log_update', {
-              slotId,
-              logLine: `--- 💾 Mappings guardados en ${result.summary.filesCreated > 1 ? 'directorio' : 'archivo'} ${featureName}.json (${result.summary.totalMappings} mappings) ---
-`,
-            });
-          } catch (error) {
-            console.error(
-              `Error al detener la grabación para el job ${currentJob.id}:`,
-              error,
-            );
-            io.emit('log_update', {
-              slotId,
-              logLine: `--- ❌ Error al guardar los mappings para ${currentJob.feature}: ${error.message} ---
-`,
-            });
-          }
-        }
-
-        worker.status = 'ready';
-
-        let reportUrl = null;
-        if (message.data && message.data.reportPath) {
-          reportUrl = handleReport(currentJob, message.data.reportPath);
-        }
-
-        worker.currentJob = null;
-        io.emit('job_finished', {
-          slotId,
-          jobId: currentJob.id,
-          exitCode: message.data?.exitCode ?? 0,
-          reportUrl: reportUrl,
-        });
-        broadcastStatus();
-        processQueue();
-        break;
-      }
-
-      case 'UNIFIED_REPORT_READY':
-        console.log(`Worker ${worker.id} reportó UNIFIED_REPORT_READY.`);
-        if (message.data && message.data.reportPath) {
-          const syntheticJob = {
-            branch: worker.branch,
-            feature: `_ReporteUnificado_${worker.client}`,
-            client: worker.client,
-          };
-          handleReport(syntheticJob, message.data.reportPath);
-        }
-        worker.process.send({ type: 'TERMINATE' });
-        break;
-
-      case 'LOG':
-        io.emit('log_update', { slotId, logLine: message.data });
-        break;
-
-      case 'PROGRESS_UPDATE':
-        // Emitir evento de progreso al frontend con información del worker y job
-        io.emit('progress_update', {
-          slotId,
-          jobId: currentJob ? currentJob.id : null,
-          event: message.event,
-          data: message.data,
-          timestamp: message.timestamp,
-        });
-        break;
-    }
-  });
-
-  workerProcess.on('close', async (code) => {
-    console.log(`Worker ${worker.id} se cerró con código ${code}.`);
-    const index = workerPool.findIndex((w) => w.id === worker.id);
-    if (index !== -1) {
-      workerPool.splice(index, 1);
-    }
-
-    const { currentJob } = worker;
-    if (worker.status === 'busy' && currentJob && !worker.terminating) {
-      io.emit('log_update', {
-        logLine: `--- ⚠️ Worker murió inesperadamente. Re-encolando job ${currentJob.id}... ---
-`,
-      });
-      io.emit('job_finished', {
-        slotId: worker.id,
-        jobId: currentJob.id,
-        exitCode: code,
-      });
-      jobQueue.unshift(currentJob);
-    }
-
-    broadcastStatus();
-    processQueue();
-  });
-
-  workerProcess.on('error', (err) => {
-    console.error(`Error irrecuperable en el worker ${worker.id}:`, err);
-  });
-
-  return worker;
+    apkIdentifier,
+    apkSourceType,
+    deviceSerial,
+    persistentWorkspace
+  );
 }
 
-// --- Manejo de Socket.IO ---
+// Socket.io event handling is now managed by SocketIOManager module
+// All socket.io functionality has been extracted to src/modules/socketio/socketio-manager.js
 
-const wrap = (middleware) => (socket, next) =>
-  middleware(socket.request, {}, next);
+// Socket.io authentication and middleware is now handled by SocketIOManager module
 
-io.use(wrap(sessionMiddleware));
-io.use(wrap(passport.initialize()));
-io.use(wrap(passport.session()));
-
-io.use((socket, next) => {
-  if (socket.request.user) {
-    next();
-  } else {
-    console.log('Rechazando conexión de socket no autenticada.');
-    next(new Error('unauthorized'));
-  }
-});
-
-io.on('connection', (socket) => {
-  console.log('Un cliente se ha conectado:', socket.id);
-
-  socket.emit('init', {
-    slots: workerPool.map((worker) => ({
-      slotId: worker.id,
-      job: worker.currentJob
-        ? { id: worker.currentJob.id, featureName: worker.currentJob.feature }
-        : null,
-      status: worker.status,
-      branch: worker.branch,
-    })),
-    status: {
-      active: workerPool.filter((w) => w.status === 'busy').length,
-      queued: jobQueue.length,
-      limit: maxWorkers,
-    },
-  });
-
-  socket.on('run_test', (data) => {
-    console.log('--- DEBUG: Datos recibidos en run_test ---', data);
-    const { persistentWorkspace } = data; // Extract persistentWorkspace
-
-    if (data.record) {
-      // --- Lógica de Record & Verify ---
-      const recordJobId = ++jobIdCounter;
-      const verifyJobId = ++jobIdCounter;
-
-      const recordJob = {
-        ...data,
-        id: recordJobId,
-        record: true,
-        persistentWorkspace,
-      }; // Pass persistentWorkspace
-      const verifyJob = {
-        ...data,
-        id: verifyJobId,
-        record: false,
-        highPriority: true, // Para que se ejecute justo después
-        mappingToLoad: `${data.feature}.json`,
-        persistentWorkspace, // Pass persistentWorkspace
-      };
-
-      // Encolar el de grabación primero, luego el de verificación
-      if (recordJob.highPriority) {
-        jobQueue.unshift(verifyJob, recordJob); // El de grabación queda primero
-        io.emit('log_update', {
-          logLine: `--- ⚡️ Test de grabación y verificación para '${data.feature}' añadido a la cola con prioridad alta. ---
-`,
-        });
-      } else {
-        jobQueue.push(recordJob, verifyJob);
-        io.emit('log_update', {
-          logLine: `--- 📼 Petición de grabación y verificación para '${data.feature}' encolada. ---
-`,
-        });
-      }
-    } else {
-      // --- Lógica normal ---
-      const job = { ...data, id: ++jobIdCounter, persistentWorkspace }; // Pass persistentWorkspace
-      if (data.usePreexistingMapping) {
-        job.mappingToLoad = `${data.feature}.json`;
-      }
-      if (job.highPriority) {
-        jobQueue.unshift(job);
-        io.emit('log_update', {
-          logLine: `--- ⚡️ Test '${job.feature}' añadido a la cola con prioridad alta. ---
-`,
-        });
-      } else {
-        jobQueue.push(job);
-        io.emit('log_update', {
-          logLine: `--- ⏳ Petición para '${job.feature}' encolada. ---
-`,
-        });
-      }
-    }
-    processQueue();
-  });
-
-  socket.on('run_batch', (data) => {
-    console.log('--- DEBUG: Datos recibidos en run_batch ---', data);
-    const {
-      jobs = [],
-      record = false,
-      usePreexistingMapping = false,
-      persistentWorkspace,
-    } = data; // Extract persistentWorkspace
-    const highPriority = jobs.length > 0 && jobs[0].highPriority;
-
-    let jobsToQueue = [];
-
-    if (record) {
-      // --- Lógica de Record & Verify para Lotes ---
-      const logMessage = highPriority
-        ? `--- ⚡️ Recibido lote de ${jobs.length} tests para Grabación y Verificación con prioridad alta. Encolando... ---
-`
-        : `--- 📼 Recibido lote de ${jobs.length} tests para Grabación y Verificación. Encolando... ---
-`;
-      io.emit('log_update', { logLine: logMessage });
-
-      jobsToQueue = jobs.flatMap((jobData) => {
-        const recordJob = {
-          ...jobData,
-          id: ++jobIdCounter,
-          record: true,
-          persistentWorkspace, // Pass persistentWorkspace
-        };
-        const verifyJob = {
-          ...jobData,
-          id: ++jobIdCounter,
-          record: false,
-          mappingToLoad: `${jobData.feature}.json`,
-          persistentWorkspace, // Pass persistentWorkspace
-        };
-        return [recordJob, verifyJob]; // Devuelve el par intercalado
-      });
-    } else {
-      // --- Lógica normal para Lotes ---
-      const logMessage = highPriority
-        ? `--- ⚡️ Recibido lote de ${jobs.length} tests con prioridad alta. Encolando... ---
-`
-        : `--- 📥 Recibido lote de ${jobs.length} tests. Encolando... ---
-`;
-      io.emit('log_update', { logLine: logMessage });
-
-      jobsToQueue = jobs.map((jobData) => {
-        const newJob = {
-          ...jobData,
-          id: ++jobIdCounter,
-          record: false, // Asegurarse que record es false si no es un lote de grabación
-          persistentWorkspace, // Pass persistentWorkspace
-        };
-        if (usePreexistingMapping) {
-          newJob.mappingToLoad = `${jobData.feature}.json`;
-        }
-        return newJob;
-      });
-    }
-
-    if (highPriority) {
-      jobQueue.unshift(...jobsToQueue.reverse());
-    } else {
-      jobQueue.push(...jobsToQueue);
-    }
-
-    processQueue();
-  });
-
-  socket.on('stop_test', (data) => {
-    const { slotId, jobId } = data;
-    const worker = workerPool.find(
-      (w) => w.id === slotId && w.currentJob?.id === jobId,
-    );
-    if (worker) {
-      worker.terminating = true;
-      worker.process.kill('SIGTERM');
-      console.log(`Señal SIGTERM enviada al worker ${worker.id}`);
-    } else {
-      console.log(`No se pudo detener el job ${jobId}: no se encontró.`);
-    }
-  });
-
-  socket.on('cancel_job', (data) => {
-    const { jobId } = data;
-    const index = jobQueue.findIndex((job) => job.id === jobId);
-    if (index !== -1) {
-      const canceledJob = jobQueue.splice(index, 1);
-      console.log(
-        `Job ${jobId} (${canceledJob[0].feature}) cancelado de la cola.`,
-      );
-      io.emit('log_update', {
-        logLine: `--- 🚫 Job '${canceledJob[0].feature}' cancelado por el usuario. ---
-`,
-      });
-      broadcastStatus();
-    } else {
-      console.log(
-        `No se pudo cancelar el job ${jobId}: no se encontró en la cola.`,
-      );
-    }
-  });
-
-  socket.on('stop_all_execution', () => {
-    console.log('--- 🛑 Recibida orden de PARAR TODO ---');
-    io.emit('log_update', {
-      logLine: `--- 🛑 Recibida orden de PARAR TODO por un usuario. Limpiando cola y deteniendo workers... ---
-`,
-    });
-
-    // 1. Limpiar la cola de jobs pendientes
-    const canceledJobs = jobQueue.splice(0, jobQueue.length);
-    console.log(`Cancelados ${canceledJobs.length} jobs de la cola.`);
-
-    // 2. Detener todos los workers activos
-    workerPool.forEach((worker) => {
-      if (worker.process) {
-        worker.terminating = true;
-        worker.process.kill('SIGTERM');
-        console.log(`Señal SIGTERM enviada al worker ${worker.id}`);
-      }
-    });
-
-    // 3. Actualizar el estado en la UI
-    broadcastStatus();
-  });
-
-  socket.on('prepare_workspace', (data) => {
-    const { branch } = data;
-    const logPrefix = `[Workspace Prep: ${branch}]`;
-    const logSlot = { slotId: 'system' }; // Use system log panel
-
-    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada en el servidor.\n`,
-      });
-      return;
-    }
-
-    if (!branch) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: No se ha especificado una branch.\n`,
-      });
-      return;
-    }
-
-    // Limpiar el panel de sistema antes de empezar
-    io.emit('log_clear', logSlot);
-    io.emit('log_update', {
-      ...logSlot,
-      logLine: `--- 🚀 Iniciando preparación del workspace para la branch: ${branch} ---\n`,
-    });
-
-    const sanitizedBranch = sanitize(branch);
-    const workspacePath = path.join(
-      process.env.PERSISTENT_WORKSPACES_ROOT,
-      sanitizedBranch,
-    );
-    fs.mkdirSync(workspacePath, { recursive: true });
-
-    const setupScript = path.join(__dirname, 'scripts', 'setup-workspace.sh');
-    const scriptProcess = spawn('bash', [setupScript, workspacePath, branch]);
-
-    scriptProcess.stdout.on('data', (data) => {
-      io.emit('log_update', { ...logSlot, logLine: data.toString() });
-    });
-
-    scriptProcess.stderr.on('data', (data) => {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `[stderr] ${data.toString()}`,
-      });
-    });
-
-    scriptProcess.on('close', (code) => {
-      if (code === 0) {
-        io.emit('log_update', {
-          ...logSlot,
-          logLine: `\n--- ✅ Preparación del workspace para ${branch} finalizada con éxito ---\n`,
-        });
-        socket.emit('workspace_ready', { branch }); // Notificar al cliente que inició la acción
-      } else {
-        io.emit('log_update', {
-          ...logSlot,
-          logLine: `\n--- ❌ Error: La preparación del workspace para ${branch} falló con código ${code} ---\n`,
-        });
-      }
-    });
-
-    scriptProcess.on('error', (err) => {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error al iniciar el script: ${err.message}\n`,
-      });
-    });
-  });
-
-  socket.on('commit_changes', async (data) => {
-    const { branch, files, message } = data;
-    const logPrefix = `[Git Commit: ${branch}]`;
-    const logSlot = { slotId: 'system' }; // Use system log panel
-
-    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada.\n`,
-      });
-      return;
-    }
-
-    if (!branch || !files || files.length === 0 || !message) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: Faltan datos para realizar el commit (branch, archivos o mensaje).\n`,
-      });
-      return;
-    }
-
-    io.emit('log_update', {
-      ...logSlot,
-      logLine: `--- 🚀 Iniciando commit local para la branch: ${branch} ---\n`,
-    });
-
-    const sanitizedBranch = sanitize(branch);
-    const workspacePath = path.join(
-      process.env.PERSISTENT_WORKSPACES_ROOT,
-      sanitizedBranch,
-      'appium',
-    );
-
-    if (!fs.existsSync(workspacePath)) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: No se encontró el workspace local.\n`,
-      });
-      return;
-    }
-
-    // --- Validación de Seguridad de Archivos ---
-    for (const file of files) {
-      const fullPath = path.join(workspacePath, file);
-      const resolvedPath = path.resolve(fullPath);
-      if (!resolvedPath.startsWith(path.resolve(workspacePath))) {
-        io.emit('log_update', {
-          ...logSlot,
-          logLine: `${logPrefix} ❌ Error de seguridad: Se intentó acceder a un archivo fuera del workspace: ${file}\n`,
-        });
-        return;
-      }
-    }
-
-    const executeGitCommand = (command, args) => {
-      return new Promise((resolve, reject) => {
-        const gitProcess = spawn(command, args, { cwd: workspacePath });
-
-        gitProcess.stdout.on('data', (data) => {
-          io.emit('log_update', { ...logSlot, logLine: data.toString() });
-        });
-
-        gitProcess.stderr.on('data', (data) => {
-          io.emit('log_update', {
-            ...logSlot,
-            logLine: `[stderr] ${data.toString()}`,
-          });
-        });
-
-        gitProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error(`El comando de Git falló con código ${code}`));
-          }
-        });
-
-        gitProcess.on('error', (err) => {
-          reject(err);
-        });
-      });
-    };
-
-    try {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} étape 1/3: Añadiendo archivos...
-`,
-      });
-      await executeGitCommand('git', ['add', ...files]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `
-${logPrefix} étape 2/3: Realizando commit local...
-`,
-      });
-      await executeGitCommand('git', ['commit', '-m', message]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `
---- ✅ Commit local realizado con éxito para la branch: ${branch} ---
-`,
-      });
-
-      // Notificar al frontend que hay commits pendientes de push
-      io.emit('commit_status_update', {
-        branch,
-        hasPendingCommits: true,
-        message:
-          'Hay commits locales que no han sido subidos al repositorio remoto.',
-      });
-    } catch (error) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `\n--- ❌ Error durante el commit local: ${error.message} ---\n`,
-      });
-    }
-  });
-
-  socket.on('push_changes', async (data) => {
-    const { branch } = data;
-    const logPrefix = `[Git Push: ${branch}]`;
-    const logSlot = { slotId: 'system' }; // Use system log panel
-
-    if (!process.env.PERSISTENT_WORKSPACES_ROOT) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada.\n`,
-      });
-      return;
-    }
-
-    if (!branch) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: No se especificó una branch.\n`,
-      });
-      return;
-    }
-
-    io.emit('log_update', {
-      ...logSlot,
-      logLine: `--- 🚀 Iniciando push para la branch: ${branch} ---\n`,
-    });
-
-    const sanitizedBranch = sanitize(branch);
-    const workspacePath = path.join(
-      process.env.PERSISTENT_WORKSPACES_ROOT,
-      sanitizedBranch,
-      'appium',
-    );
-
-    if (!fs.existsSync(workspacePath)) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} ❌ Error: No se encontró el workspace local.\n`,
-      });
-      return;
-    }
-
-    const executeGitCommand = (command, args) => {
-      return new Promise((resolve, reject) => {
-        const gitProcess = spawn(command, args, { cwd: workspacePath });
-
-        gitProcess.stdout.on('data', (data) => {
-          io.emit('log_update', { ...logSlot, logLine: data.toString() });
-        });
-
-        gitProcess.stderr.on('data', (data) => {
-          io.emit('log_update', {
-            ...logSlot,
-            logLine: `[stderr] ${data.toString()}`,
-          });
-        });
-
-        gitProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error(`El comando de Git falló con código ${code}`));
-          }
-        });
-
-        gitProcess.on('error', (err) => {
-          reject(err);
-        });
-      });
-    };
-
-    try {
-      const authenticatedUrl = getAuthenticatedUrl();
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} étape 1/4: Configurando URL remota para el push...
-`,
-      });
-      await executeGitCommand('git', [
-        'remote',
-        'set-url',
-        'origin',
-        authenticatedUrl,
-      ]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} étape 2/4: Sincronizando con el repositorio remoto (git pull)...
-`,
-      });
-      await executeGitCommand('git', ['pull', '--rebase', 'origin', branch]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `${logPrefix} étape 3/4: Empujando cambios al repositorio remoto...
-`,
-      });
-      await executeGitCommand('git', ['push', 'origin', branch]);
-
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `
---- ✅ Push finalizado con éxito para la branch: ${branch} ---
-`,
-      });
-
-      // Notificar al frontend que no hay commits pendientes
-      io.emit('commit_status_update', {
-        branch,
-        hasPendingCommits: false,
-        message:
-          'Todos los commits locales han sido subidos al repositorio remoto.',
-      });
-    } catch (error) {
-      io.emit('log_update', {
-        ...logSlot,
-        logLine: `\n--- ❌ Error durante el push: ${error.message} ---\n`,
-      });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Un cliente se ha desconectado:', socket.id);
-  });
-});
 
 server.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  loggingUtilities.logStartup(PORT);
 });
