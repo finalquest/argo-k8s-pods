@@ -6,87 +6,67 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
 
 class AuthenticationManager {
-  constructor() {
-    this.isAuthenticated = false;
-    this.setupPassport();
+  constructor(configManager) {
+    this.configManager = configManager;
+    this.isAuthenticated = configManager.isEnabled('authentication');
     this.setupSession();
-  }
-
-  /**
-   * Validate required authentication environment variables
-   */
-  validateEnvironment() {
-    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, GOOGLE_HOSTED_DOMAIN } = process.env;
-    
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
-      console.error(
-        'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
-      );
-      process.exit(1);
-    }
-
-    return {
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      SESSION_SECRET,
-      GOOGLE_HOSTED_DOMAIN
-    };
+    this.setupPassport();
   }
 
   /**
    * Setup Express session middleware
    */
   setupSession() {
-    const { SESSION_SECRET } = this.validateEnvironment();
-    
-    this.sessionMiddleware = session({
-      secret: SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 horas
-    });
+    const sessionConfig = this.configManager.getSessionConfig();
+
+    this.sessionMiddleware = session(sessionConfig);
   }
 
   /**
-   * Setup Passport.js with Google OAuth strategy
+   * Setup Passport.js with Google OAuth strategy (only if authentication is enabled)
    */
   setupPassport() {
-    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_HOSTED_DOMAIN } = this.validateEnvironment();
+    if (this.configManager.isEnabled('authentication')) {
+      const oauthConfig = this.configManager.getOAuthConfig();
 
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: GOOGLE_CLIENT_ID,
-          clientSecret: GOOGLE_CLIENT_SECRET,
-          callbackURL: `${process.env.APP_BASE_URL || 'http://localhost:3000'}/auth/google/callback`,
-          hd: GOOGLE_HOSTED_DOMAIN,
-        },
-        this.handleGoogleCallback.bind(this)
-      ),
-    );
+      passport.use(
+        new GoogleStrategy(
+          {
+            clientID: oauthConfig.clientID,
+            clientSecret: oauthConfig.clientSecret,
+            callbackURL: oauthConfig.callbackURL,
+            hostedDomain: oauthConfig.hostedDomain,
+          },
+          this.handleGoogleCallback.bind(this),
+        ),
+      );
 
-    passport.serializeUser((user, done) => {
-      done(null, user);
-    });
+      passport.serializeUser((user, done) => {
+        done(null, user);
+      });
 
-    passport.deserializeUser((obj, done) => {
-      done(null, obj);
-    });
+      passport.deserializeUser((obj, done) => {
+        done(null, obj);
+      });
 
-    this.passport = passport;
+      this.passport = passport;
+    } else {
+      // Development mode - no authentication
+      this.passport = null;
+    }
   }
 
   /**
    * Handle Google OAuth callback
    */
   handleGoogleCallback(accessToken, refreshToken, profile, done) {
-    const { GOOGLE_HOSTED_DOMAIN } = this.validateEnvironment();
-    
+    const oauthConfig = this.configManager.getOAuthConfig();
+
     // En este punto, el perfil de Google ha sido verificado.
     // Puedes buscar en tu base de datos si el usuario existe, o crearlo.
     // Por ahora, simplemente pasamos el perfil.
     // Asegúrate de que el usuario pertenece al dominio correcto si `hd` no es suficiente.
-    if (GOOGLE_HOSTED_DOMAIN && profile._json.hd !== GOOGLE_HOSTED_DOMAIN) {
+    if (oauthConfig.hostedDomain && profile._json.hd !== oauthConfig.hostedDomain) {
       return done(new Error('Dominio de Google no autorizado'));
     }
     return done(null, profile);
@@ -96,6 +76,11 @@ class AuthenticationManager {
    * Middleware to protect routes
    */
   ensureAuthenticated(req, res, next) {
+    if (!this.configManager.isEnabled('authentication')) {
+      // Development mode - allow access
+      return next();
+    }
+
     if (req.isAuthenticated()) {
       return next();
     }
@@ -106,6 +91,11 @@ class AuthenticationManager {
    * Get current user information
    */
   getCurrentUser(req) {
+    if (!this.configManager.isEnabled('authentication')) {
+      // Development mode - return development user
+      return this.configManager.getDevelopmentUser();
+    }
+
     if (req.isAuthenticated()) {
       return {
         name: req.user.displayName,
@@ -120,31 +110,38 @@ class AuthenticationManager {
    * Setup authentication routes
    */
   setupRoutes(app) {
-    // Google authentication route
-    app.get(
-      '/auth/google',
-      this.passport.authenticate('google', { scope: ['profile', 'email'] }),
-    );
+    if (this.configManager.isEnabled('authentication')) {
+      // Google authentication route
+      app.get(
+        '/auth/google',
+        this.passport.authenticate('google', { scope: ['profile', 'email'] }),
+      );
 
-    // Google callback route
-    app.get(
-      '/auth/google/callback',
-      this.passport.authenticate('google', { failureRedirect: '/' }),
-      (req, res) => {
-        // Redirección exitosa a la página principal.
-        res.redirect('/');
-      },
-    );
+      // Google callback route
+      app.get(
+        '/auth/google/callback',
+        this.passport.authenticate('google', { failureRedirect: '/' }),
+        (req, res) => {
+          // Redirección exitosa a la página principal.
+          res.redirect('/');
+        },
+      );
 
-    // Logout route
-    app.get('/auth/logout', (req, res, next) => {
-      req.logout(function (err) {
-        if (err) {
-          return next(err);
-        }
+      // Logout route
+      app.get('/auth/logout', (req, res, next) => {
+        req.logout(function (err) {
+          if (err) {
+            return next(err);
+          }
+          res.redirect('/');
+        });
+      });
+    } else {
+      // Development mode - provide mock auth routes
+      app.get('/auth/logout', (req, res) => {
         res.redirect('/');
       });
-    });
+    }
 
     // Current user route (must be before authentication middleware)
     app.get('/api/current-user', (req, res) => {
@@ -160,9 +157,11 @@ class AuthenticationManager {
     // Apply session middleware
     app.use(this.sessionMiddleware);
 
-    // Initialize Passport
-    app.use(this.passport.initialize());
-    app.use(this.passport.session());
+    // Initialize Passport only if authentication is enabled
+    if (this.configManager.isEnabled('authentication')) {
+      app.use(this.passport.initialize());
+      app.use(this.passport.session());
+    }
 
     // Setup authentication routes
     this.setupRoutes(app);
@@ -190,6 +189,32 @@ class AuthenticationManager {
    */
   getAuthMiddleware() {
     return this.ensureAuthenticated.bind(this);
+  }
+
+  /**
+   * Check if authentication is enabled
+   */
+  isAuthenticationEnabled() {
+    return this.configManager.isEnabled('authentication');
+  }
+
+  /**
+   * Check if running in development mode
+   */
+  isDevelopmentMode() {
+    return this.configManager.isDevelopmentMode();
+  }
+
+  /**
+   * Get authentication status for client
+   */
+  getAuthStatus() {
+    return {
+      enabled: this.isAuthenticationEnabled(),
+      developmentMode: this.isDevelopmentMode(),
+      providers: this.isAuthenticationEnabled() ? ['google'] : [],
+      domainRestriction: this.configManager.isEnabled('domainRestriction'),
+    };
   }
 }
 

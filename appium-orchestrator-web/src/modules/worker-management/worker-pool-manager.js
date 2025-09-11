@@ -7,7 +7,12 @@ const fs = require('fs');
 const os = require('os');
 
 class WorkerPoolManager {
-  constructor(configManager, validationManager, processManager, jobQueueManager) {
+  constructor(
+    configManager,
+    validationManager,
+    processManager,
+    jobQueueManager,
+  ) {
     this.configManager = configManager;
     this.validationManager = validationManager;
     this.processManager = processManager;
@@ -29,8 +34,18 @@ class WorkerPoolManager {
   /**
    * Create a new worker
    */
-  createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial, persistentWorkspace = false) {
-    const workerId = this.workerPool.length > 0 ? Math.max(...this.workerPool.map((w) => w.id)) + 1 : 0;
+  createWorker(
+    branch,
+    client,
+    apkIdentifier,
+    apkSourceType,
+    deviceSerial,
+    persistentWorkspace = false,
+  ) {
+    const workerId =
+      this.workerPool.length > 0
+        ? Math.max(...this.workerPool.map((w) => w.id)) + 1
+        : 0;
 
     const forkOptions = {};
     // When running in local mode INSIDE Docker, we need to tell the worker
@@ -47,7 +62,7 @@ class WorkerPoolManager {
     }
 
     const workerProcess = fork(
-      path.join(__dirname, '..', '..', 'worker.js'),
+      path.join(__dirname, '..', '..', '..', 'worker.js'),
       [],
       forkOptions,
     );
@@ -76,19 +91,29 @@ class WorkerPoolManager {
     const sanitizedBranch = this.validationManager.sanitize(branch);
     let workerWorkspacePath;
     let isPersistent = false;
-    
+
     if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
       // Use persistent workspace
-      workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+      workerWorkspacePath = path.join(
+        process.env.PERSISTENT_WORKSPACES_ROOT,
+        sanitizedBranch,
+      );
       isPersistent = true;
-      console.log(`[WORKER POOL] Usando workspace persistente para worker ${workerId}: ${workerWorkspacePath}`);
+      console.log(
+        `[WORKER POOL] Usando workspace persistente para worker ${workerId}: ${workerWorkspacePath}`,
+      );
     } else {
       // Use temporary workspace
-      workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`);
+      workerWorkspacePath = path.join(
+        os.tmpdir(),
+        `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`,
+      );
       isPersistent = false;
-      console.log(`[WORKER POOL] Usando workspace temporal para worker ${workerId}: ${workerWorkspacePath}`);
+      console.log(
+        `[WORKER POOL] Usando workspace temporal para worker ${workerId}: ${workerWorkspacePath}`,
+      );
     }
-    
+
     fs.mkdirSync(workerWorkspacePath, { recursive: true });
     const initMessage = {
       type: 'INIT',
@@ -135,7 +160,10 @@ class WorkerPoolManager {
           if (worker.currentJob) {
             try {
               if (worker.currentJob.record) {
-                await this.processManager.startRecordingSequence(worker.currentJob, worker);
+                await this.processManager.startRecordingSequence(
+                  worker.currentJob,
+                  worker,
+                );
               }
               console.log(
                 `Worker ${worker.id} está listo, iniciando job ${worker.currentJob.id}.`,
@@ -200,7 +228,10 @@ class WorkerPoolManager {
 
           let reportUrl = null;
           if (message.data && message.data.reportPath) {
-            reportUrl = this.processManager.handleReport(currentJob, message.data.reportPath);
+            reportUrl = this.processManager.handleReport(
+              currentJob,
+              message.data.reportPath,
+            );
           }
 
           worker.currentJob = null;
@@ -223,7 +254,10 @@ class WorkerPoolManager {
               feature: `_ReporteUnificado_${worker.client}`,
               client: worker.client,
             };
-            this.processManager.handleReport(syntheticJob, message.data.reportPath);
+            this.processManager.handleReport(
+              syntheticJob,
+              message.data.reportPath,
+            );
           }
           worker.process.send({ type: 'TERMINATE' });
           break;
@@ -312,7 +346,8 @@ class WorkerPoolManager {
    */
   findSuitableWorker(job) {
     const apkSourceType = job.localApk ? 'local' : 'registry';
-    const apkIdentifier = job.localApk || job.apkVersion || process.env.APK_PATH;
+    const apkIdentifier =
+      job.localApk || job.apkVersion || process.env.APK_PATH;
 
     // For local workers, deviceSerial is a search criterion
     const isLocal = process.env.DEVICE_SOURCE === 'local';
@@ -397,9 +432,15 @@ class WorkerPoolManager {
    */
   getStatistics() {
     const totalWorkers = this.workerPool.length;
-    const busyWorkers = this.workerPool.filter((w) => w.status === 'busy').length;
-    const readyWorkers = this.workerPool.filter((w) => w.status === 'ready').length;
-    const initializingWorkers = this.workerPool.filter((w) => w.status === 'initializing').length;
+    const busyWorkers = this.workerPool.filter(
+      (w) => w.status === 'busy',
+    ).length;
+    const readyWorkers = this.workerPool.filter(
+      (w) => w.status === 'ready',
+    ).length;
+    const initializingWorkers = this.workerPool.filter(
+      (w) => w.status === 'initializing',
+    ).length;
 
     return {
       totalWorkers,

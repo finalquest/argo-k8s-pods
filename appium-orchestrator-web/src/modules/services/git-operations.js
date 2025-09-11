@@ -55,7 +55,9 @@ class GitOperationsService {
         if (code === 0) {
           resolve(output);
         } else {
-          reject(new Error(`Command failed with exit code ${code}: ${errorOutput}`));
+          reject(
+            new Error(`Command failed with exit code ${code}: ${errorOutput}`),
+          );
         }
       });
 
@@ -71,7 +73,9 @@ class GitOperationsService {
   hasUncommittedChanges(workspacePath) {
     try {
       const command = `git -C ${workspacePath} status --porcelain test/features/`;
-      const { stdout } = require('child_process').execSync(command, { encoding: 'utf8' });
+      const { stdout } = require('child_process').execSync(command, {
+        encoding: 'utf8',
+      });
       return stdout.trim().length > 0;
     } catch (error) {
       console.error('Error checking uncommitted changes:', error);
@@ -85,23 +89,29 @@ class GitOperationsService {
   getGitStatus(workspacePath) {
     try {
       const command = `git -C ${workspacePath} status --porcelain test/features/`;
-      const { stdout } = require('child_process').execSync(command, { encoding: 'utf8' });
-      
+      const { stdout } = require('child_process').execSync(command, {
+        encoding: 'utf8',
+      });
+
       const changes = stdout.trim().split('\n').filter(Boolean);
       const modifiedFiles = changes.length;
-      
-      const stagedChanges = changes.filter(line => line.startsWith('M  ') || line.startsWith('A  ')).length;
-      const unstagedChanges = changes.filter(line => line.startsWith(' M ') || line.startsWith(' D')).length;
-      
+
+      const stagedChanges = changes.filter(
+        (line) => line.startsWith('M  ') || line.startsWith('A  '),
+      ).length;
+      const unstagedChanges = changes.filter(
+        (line) => line.startsWith(' M ') || line.startsWith(' D'),
+      ).length;
+
       return {
         hasChanges: changes.length > 0,
         modifiedFiles,
         stagedChanges,
         unstagedChanges,
-        changes: changes.map(change => ({
+        changes: changes.map((change) => ({
           status: change.substring(0, 2).trim(),
-          file: change.substring(3)
-        }))
+          file: change.substring(3),
+        })),
       };
     } catch (error) {
       console.error('Error getting Git status:', error);
@@ -110,7 +120,7 @@ class GitOperationsService {
         modifiedFiles: 0,
         stagedChanges: 0,
         unstagedChanges: 0,
-        changes: []
+        changes: [],
       };
     }
   }
@@ -135,7 +145,7 @@ class GitOperationsService {
       'pull',
       '--rebase',
       'origin',
-      branch
+      branch,
     ]);
   }
 
@@ -146,7 +156,7 @@ class GitOperationsService {
     await this.executeGitCommand(workspacePath, 'git', [
       'push',
       'origin',
-      branch
+      branch,
     ]);
   }
 
@@ -156,7 +166,7 @@ class GitOperationsService {
   async addFiles(workspacePath, files = ['.']) {
     await this.executeGitCommand(workspacePath, 'git', [
       'add',
-      ...Array.isArray(files) ? files : [files]
+      ...(Array.isArray(files) ? files : [files]),
     ]);
   }
 
@@ -167,7 +177,7 @@ class GitOperationsService {
     await this.executeGitCommand(workspacePath, 'git', [
       'commit',
       '-m',
-      message
+      message,
     ]);
   }
 
@@ -177,26 +187,26 @@ class GitOperationsService {
   async getCommitStatus(workspacePath, branch) {
     try {
       await this.executeGitCommand(workspacePath, 'git', ['status']);
-      
+
       // Check if there are commits to push
       const { stdout: logOutput } = require('child_process').execSync(
         `git -C ${workspacePath} log origin/${branch}..HEAD --oneline`,
-        { encoding: 'utf8' }
+        { encoding: 'utf8' },
       );
-      
+
       const commitsToPush = logOutput.trim().split('\n').filter(Boolean).length;
-      
+
       return {
         hasPendingCommits: commitsToPush > 0,
         commitsToPush,
-        lastCommit: commitsToPush > 0 ? logOutput.split('\n')[0] : null
+        lastCommit: commitsToPush > 0 ? logOutput.split('\n')[0] : null,
       };
     } catch (error) {
       console.error('Error getting commit status:', error);
       return {
         hasPendingCommits: false,
         commitsToPush: 0,
-        lastCommit: null
+        lastCommit: null,
       };
     }
   }
@@ -208,7 +218,7 @@ class GitOperationsService {
     await this.executeGitCommand(path.dirname(targetPath), 'git', [
       'clone',
       url,
-      targetPath
+      targetPath,
     ]);
   }
 
@@ -219,7 +229,7 @@ class GitOperationsService {
     try {
       const git = require('simple-git')(workspacePath);
       const status = await git.status();
-      
+
       return {
         currentBranch: status.current,
         trackingBranch: status.tracking,
@@ -228,7 +238,7 @@ class GitOperationsService {
         isClean: status.isClean(),
         modified: status.modified,
         staged: status.staged,
-        files: status.files
+        files: status.files,
       };
     } catch (error) {
       console.error('Error getting repository status:', error);
@@ -240,7 +250,7 @@ class GitOperationsService {
         isClean: true,
         modified: [],
         staged: [],
-        files: []
+        files: [],
       };
     }
   }
@@ -250,19 +260,19 @@ class GitOperationsService {
    */
   async commitAndPush(workspacePath, branch, message) {
     const authenticatedUrl = this.getAuthenticatedUrl();
-    
+
     // Step 1: Set remote URL
     await this.setRemoteUrl(workspacePath, authenticatedUrl);
-    
+
     // Step 2: Add all changes
     await this.addFiles(workspacePath);
-    
+
     // Step 3: Create commit
     await this.createCommit(workspacePath, message);
-    
+
     // Step 4: Pull latest changes (rebase)
     await this.pullChanges(workspacePath, branch);
-    
+
     // Step 5: Push changes
     await this.pushChanges(workspacePath, branch);
   }
@@ -293,7 +303,7 @@ class GitOperationsService {
     try {
       const { stdout } = require('child_process').execSync(
         `git -C ${workspacePath} branch --show-current`,
-        { encoding: 'utf8' }
+        { encoding: 'utf8' },
       );
       return stdout.trim();
     } catch (error) {

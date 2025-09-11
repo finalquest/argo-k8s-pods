@@ -33,8 +33,9 @@ class StringUtilities {
    */
   titleCase(str) {
     if (!str) return '';
-    return str.replace(/\w\S*/g, (txt) => 
-      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    return str.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
     );
   }
 
@@ -170,7 +171,7 @@ class StringUtilities {
   toCamelCase(str) {
     if (!str) return '';
     return str
-      .replace(/[-_\s]+(.)?/g, (_, char) => char ? char.toUpperCase() : '')
+      .replace(/[-_\s]+(.)?/g, (_, char) => (char ? char.toUpperCase() : ''))
       .replace(/^[A-Z]/, (firstChar) => firstChar.toLowerCase());
   }
 
@@ -236,11 +237,16 @@ class StringUtilities {
   /**
    * Generate random string
    */
-  generateRandom(length = 8, characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') {
+  generateRandom(
+    length = 8,
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  ) {
     if (length <= 0) return '';
     let result = '';
     for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length),
+      );
     }
     return result;
   }
@@ -250,8 +256,8 @@ class StringUtilities {
    */
   generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
@@ -276,7 +282,7 @@ class StringUtilities {
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#39;'
+      "'": '&#39;',
     };
     return str.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
   }
@@ -291,9 +297,12 @@ class StringUtilities {
       '&lt;': '<',
       '&gt;': '>',
       '&quot;': '"',
-      '&#39;': "'"
+      '&#39;': "'",
     };
-    return str.replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, (entity) => htmlUnescapes[entity]);
+    return str.replace(
+      /&amp;|&lt;|&gt;|&quot;|&#39;/g,
+      (entity) => htmlUnescapes[entity],
+    );
   }
 
   /**
@@ -309,7 +318,8 @@ class StringUtilities {
    */
   countOccurrences(str, substring) {
     if (!str || !substring) return 0;
-    return (str.match(new RegExp(this.escapeRegex(substring), 'g')) || []).length;
+    return (str.match(new RegExp(this.escapeRegex(substring), 'g')) || [])
+      .length;
   }
 
   /**
@@ -363,7 +373,9 @@ class StringUtilities {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+    return (
+      parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i]
+    );
   }
 
   /**
@@ -381,14 +393,14 @@ class StringUtilities {
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
-    
+
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const hours = String(d.getHours()).padStart(2, '0');
     const minutes = String(d.getMinutes()).padStart(2, '0');
     const seconds = String(d.getSeconds()).padStart(2, '0');
-    
+
     return format
       .replace('YYYY', year)
       .replace('MM', month)
@@ -475,25 +487,25 @@ class StringUtilities {
    */
   levenshteinDistance(str1, str2) {
     if (!str1 || !str2) return 0;
-    
-    const matrix = Array(str2.length + 1).fill(null).map(() => 
-      Array(str1.length + 1).fill(null)
-    );
-    
+
+    const matrix = Array(str2.length + 1)
+      .fill(null)
+      .map(() => Array(str1.length + 1).fill(null));
+
     for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
     for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-    
+
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
         const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1,
           matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + indicator
+          matrix[j - 1][i - 1] + indicator,
         );
       }
     }
-    
+
     return matrix[str2.length][str1.length];
   }
 

@@ -1,8 +1,7 @@
 // Device Manager Module
 // Handles local and remote device management, ADB operations, and device discovery
 
-const { exec, spawn } = require('child_process');
-const path = require('path');
+const { exec } = require('child_process');
 
 class DeviceManager {
   constructor(configManager, validationManager) {
@@ -17,10 +16,10 @@ class DeviceManager {
    */
   async getLocalDevices() {
     if (this.configManager.get('DEVICE_SOURCE') !== 'local') {
-      return { 
-        success: true, 
+      return {
+        success: true,
         devices: [],
-        source: 'none'
+        source: 'none',
       };
     }
 
@@ -30,8 +29,9 @@ class DeviceManager {
           console.error(`Error al ejecutar "adb devices": ${error.message}`);
           return resolve({
             success: false,
-            error: 'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.',
-            devices: []
+            error:
+              'No se pudo ejecutar el comando ADB. Asegúrate de que esté instalado y en el PATH.',
+            devices: [],
           });
         }
 
@@ -48,7 +48,7 @@ class DeviceManager {
         resolve({
           success: true,
           devices,
-          source: 'local'
+          source: 'local',
         });
       });
     });
@@ -58,30 +58,34 @@ class DeviceManager {
    * Get detailed information about a specific device
    */
   async getDeviceInfo(deviceId) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid device ID',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     try {
-      const deviceInfo = await this.executeAdbCommand(deviceId, 'shell getprop');
+      const deviceInfo = await this.executeAdbCommand(
+        deviceId,
+        'shell getprop',
+      );
       const properties = this.parseDeviceProperties(deviceInfo);
 
       return {
         success: true,
         deviceId,
         properties,
-        isOnline: true
+        isOnline: true,
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: 'Failed to get device information',
-        deviceId
+        deviceId,
       };
     }
   }
@@ -90,15 +94,19 @@ class DeviceManager {
    * Check if a device is connected and available
    */
   async isDeviceAvailable(deviceId) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
       return false;
     }
 
     try {
-      const result = await this.executeAdbCommand(deviceId, 'shell echo "test"');
+      const result = await this.executeAdbCommand(
+        deviceId,
+        'shell echo "test"',
+      );
       return result.success;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -126,7 +134,10 @@ class DeviceManager {
    */
   async getDeviceBattery(deviceId) {
     try {
-      const result = await this.executeAdbCommand(deviceId, 'shell dumpsys battery');
+      const result = await this.executeAdbCommand(
+        deviceId,
+        'shell dumpsys battery',
+      );
       if (result.success) {
         const levelMatch = result.output.match(/level: (\d+)/);
         if (levelMatch) {
@@ -152,9 +163,9 @@ class DeviceManager {
       const result = await this.getLocalDevices();
       if (result.success) {
         const currentDevices = new Set(result.devices);
-        
+
         // Detect new devices
-        currentDevices.forEach(deviceId => {
+        currentDevices.forEach((deviceId) => {
           if (!this.monitoredDevices.has(deviceId)) {
             this.onDeviceConnected(deviceId);
             this.monitoredDevices.add(deviceId);
@@ -162,7 +173,7 @@ class DeviceManager {
         });
 
         // Detect disconnected devices
-        this.monitoredDevices.forEach(deviceId => {
+        this.monitoredDevices.forEach((deviceId) => {
           if (!currentDevices.has(deviceId)) {
             this.onDeviceDisconnected(deviceId);
             this.monitoredDevices.delete(deviceId);
@@ -189,13 +200,13 @@ class DeviceManager {
           resolve({
             success: false,
             error: error.message,
-            stderr
+            stderr,
           });
         } else {
           resolve({
             success: true,
             output: stdout,
-            stderr
+            stderr,
           });
         }
       });
@@ -206,12 +217,13 @@ class DeviceManager {
    * Install APK on device
    */
   async installApk(deviceId, apkPath) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid device ID',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
@@ -220,7 +232,10 @@ class DeviceManager {
     }
 
     try {
-      const result = await this.executeAdbCommand(deviceId, `install "${apkPath}"`);
+      const result = await this.executeAdbCommand(
+        deviceId,
+        `install "${apkPath}"`,
+      );
       if (result.success) {
         return { success: true, message: 'APK installed successfully' };
       } else {
@@ -235,17 +250,21 @@ class DeviceManager {
    * Uninstall app from device
    */
   async uninstallApp(deviceId, packageName) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid device ID',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     try {
-      const result = await this.executeAdbCommand(deviceId, `uninstall ${packageName}`);
+      const result = await this.executeAdbCommand(
+        deviceId,
+        `uninstall ${packageName}`,
+      );
       if (result.success) {
         return { success: true, message: 'App uninstalled successfully' };
       } else {
@@ -260,24 +279,31 @@ class DeviceManager {
    * Take screenshot from device
    */
   async takeScreenshot(deviceId, outputPath) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid device ID',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     try {
       // Take screenshot on device
-      const screenshotResult = await this.executeAdbCommand(deviceId, 'shell screencap -p /sdcard/screenshot.png');
+      const screenshotResult = await this.executeAdbCommand(
+        deviceId,
+        'shell screencap -p /sdcard/screenshot.png',
+      );
       if (!screenshotResult.success) {
         return { success: false, error: 'Failed to capture screenshot' };
       }
 
       // Pull screenshot to local machine
-      const pullResult = await this.executeAdbCommand(deviceId, `pull /sdcard/screenshot.png "${outputPath}"`);
+      const pullResult = await this.executeAdbCommand(
+        deviceId,
+        `pull /sdcard/screenshot.png "${outputPath}"`,
+      );
       if (!pullResult.success) {
         return { success: false, error: 'Failed to pull screenshot' };
       }
@@ -295,12 +321,13 @@ class DeviceManager {
    * Get device logs
    */
   async getDeviceLogs(deviceId, options = {}) {
-    const validationErrors = this.validationManager.validateDeviceSerial(deviceId);
+    const validationErrors =
+      this.validationManager.validateDeviceSerial(deviceId);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid device ID',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
@@ -308,7 +335,7 @@ class DeviceManager {
       const { tag = '*', level = 'V', lines = 100 } = options;
       const command = `shell logcat -d -s ${tag}:${level} -t ${lines}`;
       const result = await this.executeAdbCommand(deviceId, command);
-      
+
       if (result.success) {
         return { success: true, logs: result.output };
       } else {
@@ -325,8 +352,8 @@ class DeviceManager {
   parseDeviceProperties(output) {
     const properties = {};
     const lines = output.split('\n');
-    
-    lines.forEach(line => {
+
+    lines.forEach((line) => {
       const match = line.match(/\[([^\]]+)\]:\s*\[([^\]]*)\]/);
       if (match) {
         properties[match[1]] = match[2];
@@ -341,15 +368,15 @@ class DeviceManager {
    */
   updateDeviceCache(devices) {
     const now = Date.now();
-    
+
     // Add new devices
-    devices.forEach(deviceId => {
+    devices.forEach((deviceId) => {
       if (!this.devices.has(deviceId)) {
         this.devices.set(deviceId, {
           id: deviceId,
           firstSeen: now,
           lastSeen: now,
-          status: 'connected'
+          status: 'connected',
         });
       } else {
         const device = this.devices.get(deviceId);

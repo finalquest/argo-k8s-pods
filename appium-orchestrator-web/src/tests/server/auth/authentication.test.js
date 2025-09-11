@@ -7,13 +7,13 @@ describe('Authentication System', () => {
   beforeEach(() => {
     // Store original environment variables
     originalEnv = { ...process.env };
-    
+
     // Clear environment variables for clean testing
     delete process.env.GOOGLE_CLIENT_ID;
     delete process.env.GOOGLE_CLIENT_SECRET;
     delete process.env.SESSION_SECRET;
     delete process.env.GOOGLE_HOSTED_DOMAIN;
-    
+
     // Mock console.error and process.exit for testing
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(process, 'exit').mockImplementation(() => {});
@@ -28,36 +28,51 @@ describe('Authentication System', () => {
   describe('Environment Variable Validation', () => {
     test('should validate required authentication environment variables', () => {
       // Test that the validation logic correctly identifies missing variables
-      
+
       // Missing GOOGLE_CLIENT_ID
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
+
       // Simulate the validation logic from server.js
-      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
-      
+      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } =
+        process.env;
+
       if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(true).toBe(true); // Validation should catch this
       }
-      
+
       // Missing GOOGLE_CLIENT_SECRET
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       delete process.env.GOOGLE_CLIENT_SECRET;
-      
-      const { GOOGLE_CLIENT_ID: id2, GOOGLE_CLIENT_SECRET: secret2, SESSION_SECRET: session2 } = process.env;
+
+      const {
+        GOOGLE_CLIENT_ID: id2,
+        GOOGLE_CLIENT_SECRET: secret2,
+        SESSION_SECRET: session2,
+      } = process.env;
       if (!id2 || !secret2 || !session2) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(true).toBe(true); // Validation should catch this
       }
-      
+
       // Missing SESSION_SECRET
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       delete process.env.SESSION_SECRET;
-      
-      const { GOOGLE_CLIENT_ID: id3, GOOGLE_CLIENT_SECRET: secret3, SESSION_SECRET: session3 } = process.env;
+
+      const {
+        GOOGLE_CLIENT_ID: id3,
+        GOOGLE_CLIENT_SECRET: secret3,
+        SESSION_SECRET: session3,
+      } = process.env;
       if (!id3 || !secret3 || !session3) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(true).toBe(true); // Validation should catch this
       }
     });
@@ -66,9 +81,10 @@ describe('Authentication System', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
-      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
-      
+
+      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } =
+        process.env;
+
       // All variables are present, validation should pass
       expect(GOOGLE_CLIENT_ID).toBe('test-id');
       expect(GOOGLE_CLIENT_SECRET).toBe('test-secret');
@@ -81,16 +97,16 @@ describe('Authentication System', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
+
       // Test session configuration values
       const expectedMaxAge = 24 * 60 * 60 * 1000; // 24 hours
       const sessionConfig = {
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: expectedMaxAge }
+        cookie: { maxAge: expectedMaxAge },
       };
-      
+
       expect(sessionConfig.secret).toBe('test-secret');
       expect(sessionConfig.resave).toBe(false);
       expect(sessionConfig.saveUninitialized).toBe(false);
@@ -101,11 +117,11 @@ describe('Authentication System', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
+
       // Test without GOOGLE_HOSTED_DOMAIN
       let hostedDomain = process.env.GOOGLE_HOSTED_DOMAIN;
       expect(hostedDomain).toBeUndefined();
-      
+
       // Test with GOOGLE_HOSTED_DOMAIN
       process.env.GOOGLE_HOSTED_DOMAIN = 'test.com';
       hostedDomain = process.env.GOOGLE_HOSTED_DOMAIN;
@@ -122,19 +138,19 @@ describe('Authentication System', () => {
         }
         res.redirect('/login');
       };
-      
-      const mockReq = { 
+
+      const mockReq = {
         isAuthenticated: () => false,
         session: {},
-        originalUrl: '/protected'
+        originalUrl: '/protected',
       };
       const mockRes = {
-        redirect: jest.fn()
+        redirect: jest.fn(),
       };
       const mockNext = jest.fn();
 
       ensureAuthenticated(mockReq, mockRes, mockNext);
-      
+
       expect(mockRes.redirect).toHaveBeenCalledWith('/login');
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -146,19 +162,19 @@ describe('Authentication System', () => {
         }
         res.redirect('/login');
       };
-      
-      const mockReq = { 
+
+      const mockReq = {
         isAuthenticated: () => true,
         session: {},
-        user: { id: 'test-user' }
+        user: { id: 'test-user' },
       };
       const mockRes = {
-        redirect: jest.fn()
+        redirect: jest.fn(),
       };
       const mockNext = jest.fn();
 
       ensureAuthenticated(mockReq, mockRes, mockNext);
-      
+
       expect(mockRes.redirect).not.toHaveBeenCalled();
       expect(mockNext).toHaveBeenCalled();
     });
@@ -169,14 +185,14 @@ describe('Authentication System', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
+
       // Test that required OAuth configuration is present
       const oauthConfig = {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/auth/google/callback'
+        callbackURL: '/auth/google/callback',
       };
-      
+
       expect(oauthConfig.clientID).toBe('test-id');
       expect(oauthConfig.clientSecret).toBe('test-secret');
       expect(oauthConfig.callbackURL).toBe('/auth/google/callback');
@@ -186,7 +202,7 @@ describe('Authentication System', () => {
       // Test weak session secret (should still work for development)
       process.env.SESSION_SECRET = 'short';
       expect(process.env.SESSION_SECRET.length).toBeGreaterThan(0);
-      
+
       // Test strong session secret
       process.env.SESSION_SECRET = 'a-very-long-and-secure-session-secret-key';
       expect(process.env.SESSION_SECRET.length).toBeGreaterThan(32);
@@ -196,11 +212,11 @@ describe('Authentication System', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
+
       // Test without domain restriction
       let hostedDomain = process.env.GOOGLE_HOSTED_DOMAIN;
       expect(hostedDomain).toBeUndefined();
-      
+
       // Test with domain restriction
       process.env.GOOGLE_HOSTED_DOMAIN = 'test.com';
       hostedDomain = process.env.GOOGLE_HOSTED_DOMAIN;
@@ -213,12 +229,12 @@ describe('Authentication System', () => {
       // Test that route paths are correctly defined
       const authRoutes = [
         '/auth/google',
-        '/auth/google/callback', 
+        '/auth/google/callback',
         '/auth/logout',
-        '/api/current-user'
+        '/api/current-user',
       ];
-      
-      authRoutes.forEach(route => {
+
+      authRoutes.forEach((route) => {
         expect(route.startsWith('/')).toBe(true);
         expect(route.length).toBeGreaterThan(1);
       });
@@ -230,14 +246,14 @@ describe('Authentication System', () => {
       const callbackRoute = '/auth/google/callback';
       const logoutRoute = '/auth/logout';
       const currentUserRoute = '/api/current-user';
-      
+
       // Google OAuth routes
       expect(googleAuthRoute).toContain('/auth/google');
       expect(callbackRoute).toContain('/auth/google/callback');
-      
+
       // Session management
       expect(logoutRoute).toContain('/auth/logout');
-      
+
       // API route
       expect(currentUserRoute).toContain('/api/current-user');
     });

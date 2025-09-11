@@ -130,7 +130,9 @@ describe('API Functions', () => {
     });
 
     test('retorna workspace status cuando la respuesta es exitosa', async () => {
-      const mockStatus = { modified_features: ['feature1.feature', 'feature2.feature'] };
+      const mockStatus = {
+        modified_features: ['feature1.feature', 'feature2.feature'],
+      };
       fetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -166,7 +168,7 @@ describe('API Functions', () => {
           content: mockContent,
           isLocal: true,
           workspaceExists: true,
-          message: 'Contenido cargado desde workspace local (editable)'
+          message: 'Contenido cargado desde workspace local (editable)',
         }),
       });
 
@@ -176,7 +178,7 @@ describe('API Functions', () => {
         content: mockContent,
         isLocal: true,
         workspaceExists: true,
-        message: 'Contenido cargado desde workspace local (editable)'
+        message: 'Contenido cargado desde workspace local (editable)',
       });
       expect(fetch).toHaveBeenCalledWith(
         '/api/feature-content?branch=main&client=client1&feature=test',
@@ -220,17 +222,21 @@ describe('API Functions', () => {
           content: mockContent,
           isLocal: false,
           workspaceExists: false,
-          message: 'Contenido cargado desde repositorio remoto (solo lectura)'
+          message: 'Contenido cargado desde repositorio remoto (solo lectura)',
         }),
       });
 
-      const result = await getFeatureContent('main', 'client with spaces', 'test-feature');
+      const result = await getFeatureContent(
+        'main',
+        'client with spaces',
+        'test-feature',
+      );
 
       expect(result).toEqual({
         content: mockContent,
         isLocal: false,
         workspaceExists: false,
-        message: 'Contenido cargado desde repositorio remoto (solo lectura)'
+        message: 'Contenido cargado desde repositorio remoto (solo lectura)',
       });
       // El navegador no codifica automáticamente los espacios en URLs construidos manualmente
       expect(fetch).toHaveBeenCalledWith(
@@ -248,7 +254,12 @@ describe('API Functions', () => {
         json: async () => mockResponse,
       });
 
-      const result = await saveFeatureContent('main', 'client1', 'test', 'Feature content');
+      const result = await saveFeatureContent(
+        'main',
+        'client1',
+        'test',
+        'Feature content',
+      );
 
       expect(result).toEqual(mockResponse);
       expect(fetch).toHaveBeenCalledWith('/api/feature-content', {
@@ -268,7 +279,12 @@ describe('API Functions', () => {
     test('retorna null cuando hay error de red', async () => {
       fetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await saveFeatureContent('main', 'client1', 'test', 'Feature content');
+      const result = await saveFeatureContent(
+        'main',
+        'client1',
+        'test',
+        'Feature content',
+      );
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -284,7 +300,12 @@ describe('API Functions', () => {
         json: async () => ({ error: 'Invalid feature content' }),
       });
 
-      const result = await saveFeatureContent('main', 'client1', 'test', 'Feature content');
+      const result = await saveFeatureContent(
+        'main',
+        'client1',
+        'test',
+        'Feature content',
+      );
 
       expect(result).toBeNull();
       expect(console.error).toHaveBeenCalledWith(
@@ -310,7 +331,7 @@ describe('API Functions', () => {
       // Todas deberían completarse con valores seguros
       results.forEach((result, index) => {
         expect(result.status).toBe('fulfilled');
-        
+
         if (index === 0) {
           // getCurrentUser retorna null en error
           expect(result.value).toBeNull();

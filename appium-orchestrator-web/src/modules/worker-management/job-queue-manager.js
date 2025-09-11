@@ -2,8 +2,8 @@
 // Handles job queue operations, job lifecycle management, and job assignment
 
 class JobQueueManager {
-  constructor(workerPoolManager) {
-    this.workerPoolManager = workerPoolManager;
+  constructor() {
+    this.workerPoolManager = null; // Will be set by server after initialization
     this.jobQueue = [];
     this.jobIdCounter = 0;
     this.io = null; // Will be set by server
@@ -69,10 +69,14 @@ class JobQueueManager {
     }
 
     // If no suitable worker found and we can create a new one
-    if (this.workerPoolManager.getWorkers().length < this.workerPoolManager.maxWorkers) {
+    if (
+      this.workerPoolManager.getWorkers().length <
+      this.workerPoolManager.maxWorkers
+    ) {
       const apkSourceType = job.localApk ? 'local' : 'registry';
-      const apkIdentifier = job.localApk || job.apkVersion || process.env.APK_PATH;
-      
+      const apkIdentifier =
+        job.localApk || job.apkVersion || process.env.APK_PATH;
+
       const newWorker = this.workerPoolManager.createWorker(
         job.branch,
         job.client,
@@ -157,7 +161,10 @@ class JobQueueManager {
       jobIdCounter: this.jobIdCounter,
       averageWaitTime: this.calculateAverageWaitTime(),
       oldestJob: this.jobQueue.length > 0 ? this.jobQueue[0] : null,
-      newestJob: this.jobQueue.length > 0 ? this.jobQueue[this.jobQueue.length - 1] : null,
+      newestJob:
+        this.jobQueue.length > 0
+          ? this.jobQueue[this.jobQueue.length - 1]
+          : null,
     };
   }
 
@@ -193,7 +200,9 @@ class JobQueueManager {
 
     // Check if job is running on a worker
     const workers = this.workerPoolManager.getWorkers();
-    const workerWithJob = workers.find((w) => w.currentJob && w.currentJob.id === jobId);
+    const workerWithJob = workers.find(
+      (w) => w.currentJob && w.currentJob.id === jobId,
+    );
     if (workerWithJob) {
       return {
         id: jobId,
@@ -223,13 +232,17 @@ class JobQueueManager {
 
     // Check if job is running on a worker
     const workers = this.workerPoolManager.getWorkers();
-    const workerWithJob = workers.find((w) => w.currentJob && w.currentJob.id === jobId);
+    const workerWithJob = workers.find(
+      (w) => w.currentJob && w.currentJob.id === jobId,
+    );
     if (workerWithJob) {
       // Mark job for cancellation
       workerWithJob.currentJob.cancelled = true;
       // Send cancellation signal to worker
       workerWithJob.process.send({ type: 'CANCEL_JOB', jobId });
-      console.log(`Señal de cancelación enviada para job ${jobId} en worker ${workerWithJob.id}`);
+      console.log(
+        `Señal de cancelación enviada para job ${jobId} en worker ${workerWithJob.id}`,
+      );
       return { success: true, status: 'cancellation_sent' };
     }
 
@@ -248,7 +261,7 @@ class JobQueueManager {
     const job = this.jobQueue.splice(jobIndex, 1)[0];
     this.jobQueue.unshift(job);
     console.log(`Job ${jobId} prioritizado y movido al frente de la cola`);
-    
+
     this.processQueue();
     return { success: true, job };
   }

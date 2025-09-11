@@ -2,7 +2,13 @@
 // Handles real-time communication, event handling, and client connections
 
 class SocketIOManager {
-  constructor(authenticationManager, workerPoolManager, jobQueueManager, configManager, validationManager) {
+  constructor(
+    authenticationManager,
+    workerPoolManager,
+    jobQueueManager,
+    configManager,
+    validationManager,
+  ) {
     this.authenticationManager = authenticationManager;
     this.workerPoolManager = workerPoolManager;
     this.jobQueueManager = jobQueueManager;
@@ -17,7 +23,8 @@ class SocketIOManager {
    */
   initialize(server, sessionMiddleware, passport) {
     const { Server } = require('socket.io');
-    const wrap = (middleware) => (socket, next) => middleware(socket.request, {}, next);
+    const wrap = (middleware) => (socket, next) =>
+      middleware(socket.request, {}, next);
 
     this.io = new Server(server, {
       cors: {
@@ -26,20 +33,32 @@ class SocketIOManager {
       },
     });
 
-    // Apply authentication middleware
+    // Apply session middleware (always needed for socket sessions)
     this.io.use(wrap(sessionMiddleware));
-    this.io.use(wrap(passport.initialize()));
-    this.io.use(wrap(passport.session()));
 
-    // Custom authentication middleware
-    this.io.use((socket, next) => {
-      if (socket.request.user) {
+    // Apply authentication middleware only if authentication is enabled
+    if (this.authenticationManager.isAuthenticationEnabled()) {
+      this.io.use(wrap(passport.initialize()));
+      this.io.use(wrap(passport.session()));
+
+      // Custom authentication middleware
+      this.io.use((socket, next) => {
+        if (socket.request.user) {
+          next();
+        } else {
+          console.log('Rechazando conexión de socket no autenticada.');
+          next(new Error('unauthorized'));
+        }
+      });
+    } else {
+      // Development mode - allow all connections
+      console.log('🔓 Socket.io en modo desarrollo - sin autenticación');
+      this.io.use((socket, next) => {
+        // Attach development user to socket request
+        socket.request.user = this.configManager.getDevelopmentUser();
         next();
-      } else {
-        console.log('Rechazando conexión de socket no autenticada.');
-        next(new Error('unauthorized'));
-      }
-    });
+      });
+    }
 
     this.setupEventHandlers();
     console.log('Socket.io manager initialized');
@@ -156,8 +175,8 @@ class SocketIOManager {
    * Handle normal test execution
    */
   handleNormalTest(socket, data, persistentWorkspace) {
-    const job = { 
-      ...data, 
+    const job = {
+      ...data,
       persistentWorkspace,
     };
     this.jobQueueManager.addJob(job);
@@ -202,7 +221,7 @@ class SocketIOManager {
     socket.on('stop_test', (data) => {
       console.log('--- DEBUG: Datos recibidos en stop_test ---', data);
       const worker = this.workerPoolManager.getWorkerById(data.slotId);
-      
+
       if (worker) {
         this.emitLogUpdate({
           logLine: `--- 🛑 Deteniendo ejecución en slot ${data.slotId}... ---
@@ -227,7 +246,7 @@ class SocketIOManager {
     socket.on('cancel_job', (data) => {
       console.log('--- DEBUG: Datos recibidos en cancel_job ---', data);
       const result = this.jobQueueManager.cancelJob(data.jobId);
-      
+
       if (result.success) {
         this.emitLogUpdate({
           logLine: `--- ❌ Job ${data.jobId} cancelado. ---
@@ -254,7 +273,7 @@ class SocketIOManager {
         logLine: `--- 🛑 Deteniendo todas las ejecuciones... ---
 `,
       });
-      
+
       this.workerPoolManager.getWorkers().forEach((worker) => {
         if (worker.status === 'busy' && !worker.terminating) {
           worker.terminating = true;

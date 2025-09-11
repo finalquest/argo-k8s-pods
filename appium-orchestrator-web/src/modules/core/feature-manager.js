@@ -19,14 +19,14 @@ class FeatureManager {
   async getFeatures(branch, client) {
     const validationErrors = this.validationManager.validateMultiple({
       branch: { type: 'branch', value: branch },
-      client: { type: 'client', value: client }
+      client: { type: 'client', value: client },
     });
 
     if (!validationErrors.isValid) {
       return {
         success: false,
         error: 'Invalid parameters',
-        details: validationErrors.errors
+        details: validationErrors.errors,
       };
     }
 
@@ -37,17 +37,24 @@ class FeatureManager {
     try {
       // Try to read from persistent workspace first
       if (this.configManager.isEnabled('persistentWorkspaces')) {
-        const workspaceResult = await this.getFeaturesFromPersistentWorkspace(branch, client);
+        const workspaceResult = await this.getFeaturesFromPersistentWorkspace(
+          branch,
+          client,
+        );
         if (workspaceResult.success) {
           featuresPath = workspaceResult.featuresPath;
           foundInPersistent = true;
-          console.log(`[API Features] Leyendo features desde el workspace local para la branch: ${branch}`);
+          console.log(
+            `[API Features] Leyendo features desde el workspace local para la branch: ${branch}`,
+          );
         }
       }
 
       // If not found in persistent workspace, clone from remote
       if (!foundInPersistent) {
-        console.log(`[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`);
+        console.log(
+          `[API Features] No se encontró workspace local para la branch ${branch}. Consultando repositorio remoto.`,
+        );
         const cloneResult = await this.cloneFeaturesFromRemote(branch, client);
         if (!cloneResult.success) {
           return cloneResult;
@@ -57,19 +64,25 @@ class FeatureManager {
       }
 
       // Read features from the determined path
-      const features = await this.readFeaturesFromPath(featuresPath, featuresPath);
-      
+      const features = await this.readFeaturesFromPath(
+        featuresPath,
+        featuresPath,
+      );
+
       return {
         success: true,
         features,
         source: foundInPersistent ? 'persistent' : 'remote',
-        featuresPath
+        featuresPath,
       };
     } catch (error) {
-      console.error(`Error al obtener features para branch '${branch}' y client '${client}':`, error);
+      console.error(
+        `Error al obtener features para branch '${branch}' y client '${client}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al listar features.'
+        error: 'Error interno al listar features.',
       };
     } finally {
       // Clean up temporary directory if used
@@ -88,34 +101,34 @@ class FeatureManager {
       const workspacePath = path.join(
         this.configManager.get('PERSISTENT_WORKSPACES_ROOT'),
         sanitizedBranch,
-        'appium'
+        'appium',
       );
-      
+
       const potentialFeaturesPath = path.join(
         workspacePath,
         'test',
         'features',
         client,
         'feature',
-        'modulos'
+        'modulos',
       );
 
       if (fs.existsSync(potentialFeaturesPath)) {
         return {
           success: true,
           featuresPath: potentialFeaturesPath,
-          workspacePath
+          workspacePath,
         };
       }
 
       return {
         success: false,
-        error: 'Persistent workspace not found'
+        error: 'Persistent workspace not found',
       };
     } catch (error) {
       return {
         success: false,
-        error: `Error accessing persistent workspace: ${error.message}`
+        error: `Error accessing persistent workspace: ${error.message}`,
       };
     }
   }
@@ -127,20 +140,20 @@ class FeatureManager {
     try {
       const tempDir = path.join(
         os.tmpdir(),
-        `appium-features-${crypto.randomBytes(16).toString('hex')}`
+        `appium-features-${crypto.randomBytes(16).toString('hex')}`,
       );
-      
+
       const authenticatedUrl = this.getAuthenticatedUrl();
-      
+
       await fs.promises.mkdir(tempDir, { recursive: true });
-      
+
       const git = simpleGit(tempDir);
       await git.clone(authenticatedUrl, tempDir, [
         '--branch',
         branch,
         '--depth',
         '1',
-        '--no-checkout'
+        '--no-checkout',
       ]);
 
       const featureDirForCheckout = path.join(
@@ -148,7 +161,7 @@ class FeatureManager {
         'features',
         client,
         'feature',
-        'modulos'
+        'modulos',
       );
 
       await git.checkout(branch, ['--', featureDirForCheckout]);
@@ -157,13 +170,16 @@ class FeatureManager {
       return {
         success: true,
         featuresPath,
-        tempDir
+        tempDir,
       };
     } catch (error) {
-      console.error(`Error al clonar o hacer checkout para la branch '${branch}':`, error);
+      console.error(
+        `Error al clonar o hacer checkout para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al listar features.'
+        error: 'Error interno al listar features.',
       };
     }
   }
@@ -175,18 +191,18 @@ class FeatureManager {
     const entries = await fs.promises.readdir(currentDirectory, {
       withFileTypes: true,
     });
-    
+
     const nodes = [];
-    
+
     for (const dirent of entries) {
       const fullPath = path.join(currentDirectory, dirent.name);
-      
+
       if (dirent.isDirectory()) {
         nodes.push({
           type: 'folder',
           name: dirent.name,
           path: path.relative(basePath, fullPath),
-          children: await this.readFeaturesRecursive(basePath, fullPath)
+          children: await this.readFeaturesRecursive(basePath, fullPath),
         });
       } else if (dirent.isFile() && dirent.name.endsWith('.feature')) {
         // Calculate the relative path from the basePath to the feature file
@@ -195,11 +211,11 @@ class FeatureManager {
           type: 'file',
           name: dirent.name, // Keep original file name for display
           featureName: relativePath.replace(/\.feature$/, ''), // This is the full relative path without extension
-          path: relativePath
+          path: relativePath,
         });
       }
     }
-    
+
     // Sort so folders appear before files
     return nodes.sort((a, b) => {
       if (a.type === b.type) {
@@ -233,14 +249,14 @@ class FeatureManager {
     const validationErrors = this.validationManager.validateMultiple({
       branch: { type: 'branch', value: branch },
       client: { type: 'client', value: client },
-      feature: { type: 'featureFile', value: feature }
+      feature: { type: 'featureFile', value: feature },
     });
 
     if (!validationErrors.isValid) {
       return {
         success: false,
         error: 'Invalid parameters',
-        details: validationErrors.errors
+        details: validationErrors.errors,
       };
     }
 
@@ -251,7 +267,11 @@ class FeatureManager {
     try {
       // Try persistent workspace first
       if (this.configManager.isEnabled('persistentWorkspaces')) {
-        const persistentResult = await this.getFeatureFromPersistentWorkspace(branch, client, feature);
+        const persistentResult = await this.getFeatureFromPersistentWorkspace(
+          branch,
+          client,
+          feature,
+        );
         if (persistentResult.success) {
           featurePath = persistentResult.featurePath;
           foundInPersistent = true;
@@ -260,7 +280,11 @@ class FeatureManager {
 
       // If not found in persistent workspace, clone from remote
       if (!foundInPersistent) {
-        const cloneResult = await this.cloneFeatureFromRemote(branch, client, feature);
+        const cloneResult = await this.cloneFeatureFromRemote(
+          branch,
+          client,
+          feature,
+        );
         if (!cloneResult.success) {
           return cloneResult;
         }
@@ -270,18 +294,21 @@ class FeatureManager {
 
       // Read feature content
       const content = await fs.promises.readFile(featurePath, 'utf8');
-      
+
       return {
         success: true,
         content,
         path: feature,
-        source: foundInPersistent ? 'persistent' : 'remote'
+        source: foundInPersistent ? 'persistent' : 'remote',
       };
     } catch (error) {
-      console.error(`Error al obtener contenido del feature '${feature}':`, error);
+      console.error(
+        `Error al obtener contenido del feature '${feature}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al obtener el contenido del feature.'
+        error: 'Error interno al obtener el contenido del feature.',
       };
     } finally {
       // Clean up temporary directory if used
@@ -300,7 +327,7 @@ class FeatureManager {
       const workspacePath = path.join(
         this.configManager.get('PERSISTENT_WORKSPACES_ROOT'),
         sanitizedBranch,
-        'appium'
+        'appium',
       );
 
       const featurePath = path.join(
@@ -310,25 +337,25 @@ class FeatureManager {
         client,
         'feature',
         'modulos',
-        feature
+        feature,
       );
 
       if (fs.existsSync(featurePath)) {
         return {
           success: true,
           featurePath,
-          workspacePath
+          workspacePath,
         };
       }
 
       return {
         success: false,
-        error: 'Feature not found in persistent workspace'
+        error: 'Feature not found in persistent workspace',
       };
     } catch (error) {
       return {
         success: false,
-        error: `Error accessing persistent workspace: ${error.message}`
+        error: `Error accessing persistent workspace: ${error.message}`,
       };
     }
   }
@@ -340,20 +367,20 @@ class FeatureManager {
     try {
       const tempDir = path.join(
         os.tmpdir(),
-        `appium-feature-${crypto.randomBytes(16).toString('hex')}`
+        `appium-feature-${crypto.randomBytes(16).toString('hex')}`,
       );
-      
+
       const authenticatedUrl = this.getAuthenticatedUrl();
-      
+
       await fs.promises.mkdir(tempDir, { recursive: true });
-      
+
       const git = simpleGit(tempDir);
       await git.clone(authenticatedUrl, tempDir, [
         '--branch',
         branch,
         '--depth',
         '1',
-        '--no-checkout'
+        '--no-checkout',
       ]);
 
       const featurePathInRepo = path.join(
@@ -362,7 +389,7 @@ class FeatureManager {
         client,
         'feature',
         'modulos',
-        feature
+        feature,
       );
 
       await git.checkout(branch, ['--', featurePathInRepo]);
@@ -371,13 +398,16 @@ class FeatureManager {
       return {
         success: true,
         featurePath,
-        tempDir
+        tempDir,
       };
     } catch (error) {
-      console.error(`Error al clonar feature '${feature}' para la branch '${branch}':`, error);
+      console.error(
+        `Error al clonar feature '${feature}' para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al obtener el contenido del feature.'
+        error: 'Error interno al obtener el contenido del feature.',
       };
     }
   }
@@ -389,21 +419,22 @@ class FeatureManager {
     const validationErrors = this.validationManager.validateMultiple({
       branch: { type: 'branch', value: branch },
       client: { type: 'client', value: client },
-      feature: { type: 'featureFile', value: feature }
+      feature: { type: 'featureFile', value: feature },
     });
 
     if (!validationErrors.isValid) {
       return {
         success: false,
         error: 'Invalid parameters',
-        details: validationErrors.errors
+        details: validationErrors.errors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
@@ -412,7 +443,7 @@ class FeatureManager {
       const workspacePath = path.join(
         this.configManager.get('PERSISTENT_WORKSPACES_ROOT'),
         sanitizedBranch,
-        'appium'
+        'appium',
       );
 
       const featurePath = path.join(
@@ -422,7 +453,7 @@ class FeatureManager {
         client,
         'feature',
         'modulos',
-        feature
+        feature,
       );
 
       // Ensure directory exists
@@ -434,13 +465,13 @@ class FeatureManager {
       return {
         success: true,
         message: 'Feature guardado exitosamente',
-        path: featurePath
+        path: featurePath,
       };
     } catch (error) {
       console.error(`Error al guardar feature '${feature}':`, error);
       return {
         success: false,
-        error: 'Error interno al guardar el feature.'
+        error: 'Error interno al guardar el feature.',
       };
     }
   }
@@ -460,7 +491,10 @@ class FeatureManager {
     try {
       await fs.promises.rm(tempDir, { recursive: true, force: true });
     } catch (error) {
-      console.warn(`Warning: Could not clean up temp directory ${tempDir}:`, error);
+      console.warn(
+        `Warning: Could not clean up temp directory ${tempDir}:`,
+        error,
+      );
     }
   }
 
@@ -513,12 +547,12 @@ class FeatureManager {
         totalFolders: 0,
         totalFiles: 0,
         featureSizes: {},
-        lastModified: {}
+        lastModified: {},
       };
 
       // Count features and calculate sizes
       const countFeatures = (nodes) => {
-        nodes.forEach(node => {
+        nodes.forEach((node) => {
           if (node.type === 'folder') {
             stats.totalFolders++;
             if (node.children) {
@@ -536,12 +570,12 @@ class FeatureManager {
       return {
         success: true,
         statistics: stats,
-        features
+        features,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Error getting feature statistics: ${error.message}`
+        error: `Error getting feature statistics: ${error.message}`,
       };
     }
   }

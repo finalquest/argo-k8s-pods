@@ -22,26 +22,27 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: true,
           status: 'not_found',
           message: 'Workspace no encontrado',
-          workspacePath
+          workspacePath,
         };
       }
 
@@ -52,7 +53,7 @@ class WorkspaceManager {
           success: true,
           status: 'invalid',
           message: 'Workspace existe pero no es un repositorio Git válido',
-          workspacePath
+          workspacePath,
         };
       }
 
@@ -69,19 +70,22 @@ class WorkspaceManager {
         deleted: status.deleted,
         staged: status.staged,
         workspacePath,
-        lastChecked: new Date().toISOString()
+        lastChecked: new Date().toISOString(),
       };
 
       return {
         success: true,
         status: 'ready',
-        workspace: workspaceInfo
+        workspace: workspaceInfo,
       };
     } catch (error) {
-      console.error(`Error al obtener estado del workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al obtener estado del workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al obtener el estado del workspace.'
+        error: 'Error interno al obtener el estado del workspace.',
       };
     }
   }
@@ -95,25 +99,26 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (fs.existsSync(workspacePath)) {
         return {
           success: false,
           error: 'Workspace ya existe para esta branch',
-          workspacePath
+          workspacePath,
         };
       }
 
@@ -123,22 +128,22 @@ class WorkspaceManager {
       // Clone the repository
       const authenticatedUrl = this.getAuthenticatedUrl();
       const git = simpleGit(workspacePath);
-      
+
       await git.clone(authenticatedUrl, workspacePath, [
         '--branch',
         branch,
         '--depth',
-        '1'
+        '1',
       ]);
 
       // Verify the workspace was created successfully
       const status = await git.status();
-      
+
       const workspaceInfo = {
         branch: status.current,
         workspacePath,
         createdAt: new Date().toISOString(),
-        status: 'created'
+        status: 'created',
       };
 
       // Add to active workspaces
@@ -147,13 +152,16 @@ class WorkspaceManager {
       return {
         success: true,
         workspace: workspaceInfo,
-        message: 'Workspace creado exitosamente'
+        message: 'Workspace creado exitosamente',
       };
     } catch (error) {
-      console.error(`Error al crear workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al crear workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al crear el workspace.'
+        error: 'Error interno al crear el workspace.',
       };
     }
   }
@@ -167,20 +175,21 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       // Check if workspace already exists
       if (fs.existsSync(workspacePath)) {
         const statusResult = await this.getWorkspaceStatus(branch);
@@ -190,10 +199,13 @@ class WorkspaceManager {
       // Create new workspace
       return await this.createWorkspace(branch);
     } catch (error) {
-      console.error(`Error al inicializar workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al inicializar workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al inicializar el workspace.'
+        error: 'Error interno al inicializar el workspace.',
       };
     }
   }
@@ -207,29 +219,30 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: false,
-          error: 'Workspace no encontrado'
+          error: 'Workspace no encontrado',
         };
       }
 
       const git = simpleGit(workspacePath);
-      
+
       // Stash any local changes
       const status = await git.status();
       if (!status.isClean()) {
@@ -244,12 +257,15 @@ class WorkspaceManager {
         try {
           await git.stash(['pop']);
         } catch (stashError) {
-          console.warn('Warning: Could not pop stash after pull:', stashError.message);
+          console.warn(
+            'Warning: Could not pop stash after pull:',
+            stashError.message,
+          );
         }
       }
 
       const newStatus = await git.status();
-      
+
       return {
         success: true,
         message: 'Workspace actualizado exitosamente',
@@ -258,14 +274,17 @@ class WorkspaceManager {
           isClean: newStatus.isClean(),
           hasChanges: !newStatus.isClean(),
           workspacePath,
-          updatedAt: new Date().toISOString()
-        }
+          updatedAt: new Date().toISOString(),
+        },
       };
     } catch (error) {
-      console.error(`Error al actualizar workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al actualizar workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al actualizar el workspace.'
+        error: 'Error interno al actualizar el workspace.',
       };
     }
   }
@@ -279,37 +298,38 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: false,
-          error: 'Workspace no encontrado'
+          error: 'Workspace no encontrado',
         };
       }
 
       const git = simpleGit(workspacePath);
-      
+
       // Reset all changes
       await git.reset(['--hard']);
-      
+
       // Clean untracked files
       await git.clean(['-f', '-d']);
 
       const status = await git.status();
-      
+
       return {
         success: true,
         message: 'Workspace limpiado exitosamente',
@@ -318,14 +338,17 @@ class WorkspaceManager {
           isClean: status.isClean(),
           hasChanges: !status.isClean(),
           workspacePath,
-          cleanedAt: new Date().toISOString()
-        }
+          cleanedAt: new Date().toISOString(),
+        },
       };
     } catch (error) {
-      console.error(`Error al limpiar workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al limpiar workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al limpiar el workspace.'
+        error: 'Error interno al limpiar el workspace.',
       };
     }
   }
@@ -339,25 +362,26 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: true,
           message: 'Workspace no existe',
-          workspacePath
+          workspacePath,
         };
       }
 
@@ -370,13 +394,16 @@ class WorkspaceManager {
       return {
         success: true,
         message: 'Workspace eliminado exitosamente',
-        workspacePath
+        workspacePath,
       };
     } catch (error) {
-      console.error(`Error al eliminar workspace para la branch '${branch}':`, error);
+      console.error(
+        `Error al eliminar workspace para la branch '${branch}':`,
+        error,
+      );
       return {
         success: false,
-        error: 'Error interno al eliminar el workspace.'
+        error: 'Error interno al eliminar el workspace.',
       };
     }
   }
@@ -389,18 +416,20 @@ class WorkspaceManager {
       return {
         success: true,
         workspaces: [],
-        enabled: false
+        enabled: false,
       };
     }
 
     try {
-      const persistentRoot = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
-      
+      const persistentRoot = this.configManager.get(
+        'PERSISTENT_WORKSPACES_ROOT',
+      );
+
       if (!fs.existsSync(persistentRoot)) {
         return {
           success: true,
           workspaces: [],
-          enabled: true
+          enabled: true,
         };
       }
 
@@ -409,14 +438,14 @@ class WorkspaceManager {
 
       for (const dir of workspaceDirs) {
         const workspacePath = path.join(persistentRoot, dir, 'appium');
-        
+
         if (fs.existsSync(workspacePath)) {
           try {
             const git = simpleGit(workspacePath);
             const status = await git.status();
-            
+
             const stats = await fs.promises.stat(workspacePath);
-            
+
             workspaces.push({
               branch: dir,
               workspacePath,
@@ -425,14 +454,14 @@ class WorkspaceManager {
               hasChanges: !status.isClean(),
               createdAt: stats.birthtime,
               modifiedAt: stats.mtime,
-              status: 'ready'
+              status: 'ready',
             });
           } catch (error) {
             workspaces.push({
               branch: dir,
               workspacePath,
               status: 'error',
-              error: error.message
+              error: error.message,
             });
           }
         }
@@ -441,13 +470,13 @@ class WorkspaceManager {
       return {
         success: true,
         workspaces: workspaces.sort((a, b) => b.modifiedAt - a.modifiedAt),
-        enabled: true
+        enabled: true,
       };
     } catch (error) {
       console.error('Error al obtener lista de workspaces:', error);
       return {
         success: false,
-        error: 'Error interno al obtener la lista de workspaces.'
+        error: 'Error interno al obtener la lista de workspaces.',
       };
     }
   }
@@ -461,24 +490,25 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: false,
-          error: 'Workspace no encontrado'
+          error: 'Workspace no encontrado',
         };
       }
 
@@ -487,14 +517,14 @@ class WorkspaceManager {
           if (error) {
             resolve({
               success: false,
-              error: 'Error al obtener uso de disco'
+              error: 'Error al obtener uso de disco',
             });
           } else {
             const usage = stdout.trim().split('\t')[0];
             resolve({
               success: true,
               usage,
-              workspacePath
+              workspacePath,
             });
           }
         });
@@ -502,7 +532,7 @@ class WorkspaceManager {
     } catch (error) {
       return {
         success: false,
-        error: `Error al obtener uso de disco: ${error.message}`
+        error: `Error al obtener uso de disco: ${error.message}`,
       };
     }
   }
@@ -513,7 +543,7 @@ class WorkspaceManager {
   getWorkspacePath(branch) {
     const sanitizedBranch = this.validationManager.sanitize(branch);
     const persistentRoot = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
-    
+
     if (!persistentRoot) {
       throw new Error('Persistent workspaces not enabled');
     }
@@ -536,7 +566,7 @@ class WorkspaceManager {
     try {
       const workspacePath = this.getWorkspacePath(branch);
       return fs.existsSync(workspacePath);
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -550,20 +580,21 @@ class WorkspaceManager {
       return {
         success: false,
         error: 'Invalid branch name',
-        details: validationErrors
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
       return {
         success: false,
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.'
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
-      
+
       if (!fs.existsSync(workspacePath)) {
         return {
           success: true,
@@ -572,8 +603,8 @@ class WorkspaceManager {
             exists: false,
             gitRepo: false,
             readable: false,
-            writable: false
-          }
+            writable: false,
+          },
         };
       }
 
@@ -582,7 +613,7 @@ class WorkspaceManager {
         gitRepo: false,
         readable: false,
         writable: false,
-        diskSpace: false
+        diskSpace: false,
       };
 
       // Check if it's a git repository
@@ -593,7 +624,7 @@ class WorkspaceManager {
       try {
         await fs.promises.access(workspacePath, fs.constants.R_OK);
         checks.readable = true;
-      } catch (error) {
+      } catch {
         checks.readable = false;
       }
 
@@ -601,7 +632,7 @@ class WorkspaceManager {
       try {
         await fs.promises.access(workspacePath, fs.constants.W_OK);
         checks.writable = true;
-      } catch (error) {
+      } catch {
         checks.writable = false;
       }
 
@@ -609,22 +640,24 @@ class WorkspaceManager {
       try {
         const stats = await fs.promises.statfs(workspacePath);
         checks.diskSpace = stats.bavail > 1024 * 1024 * 100; // At least 100MB free
-      } catch (error) {
+      } catch {
         checks.diskSpace = false;
       }
 
-      const health = Object.values(checks).every(check => check === true) ? 'healthy' : 'unhealthy';
+      const health = Object.values(checks).every((check) => check === true)
+        ? 'healthy'
+        : 'unhealthy';
 
       return {
         success: true,
         health,
         checks,
-        workspacePath
+        workspacePath,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Error al verificar salud del workspace: ${error.message}`
+        error: `Error al verificar salud del workspace: ${error.message}`,
       };
     }
   }

@@ -25,7 +25,7 @@ class ProcessManager {
   async startRecordingSequence(job, worker) {
     const { id, feature } = job;
     const { id: slotId } = worker;
-    
+
     try {
       this.io.emit('log_update', {
         slotId,
@@ -59,7 +59,10 @@ class ProcessManager {
 
       return result;
     } catch (error) {
-      console.error(`Error al iniciar secuencia de grabación para job ${id}:`, error);
+      console.error(
+        `Error al iniciar secuencia de grabación para job ${id}:`,
+        error,
+      );
       this.io.emit('log_update', {
         slotId,
         logLine: `--- ❌ Error al iniciar grabación para ${feature}: ${error.message} ---
@@ -75,7 +78,7 @@ class ProcessManager {
   async stopRecordingSequence(job, worker) {
     const { id, feature } = job;
     const { id: slotId } = worker;
-    
+
     try {
       this.io.emit('log_update', {
         slotId,
@@ -109,7 +112,10 @@ class ProcessManager {
 
       return result;
     } catch (error) {
-      console.error(`Error al detener secuencia de grabación para job ${id}:`, error);
+      console.error(
+        `Error al detener secuencia de grabación para job ${id}:`,
+        error,
+      );
       this.io.emit('log_update', {
         slotId,
         logLine: `--- ❌ Error al detener grabación para ${feature}: ${error.message} ---
@@ -134,23 +140,23 @@ class ProcessManager {
       const sanitizedBranch = this.validationManager.sanitize(job.branch);
       const sanitizedClient = this.validationManager.sanitize(job.client);
       const sanitizedFeature = this.validationManager.sanitize(job.feature);
-      
+
       const reportFileName = `${sanitizedBranch}_${sanitizedClient}_${sanitizedFeature}_${Date.now()}.html`;
       const reportsDir = path.join(__dirname, '..', '..', 'reports');
-      
+
       // Ensure reports directory exists
       if (!fs.existsSync(reportsDir)) {
         fs.mkdirSync(reportsDir, { recursive: true });
       }
 
       const publicReportPath = path.join(reportsDir, reportFileName);
-      
+
       // Copy the report to public location
       fs.copyFileSync(reportPath, publicReportPath);
 
       // Generate URL
       const reportUrl = `/reports/${reportFileName}`;
-      
+
       console.log(`Report generated: ${reportUrl}`);
       return reportUrl;
     } catch (error) {
@@ -170,7 +176,10 @@ class ProcessManager {
       .readdirSync(featureReportDir)
       .map((name) => ({ name, path: path.join(featureReportDir, name) }))
       .filter((item) => fs.statSync(item.path).isDirectory())
-      .map((item) => ({ ...item, time: fs.statSync(item.path).mtime.getTime() }))
+      .map((item) => ({
+        ...item,
+        time: fs.statSync(item.path).mtime.getTime(),
+      }))
       .sort((a, b) => a.time - b.time); // Sort oldest first
 
     if (reports.length > maxReports) {
@@ -178,7 +187,10 @@ class ProcessManager {
       reportsToDelete.forEach((report) => {
         fs.rm(report.path, { recursive: true, force: true }, (err) => {
           if (err) {
-            console.error(`Error eliminando reporte antiguo ${report.path}:`, err);
+            console.error(
+              `Error eliminando reporte antiguo ${report.path}:`,
+              err,
+            );
           } else {
             console.log(`Reporte antiguo eliminado: ${report.path}`);
           }
@@ -207,7 +219,7 @@ class ProcessManager {
   getSystemResources() {
     const usage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
-    
+
     return {
       memory: {
         rss: Math.round(usage.rss / 1024 / 1024), // MB
@@ -234,12 +246,16 @@ class ProcessManager {
     try {
       // Check if we can access the reports directory
       const reportsDir = path.join(__dirname, '..', '..', 'reports');
-      const reportsAccessible = fs.existsSync(reportsDir) || fs.mkdirSync(reportsDir, { recursive: true });
+      const reportsAccessible =
+        fs.existsSync(reportsDir) ||
+        fs.mkdirSync(reportsDir, { recursive: true });
 
       // Check if we can access WireMock API
       let wiremockAccessible = false;
       try {
-        const response = await fetch(`http://localhost:${this.configManager.get('PORT')}/api/wiremock/health`);
+        const response = await fetch(
+          `http://localhost:${this.configManager.get('PORT')}/api/wiremock/health`,
+        );
         wiremockAccessible = response.ok;
       } catch (error) {
         console.warn('WireMock health check failed:', error.message);
@@ -267,7 +283,7 @@ class ProcessManager {
   archiveOldReports() {
     const reportsDir = path.join(__dirname, '..', '..', 'reports');
     const archiveDir = path.join(reportsDir, 'archive');
-    
+
     if (!fs.existsSync(reportsDir)) return;
 
     // Create archive directory if it doesn't exist
@@ -276,9 +292,10 @@ class ProcessManager {
     }
 
     const maxAge = this.configManager.get('REPORT_ARCHIVE_AGE_DAYS') || 30;
-    const cutoffDate = new Date(Date.now() - (maxAge * 24 * 60 * 60 * 1000));
+    const cutoffDate = new Date(Date.now() - maxAge * 24 * 60 * 60 * 1000);
 
-    const reports = fs.readdirSync(reportsDir)
+    const reports = fs
+      .readdirSync(reportsDir)
       .map((name) => ({ name, path: path.join(reportsDir, name) }))
       .filter((item) => {
         const stats = fs.statSync(item.path);
@@ -312,7 +329,8 @@ class ProcessManager {
 
     // Count active reports
     if (fs.existsSync(reportsDir)) {
-      const reports = fs.readdirSync(reportsDir)
+      const reports = fs
+        .readdirSync(reportsDir)
         .map((name) => {
           const reportPath = path.join(reportsDir, name);
           const stats = fs.statSync(reportPath);
@@ -321,18 +339,23 @@ class ProcessManager {
         .filter((item) => item.stats.isFile());
 
       stats.totalReports += reports.length;
-      stats.totalSize += reports.reduce((sum, item) => sum + item.stats.size, 0);
-      
+      stats.totalSize += reports.reduce(
+        (sum, item) => sum + item.stats.size,
+        0,
+      );
+
       const now = Date.now();
-      const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
-      stats.recentReports = reports.filter((item) => item.stats.mtime >= weekAgo).length;
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+      stats.recentReports = reports.filter(
+        (item) => item.stats.mtime >= weekAgo,
+      ).length;
 
       if (reports.length > 0) {
-        stats.oldestReport = reports.reduce((oldest, current) => 
-          current.stats.mtime < oldest.stats.mtime ? current : oldest
+        stats.oldestReport = reports.reduce((oldest, current) =>
+          current.stats.mtime < oldest.stats.mtime ? current : oldest,
         );
-        stats.newestReport = reports.reduce((newest, current) => 
-          current.stats.mtime > newest.stats.mtime ? current : newest
+        stats.newestReport = reports.reduce((newest, current) =>
+          current.stats.mtime > newest.stats.mtime ? current : newest,
         );
       }
     }

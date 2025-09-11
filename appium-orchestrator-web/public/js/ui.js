@@ -234,8 +234,8 @@ export function populateApkVersions(versions) {
 
   versions.forEach((version) => {
     const option = document.createElement('option');
-    option.value = version;
-    option.textContent = version;
+    option.value = version.name;
+    option.textContent = version.name;
     apkVersionSelect.appendChild(option);
   });
 }

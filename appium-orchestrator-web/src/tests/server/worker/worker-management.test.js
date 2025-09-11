@@ -16,7 +16,7 @@ describe('Worker Management', () => {
     test('should initialize worker pool with correct size', () => {
       const maxWorkers = 2;
       const workerPool = [];
-      
+
       // Simulate worker pool initialization
       for (let i = 0; i < maxWorkers; i++) {
         workerPool.push({
@@ -24,24 +24,28 @@ describe('Worker Management', () => {
           busy: false,
           currentJob: null,
           workspacePath: null,
-          childProcess: null
+          childProcess: null,
         });
       }
-      
+
       expect(workerPool.length).toBe(maxWorkers);
-      expect(workerPool.every(worker => worker.busy === false)).toBe(true);
-      expect(workerPool.every(worker => worker.currentJob === null)).toBe(true);
+      expect(workerPool.every((worker) => worker.busy === false)).toBe(true);
+      expect(workerPool.every((worker) => worker.currentJob === null)).toBe(
+        true,
+      );
     });
 
     test('should handle MAX_PARALLEL_TESTS environment variable', () => {
       // Test without MAX_PARALLEL_TESTS
       delete process.env.MAX_PARALLEL_TESTS;
-      const maxWorkersDefault = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
+      const maxWorkersDefault =
+        parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
       expect(maxWorkersDefault).toBe(2);
 
       // Test with MAX_PARALLEL_TESTS
       process.env.MAX_PARALLEL_TESTS = '4';
-      const maxWorkersCustom = parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
+      const maxWorkersCustom =
+        parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2;
       expect(maxWorkersCustom).toBe(4);
     });
 
@@ -51,7 +55,7 @@ describe('Worker Management', () => {
         busy: false,
         currentJob: null,
         workspacePath: null,
-        childProcess: null
+        childProcess: null,
       };
 
       // Test idle state
@@ -65,7 +69,7 @@ describe('Worker Management', () => {
         client: 'test-client',
         apkIdentifier: '1.0.0',
         apkSourceType: 'registry',
-        deviceSerial: 'emulator-5554'
+        deviceSerial: 'emulator-5554',
       };
 
       expect(worker.busy).toBe(true);
@@ -75,7 +79,7 @@ describe('Worker Management', () => {
       // Test job completion
       worker.busy = false;
       worker.currentJob = null;
-      
+
       expect(worker.busy).toBe(false);
       expect(worker.currentJob).toBe(null);
     });
@@ -92,7 +96,7 @@ describe('Worker Management', () => {
         apkSourceType: 'registry',
         deviceSerial: 'emulator-5554',
         persistentWorkspace: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Test adding job to queue
@@ -115,7 +119,7 @@ describe('Worker Management', () => {
         apkSourceType: 'registry',
         deviceSerial: 'emulator-5554',
         persistentWorkspace: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Test required job properties
@@ -145,20 +149,20 @@ describe('Worker Management', () => {
           id: 'job-1',
           priority: 1,
           timestamp: Date.now() - 1000,
-          branch: 'main'
+          branch: 'main',
         },
         {
           id: 'job-2',
           priority: 2,
           timestamp: Date.now() - 500,
-          branch: 'develop'
+          branch: 'develop',
         },
         {
           id: 'job-3',
           priority: 1,
           timestamp: Date.now(),
-          branch: 'feature'
-        }
+          branch: 'feature',
+        },
       ];
 
       // Sort by priority (higher first), then by timestamp (older first)
@@ -183,78 +187,118 @@ describe('Worker Management', () => {
         apkIdentifier,
         apkSourceType,
         deviceSerial,
-        persistentWorkspace = false
+        persistentWorkspace = false,
       ) => {
         const workerId = 'test-worker';
         const sanitizedBranch = sanitize(branch);
         let workerWorkspacePath;
         let isPersistent = false;
-        
+
         const timestamp = Date.now();
         // Determinar si usar workspace persistente basado en:
         // 1. El checkbox del frontend (persistentWorkspace)
         // 2. Que PERSISTENT_WORKSPACES_ROOT esté configurado
         if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
           // Usar workspace persistente
-          workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+          workerWorkspacePath = path.join(
+            process.env.PERSISTENT_WORKSPACES_ROOT,
+            sanitizedBranch,
+          );
           isPersistent = true;
         } else {
           // Usar workspace temporal
-          workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${timestamp}`);
+          workerWorkspacePath = path.join(
+            os.tmpdir(),
+            `appium-orchestrator-${workerId}-${sanitizedBranch}-${timestamp}`,
+          );
           isPersistent = false;
         }
-        
+
         return {
           workspacePath: workerWorkspacePath,
           isPersistent: isPersistent,
-          branch: sanitizedBranch
+          branch: sanitizedBranch,
         };
       };
 
       // Test persistent workspace
       process.env.PERSISTENT_WORKSPACES_ROOT = '/tmp/workspaces';
-      const persistentResult = mockCreateWorker('main', 'test-client', '1.0.0', 'registry', 'emulator-5554', true);
+      const persistentResult = mockCreateWorker(
+        'main',
+        'test-client',
+        '1.0.0',
+        'registry',
+        'emulator-5554',
+        true,
+      );
       expect(persistentResult.isPersistent).toBe(true);
       expect(persistentResult.workspacePath).toContain('/tmp/workspaces/main');
-      expect(persistentResult.workspacePath).not.toContain('appium-orchestrator-');
+      expect(persistentResult.workspacePath).not.toContain(
+        'appium-orchestrator-',
+      );
 
       // Test temporary workspace
-      const temporaryResult = mockCreateWorker('main', 'test-client', '1.0.0', 'registry', 'emulator-5554', false);
+      const temporaryResult = mockCreateWorker(
+        'main',
+        'test-client',
+        '1.0.0',
+        'registry',
+        'emulator-5554',
+        false,
+      );
       expect(temporaryResult.isPersistent).toBe(false);
       expect(temporaryResult.workspacePath).toContain('appium-orchestrator-');
       expect(temporaryResult.workspacePath).toContain('test-worker');
-      expect(temporaryResult.workspacePath).toMatch(/appium-orchestrator-test-worker-main-\d+/);
+      expect(temporaryResult.workspacePath).toMatch(
+        /appium-orchestrator-test-worker-main-\d+/,
+      );
     });
 
     test('should handle missing PERSISTENT_WORKSPACES_ROOT', () => {
       delete process.env.PERSISTENT_WORKSPACES_ROOT;
-      
+
       const mockCreateWorker = (
         branch,
         client,
         apkIdentifier,
         apkSourceType,
         deviceSerial,
-        persistentWorkspace = false
+        persistentWorkspace = false,
       ) => {
         const workerId = 'test-worker';
         const sanitizedBranch = sanitize(branch);
         let workerWorkspacePath;
         let isPersistent = false;
-        
+
         if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
-          workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+          workerWorkspacePath = path.join(
+            process.env.PERSISTENT_WORKSPACES_ROOT,
+            sanitizedBranch,
+          );
           isPersistent = true;
         } else {
-          workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`);
+          workerWorkspacePath = path.join(
+            os.tmpdir(),
+            `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`,
+          );
           isPersistent = false;
         }
-        
-        return { workspacePath: workerWorkspacePath, isPersistent: isPersistent };
+
+        return {
+          workspacePath: workerWorkspacePath,
+          isPersistent: isPersistent,
+        };
       };
 
       // Even with persistentWorkspace=true, should use temporary if PERSISTENT_WORKSPACES_ROOT is not set
-      const result = mockCreateWorker('main', 'test-client', '1.0.0', 'registry', 'emulator-5554', true);
+      const result = mockCreateWorker(
+        'main',
+        'test-client',
+        '1.0.0',
+        'registry',
+        'emulator-5554',
+        true,
+      );
       expect(result.isPersistent).toBe(false);
       expect(result.workspacePath).toContain('appium-orchestrator-');
     });
@@ -266,26 +310,42 @@ describe('Worker Management', () => {
         apkIdentifier,
         apkSourceType,
         deviceSerial,
-        persistentWorkspace = false
+        persistentWorkspace = false,
       ) => {
         const workerId = 'test-worker';
         const sanitizedBranch = sanitize(branch);
         let workerWorkspacePath;
-        
+
         if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
-          workerWorkspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, sanitizedBranch);
+          workerWorkspacePath = path.join(
+            process.env.PERSISTENT_WORKSPACES_ROOT,
+            sanitizedBranch,
+          );
         } else {
-          workerWorkspacePath = path.join(os.tmpdir(), `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`);
+          workerWorkspacePath = path.join(
+            os.tmpdir(),
+            `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`,
+          );
         }
-        
-        return { workspacePath: workerWorkspacePath, sanitizedBranch: sanitizedBranch };
+
+        return {
+          workspacePath: workerWorkspacePath,
+          sanitizedBranch: sanitizedBranch,
+        };
       };
 
       process.env.PERSISTENT_WORKSPACES_ROOT = '/tmp/workspaces';
-      
+
       const dangerousBranch = 'feature/../../../malicious';
-      const result = mockCreateWorker(dangerousBranch, 'test-client', '1.0.0', 'registry', 'emulator-5554', true);
-      
+      const result = mockCreateWorker(
+        dangerousBranch,
+        'test-client',
+        '1.0.0',
+        'registry',
+        'emulator-5554',
+        true,
+      );
+
       expect(result.sanitizedBranch).toBe('feature_.._.._.._malicious');
       expect(result.workspacePath).toContain('feature_.._.._.._malicious');
       expect(result.workspacePath).not.toContain('../../../');
@@ -302,7 +362,7 @@ describe('Worker Management', () => {
           stdout: new EventEmitter(),
           stderr: new EventEmitter(),
           on: jest.fn(),
-          once: jest.fn()
+          once: jest.fn(),
         };
       };
 
@@ -323,14 +383,14 @@ describe('Worker Management', () => {
 
     test('should handle child process cleanup', () => {
       const mockChildProcesses = new Map();
-      
+
       const mockChildProcess = {
         pid: 1234,
         killed: false,
         kill: jest.fn(() => {
           mockChildProcess.killed = true;
           return true;
-        })
+        }),
       };
 
       mockChildProcesses.set('test-worker', mockChildProcess);
@@ -353,19 +413,21 @@ describe('Worker Management', () => {
         { code: 0, expected: 'success' },
         { code: 1, expected: 'failure' },
         { code: null, signal: 'SIGTERM', expected: 'terminated' },
-        { code: null, signal: 'SIGKILL', expected: 'killed' }
+        { code: null, signal: 'SIGKILL', expected: 'killed' },
       ];
 
-      exitCodeScenarios.forEach(scenario => {
+      exitCodeScenarios.forEach((scenario) => {
         const mockProcess = {
           on: jest.fn((event, callback) => {
             if (event === 'exit') {
               callback(scenario.code, scenario.signal);
             }
-          })
+          }),
         };
 
-        expect(scenario.code === null || typeof scenario.code === 'number').toBe(true);
+        expect(
+          scenario.code === null || typeof scenario.code === 'number',
+        ).toBe(true);
       });
     });
   });
@@ -374,16 +436,16 @@ describe('Worker Management', () => {
     test('should handle worker assignment to jobs', () => {
       const workerPool = [
         { id: 0, busy: false, currentJob: null },
-        { id: 1, busy: false, currentJob: null }
+        { id: 1, busy: false, currentJob: null },
       ];
 
       const jobQueue = [
         { id: 'job-1', branch: 'main', client: 'test-client' },
-        { id: 'job-2', branch: 'develop', client: 'test-client' }
+        { id: 'job-2', branch: 'develop', client: 'test-client' },
       ];
 
       // Simulate worker assignment
-      const availableWorker = workerPool.find(worker => !worker.busy);
+      const availableWorker = workerPool.find((worker) => !worker.busy);
       const job = jobQueue.shift();
 
       if (availableWorker && job) {
@@ -400,7 +462,7 @@ describe('Worker Management', () => {
       const worker = {
         id: 0,
         busy: true,
-        currentJob: { id: 'job-1', branch: 'main' }
+        currentJob: { id: 'job-1', branch: 'main' },
       };
 
       // Simulate job completion
@@ -417,7 +479,7 @@ describe('Worker Management', () => {
         busy: true,
         currentJob: { id: 'job-1', branch: 'main' },
         error: null,
-        retryCount: 0
+        retryCount: 0,
       };
 
       // Simulate error occurrence
@@ -441,14 +503,14 @@ describe('Worker Management', () => {
   describe('Resource Management', () => {
     test('should handle workspace cleanup', () => {
       const mockWorkspaces = new Map();
-      
+
       const mockWorkspace = {
         path: '/tmp/workspace-test',
         isPersistent: false,
         cleanup: jest.fn(() => {
           mockWorkspaces.delete('test-worker');
           return true;
-        })
+        }),
       };
 
       mockWorkspaces.set('test-worker', mockWorkspace);
@@ -466,17 +528,17 @@ describe('Worker Management', () => {
 
     test('should handle persistent workspace retention', () => {
       const mockWorkspaces = new Map();
-      
+
       const persistentWorkspace = {
         path: '/tmp/workspaces/main',
         isPersistent: true,
-        cleanup: jest.fn()
+        cleanup: jest.fn(),
       };
 
       const temporaryWorkspace = {
         path: '/tmp/workspace-temp',
         isPersistent: false,
-        cleanup: jest.fn()
+        cleanup: jest.fn(),
       };
 
       mockWorkspaces.set('worker-1', persistentWorkspace);
@@ -501,13 +563,16 @@ describe('Worker Management', () => {
         totalWorkers: 4,
         activeWorkers: 2,
         totalMemoryUsage: 0,
-        peakMemoryUsage: 0
+        peakMemoryUsage: 0,
       };
 
       // Simulate memory usage updates
       const updateMemoryUsage = (workerId, memoryUsage) => {
         memoryStats.totalMemoryUsage += memoryUsage;
-        memoryStats.peakMemoryUsage = Math.max(memoryStats.peakMemoryUsage, memoryStats.totalMemoryUsage);
+        memoryStats.peakMemoryUsage = Math.max(
+          memoryStats.peakMemoryUsage,
+          memoryStats.totalMemoryUsage,
+        );
       };
 
       updateMemoryUsage('worker-1', 100);
@@ -530,7 +595,13 @@ describe('Worker Management', () => {
       });
 
       expect(() => {
-        mockCreateWorker('main', 'test-client', '1.0.0', 'registry', 'emulator-5554');
+        mockCreateWorker(
+          'main',
+          'test-client',
+          '1.0.0',
+          'registry',
+          'emulator-5554',
+        );
       }).toThrow('Failed to create worker');
     });
 
@@ -539,14 +610,14 @@ describe('Worker Management', () => {
         id: 'test-job',
         branch: 'main',
         client: 'test-client',
-        timeout: 30000
+        timeout: 30000,
       };
 
       const mockProcessJob = (job, callback) => {
         const timeout = setTimeout(() => {
           callback(new Error('Job timeout'));
         }, 100);
-        
+
         return { timeout };
       };
 
@@ -578,22 +649,22 @@ describe('Worker Management', () => {
   describe('Performance Optimization', () => {
     test('should handle worker reuse', () => {
       const workerPool = [
-        { id: 0, busy: false, currentJob: null, reuseCount: 0 }
+        { id: 0, busy: false, currentJob: null, reuseCount: 0 },
       ];
 
       const jobs = [
         { id: 'job-1', branch: 'main' },
-        { id: 'job-2', branch: 'develop' }
+        { id: 'job-2', branch: 'develop' },
       ];
 
       // Simulate worker reuse
-      jobs.forEach(job => {
-        const worker = workerPool.find(w => !w.busy);
+      jobs.forEach((job) => {
+        const worker = workerPool.find((w) => !w.busy);
         if (worker) {
           worker.busy = true;
           worker.currentJob = job;
           worker.reuseCount++;
-          
+
           // Simulate job completion
           worker.busy = false;
           worker.currentJob = null;
@@ -608,12 +679,12 @@ describe('Worker Management', () => {
       const workerPool = [
         { id: 0, busy: false, load: 0 },
         { id: 1, busy: false, load: 0 },
-        { id: 2, busy: false, load: 0 }
+        { id: 2, busy: false, load: 0 },
       ];
 
       const selectLeastLoadedWorker = () => {
-        return workerPool.reduce((least, current) => 
-          current.load < least.load ? current : least
+        return workerPool.reduce((least, current) =>
+          current.load < least.load ? current : least,
         );
       };
 

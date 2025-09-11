@@ -36,32 +36,32 @@ class ValidationManager {
    */
   validateBranchName(branchName) {
     const errors = [];
-    
+
     if (!branchName || typeof branchName !== 'string') {
       errors.push('Branch name is required');
       return errors;
     }
-    
+
     if (branchName.trim() !== branchName) {
       errors.push('Branch name cannot have leading/trailing whitespace');
     }
-    
+
     if (branchName.length < 1) {
       errors.push('Branch name cannot be empty');
     }
-    
+
     if (branchName.length > 255) {
       errors.push('Branch name too long');
     }
-    
+
     if (!/^[a-zA-Z0-9_.\-/]+$/.test(branchName)) {
       errors.push('Branch name contains invalid characters');
     }
-    
+
     if (branchName.startsWith('/') || branchName.endsWith('/')) {
       errors.push('Branch name cannot start or end with /');
     }
-    
+
     if (branchName.includes('//')) {
       errors.push('Branch name cannot contain consecutive slashes');
     }
@@ -70,7 +70,7 @@ class ValidationManager {
     if (branchName.includes('../') || branchName.includes('..\\')) {
       errors.push('Branch name cannot contain path traversal patterns');
     }
-    
+
     return errors;
   }
 
@@ -79,17 +79,17 @@ class ValidationManager {
    */
   validateClientName(clientName) {
     const errors = [];
-    
+
     if (!clientName || typeof clientName !== 'string') {
       errors.push('Client name is required');
       return errors;
     }
-    
+
     if (clientName.trim() !== clientName) {
       errors.push('Client name cannot have leading/trailing whitespace');
     }
-    
-    if (!/^[a-zA-Z0-9_.\-]+$/.test(clientName)) {
+
+    if (!/^[a-zA-Z0-9_.-]+$/.test(clientName)) {
       errors.push('Client name contains invalid characters');
     }
 
@@ -97,7 +97,7 @@ class ValidationManager {
     if (clientName.includes('../') || clientName.includes('..\\')) {
       errors.push('Client name cannot contain path traversal patterns');
     }
-    
+
     return errors;
   }
 
@@ -106,16 +106,16 @@ class ValidationManager {
    */
   validateApkIdentifier(identifier) {
     const errors = [];
-    
+
     if (!identifier || typeof identifier !== 'string') {
       errors.push('APK identifier is required');
       return errors;
     }
-    
+
     // Check if it's a package name or version number
     const isValidPackage = /^[a-zA-Z0-9._]+$/.test(identifier);
     const isValidVersion = /^\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?$/.test(identifier);
-    
+
     if (!isValidPackage && !isValidVersion) {
       errors.push('APK identifier format is invalid');
     }
@@ -125,7 +125,7 @@ class ValidationManager {
     if (dangerousChars.test(identifier)) {
       errors.push('APK identifier contains dangerous characters');
     }
-    
+
     return errors;
   }
 
@@ -134,12 +134,12 @@ class ValidationManager {
    */
   validateDeviceSerial(serial) {
     const errors = [];
-    
+
     if (!serial || typeof serial !== 'string') {
       errors.push('Device serial is required');
       return errors;
     }
-    
+
     if (serial.trim() !== serial) {
       errors.push('Device serial cannot have leading/trailing whitespace');
     }
@@ -149,7 +149,7 @@ class ValidationManager {
     if (dangerousChars.test(serial)) {
       errors.push('Device serial contains dangerous characters');
     }
-    
+
     return errors;
   }
 
@@ -158,16 +158,16 @@ class ValidationManager {
    */
   validateFeatureFile(fileName) {
     const errors = [];
-    
+
     if (!fileName || typeof fileName !== 'string') {
       errors.push('Feature file name is required');
       return errors;
     }
-    
+
     if (!fileName.endsWith('.feature')) {
       errors.push('Feature file must have .feature extension');
     }
-    
+
     if (fileName.trim() !== fileName) {
       errors.push('Feature file name cannot have leading/trailing whitespace');
     }
@@ -182,7 +182,7 @@ class ValidationManager {
     if (dangerousChars.test(fileName)) {
       errors.push('Feature file name contains dangerous characters');
     }
-    
+
     return errors;
   }
 
@@ -191,31 +191,30 @@ class ValidationManager {
    */
   validateGitUrl(url) {
     const errors = [];
-    
+
     if (!url || typeof url !== 'string') {
       errors.push('Git URL is required');
       return errors;
     }
-    
+
     try {
       const urlObj = new URL(url);
-      
+
       // Check for valid protocols
       const validProtocols = ['https:', 'http:', 'git:'];
       if (!validProtocols.includes(urlObj.protocol)) {
         errors.push('Git URL must use http, https, or git protocol');
       }
-      
+
       // Check for dangerous characters in path
       const dangerousChars = /[;|&`$'"<>]/;
       if (dangerousChars.test(urlObj.pathname)) {
         errors.push('Git URL path contains dangerous characters');
       }
-      
-    } catch (error) {
+    } catch {
       errors.push('Git URL format is invalid');
     }
-    
+
     return errors;
   }
 
@@ -224,12 +223,12 @@ class ValidationManager {
    */
   validateWorkspacePath(workspacePath) {
     const errors = [];
-    
+
     if (!workspacePath || typeof workspacePath !== 'string') {
       errors.push('Workspace path is required');
       return errors;
     }
-    
+
     // Check for absolute path or dangerous patterns
     if (workspacePath.includes('../') || workspacePath.includes('..\\')) {
       errors.push('Workspace path cannot contain path traversal patterns');
@@ -250,11 +249,11 @@ class ValidationManager {
       /\/bin\//,
       /\/sbin\//,
     ];
-    
-    if (sensitivePatterns.some(pattern => pattern.test(workspacePath))) {
+
+    if (sensitivePatterns.some((pattern) => pattern.test(workspacePath))) {
       errors.push('Workspace path cannot access system directories');
     }
-    
+
     return errors;
   }
 
@@ -263,12 +262,12 @@ class ValidationManager {
    */
   validateApiParams(requiredParams, providedParams) {
     const errors = [];
-    const missing = requiredParams.filter(param => !providedParams[param]);
-    
+    const missing = requiredParams.filter((param) => !providedParams[param]);
+
     if (missing.length > 0) {
       errors.push(`Missing required parameters: ${missing.join(', ')}`);
     }
-    
+
     return errors;
   }
 
@@ -277,17 +276,19 @@ class ValidationManager {
    */
   validateFileExtension(fileName, allowedExtensions) {
     const errors = [];
-    
+
     if (!fileName || typeof fileName !== 'string') {
       errors.push('File name is required');
       return errors;
     }
-    
+
     const extension = path.extname(fileName).toLowerCase();
     if (!allowedExtensions.includes(extension)) {
-      errors.push(`File extension ${extension} is not allowed. Allowed: ${allowedExtensions.join(', ')}`);
+      errors.push(
+        `File extension ${extension} is not allowed. Allowed: ${allowedExtensions.join(', ')}`,
+      );
     }
-    
+
     return errors;
   }
 
@@ -296,16 +297,18 @@ class ValidationManager {
    */
   validateContentType(contentType, allowedTypes) {
     const errors = [];
-    
+
     if (!contentType || typeof contentType !== 'string') {
       errors.push('Content type is required');
       return errors;
     }
-    
+
     if (!allowedTypes.includes(contentType)) {
-      errors.push(`Content type ${contentType} is not allowed. Allowed: ${allowedTypes.join(', ')}`);
+      errors.push(
+        `Content type ${contentType} is not allowed. Allowed: ${allowedTypes.join(', ')}`,
+      );
     }
-    
+
     return errors;
   }
 
@@ -314,17 +317,20 @@ class ValidationManager {
    */
   sanitizeErrorMessage(error) {
     if (!error || typeof error !== 'string') return 'Internal server error';
-    
+
     // Remove sensitive information
     let sanitized = error;
-    
+
     // Remove file paths that might contain sensitive information
-    sanitized = sanitized.replace(/\/[a-zA-Z0-9_\-\/]*\//g, '/[PATH]/');
-    sanitized = sanitized.replace(/[A-Za-z]:\\[a-zA-Z0-9_\-\\]*\\/g, '[PATH]\\');
-    
+    sanitized = sanitized.replace(/\/[a-zA-Z0-9_\-/]*\//g, '/[PATH]/');
+    sanitized = sanitized.replace(
+      /[A-Za-z]:\\[a-zA-Z0-9_\-\\]*\\/g,
+      '[PATH]\\',
+    );
+
     // Remove environment variable references
     sanitized = sanitized.replace(/process\.env\.[A-Z_]+/g, '[ENV_VAR]');
-    
+
     // Remove sensitive keywords
     const sensitivePatterns = [
       /password/i,
@@ -334,11 +340,11 @@ class ValidationManager {
       /auth/i,
       /credential/i,
     ];
-    
-    sensitivePatterns.forEach(pattern => {
+
+    sensitivePatterns.forEach((pattern) => {
       sanitized = sanitized.replace(pattern, '[REDACTED]');
     });
-    
+
     return sanitized;
   }
 
@@ -348,7 +354,7 @@ class ValidationManager {
   validateMultiple(validations) {
     const errors = {};
     let hasErrors = false;
-    
+
     Object.entries(validations).forEach(([key, { type, value }]) => {
       const validator = this.validators[type];
       if (validator) {
@@ -362,10 +368,10 @@ class ValidationManager {
         hasErrors = true;
       }
     });
-    
+
     return {
       isValid: !hasErrors,
-      errors
+      errors,
     };
   }
 
@@ -374,17 +380,17 @@ class ValidationManager {
    */
   containsDangerousPatterns(value) {
     if (!value || typeof value !== 'string') return false;
-    
+
     const dangerousPatterns = [
-      /\.\.\//,  // Path traversal
-      /\.\.\\/,  // Windows path traversal
-      /;rm\s+-rf\s+\//,  // Dangerous command
-      /\$\(/,    // Command substitution
-      /`.*`/,   // Command execution
-      /[|&`$'"<>]/,  // Dangerous characters
+      /\.\.\//, // Path traversal
+      /\.\.\\/, // Windows path traversal
+      /;rm\s+-rf\s+\//, // Dangerous command
+      /\$\(/, // Command substitution
+      /`.*`/, // Command execution
+      /[|&`$'"<>]/, // Dangerous characters
     ];
-    
-    return dangerousPatterns.some(pattern => pattern.test(value));
+
+    return dangerousPatterns.some((pattern) => pattern.test(value));
   }
 
   /**

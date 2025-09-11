@@ -15,7 +15,7 @@ class PathUtilities {
     return path.join(
       process.env.WORKSPACE_BASE_DIR || './workspaces',
       this.configManager.getValidationManager().sanitize(client),
-      this.configManager.getValidationManager().sanitize(branch)
+      this.configManager.getValidationManager().sanitize(branch),
     );
   }
 
@@ -69,7 +69,9 @@ class PathUtilities {
    */
   getApkFilePath(apkIdentifier) {
     const apkDir = this.getApkDirectoryPath();
-    const sanitizedIdentifier = this.configManager.getValidationManager().sanitize(apkIdentifier);
+    const sanitizedIdentifier = this.configManager
+      .getValidationManager()
+      .sanitize(apkIdentifier);
     return path.join(apkDir, `${sanitizedIdentifier}.apk`);
   }
 
@@ -198,7 +200,7 @@ class PathUtilities {
   splitPath(filePath) {
     return {
       directory: path.dirname(filePath),
-      fileName: path.basename(filePath)
+      fileName: path.basename(filePath),
     };
   }
 
@@ -236,7 +238,9 @@ class PathUtilities {
    */
   getTestOutputPath(testName) {
     const baseOutputDir = process.env.TEST_OUTPUT_DIR || './test-output';
-    const sanitizedTestName = this.configManager.getValidationManager().sanitize(testName);
+    const sanitizedTestName = this.configManager
+      .getValidationManager()
+      .sanitize(testName);
     return path.join(baseOutputDir, sanitizedTestName);
   }
 

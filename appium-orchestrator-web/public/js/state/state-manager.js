@@ -103,4 +103,3 @@ export class StateManager {
     this.debugMode = enabled;
   }
 }
-

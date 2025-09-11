@@ -107,7 +107,7 @@ class FileOperationsService {
       for (const file of files) {
         const filePath = path.join(dirPath, file);
         const stats = await this.getFileStats(filePath);
-        
+
         if (stats.mtime.getTime() < cutoffTime) {
           await fs.unlink(filePath);
           cleanedCount++;
@@ -260,7 +260,7 @@ class FileOperationsService {
 
     for (const file of files) {
       const filePath = path.join(dirPath, file.name);
-      
+
       if (file.isDirectory()) {
         const subResults = await this.findFiles(filePath, pattern);
         results.push(...subResults);

@@ -338,7 +338,7 @@ export async function fetchApkVersions() {
       );
     }
     const data = await response.json();
-    apkSource = data.source; // Guardar el origen
+    apkSource = data.source || 'registry'; // Guardar el origen con fallback
     populateApkVersions(data.versions);
     console.log(`APK source set to: ${apkSource}`);
   } catch (error) {

@@ -13,7 +13,7 @@ class LoggingUtilities {
       warn: 1,
       info: 2,
       debug: 3,
-      trace: 4
+      trace: 4,
     };
     this.currentLevel = this.configManager.get('LOG_LEVEL') || 'info';
     this.logToConsole = this.configManager.get('LOG_TO_CONSOLE') !== false;
@@ -48,7 +48,7 @@ class LoggingUtilities {
       timestamp,
       level: level.toUpperCase(),
       message,
-      ...meta
+      ...meta,
     };
 
     if (this.logFormat === 'json') {
@@ -56,7 +56,7 @@ class LoggingUtilities {
     }
 
     let formattedMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-    
+
     if (Object.keys(meta).length > 0) {
       formattedMessage += ` ${JSON.stringify(meta)}`;
     }
@@ -141,7 +141,7 @@ class LoggingUtilities {
     if (!this.shouldLog(level)) return;
 
     const formattedMessage = this.formatMessage(level, message, meta);
-    
+
     this.writeToConsole(level, formattedMessage);
     this.writeToFile(formattedMessage);
   }
@@ -156,7 +156,7 @@ class LoggingUtilities {
       statusCode: res.statusCode,
       responseTime: `${responseTime}ms`,
       userAgent: req.get('User-Agent'),
-      ip: req.ip || req.connection.remoteAddress
+      ip: req.ip || req.connection.remoteAddress,
     };
 
     if (res.statusCode >= 400) {
@@ -173,7 +173,7 @@ class LoggingUtilities {
     this.info(`Worker ${workerId} ${operation}`, {
       workerId,
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -184,7 +184,7 @@ class LoggingUtilities {
     this.info(`Job ${jobId} ${operation}`, {
       jobId,
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -194,7 +194,7 @@ class LoggingUtilities {
   logGitOperation(operation, details = {}) {
     this.info(`Git ${operation}`, {
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -205,7 +205,7 @@ class LoggingUtilities {
     this.info(`File ${operation}`, {
       operation,
       filePath,
-      ...details
+      ...details,
     });
   }
 
@@ -215,7 +215,7 @@ class LoggingUtilities {
   logSocketOperation(operation, details = {}) {
     this.debug(`Socket ${operation}`, {
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -225,7 +225,7 @@ class LoggingUtilities {
   logDatabaseOperation(operation, details = {}) {
     this.debug(`Database ${operation}`, {
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -235,7 +235,7 @@ class LoggingUtilities {
   logAuthOperation(operation, details = {}) {
     this.info(`Auth ${operation}`, {
       operation,
-      ...details
+      ...details,
     });
   }
 
@@ -247,7 +247,7 @@ class LoggingUtilities {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      ...context
+      ...context,
     };
 
     this.error('Application Error', errorData);
@@ -260,7 +260,7 @@ class LoggingUtilities {
     this.info(`Performance: ${operation}`, {
       operation,
       duration: `${duration}ms`,
-      ...details
+      ...details,
     });
   }
 
@@ -270,7 +270,7 @@ class LoggingUtilities {
   createRequestLogger() {
     return (req, res, next) => {
       const start = Date.now();
-      
+
       res.on('finish', () => {
         const responseTime = Date.now() - start;
         this.logRequest(req, res, responseTime);
@@ -290,7 +290,7 @@ class LoggingUtilities {
         method: req.method,
         body: req.body,
         params: req.params,
-        query: req.query
+        query: req.query,
       });
       next(error);
     };
@@ -306,7 +306,7 @@ class LoggingUtilities {
       arch: process.arch,
       memoryUsage: process.memoryUsage(),
       uptime: process.uptime(),
-      pid: process.pid
+      pid: process.pid,
     };
 
     this.info('System Information', systemInfo);
@@ -320,7 +320,7 @@ class LoggingUtilities {
       port,
       environment: process.env.NODE_ENV,
       logLevel: this.currentLevel,
-      logFormat: this.logFormat
+      logFormat: this.logFormat,
     });
   }
 
@@ -330,7 +330,7 @@ class LoggingUtilities {
   logShutdown() {
     this.info('Application Shutting Down', {
       uptime: process.uptime(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -347,7 +347,8 @@ class LoggingUtilities {
       const stats = fs.statSync(logFile);
       if (stats.size > maxSize) {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFile = this.pathUtilities.getLogsPath() + `/app-${timestamp}.log`;
+        const backupFile =
+          this.pathUtilities.getLogsPath() + `/app-${timestamp}.log`;
         fs.renameSync(logFile, backupFile);
         this.info('Log file rotated', { originalSize: stats.size, backupFile });
       }
@@ -366,17 +367,21 @@ class LoggingUtilities {
     if (!this.logToFile) return;
 
     const logsDir = this.pathUtilities.getLogsPath();
-    const cutoffTime = Date.now() - (maxAgeDays * 24 * 60 * 60 * 1000);
+    const cutoffTime = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
 
     try {
       const files = fs.readdirSync(logsDir);
       let cleanedCount = 0;
 
-      files.forEach(file => {
+      files.forEach((file) => {
         const filePath = path.join(logsDir, file);
         const stats = fs.statSync(filePath);
 
-        if (stats.isFile() && stats.mtime.getTime() < cutoffTime && file !== 'app.log') {
+        if (
+          stats.isFile() &&
+          stats.mtime.getTime() < cutoffTime &&
+          file !== 'app.log'
+        ) {
           fs.unlinkSync(filePath);
           cleanedCount++;
         }
@@ -395,20 +400,20 @@ class LoggingUtilities {
    */
   getLogContents(lines = 100) {
     const logFile = this.pathUtilities.getLogsPath() + '/app.log';
-    
+
     try {
       if (!fs.existsSync(logFile)) {
         return { success: false, error: 'Log file not found' };
       }
 
       const content = fs.readFileSync(logFile, 'utf8');
-      const allLines = content.split('\n').filter(line => line.trim());
+      const allLines = content.split('\n').filter((line) => line.trim());
       const recentLines = allLines.slice(-lines);
 
       return {
         success: true,
         lines: recentLines,
-        totalLines: allLines.length
+        totalLines: allLines.length,
       };
     } catch (error) {
       this.logError(error, { context: 'get log contents' });
@@ -421,7 +426,7 @@ class LoggingUtilities {
    */
   streamLogFiles(req, res) {
     const logFile = this.pathUtilities.getLogsPath() + '/app.log';
-    
+
     try {
       if (!fs.existsSync(logFile)) {
         return res.status(404).json({ error: 'Log file not found' });
@@ -441,11 +446,16 @@ class LoggingUtilities {
    */
   createModuleLogger(moduleName) {
     return {
-      error: (message, meta = {}) => this.error(message, { module: moduleName, ...meta }),
-      warn: (message, meta = {}) => this.warn(message, { module: moduleName, ...meta }),
-      info: (message, meta = {}) => this.info(message, { module: moduleName, ...meta }),
-      debug: (message, meta = {}) => this.debug(message, { module: moduleName, ...meta }),
-      trace: (message, meta = {}) => this.trace(message, { module: moduleName, ...meta })
+      error: (message, meta = {}) =>
+        this.error(message, { module: moduleName, ...meta }),
+      warn: (message, meta = {}) =>
+        this.warn(message, { module: moduleName, ...meta }),
+      info: (message, meta = {}) =>
+        this.info(message, { module: moduleName, ...meta }),
+      debug: (message, meta = {}) =>
+        this.debug(message, { module: moduleName, ...meta }),
+      trace: (message, meta = {}) =>
+        this.trace(message, { module: moduleName, ...meta }),
     };
   }
 
@@ -457,7 +467,7 @@ class LoggingUtilities {
       action,
       user,
       timestamp: new Date().toISOString(),
-      ...details
+      ...details,
     });
   }
 
@@ -469,7 +479,7 @@ class LoggingUtilities {
       timestamp: new Date().toISOString(),
       status: results.status,
       checks: results.checks,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
   }
 }

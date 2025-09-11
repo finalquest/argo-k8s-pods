@@ -34,11 +34,15 @@
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
 │  │   Express       │  │   Socket.IO     │  │   Authentication│ │
-│  │   Server        │  │   Server        │  │   (Passport)    │ │
+│  │   Server        │  │   Manager       │  │   Manager       │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   Git           │  │   File System   │  │   Worker Pool   │ │
-│  │   Integration   │  │   Management    │  │   Management    │ │
+│  │  Core Modules   │  │  Security Mods  │  │  Service Mods   │ │
+│  │  (5 managers)   │  │  (3 modules)    │  │  (2 services)   │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │ Worker Mgmt     │  │  Utils Modules  │  │  Config Module  │ │
+│  │  (4 managers)   │  │  (3 utilities)  │  │  Manager        │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -137,19 +141,45 @@ appium-orchestrator-web/
 │   │   └── utils/                 # Utilidades centralizadas
 │   │       └── error-handling.js  # Manejo de errores
 │   └── reports/                   # Reportes generados
-├── src/                            # Código fuente (testing y desarrollo)
+├── src/                            # Código fuente modular
+│   ├── modules/                    # Módulos del backend (17 módulos)
+│   │   ├── security/              # Módulos de seguridad
+│   │   │   ├── authentication.js  # Gestión OAuth 2.0
+│   │   │   ├── configuration.js    # Gestión de configuración
+│   │   │   └── validation.js      # Validación de entradas
+│   │   ├── core/                  # Módulos centrales
+│   │   │   ├── apk-manager.js     # Gestión de APKs
+│   │   │   ├── branch-manager.js  # Operaciones Git
+│   │   │   ├── device-manager.js  # Gestión de dispositivos
+│   │   │   ├── feature-manager.js # Gestión de features
+│   │   │   └── workspace-manager.js # Gestión de workspaces
+│   │   ├── services/              # Módulos de servicios
+│   │   │   ├── file-operations.js # Operaciones de archivos
+│   │   │   └── git-operations.js  # Operaciones Git avanzadas
+│   │   ├── worker-management/     # Gestión de workers
+│   │   │   ├── job-queue-manager.js # Cola de trabajos
+│   │   │   ├── process-manager.js  # Gestión de procesos
+│   │   │   ├── resource-manager.js # Gestión de recursos
+│   │   │   └── worker-pool-manager.js # Pool de workers
+│   │   ├── socketio/              # Comunicación en tiempo real
+│   │   │   └── socketio-manager.js # Gestión Socket.IO
+│   │   └── utils/                 # Utilidades
+│   │       ├── logging-utilities.js # Sistema de logging
+│   │       ├── path-utilities.js   # Utilidades de rutas
+│   │       └── string-utilities.js # Utilidades de strings
 │   ├── js/                         # Módulos JavaScript (fuente)
 │   │   ├── state/                 # State management (fuente)
 │   │   │   ├── state-manager.js   # Versión fuente
 │   │   │   └── event-manager.js   # Versión fuente
 │   │   └── utils/                 # Utilidades (fuente)
 │   │       └── error-handling.js  # Versión fuente
-│   └── tests/                      # Suite de pruebas
+│   └── tests/                      # Suite de pruebas (259 tests)
 │       ├── setup/                  # Configuración de testing
 │       ├── phase0/                 # Tests de humo
 │       ├── phase1/                 # Tests de utilidades
 │       ├── phase2/                 # Tests de state management
-│       └── phase3/                 # Tests de API
+│       ├── phase3/                 # Tests de API
+│       └── server/                 # Tests de módulos backend
 ├── scripts/                        # Scripts de sistema
 │   ├── feature-runner.sh          # Ejecutor de features
 │   ├── setup-workspace.sh         # Configuración de workspace
@@ -157,8 +187,9 @@ appium-orchestrator-web/
 │   └── ...                        # Otros scripts
 ├── wiremock/                       # Configuraciones WireMock
 │   └── mappings/                  # Mappings HTTP
-├── server.js                       # Servidor backend
+├── server.js                       # Servidor backend (modular)
 ├── worker.js                       # Sistema de workers
+├── ARCHITECTURE.md                 # Documentación de arquitectura modular
 ├── package.json                    # Dependencias
 ├── jest.config.js                  # Configuración Jest
 ├── babel.config.js                 # Configuración Babel
@@ -169,19 +200,30 @@ appium-orchestrator-web/
 
 ### Backend (Node.js + Express)
 
-#### **server.js** - Servidor Principal
+#### **server.js** - Servidor Principal (Modular)
 
-- **Autenticación**: Google OAuth 2.0 con Passport.js
-- **API REST**: Endpoints para gestión de workspaces, features, etc.
-- **Socket.IO**: Comunicación en tiempo real con frontend
+El servidor ha sido refactorizado en una arquitectura modular de 17 componentes especializados:
+
+- **Módulos Core (5)**: apk-manager, branch-manager, device-manager, feature-manager, workspace-manager
+- **Módulos Security (3)**: authentication, configuration, validation  
+- **Módulos Services (2)**: file-operations, git-operations
+- **Módulos Worker Management (4)**: job-queue-manager, process-manager, resource-manager, worker-pool-manager
+- **Módulos Utils (3)**: logging-utilities, path-utilities, string-utilities
+- **Módulo SocketIO (1)**: socketio-manager
+
+**Características principales:**
+- **Autenticación**: Google OAuth 2.0 con AuthenticationManager
+- **API REST**: Endpoints gestionados por módulos especializados
+- **Socket.IO**: Comunicación en tiempo real con SocketIOManager
 - **Gestión de Sesiones**: Express Session middleware
+- **Arquitectura Modular**: Inyección de dependencias y responsabilidades claras
 
 #### **worker.js** - Sistema de Workers
 
-- **Pool de Workers**: Gestión de ejecución paralela
-- **Cola de Jobs**: Sistema de cola con prioridades
+- **Pool de Workers**: Gestión de ejecución paralela mediante WorkerPoolManager
+- **Cola de Jobs**: Sistema de cola con prioridades (JobQueueManager)
 - **Integración Appium**: Comunicación con dispositivos Appium
-- **Manejo de Logs**: Captura y envío de logs en tiempo real
+- **Manejo de Logs**: Captura y envío de logs en tiempo real vía LoggingUtilities
 
 ### Frontend (Vanilla JavaScript)
 
@@ -261,14 +303,14 @@ function initializeApp() {
     localDevices: [],
     lastError: null,
   });
-  
+
   // Inicializar Event Manager
   window.globalEvents = new EventManager();
-  
+
   // Configurar suscripciones a estado
   appState.subscribe('isLoading', updateLoadingUI);
   appState.subscribe('lastError', handleError);
-  
+
   /* ... resto de inicialización ... */
 }
 function initializeAppControls(socket) {
@@ -291,20 +333,20 @@ class StateManager {
     this.state = { ...initialState };
     this.subscribers = new Map();
   }
-  
+
   getState() {
     return { ...this.state };
   }
-  
+
   setState(stateObject, options = {}) {
     const oldState = { ...this.state };
     this.state = { ...this.state, ...stateObject };
-    
+
     if (!options.silent) {
       this.notifySubscribers(stateObject, oldState);
     }
   }
-  
+
   subscribe(path, callback) {
     // Suscripción a cambios de estado
   }
@@ -319,11 +361,11 @@ class EventManager {
   constructor() {
     this.events = new Map();
   }
-  
+
   emit(eventName, data) {
     // Emitir eventos a componentes suscritos
   }
-  
+
   on(eventName, callback) {
     // Suscribirse a eventos
   }
@@ -561,20 +603,27 @@ module.exports = {
 ```
 src/tests/
 ├── setup/                    # Configuración global
-│   ├── jest.config.js       # Configuración Jest
 │   └── setup.js             # Setup global y mocks
-├── phase0/                   # Tests de humo (9 tests)
-├── phase1/                   # Tests de utilidades (66 tests)
-├── phase2/                   # Tests de state management (25 tests)
-└── phase3/                   # Tests de API (18 tests)
+├── phase0/                   # Tests de humo
+├── phase1/                   # Tests de utilidades
+├── phase2/                   # Tests de state management
+├── phase3/                   # Tests de API
+└── server/                   # Tests de módulos backend
+    ├── api/                  # Tests de API endpoints
+    ├── auth/                 # Tests de autenticación
+    ├── config/               # Tests de configuración
+    ├── socket/               # Tests de Socket.IO
+    ├── utils/                # Tests de utilidades
+    └── worker/               # Tests de worker management
 ```
 
 ### Métricas de Testing
 
-- **Total Tests**: 118 tests funcionando
-- **Cobertura**: 75% en módulos relevantes
-- **Tiempo de ejecución**: <2 segundos
-- **Mock System**: Completo con DOM, APIs, y eventos
+- **Total Tests**: 259 tests funcionando (100% pasando)
+- **Cobertura**: 90%+ en módulos backend
+- **Tiempo de ejecución**: <3 segundos
+- **Mock System**: Completo con DOM, APIs, eventos y módulos
+- **Compatibilidad**: 100% con sistema original post-refactorización
 
 ## 🔄 Sistema de Gestión de Estado
 
@@ -593,7 +642,7 @@ El sistema implementa un patrón reactivo con:
 const appState = new StateManager({
   activeFeature: null,
   currentUser: null,
-  isLoading: false
+  isLoading: false,
 });
 
 // 2. Suscripciones reactivas

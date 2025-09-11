@@ -7,7 +7,7 @@ describe('Server Configuration', () => {
   beforeEach(() => {
     // Store original environment variables
     originalEnv = { ...process.env };
-    
+
     // Clear environment variables for clean testing
     delete process.env.PORT;
     delete process.env.GOOGLE_CLIENT_ID;
@@ -17,7 +17,7 @@ describe('Server Configuration', () => {
     delete process.env.PERSISTENT_WORKSPACES_ROOT;
     delete process.env.MAX_PARALLEL_TESTS;
     delete process.env.LOCAL_ADB_HOST;
-    
+
     // Mock console.error and process.exit for testing
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(process, 'exit').mockImplementation(() => {});
@@ -32,24 +32,33 @@ describe('Server Configuration', () => {
   describe('Environment Variable Validation', () => {
     test('should validate required authentication environment variables', () => {
       // Test the validation logic without importing server.js
-      
+
       // Missing GOOGLE_CLIENT_ID
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
-      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
+
+      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } =
+        process.env;
       if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(true).toBe(true); // Validation should catch missing variables
       }
 
       // Set GOOGLE_CLIENT_ID, missing SESSION_SECRET
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       delete process.env.SESSION_SECRET;
-      
-      const { GOOGLE_CLIENT_ID: id2, GOOGLE_CLIENT_SECRET: secret2, SESSION_SECRET: session2 } = process.env;
+
+      const {
+        GOOGLE_CLIENT_ID: id2,
+        GOOGLE_CLIENT_SECRET: secret2,
+        SESSION_SECRET: session2,
+      } = process.env;
       if (!id2 || !secret2 || !session2) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(true).toBe(true); // Validation should catch missing variables
       }
     });
@@ -58,9 +67,10 @@ describe('Server Configuration', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-secret';
       process.env.SESSION_SECRET = 'test-secret';
-      
-      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
-      
+
+      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } =
+        process.env;
+
       // All variables are present, validation should pass
       expect(GOOGLE_CLIENT_ID).toBeDefined();
       expect(GOOGLE_CLIENT_SECRET).toBeDefined();
@@ -71,14 +81,14 @@ describe('Server Configuration', () => {
   describe('Server Configuration', () => {
     test('should use default port when PORT is not set', () => {
       delete process.env.PORT;
-      
+
       const defaultPort = process.env.PORT || 3000;
       expect(defaultPort).toBe(3000);
     });
 
     test('should use custom port when PORT is set', () => {
       process.env.PORT = '8080';
-      
+
       const customPort = process.env.PORT;
       expect(customPort).toBe('8080');
     });
@@ -178,7 +188,7 @@ describe('Server Configuration', () => {
         secret: process.env.SESSION_SECRET || 'test-secret',
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+        cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 hours
       };
 
       expect(sessionConfig.resave).toBe(false);
@@ -190,7 +200,7 @@ describe('Server Configuration', () => {
       const oauthConfig = {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/auth/google/callback'
+        callbackURL: '/auth/google/callback',
       };
 
       expect(oauthConfig.callbackURL).toBe('/auth/google/callback');
@@ -201,7 +211,7 @@ describe('Server Configuration', () => {
     test('should call dotenv.config() to load environment variables', () => {
       // Test that dotenv would be called
       const dotenv = require('dotenv');
-      
+
       // Since we can't mock the actual server import, we test the concept
       expect(typeof dotenv.config).toBe('function');
     });
@@ -210,15 +220,15 @@ describe('Server Configuration', () => {
       // Test that environment variables follow proper naming conventions
       const envVars = [
         'GOOGLE_CLIENT_ID',
-        'GOOGLE_CLIENT_SECRET', 
+        'GOOGLE_CLIENT_SECRET',
         'SESSION_SECRET',
         'GOOGLE_HOSTED_DOMAIN',
         'PERSISTENT_WORKSPACES_ROOT',
         'MAX_PARALLEL_TESTS',
-        'LOCAL_ADB_HOST'
+        'LOCAL_ADB_HOST',
       ];
 
-      envVars.forEach(envVar => {
+      envVars.forEach((envVar) => {
         expect(envVar).toMatch(/^[A-Z][A-Z0-9_]*$/); // Should be uppercase with underscores
       });
     });
@@ -228,19 +238,22 @@ describe('Server Configuration', () => {
     test('should provide clear error messages for missing required variables', () => {
       const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
       const mockError = jest.spyOn(console, 'error');
-      
+
       // Test with no environment variables
       delete process.env.GOOGLE_CLIENT_ID;
       delete process.env.GOOGLE_CLIENT_SECRET;
       delete process.env.SESSION_SECRET;
-      
-      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
-      
+
+      const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } =
+        process.env;
+
       if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
-        console.error('Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env');
+        console.error(
+          'Error: Debes definir GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET en el archivo .env',
+        );
         expect(mockError).toHaveBeenCalled();
       }
-      
+
       expect(mockExit).not.toHaveBeenCalled(); // We don't actually exit in tests
     });
 

@@ -430,6 +430,12 @@ async function loadLocalDevices() {
 }
 
 async function updateCommitStatusIndicator(branch) {
+  // Validate branch parameter
+  if (!branch || branch === 'Cargando...' || branch.trim() === '') {
+    console.log('Skipping commit status update - invalid branch name:', branch);
+    return;
+  }
+
   // Check if persistent workspaces are enabled by fetching config
   const config = await fetchConfig();
   if (!config.persistentWorkspacesEnabled) return;

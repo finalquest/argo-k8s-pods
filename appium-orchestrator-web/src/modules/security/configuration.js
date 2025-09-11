@@ -17,32 +17,35 @@ class ConfigurationManager {
       // Server Configuration
       PORT: process.env.PORT || 3000,
       APP_BASE_URL: process.env.APP_BASE_URL || 'http://localhost:3000',
-      
+
       // Authentication Configuration
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
       SESSION_SECRET: process.env.SESSION_SECRET,
       GOOGLE_HOSTED_DOMAIN: process.env.GOOGLE_HOSTED_DOMAIN,
-      
+
       // Git Configuration
       GIT_REPO_URL: process.env.GIT_REPO_URL,
       GIT_USER: process.env.GIT_USER,
       GIT_PAT: process.env.GIT_PAT,
-      
+
       // Workspace Configuration
       PERSISTENT_WORKSPACES_ROOT: process.env.PERSISTENT_WORKSPACES_ROOT,
-      
+
       // Device Configuration
       DEVICE_SOURCE: process.env.DEVICE_SOURCE || 'local',
       LOCAL_ADB_HOST: process.env.LOCAL_ADB_HOST,
-      
+
       // Performance Configuration
       MAX_PARALLEL_TESTS: parseInt(process.env.MAX_PARALLEL_TESTS, 10) || 2,
-      MAX_REPORTS_PER_FEATURE: parseInt(process.env.MAX_REPORTS_PER_FEATURE, 10) || 5,
-      
+      MAX_REPORTS_PER_FEATURE:
+        parseInt(process.env.MAX_REPORTS_PER_FEATURE, 10) || 5,
+
       // Feature Directory Configuration
-      FEATURE_DIRS: process.env.FEATURE_DIRS ? process.env.FEATURE_DIRS.split(',') : ['feature/modulos'],
-      
+      FEATURE_DIRS: process.env.FEATURE_DIRS
+        ? process.env.FEATURE_DIRS.split(',')
+        : ['feature/modulos'],
+
       // APK Registry Configuration
       APK_REGISTRY_URL: process.env.APK_REGISTRY_URL || 'http://localhost:8081',
     };
@@ -52,20 +55,37 @@ class ConfigurationManager {
    * Validate required configuration
    */
   validateConfiguration() {
-    const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SESSION_SECRET'];
-    const missing = required.filter(key => !this.config[key]);
-    
-    if (missing.length > 0) {
-      console.error(
-        `Error: Faltan variables de entorno requeridas: ${missing.join(', ')}`,
-      );
-      process.exit(1);
+    // Si Google OAuth no está configurado, usar modo de desarrollo
+    if (!this.isEnabled('googleAuth')) {
+      console.warn('⚠️  Google OAuth no configurado - Modo desarrollo (sin autenticación)');
+      console.warn('   Para habilitar autenticación, define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET');
+      
+      // Solo requerir SESSION_SECRET para modo desarrollo
+      if (!this.config.SESSION_SECRET) {
+        console.warn('⚠️  Generando SESSION_SECRET aleatoria para modo desarrollo...');
+        this.config.SESSION_SECRET = require('crypto').randomBytes(32).toString('hex');
+      }
+    } else {
+      // Validar variables de autenticación si Google OAuth está habilitado
+      const authRequired = [
+        'GOOGLE_CLIENT_ID',
+        'GOOGLE_CLIENT_SECRET',
+        'SESSION_SECRET',
+      ];
+      const authMissing = authRequired.filter((key) => !this.config[key]);
+
+      if (authMissing.length > 0) {
+        console.error(
+          `Error: Faltan variables de entorno requeridas: ${authMissing.join(', ')}`,
+        );
+        process.exit(1);
+      }
     }
 
     // Validate Git configuration
     const gitRequired = ['GIT_REPO_URL', 'GIT_USER', 'GIT_PAT'];
-    const gitMissing = gitRequired.filter(key => !this.config[key]);
-    
+    const gitMissing = gitRequired.filter((key) => !this.config[key]);
+
     if (gitMissing.length > 0) {
       console.error(
         `Error: Debes definir ${gitMissing.join(', ')} en el archivo .env`,
@@ -81,7 +101,9 @@ class ConfigurationManager {
 
     // Validate MAX_PARALLEL_TESTS is a positive number
     if (this.config.MAX_PARALLEL_TESTS < 0) {
-      console.warn('Warning: MAX_PARALLEL_TESTS cannot be negative, using default 2');
+      console.warn(
+        'Warning: MAX_PARALLEL_TESTS cannot be negative, using default 2',
+      );
       this.config.MAX_PARALLEL_TESTS = 2;
     }
   }
@@ -108,14 +130,38 @@ class ConfigurationManager {
       case 'persistentWorkspaces':
         return !!this.config.PERSISTENT_WORKSPACES_ROOT;
       case 'googleAuth':
-        return !!(this.config.GOOGLE_CLIENT_ID && this.config.GOOGLE_CLIENT_SECRET);
+        return !!(
+          this.config.GOOGLE_CLIENT_ID && this.config.GOOGLE_CLIENT_SECRET
+        );
       case 'domainRestriction':
         return !!this.config.GOOGLE_HOSTED_DOMAIN;
       case 'localDevices':
         return this.config.DEVICE_SOURCE === 'local';
+      case 'authentication':
+        return this.isEnabled('googleAuth');
       default:
         return false;
     }
+  }
+
+  /**
+   * Check if running in development mode (without authentication)
+   */
+  isDevelopmentMode() {
+    return !this.isEnabled('authentication');
+  }
+
+  /**
+   * Get development user info for non-authenticated mode
+   */
+  getDevelopmentUser() {
+    return {
+      id: 'dev-user',
+      displayName: 'Development User',
+      email: 'dev@localhost',
+      photos: [{ value: 'https://via.placeholder.com/40' }],
+      isDevelopment: true
+    };
   }
 
   /**

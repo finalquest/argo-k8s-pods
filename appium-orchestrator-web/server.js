@@ -1,12 +1,8 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
 const path = require('path');
-const simpleGit = require('simple-git');
 const fs = require('fs');
-const os = require('os');
-const crypto = require('crypto');
-const { fork, exec, spawn } = require('child_process');
+const { exec } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');
@@ -31,15 +27,12 @@ const ResourceManager = require('./src/modules/worker-management/resource-manage
 const SocketIOManager = require('./src/modules/socketio/socketio-manager');
 
 // Import services and utils modules
-const GitOperationsService = require('./src/modules/services/git-operations');
-const FileOperationsService = require('./src/modules/services/file-operations');
 const PathUtilities = require('./src/modules/utils/path-utilities');
-const StringUtilities = require('./src/modules/utils/string-utilities');
 const LoggingUtilities = require('./src/modules/utils/logging-utilities');
 
 // Initialize security modules
 const configManager = new ConfigurationManager();
-const authManager = new AuthenticationManager();
+const authManager = new AuthenticationManager(configManager);
 const validationManager = new ValidationManager();
 
 // Initialize core API modules
@@ -53,16 +46,27 @@ const workspaceManager = new WorkspaceManager(configManager, validationManager);
 const processManager = new ProcessManager(configManager, validationManager);
 const resourceManager = new ResourceManager(configManager, validationManager);
 const jobQueueManager = new JobQueueManager();
-const workerPoolManager = new WorkerPoolManager(configManager, validationManager, processManager, jobQueueManager);
+const workerPoolManager = new WorkerPoolManager(
+  configManager,
+  validationManager,
+  processManager,
+  jobQueueManager,
+);
+
+// Set the workerPoolManager reference in jobQueueManager after both are created
+jobQueueManager.workerPoolManager = workerPoolManager;
 
 // Initialize socket.io manager
-const socketIOManager = new SocketIOManager(authManager, workerPoolManager, jobQueueManager, configManager, validationManager);
+const socketIOManager = new SocketIOManager(
+  authManager,
+  workerPoolManager,
+  jobQueueManager,
+  configManager,
+  validationManager,
+);
 
 // Initialize services and utils modules
-const gitOperationsService = new GitOperationsService(configManager, validationManager);
-const fileOperationsService = new FileOperationsService(configManager);
 const pathUtilities = new PathUtilities(configManager);
-const stringUtilities = new StringUtilities(validationManager);
 const loggingUtilities = new LoggingUtilities(configManager, pathUtilities);
 
 const app = express();
@@ -71,7 +75,11 @@ const server = http.createServer(app);
 const PORT = configManager.get('PORT');
 
 // Initialize socket.io manager first to get io instance
-socketIOManager.initialize(server, sessionMiddleware, passport);
+socketIOManager.initialize(
+  server,
+  authManager.getSessionMiddleware(),
+  authManager.getPassport(),
+);
 const io = socketIOManager.getIO();
 
 // Initialize worker management modules with dependencies
@@ -85,7 +93,10 @@ authManager.applyMiddleware(app);
 
 // Add configuration endpoint (must be before authentication middleware)
 app.get('/api/config', (req, res) => {
-  res.json(configManager.getClientConfig());
+  res.json({
+    ...configManager.getClientConfig(),
+    auth: authManager.getAuthStatus(),
+  });
 });
 
 app.get('/api/local-devices', async (req, res) => {
@@ -96,8 +107,6 @@ app.get('/api/local-devices', async (req, res) => {
     res.status(500).json({ error: result.error });
   }
 });
-
-
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '50mb' }));
@@ -115,16 +124,35 @@ app.get('/api/branches', async (req, res) => {
 });
 
 app.get('/api/apk/versions', async (req, res) => {
-  const { client } = req.query;
-  const result = await apkManager.getApkVersions(client);
-  if (result.success) {
-    res.json(result.versions);
-  } else {
-    res.status(500).json({ error: result.error });
+  const { repo, client } = req.query;
+  
+  try {
+    let result;
+    
+    // If repo parameter is provided, use legacy method
+    if (repo) {
+      result = await apkManager.getRegistryApkVersions(repo);
+    } 
+    // If client parameter is provided, use client-specific method
+    else if (client) {
+      result = await apkManager.getClientApkVersions(client);
+    }
+    // If no parameters, try to get all available versions
+    else {
+      result = await apkManager.getApkVersions();
+    }
+    
+    if (result.success) {
+      res.json({ source: result.source, versions: result.versions });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Error en /api/apk/versions:', error);
+    res.status(500).json({ error: 'Error interno al obtener versiones de APK.' });
   }
 });
 
-  
 app.get('/api/features', async (req, res) => {
   const { branch, client } = req.query;
   const result = await featureManager.getFeatures(branch, client);
@@ -134,11 +162,11 @@ app.get('/api/features', async (req, res) => {
     res.status(500).json({ error: result.error });
   }
 });
-      
+
 app.get('/api/history/branches', async (req, res) => {
   const result = await branchManager.getBranchHistory();
   if (result.success) {
-    res.json(result.branches.map(b => b.name));
+    res.json(result.branches.map((b) => b.name));
   } else {
     res.status(500).json({ error: result.error });
   }
@@ -167,7 +195,8 @@ app.get('/api/workspace-status/:branch', async (req, res) => {
       });
     } else if (result.status === 'ready') {
       const modifiedFeatures = workspace.modified.filter(
-        (file) => file.includes('/feature/modulos/') && file.endsWith('.feature'),
+        (file) =>
+          file.includes('/feature/modulos/') && file.endsWith('.feature'),
       );
       res.json({
         exists: true,
@@ -184,24 +213,32 @@ app.get('/api/workspace-status/:branch', async (req, res) => {
 
 app.get('/api/feature-content', async (req, res) => {
   const { branch, client, feature } = req.query;
-  const result = await featureManager.getFeatureContent(branch, client, feature);
+  const result = await featureManager.getFeatureContent(
+    branch,
+    client,
+    feature,
+  );
   if (result.success) {
     res.json({ content: result.content });
   } else {
     res.status(500).json({ error: result.error });
   }
-    
-  });
+});
 
 app.post('/api/feature-content', async (req, res) => {
   const { branch, client, feature, content } = req.body;
-  const result = await featureManager.saveFeatureContent(branch, client, feature, content);
+  const result = await featureManager.saveFeatureContent(
+    branch,
+    client,
+    feature,
+    content,
+  );
   if (result.success) {
     res.json({ message: result.message });
   } else {
     res.status(500).json({ error: result.error });
   }
-  });
+});
 
 app.get('/api/commit-status/:branch', async (req, res) => {
   const { branch } = req.params;
@@ -220,67 +257,6 @@ app.get('/api/workspace-changes/:branch', async (req, res) => {
     res.json(result);
   } else {
     res.status(500).json({ error: result.error });
-  }
-    });
-  }
-
-  const sanitizedBranch = sanitize(branch);
-  const workspacePath = path.join(
-    process.env.PERSISTENT_WORKSPACES_ROOT,
-    sanitizedBranch,
-    'appium',
-  );
-
-  if (!fs.existsSync(workspacePath)) {
-    return res.json({ hasUncommittedChanges: false });
-  }
-
-  try {
-    // Check if there are uncommitted changes only in the features path
-    const command = `git -C ${workspacePath} status --porcelain test/features/`;
-    exec(command, (error, stdout) => {
-      if (error) {
-        // If there's an error, assume no uncommitted changes
-        return res.json({ hasUncommittedChanges: false });
-      }
-
-      const hasUncommittedChanges = stdout.trim().length > 0;
-      const changes = stdout.trim().split('\n').filter(Boolean);
-      const modifiedFiles = changes.length;
-
-      // Count different types of changes
-      const stagedChanges = changes.filter(
-        (line) =>
-          line.startsWith('M ') ||
-          line.startsWith('A ') ||
-          line.startsWith('D '),
-      ).length;
-      const unstagedChanges = changes.filter(
-        (line) =>
-          line.startsWith(' M') ||
-          line.startsWith(' D') ||
-          line.startsWith('??'),
-      ).length;
-
-      res.json({
-        hasUncommittedChanges,
-        modifiedFiles,
-        stagedChanges,
-        unstagedChanges,
-        message: hasUncommittedChanges
-          ? `Hay ${modifiedFiles} archivo(s) con cambios sin commit`
-          : 'No hay cambios sin commit',
-      });
-    });
-  } catch (error) {
-    console.error(
-      `Error al verificar cambios sin commit para la branch ${branch}:`,
-      error,
-    );
-    res.status(500).json({
-      error: 'Error al verificar cambios sin commit.',
-      details: error.message,
-    });
   }
 });
 
@@ -611,89 +587,19 @@ app.post('/api/mappings/download-batch', (req, res) => {
 // Worker management now handled by dedicated modules
 // All worker operations use the new modular system
 
-function cleanupOldReports(featureReportDir) {
-  // Delegated to ProcessManager
-  return processManager.cleanupOldReports(featureReportDir);
-}
-
-function handleReport(job, reportPath) {
-  // Delegated to ProcessManager
-  return processManager.handleReport(job, reportPath);
-}
-
-function broadcastStatus() {
-  // Delegated to JobQueueManager and WorkerPoolManager
-  const stats = jobQueueManager.getStatistics();
-  const workerStats = workerPoolManager.getStatistics();
-  
-  io.emit('queue_status_update', {
-    active: workerStats.busyWorkers,
-    queued: stats.totalJobs,
-    limit: workerStats.maxWorkers,
-    queue: jobQueueManager.getQueuedJobs(),
-  });
-  
-  workerPoolManager.broadcastStatus();
-}
-
-function checkIdleAndCleanup() {
-  // Delegated to JobQueueManager and WorkerPoolManager
-  const stats = jobQueueManager.getStatistics();
-  
-  if (stats.totalJobs === 0) {
-    io.emit('log_update', {
-      logLine: `--- 🧹 Cola vacía. Generando reportes finales para workers inactivos... ---
-`,
-    });
-    workerPoolManager.generateReportsForIdleWorkers();
-  }
-}
-
-function processQueue() {
-  // Delegated to JobQueueManager
-  jobQueueManager.processQueue();
-}
-
-function assignJobToWorker(job) {
-  // Delegated to JobQueueManager
-  return jobQueueManager.assignJobToWorker(job);
-}
-
-async function startRecordingSequence(job, worker) {
-  // Delegated to ProcessManager
-  return await processManager.startRecordingSequence(job, worker);
-}
-
-async function runJobOnWorker(job, worker) {
-  // Delegated to WorkerPoolManager
-  return await workerPoolManager.runJobOnWorker(job, worker);
-}
-
-function createWorker(
-  branch,
-  client,
-  apkIdentifier,
-  apkSourceType,
-  deviceSerial,
-  persistentWorkspace = false,
-) {
-  // Delegated to WorkerPoolManager
-  return workerPoolManager.createWorker(
-    branch,
-    client,
-    apkIdentifier,
-    apkSourceType,
-    deviceSerial,
-    persistentWorkspace
-  );
-}
-
 // Socket.io event handling is now managed by SocketIOManager module
 // All socket.io functionality has been extracted to src/modules/socketio/socketio-manager.js
 
 // Socket.io authentication and middleware is now handled by SocketIOManager module
 
-
 server.listen(PORT, () => {
   loggingUtilities.logStartup(PORT);
+  
+  // Display authentication mode
+  if (authManager.isDevelopmentMode()) {
+    console.log('🔓 MODO DESARROLLO: Autenticación deshabilitada');
+    console.log('   Para habilitar autenticación, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET');
+  } else {
+    console.log('🔒 MODO PRODUCCIÓN: Autenticación habilitada');
+  }
 });

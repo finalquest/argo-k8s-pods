@@ -25,7 +25,7 @@ class BranchManager {
       const git = simpleGit();
       const authenticatedUrl = this.getAuthenticatedUrl();
       const remoteInfo = await git.listRemote(['--heads', authenticatedUrl]);
-      
+
       if (!remoteInfo) {
         throw new Error('No se pudo obtener información del repositorio.');
       }
@@ -41,9 +41,10 @@ class BranchManager {
       return { success: true, branches };
     } catch (error) {
       console.error('Error al listar branches:', error);
-      return { 
-        success: false, 
-        error: 'Error interno al listar branches. Revisa la URL del repo y el PAT.' 
+      return {
+        success: false,
+        error:
+          'Error interno al listar branches. Revisa la URL del repo y el PAT.',
       };
     }
   }
@@ -54,40 +55,47 @@ class BranchManager {
   async getCommitStatus(branch) {
     const validationErrors = this.validationManager.validateBranchName(branch);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid branch name',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     try {
       const git = simpleGit();
       const authenticatedUrl = this.getAuthenticatedUrl();
-      
+
       // Get the latest commit hash for the branch
-      const commitInfo = await git.listRemote(['--heads', authenticatedUrl, `refs/heads/${branch}`]);
-      
+      const commitInfo = await git.listRemote([
+        '--heads',
+        authenticatedUrl,
+        `refs/heads/${branch}`,
+      ]);
+
       if (!commitInfo) {
-        return { 
-          success: false, 
-          error: `No se encontró información para la branch '${branch}'` 
+        return {
+          success: false,
+          error: `No se encontró información para la branch '${branch}'`,
         };
       }
 
       const commitHash = commitInfo.split('\t')[0];
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         commitHash,
         branch,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      console.error(`Error al obtener commit status para la branch '${branch}':`, error);
-      return { 
-        success: false, 
-        error: 'Error interno al obtener el estado del commit.' 
+      console.error(
+        `Error al obtener commit status para la branch '${branch}':`,
+        error,
+      );
+      return {
+        success: false,
+        error: 'Error interno al obtener el estado del commit.',
       };
     }
   }
@@ -98,54 +106,58 @@ class BranchManager {
   async getWorkspaceChanges(branch) {
     const validationErrors = this.validationManager.validateBranchName(branch);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid branch name',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
-      return { 
-        success: false, 
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.' 
+      return {
+        success: false,
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const sanitizedBranch = this.validationManager.sanitize(branch);
       const workspacePath = this.getWorkspacePath(sanitizedBranch);
-      
+
       if (!require('fs').existsSync(workspacePath)) {
-        return { 
-          success: true, 
+        return {
+          success: true,
           changes: [],
-          hasChanges: false 
+          hasChanges: false,
         };
       }
 
       const git = simpleGit(workspacePath);
       const status = await git.status();
-      
+
       const changes = {
         modified: status.modified,
         added: status.created,
         deleted: status.deleted,
         renamed: status.renamed,
         staged: status.staged,
-        hasChanges: !status.isClean()
+        hasChanges: !status.isClean(),
       };
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         changes,
-        hasChanges: changes.hasChanges 
+        hasChanges: changes.hasChanges,
       };
     } catch (error) {
-      console.error(`Error al obtener cambios para la branch '${branch}':`, error);
-      return { 
-        success: false, 
-        error: 'Error interno al obtener los cambios del workspace.' 
+      console.error(
+        `Error al obtener cambios para la branch '${branch}':`,
+        error,
+      );
+      return {
+        success: false,
+        error: 'Error interno al obtener los cambios del workspace.',
       };
     }
   }
@@ -156,7 +168,7 @@ class BranchManager {
   getWorkspacePath(branch) {
     const sanitizedBranch = this.validationManager.sanitize(branch);
     const persistentRoot = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
-    
+
     if (!persistentRoot) {
       throw new Error('Persistent workspaces not enabled');
     }
@@ -170,56 +182,60 @@ class BranchManager {
   async createWorkspace(branch) {
     const validationErrors = this.validationManager.validateBranchName(branch);
     if (validationErrors.length > 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Invalid branch name',
-        details: validationErrors 
+        details: validationErrors,
       };
     }
 
     if (!this.configManager.isEnabled('persistentWorkspaces')) {
-      return { 
-        success: false, 
-        error: 'La funcionalidad de workspaces persistentes no está habilitada.' 
+      return {
+        success: false,
+        error:
+          'La funcionalidad de workspaces persistentes no está habilitada.',
       };
     }
 
     try {
       const workspacePath = this.getWorkspacePath(branch);
       const fs = require('fs');
-      
+
       if (fs.existsSync(workspacePath)) {
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: 'Workspace already exists',
-          path: workspacePath 
+          path: workspacePath,
         };
       }
 
       // Create directory structure
       await fs.promises.mkdir(workspacePath, { recursive: true });
-      
+
       // Clone the repository
       const git = simpleGit(workspacePath);
       const authenticatedUrl = this.getAuthenticatedUrl();
-      
+
       await git.clone(authenticatedUrl, workspacePath, [
         '--branch',
         branch,
         '--depth',
-        '1'
+        '1',
       ]);
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         message: 'Workspace created successfully',
-        path: workspacePath 
+        path: workspacePath,
       };
     } catch (error) {
-      console.error(`Error al crear workspace para la branch '${branch}':`, error);
-      return { 
-        success: false, 
-        error: 'Error interno al crear el workspace.' 
+      console.error(
+        `Error al crear workspace para la branch '${branch}':`,
+        error,
+      );
+      return {
+        success: false,
+        error: 'Error interno al crear el workspace.',
       };
     }
   }
@@ -231,7 +247,7 @@ class BranchManager {
     try {
       const workspacePath = this.getWorkspacePath(branch);
       return require('fs').existsSync(workspacePath);
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -241,13 +257,19 @@ class BranchManager {
    */
   async getBranchHistory() {
     try {
-      const reportsDir = require('path').join(__dirname, '..', '..', 'public', 'reports');
+      const reportsDir = require('path').join(
+        __dirname,
+        '..',
+        '..',
+        'public',
+        'reports',
+      );
       const fs = require('fs');
-      
+
       if (!fs.existsSync(reportsDir)) {
-        return { 
-          success: true, 
-          branches: [] 
+        return {
+          success: true,
+          branches: [],
         };
       }
 
@@ -257,27 +279,27 @@ class BranchManager {
       for (const branch of branches) {
         const branchPath = require('path').join(reportsDir, branch);
         const stats = await fs.promises.stat(branchPath);
-        
+
         if (stats.isDirectory()) {
           const reports = await fs.promises.readdir(branchPath);
           branchData.push({
             name: branch,
             reportCount: reports.length,
             lastModified: stats.mtime,
-            hasReports: reports.length > 0
+            hasReports: reports.length > 0,
           });
         }
       }
 
-      return { 
-        success: true, 
-        branches: branchData.sort((a, b) => b.lastModified - a.lastModified) 
+      return {
+        success: true,
+        branches: branchData.sort((a, b) => b.lastModified - a.lastModified),
       };
     } catch (error) {
       console.error('Error al obtener historial de branches:', error);
-      return { 
-        success: false, 
-        error: 'Error interno al obtener el historial.' 
+      return {
+        success: false,
+        error: 'Error interno al obtener el historial.',
       };
     }
   }
@@ -287,13 +309,19 @@ class BranchManager {
    */
   async getBranchDetailedHistory(branchFilter = null) {
     try {
-      const reportsDir = require('path').join(__dirname, '..', '..', 'public', 'reports');
+      const reportsDir = require('path').join(
+        __dirname,
+        '..',
+        '..',
+        'public',
+        'reports',
+      );
       const fs = require('fs');
-      
+
       if (!fs.existsSync(reportsDir)) {
-        return { 
-          success: true, 
-          history: [] 
+        return {
+          success: true,
+          history: [],
         };
       }
 
@@ -311,24 +339,29 @@ class BranchManager {
         for (const report of reports) {
           const reportPath = require('path').join(branchPath, report);
           const stats = await fs.promises.stat(reportPath);
-          
+
           if (stats.isDirectory()) {
             const reportData = {
               branch,
               reportName: report,
               path: reportPath,
               created: stats.birthtime,
-              modified: stats.mtime
+              modified: stats.mtime,
             };
 
             // Try to read report metadata if available
             try {
-              const metadataPath = require('path').join(reportPath, 'metadata.json');
+              const metadataPath = require('path').join(
+                reportPath,
+                'metadata.json',
+              );
               if (fs.existsSync(metadataPath)) {
-                const metadata = JSON.parse(await fs.promises.readFile(metadataPath, 'utf8'));
+                const metadata = JSON.parse(
+                  await fs.promises.readFile(metadataPath, 'utf8'),
+                );
                 reportData.metadata = metadata;
               }
-            } catch (e) {
+            } catch {
               // Ignore metadata reading errors
             }
 
@@ -337,15 +370,15 @@ class BranchManager {
         }
       }
 
-      return { 
-        success: true, 
-        history: history.sort((a, b) => b.modified - a.modified) 
+      return {
+        success: true,
+        history: history.sort((a, b) => b.modified - a.modified),
       };
     } catch (error) {
       console.error('Error al obtener historial detallado:', error);
-      return { 
-        success: false, 
-        error: 'Error interno al obtener el historial detallado.' 
+      return {
+        success: false,
+        error: 'Error interno al obtener el historial detallado.',
       };
     }
   }

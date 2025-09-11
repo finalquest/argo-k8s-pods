@@ -4,6 +4,33 @@
 
 El sistema de autenticación de Appium Orchestrator Web está implementado utilizando **Google OAuth 2.0** con Passport.js, proporcionando una capa de seguridad robusta y una experiencia de usuario fluida. Este sistema garantiza que solo usuarios autorizados puedan acceder y operar la plataforma.
 
+### 🔓 Modo Desarrollo (Sin Autenticación)
+
+Cuando las variables de entorno de Google OAuth no están configuradas, el sistema opera en **modo desarrollo**, lo que permite:
+
+- **Acceso sin autenticación** para desarrollo y testing
+- **Usuario de desarrollo automático** con perfil simulado
+- **Misma funcionalidad** que el modo producción
+- **Ideal para entornos locales** y desarrollo rápido
+
+### 🔄 Detección Automática de Modo
+
+El sistema detecta automáticamente el modo de operación:
+
+```javascript
+// Modo desarrollo (sin autenticación)
+if (!process.env.GOOGLE_CLIENT_SECRET) {
+  console.log('🔓 Modo desarrollo: Autenticación deshabilitada');
+  // Usar usuario de desarrollo automático
+}
+
+// Modo producción (con autenticación)
+if (process.env.GOOGLE_CLIENT_SECRET) {
+  console.log('🔒 Modo producción: Autenticación habilitada');
+  // Configurar Google OAuth 2.0
+}
+```
+
 ## 🔧 Componentes del Sistema
 
 ### 1. Configuración de Passport.js
@@ -30,17 +57,62 @@ passport.use(
 );
 ```
 
-#### Variables de Entorno Requeridas
+#### Variables de Entorno
+
+**Modo Producción (con autenticación):**
 
 ```javascript
-// .env - Variables de configuración
-GOOGLE_CLIENT_ID = tu - client - id - de - google;
-GOOGLE_CLIENT_SECRET = tu - client - secret - de - google;
-GOOGLE_HOSTEDDomain = tu - dominio - empresarial.com;
-SESSION_SECRET = tu - secreto - de - sesion - muy - seguro;
+// .env - Variables requeridas para autenticación
+GOOGLE_CLIENT_ID=tu-client-id-de-google
+GOOGLE_CLIENT_SECRET=tu-client-secret-de-google
+GOOGLE_HOSTED_DOMAIN=tu-dominio-empresarial.com
+SESSION_SECRET=tu-secreto-de-sesion-muy-seguro
 ```
 
-### 2. Serialización y Deserialización de Usuarios
+**Modo Desarrollo (sin autenticación):**
+
+```javascript
+// .env - Variables mínimas para modo desarrollo
+SESSION_SECRET=tu-secreto-de-sesion-muy-seguro
+# GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET son opcionales
+# Si no se definen, el sistema funciona en modo desarrollo
+```
+
+**Generación Automática:**
+
+Si no se define `SESSION_SECRET`, el sistema genera uno automáticamente en modo desarrollo:
+
+```javascript
+// Generación automática en modo desarrollo
+SESSION_SECRET=${crypto.randomBytes(32).toString('hex')}
+```
+
+### 2. Sistema de Usuario de Desarrollo
+
+**Modo Desarrollo - Usuario Automático:**
+
+Cuando la autenticación está deshabilitada, el sistema crea automáticamente un usuario de desarrollo:
+
+```javascript
+// Usuario de desarrollo automático
+const developmentUser = {
+  id: 'dev-user',
+  displayName: 'Development User',
+  email: 'dev@localhost',
+  photos: [{ value: 'https://via.placeholder.com/40' }],
+  isDevelopment: true
+};
+```
+
+**Características del Usuario de Desarrollo:**
+
+- **ID único**: `dev-user`
+- **Nombre completo**: `Development User`
+- **Email**: `dev@localhost`
+- **Foto**: Placeholder automático
+- **Marca de desarrollo**: `isDevelopment: true`
+
+### 3. Serialización y Deserialización de Usuarios
 
 ```javascript
 // server.js - Manejo de sesiones de usuario
@@ -414,6 +486,96 @@ app.use((err, req, res, next) => {
   next(err);
 });
 ```
+
+## 🔄 Configuración Condicional y Detección de Modo
+
+### 1. Detección Automática
+
+El sistema detecta automáticamente si debe operar en modo desarrollo o producción:
+
+```javascript
+// ConfigurationManager - Detección de modo
+isEnabled(feature) {
+  switch (feature) {
+    case 'authentication':
+      return !!(
+        this.config.GOOGLE_CLIENT_ID && 
+        this.config.GOOGLE_CLIENT_SECRET
+      );
+    default:
+      return false;
+  }
+}
+
+isDevelopmentMode() {
+  return !this.isEnabled('authentication');
+}
+```
+
+### 2. Comportamiento del AuthenticationManager
+
+**Modo Producción:**
+- Configura Google OAuth 2.0
+- Protege todas las rutas /api
+- Requiere autenticación para Socket.IO
+- Valida dominio de Google
+
+**Modo Desarrollo:**
+- Omite configuración de OAuth
+- Permite acceso sin autenticación
+- Crea usuario de desarrollo automático
+- Socket.IO funciona sin autenticación
+
+### 3. Endpoint de Configuración
+
+El frontend puede verificar el modo de autenticación:
+
+```javascript
+// GET /api/config
+{
+  "persistentWorkspacesEnabled": false,
+  "deviceSource": "local",
+  "maxParallelTests": 2,
+  "featureDirs": ["feature/modulos"],
+  "auth": {
+    "enabled": false,
+    "developmentMode": true,
+    "providers": [],
+    "domainRestriction": false
+  }
+}
+```
+
+### 4. Mensajes del Sistema
+
+**Inicio en Modo Desarrollo:**
+```
+⚠️  Google OAuth no configurado - Modo desarrollo (sin autenticación)
+   Para habilitar autenticación, define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
+⚠️  Generando SESSION_SECRET aleatoria para modo desarrollo...
+🔓 MODO DESARROLLO: Autenticación deshabilitada
+   Para habilitar autenticación, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
+🔓 Socket.io en modo desarrollo - sin autenticación
+```
+
+**Inicio en Modo Producción:**
+```
+🔒 MODO PRODUCCIÓN: Autenticación habilitada
+```
+
+### 5. Consideraciones de Seguridad
+
+**Modo Desarrollo:**
+- Solo usar en entornos locales y desarrollo
+- No exponer a internet sin autenticación
+- Ideal para testing y desarrollo rápido
+- Misma funcionalidad que modo producción
+
+**Modo Producción:**
+- Requiere todas las variables de entorno
+- Seguridad completa con Google OAuth
+- Restricción de dominio opcional
+- Auditoría completa de accesos
 
 ## 📖 Documentos Relacionados
 
