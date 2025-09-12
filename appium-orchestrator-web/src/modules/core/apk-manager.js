@@ -481,7 +481,7 @@ class ApkManager {
             error: 'AndroidManifest.xml not found in APK',
           };
         }
-      } catch (zipError) {
+      } catch {
         // If JSZip is not available or fails, do basic validation
         console.log('JSZip validation failed, doing basic validation');
       }

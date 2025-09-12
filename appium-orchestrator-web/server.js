@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
 const fetch = require('node-fetch');
 const https = require('https');
 const archiver = require('archiver');

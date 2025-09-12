@@ -205,9 +205,6 @@ class BranchManager {
       const modifiedFiles = status.modified.length;
       const stagedFiles = status.staged.length;
       const unstagedFiles = status.not_added.length;
-      const deletedFiles = status.deleted.length;
-      const createdFiles = status.created.length;
-      const renamedFiles = status.renamed.length;
 
       // Only show header for tracked files that have been modified (not untracked files)
       const hasChanges = modifiedFiles + stagedFiles > 0;

@@ -88,6 +88,10 @@ body {
   border-bottom: 1px solid var(--gray-200);
   position: relative;
   transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 /* Dark mode header styles */
@@ -106,10 +110,32 @@ body {
   border-bottom: 3px solid var(--warning-color);
 }
 
-.header-title-section {
+.header-queue-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1;
+}
+
+#queue-status-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 0;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#queue-status-header::before {
+  content: "⚡";
+  font-size: 1rem;
+}
+
+/* Dark mode queue status header */
+[data-theme='dark'] #queue-status-header {
+  color: var(--gray-300);
 }
 
 .header-indicators {
@@ -835,6 +861,12 @@ button[style*='17a2b8']:hover:not(:disabled) {
   background: var(--gray-50);
 }
 
+/* Dark mode hover for feature items */
+[data-theme='dark'] #features-list .feature-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+}
+
 #features-list li.modified {
   background-color: #fefce8; /* Light Yellow */
   border-left: 5px solid #facc15; /* Amber */
@@ -843,6 +875,26 @@ button[style*='17a2b8']:hover:not(:disabled) {
 
 #features-list li.modified:hover {
   background-color: #fef9c3; /* Slightly darker yellow on hover */
+}
+
+/* Dark mode styles for modified files */
+[data-theme='dark'] #features-list li.modified {
+  background-color: #713f12; /* Dark amber background for contrast */
+  border-left: 5px solid #facc15; /* Keep amber border for visibility */
+  color: #fef3c7; /* Light amber text for contrast */
+}
+
+[data-theme='dark'] #features-list li.modified:hover {
+  background-color: #92400e; /* Darker amber on hover */
+  color: #fef3c7; /* Keep light text */
+}
+
+[data-theme='dark'] #features-list li.modified .feature-item {
+  color: #fef3c7; /* Light amber text for feature names */
+}
+
+[data-theme='dark'] #features-list li.modified .feature-checkbox {
+  filter: brightness(1.5) contrast(1.2); /* Make checkbox more visible */
 }
 
 #features-list li:last-child,
@@ -1315,11 +1367,12 @@ h3 {
 
 /* Enhanced User Info */
 #auth-container {
-  position: absolute;
-  top: 1.5rem;
-  right: 2rem;
+  position: relative;
   text-align: right;
   z-index: 101; /* Por encima del toggle */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 #user-info img {

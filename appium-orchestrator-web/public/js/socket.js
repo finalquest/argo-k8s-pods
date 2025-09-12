@@ -1,9 +1,10 @@
-import { apkSource, loadHistory, getWorkspaceChanges } from './api.js';
+import { apkSource, loadHistory } from './api.js';
 import {
   updateQueueStatus,
   renderWorkerPool,
   renderWorkerStatus,
 } from './ui.js';
+import { globalEvents } from './state/event-manager.js';
 
 let runningJobs = new Map();
 
@@ -264,21 +265,26 @@ export function initializeSocketListeners(socket) {
     console.log(`Commit status update for branch ${data.branch}:`, data);
     const selectedBranch = document.getElementById('branch-select').value;
     if (data.branch === selectedBranch) {
-      // Update the commit status indicator
-      if (window.updateCommitStatusIndicator) {
-        await window.updateCommitStatusIndicator(data.branch);
-      }
+      // Emitir evento para actualizar el estado del commit
+      globalEvents.emit('commit:status_updated', { branch: data.branch });
     }
   });
 
   socket.on('workspace_changes_committed', async (data) => {
     console.log(`Workspace changes committed for branch ${data.branch}`);
     const selectedBranch = document.getElementById('branch-select').value;
+    const selectedClient = document.getElementById('client-select').value;
+
     if (data.branch === selectedBranch) {
-      // Update the commit status indicator to reflect the committed changes
-      if (window.updateCommitStatusIndicator) {
-        await window.updateCommitStatusIndicator();
-      }
+      // Emitir evento para actualizar el estado del commit
+      globalEvents.emit('commit:completed', {
+        branch: selectedBranch,
+        client: selectedClient,
+      });
+
+      console.log(
+        '🔍 workspace_changes_committed - Evento commit:completed emitido',
+      );
     }
   });
 }

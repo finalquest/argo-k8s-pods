@@ -159,19 +159,53 @@ export function updateSelectedCount() {
   ).length;
   runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
   runSelectedBtn.disabled = selectedCount === 0;
+  console.log('🔍 updateSelectedCount - Selected count:', selectedCount);
   updateCommitButtonState(); // Update commit button state as well
 }
 
 export function updateCommitButtonState() {
-  const commitBtn = document.getElementById('commit-changes-btn');
+  const commitBtn = document.getElementById('ide-commit-btn');
+  console.log(
+    '🔍 updateCommitButtonState - commitBtn (ide-commit-btn) encontrado:',
+    !!commitBtn,
+  );
   if (!commitBtn) return;
 
-  const selectedModified = document.querySelectorAll(
-    'li.modified .feature-checkbox:checked',
-  ).length;
+  const hasModifiedFiles = document.querySelectorAll('li.modified').length > 0;
 
-  commitBtn.disabled = selectedModified === 0;
-  commitBtn.classList.toggle('hidden', selectedModified === 0);
+  console.log(
+    '🔍 updateCommitButtonState - Hay archivos modificados:',
+    hasModifiedFiles,
+  );
+  console.log(
+    '🔍 updateCommitButtonState - Total elementos .modified:',
+    document.querySelectorAll('li.modified').length,
+  );
+  console.log(
+    '🔍 updateCommitButtonState - Antes de cambios - disabled:',
+    commitBtn.disabled,
+    'display:',
+    commitBtn.style.display,
+  );
+
+  commitBtn.disabled = !hasModifiedFiles;
+  commitBtn.style.display = hasModifiedFiles ? 'inline-block' : 'none';
+  console.log(
+    '🔍 updateCommitButtonState - Después de cambios - disabled:',
+    commitBtn.disabled,
+    'display:',
+    commitBtn.style.display,
+  );
+
+  // Verificar si hay algún atributo disabled directamente en el HTML
+  console.log(
+    '🔍 updateCommitButtonState - Atributo disabled HTML:',
+    commitBtn.hasAttribute('disabled'),
+  );
+  console.log(
+    '🔍 updateCommitButtonState - Clases del botón:',
+    commitBtn.className,
+  );
 }
 
 export function toggleSelectAll(event) {
@@ -183,8 +217,10 @@ export function toggleSelectAll(event) {
 }
 
 export function updateQueueStatus(status) {
-  const statusDiv = document.getElementById('queue-status');
-  statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+  const statusDiv = document.getElementById('queue-status-header');
+  if (statusDiv) {
+    statusDiv.textContent = `Estado: ${status.active} en ejecución / ${status.queued} en cola (Límite: ${status.limit})`;
+  }
   renderQueue(status.queue);
 }
 
@@ -369,8 +405,16 @@ export function filterFeatureListByText() {
 export function updateFeaturesWithGitStatus(modifiedFeatures) {
   // The modifiedFeatures from server are full paths, e.g., test/features/nbch/feature/modulos/folder/file.feature
   // The featureName in the dataset is relative to modulos, e.g., folder/file
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Modified features recibidos:',
+    modifiedFeatures,
+  );
   const modifiedSet = new Set(modifiedFeatures);
   const featureItems = document.querySelectorAll('#features-list .file');
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Encontrados .file elements:',
+    featureItems.length,
+  );
 
   featureItems.forEach((item) => {
     const featureName = item.dataset.featureName;
@@ -384,16 +428,32 @@ export function updateFeaturesWithGitStatus(modifiedFeatures) {
     for (const modifiedFile of modifiedSet) {
       if (modifiedFile.endsWith(featurePathSuffix)) {
         isModified = true;
+        console.log(
+          '🔍 updateFeaturesWithGitStatus - Marcando como modificado:',
+          featureName,
+        );
         break;
       }
     }
 
     if (isModified) {
       item.classList.add('modified');
+      console.log(
+        '🔍 updateFeaturesWithGitStatus - Clase "modified" agregada a:',
+        featureName,
+      );
     } else {
       item.classList.remove('modified');
     }
   });
+
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Total elementos con clase modified después de actualizar:',
+    document.querySelectorAll('li.modified').length,
+  );
+
+  // Actualizar el estado del botón de commit después de marcar los archivos modificados
+  updateCommitButtonState();
 }
 
 export function addFeatureControls(li, featureName) {
@@ -497,9 +557,12 @@ export function initIdeView({ onSave, onCommit, onRun }) {
   const editorPanel = document.getElementById('editor-panel');
   editorPanel.innerHTML = `
     <div class="editor-controls">
-      <button id="ide-run-btn" class="execute-btn" style="display: none;">Ejecutar</button>
-      <button id="ide-commit-btn" class="commit-btn" style="display: none;">Hacer Commit</button>
-      <button id="ide-save-btn" class="secondary-btn" style="display: none;" disabled>Guardar Cambios</button>
+      <div class="editor-title" id="editor-title" style="display: none;">Selecciona un archivo</div>
+      <div class="editor-actions">
+        <button id="ide-run-btn" class="execute-btn" style="display: none;">Ejecutar</button>
+        <button id="ide-commit-btn" class="commit-btn" style="display: none;">Hacer Commit</button>
+        <button id="ide-save-btn" class="secondary-btn" style="display: none;" disabled>Guardar Cambios</button>
+      </div>
     </div>
     <div class="codemirror-wrapper"></div>
   `;
@@ -534,6 +597,8 @@ export function initIdeView({ onSave, onCommit, onRun }) {
     commitBtn.addEventListener('click', onCommit);
   }
 
+  // El ide-commit-btn ya tiene su listener agregado más arriba
+
   const runBtn = document.getElementById('ide-run-btn');
   if (runBtn && typeof onRun === 'function') {
     runBtn.addEventListener('click', onRun);
@@ -544,7 +609,15 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
   const saveBtn = document.getElementById('ide-save-btn');
   const commitBtn = document.getElementById('ide-commit-btn');
   const runBtn = document.getElementById('ide-run-btn');
+  const editorTitle = document.getElementById('editor-title');
   const editorControls = document.querySelector('.editor-controls');
+
+  console.log(
+    '🔍 setIdeEditorContent - isModified:',
+    isModified,
+    'isReadOnly:',
+    isReadOnly,
+  );
 
   // Remove existing read-only indicator
   const existingIndicator = editorControls?.querySelector(
@@ -586,7 +659,47 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
     runBtn.style.display = 'inline-block';
   }
   if (commitBtn) {
-    commitBtn.style.display = isModified ? 'inline-block' : 'none';
+    commitBtn.style.display = 'inline-block';
+    console.log(
+      '🔍 setIdeEditorContent - Botón commit display set to inline-block',
+    );
+  }
+  if (editorTitle) {
+    // Si hay contenido real (no el mensaje por defecto), mostrar el título
+    if (
+      content &&
+      content !==
+        '// Selecciona un archivo del árbol para ver su contenido.\n' &&
+      content !==
+        '// Selecciona una branch y luego un archivo para ver su contenido.'
+    ) {
+      // Obtener el nombre del feature del appState o del contenido
+      const activeFeature = window.appState?.getState()?.activeFeature;
+      if (activeFeature && activeFeature.featureName) {
+        editorTitle.textContent = activeFeature.featureName;
+        editorTitle.style.display = 'block';
+        console.log(
+          '🔍 setIdeEditorContent - Título establecido:',
+          activeFeature.featureName,
+        );
+      } else {
+        // Intentar extraer el nombre del feature del contenido
+        const featureMatch = content.match(/Feature:\s*(.+)/);
+        if (featureMatch) {
+          const featureName = featureMatch[1].trim();
+          editorTitle.textContent = featureName;
+          editorTitle.style.display = 'block';
+          console.log(
+            '🔍 setIdeEditorContent - Título extraído del contenido:',
+            featureName,
+          );
+        } else {
+          editorTitle.style.display = 'none';
+        }
+      }
+    } else {
+      editorTitle.style.display = 'none';
+    }
   }
 }
 

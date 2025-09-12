@@ -28,8 +28,26 @@
   background: var(--gray-50);
   border-bottom: 1px solid var(--gray-200);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
+}
+
+.editor-title {
+  flex: 1;
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .codemirror-wrapper {
@@ -55,6 +73,13 @@
 #features-list .folder > .feature-item:hover,
 #features-list .file > .feature-item:hover {
   background-color: var(--gray-100);
+}
+
+/* Dark mode hover for features list */
+[data-theme='dark'] #features-list .folder > .feature-item:hover,
+[data-theme='dark'] #features-list .file > .feature-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 #features-list ul.nested {

@@ -26,8 +26,8 @@
     </div>
 
     <div class="header" id="main-header">
-      <div class="header-title-section">
-        <h1 id="main-title">Appium Orchestrator Web</h1>
+      <div class="header-queue-section">
+        <div id="queue-status-header">Estado: 0 en ejecución / 0 en cola (Límite: 0)</div>
         <div class="header-indicators">
           <div
             id="uncommitted-changes-indicator"
@@ -47,7 +47,6 @@
           </div>
         </div>
       </div>
-      <div id="queue-status"></div>
       <div id="auth-container">
         <div id="user-info" style="display: none">
           <div>
@@ -211,13 +210,6 @@
                   <input type="checkbox" id="select-all-features" />
                   <span>Seleccionar Todo</span>
                 </label>
-                <button
-                  id="commit-changes-btn"
-                  class="compact-btn commit-btn hidden"
-                  title="Hacer Commit de Cambios"
-                >
-                  📝 Commit
-                </button>
                 <button
                   id="run-selected-btn"
                   class="compact-btn execute-btn"

@@ -419,8 +419,14 @@ class SocketIOManager {
       });
 
       const sanitizedBranch = this.validationManager.sanitize(branch);
-      const workspacePath = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
-      const appiumWorkspacePath = require('path').join(workspacePath, sanitizedBranch, 'appium');
+      const workspacePath = this.configManager.get(
+        'PERSISTENT_WORKSPACES_ROOT',
+      );
+      const appiumWorkspacePath = require('path').join(
+        workspacePath,
+        sanitizedBranch,
+        'appium',
+      );
 
       if (!require('fs').existsSync(appiumWorkspacePath)) {
         this.emitLogUpdate({
@@ -434,7 +440,9 @@ class SocketIOManager {
       for (const file of files) {
         const fullPath = require('path').join(appiumWorkspacePath, file);
         const resolvedPath = require('path').resolve(fullPath);
-        if (!resolvedPath.startsWith(require('path').resolve(appiumWorkspacePath))) {
+        if (
+          !resolvedPath.startsWith(require('path').resolve(appiumWorkspacePath))
+        ) {
           this.emitLogUpdate({
             ...logSlot,
             logLine: `${logPrefix} ❌ Error de seguridad: Se intentó acceder a un archivo fuera del workspace: ${file}\n`,
@@ -479,12 +487,13 @@ class SocketIOManager {
           logLine: `${logPrefix} étape 1/3: Añadiendo archivos...
 `,
         });
-        
+
         // Handle both individual files and directories
-        const gitAddArgs = files.length === 1 && files[0].endsWith('/') 
-          ? [files[0]] // Add directory
-          : [...files]; // Add individual files
-        
+        const gitAddArgs =
+          files.length === 1 && files[0].endsWith('/')
+            ? [files[0]] // Add directory
+            : [...files]; // Add individual files
+
         await executeGitCommand('git', ['add', ...gitAddArgs]);
 
         this.emitLogUpdate({
@@ -509,7 +518,7 @@ ${logPrefix} étape 2/3: Realizando commit local...
           message:
             'Hay commits locales que no han sido subidos al repositorio remoto.',
         });
-        
+
         // Notificar al frontend para que actualice el status de cambios del workspace
         this.io.emit('workspace_changes_committed', { branch });
       } catch (error) {

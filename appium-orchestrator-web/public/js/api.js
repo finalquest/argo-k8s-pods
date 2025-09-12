@@ -5,6 +5,7 @@ import {
   updateFeaturesWithGitStatus,
   renderFeatureTree,
 } from './ui.js';
+import { globalEvents } from './state/event-manager.js';
 
 export async function getCurrentUser() {
   try {
@@ -104,7 +105,7 @@ export async function getCommitStatus(branch) {
     const response = await fetch(`/api/commit-status/${branch}`);
     if (!response.ok) throw new Error('Failed to get commit status');
     const data = await response.json();
-    
+
     // Normalize the response to match expected format
     if (data.success) {
       return {
@@ -225,10 +226,11 @@ export async function fetchFeatures() {
       const status = await getWorkspaceStatus(selectedBranch);
       updateFeaturesWithGitStatus(status.modified_features);
 
-      // Update commit status indicators
-      if (window.updateCommitStatusIndicator) {
-        await window.updateCommitStatusIndicator(selectedBranch);
-      }
+      // Emit event to update commit status indicators
+      globalEvents.emit('features:loaded', {
+        branch: selectedBranch,
+        modifiedFeatures: status.modified_features,
+      });
     }
   } catch (error) {
     console.error('Error al buscar features:', error);

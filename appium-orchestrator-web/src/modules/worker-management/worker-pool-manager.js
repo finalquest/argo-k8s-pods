@@ -34,14 +34,7 @@ class WorkerPoolManager {
   /**
    * Create a new worker
    */
-  createWorker(
-    branch,
-    client,
-    apkIdentifier,
-    apkSourceType,
-    deviceSerial,
-    persistentWorkspace = false,
-  ) {
+  createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial) {
     const workerId =
       this.workerPool.length > 0
         ? Math.max(...this.workerPool.map((w) => w.id)) + 1

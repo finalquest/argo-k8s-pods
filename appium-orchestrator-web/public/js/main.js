@@ -29,6 +29,7 @@ import {
   displayPrepareWorkspaceButton,
   displayGitControls,
   updateFeaturesWithGitStatus,
+  updateCommitButtonState,
   displayFeatureFilter,
   filterFeatureList,
   filterFeatureListByText,
@@ -64,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkAuthStatus() {
   const authOverlay = document.getElementById('auth-overlay');
   const userInfoDiv = document.getElementById('user-info');
+  const themeToggleContainer = document.querySelector(
+    '.theme-toggle-container',
+  );
 
   appState.setState({ isLoading: true });
   globalEvents.emit('auth:checking');
@@ -71,22 +75,57 @@ async function checkAuthStatus() {
   const user = await getCurrentUser();
   appState.setState({ isLoading: false });
 
+  // Obtener configuración para verificar modo desarrollo
+  const config = await fetchConfig();
+
   if (user) {
     appState.setState({ currentUser: user });
     globalEvents.emit('auth:success', user);
 
     authOverlay.style.display = 'none';
-    document.getElementById('user-name').textContent = user.name;
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-photo').src = user.photo;
-    userInfoDiv.style.display = 'block';
+
+    // Ocultar elementos de auth en modo desarrollo
+    if (config.auth && config.auth.developmentMode) {
+      console.log('🔓 Modo desarrollo: Ocultando elementos de autenticación');
+      userInfoDiv.style.display = 'none';
+    } else {
+      // Mostrar elementos normales en modo producción
+      document.getElementById('user-name').textContent = user.name;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-photo').src = user.photo;
+      userInfoDiv.style.display = 'block';
+      themeToggleContainer.style.display = 'block';
+    }
+
     initializeApp();
   } else {
     appState.setState({ currentUser: null });
     globalEvents.emit('auth:failed');
 
     authOverlay.style.display = 'flex';
-    userInfoDiv.style.display = 'none';
+    userInfoDiv.style.display = 'block';
+    themeToggleContainer.style.display = 'block';
+  }
+}
+
+// Función auxiliar para verificar si estamos en modo desarrollo
+async function isDevelopmentMode() {
+  try {
+    const config = await fetchConfig();
+    return config.auth && config.auth.developmentMode;
+  } catch (error) {
+    console.error('Error al verificar modo desarrollo:', error);
+    return false;
+  }
+}
+
+// Función para ocultar elementos de autenticación en modo desarrollo
+async function hideAuthElementsInDevMode() {
+  if (await isDevelopmentMode()) {
+    const userInfoDiv = document.getElementById('user-info');
+    if (userInfoDiv) userInfoDiv.style.display = 'none';
+
+    console.log('🔓 Modo desarrollo: Elementos de autenticación ocultos');
   }
 }
 
@@ -162,7 +201,7 @@ function handleIdeCommit() {
   console.log('=== HANDLE IDE COMMIT DEBUG ===');
   const activeFeature = appState.getState().activeFeature;
   console.log('Active feature:', activeFeature);
-  
+
   if (!activeFeature) {
     alert('No hay ningún archivo activo para commitear.');
     return;
@@ -175,38 +214,40 @@ function handleIdeCommit() {
   // Check if there are actual changes to commit
   const branch = activeFeature.branch;
   console.log('Branch for commit check:', branch);
-  
-  getWorkspaceChanges(branch).then(workspaceStatus => {
-    console.log('Workspace status from API:', workspaceStatus);
-    console.log('Has changes:', workspaceStatus.hasChanges);
-    console.log('Modified files count:', workspaceStatus.modifiedFiles);
-    
-    if (!workspaceStatus.hasChanges) {
-      console.log('No changes detected, showing alert');
-      alert('No hay archivos modificados para commitear.');
-      return;
-    }
 
-    // Show the active feature file
-    const { featureName, client } = activeFeature;
-    const li = document.createElement('li');
-    li.textContent = `test/features/${client}/feature/modulos/${featureName}.feature`;
-    filesList.appendChild(li);
+  getWorkspaceChanges(branch)
+    .then((workspaceStatus) => {
+      console.log('Workspace status from API:', workspaceStatus);
+      console.log('Has changes:', workspaceStatus.hasChanges);
+      console.log('Modified files count:', workspaceStatus.modifiedFiles);
 
-    // If there are other modified files, show them too
-    if (workspaceStatus.modifiedFiles > 1) {
-      const otherFilesLi = document.createElement('li');
-      otherFilesLi.textContent = `y ${workspaceStatus.modifiedFiles - 1} otro(s) archivo(s) modificado(s)`;
-      otherFilesLi.style.fontStyle = 'italic';
-      filesList.appendChild(otherFilesLi);
-    }
+      if (!workspaceStatus.hasChanges) {
+        console.log('No changes detected, showing alert');
+        alert('No hay archivos modificados para commitear.');
+        return;
+      }
 
-    console.log('Showing commit modal');
-    modal.style.display = 'block';
-  }).catch(error => {
-    console.error('Error checking workspace changes:', error);
-    alert('Error al verificar cambios en el workspace.');
-  });
+      // Show the active feature file
+      const { featureName, client } = activeFeature;
+      const li = document.createElement('li');
+      li.textContent = `test/features/${client}/feature/modulos/${featureName}.feature`;
+      filesList.appendChild(li);
+
+      // If there are other modified files, show them too
+      if (workspaceStatus.modifiedFiles > 1) {
+        const otherFilesLi = document.createElement('li');
+        otherFilesLi.textContent = `y ${workspaceStatus.modifiedFiles - 1} otro(s) archivo(s) modificado(s)`;
+        otherFilesLi.style.fontStyle = 'italic';
+        filesList.appendChild(otherFilesLi);
+      }
+
+      console.log('Showing commit modal');
+      modal.style.display = 'block';
+    })
+    .catch((error) => {
+      console.error('Error checking workspace changes:', error);
+      alert('Error al verificar cambios en el workspace.');
+    });
 }
 
 function initializeApp() {
@@ -230,12 +271,52 @@ function initializeApp() {
   // Auto-fetch APK versions on page load
   fetchApkVersions();
 
+  // Asegurar que elementos de auth estén ocultos en modo desarrollo
+  hideAuthElementsInDevMode();
+
   // Listen for features loaded event to update commit status
   window.addEventListener('featuresLoaded', async (event) => {
     const { branch } = event.detail;
     const config = await fetchConfig();
     if (config.persistentWorkspacesEnabled) {
       await updateCommitStatusIndicator(branch);
+    }
+  });
+
+  // Listen for commit completed event to update UI after successful commit
+  globalEvents.on('commit:completed', async (data) => {
+    console.log('🔍 commit:completed event received:', data);
+    const { branch, client } = data;
+
+    try {
+      // Update the commit status indicator
+      await updateCommitStatusIndicator(branch);
+
+      // Refresh git status to update the modified files display
+      const status = await getWorkspaceStatus(branch);
+      updateFeaturesWithGitStatus(status.modified_features, client);
+
+      // Update commit button state
+      updateCommitButtonState();
+
+      console.log(
+        '🔍 commit:completed - UI actualizada, modified features:',
+        status.modified_features,
+      );
+    } catch (error) {
+      console.error('Error updating UI after commit:', error);
+    }
+  });
+
+  // Listen for commit status update events
+  globalEvents.on('commit:status_updated', async (data) => {
+    console.log('🔍 commit:status_updated event received:', data);
+    const { branch } = data;
+
+    try {
+      await updateCommitStatusIndicator(branch);
+    } catch (error) {
+      console.error('Error updating commit status indicator:', error);
     }
   });
 }
@@ -291,44 +372,46 @@ async function initializeAppControls(socket) {
         alert('Por favor, selecciona una branch.');
         return;
       }
-      
+
       console.log('=== HEADER COMMIT DEBUG ===');
       console.log('Selected branch:', selectedBranch);
       console.log('Selected client:', selectedClient);
-      
-      getWorkspaceChanges(selectedBranch).then(workspaceStatus => {
-        console.log('Workspace status:', workspaceStatus);
-        
-        if (!workspaceStatus.hasChanges) {
-          console.log('No changes detected');
-          alert('No hay archivos modificados para commitear.');
-          return;
-        }
-        
-        // For header commit, we need to get the actual modified files
-        // Since we can't get the exact list from the current API, 
-        // we'll commit all .feature files for the selected client
-        const modal = document.getElementById('commit-modal');
-        const filesList = document.getElementById('commit-files-list');
-        filesList.innerHTML = '';
-        
-        // Store commit info for later use in confirm
-        modal.commitData = {
-          branch: selectedBranch,
-          client: selectedClient,
-          commitAllChanges: true, // Flag to indicate this is a header commit
-          modifiedFilesCount: workspaceStatus.modifiedFiles
-        };
-        
-        const li = document.createElement('li');
-        li.textContent = `Todos los cambios (${workspaceStatus.modifiedFiles} archivos)`;
-        filesList.appendChild(li);
-        
-        modal.style.display = 'block';
-      }).catch(error => {
-        console.error('Error checking workspace changes:', error);
-        alert('Error al verificar cambios en el workspace.');
-      });
+
+      getWorkspaceChanges(selectedBranch)
+        .then((workspaceStatus) => {
+          console.log('Workspace status:', workspaceStatus);
+
+          if (!workspaceStatus.hasChanges) {
+            console.log('No changes detected');
+            alert('No hay archivos modificados para commitear.');
+            return;
+          }
+
+          // For header commit, we need to get the actual modified files
+          // Since we can't get the exact list from the current API,
+          // we'll commit all .feature files for the selected client
+          const modal = document.getElementById('commit-modal');
+          const filesList = document.getElementById('commit-files-list');
+          filesList.innerHTML = '';
+
+          // Store commit info for later use in confirm
+          modal.commitData = {
+            branch: selectedBranch,
+            client: selectedClient,
+            commitAllChanges: true, // Flag to indicate this is a header commit
+            modifiedFilesCount: workspaceStatus.modifiedFiles,
+          };
+
+          const li = document.createElement('li');
+          li.textContent = `Todos los cambios (${workspaceStatus.modifiedFiles} archivos)`;
+          filesList.appendChild(li);
+
+          modal.style.display = 'block';
+        })
+        .catch((error) => {
+          console.error('Error checking workspace changes:', error);
+          alert('Error al verificar cambios en el workspace.');
+        });
     });
   }
 
@@ -372,19 +455,24 @@ async function initializeAppControls(socket) {
       const branch = document.getElementById('branch-select').value;
       const client = document.getElementById('client-select').value;
       const activeFeature = appState.getState().activeFeature;
-      
+
       console.log('=== CONFIRM COMMIT DEBUG ===');
       console.log('Branch:', branch);
       console.log('Client:', client);
       console.log('Active feature:', activeFeature);
-      
+
       let files;
-      
+
       // Check if this is a header commit (stored data in modal)
       if (commitModal.commitData && commitModal.commitData.commitAllChanges) {
         // For header commit, use the stored client data
-        console.log('Header commit detected, using stored data:', commitModal.commitData);
-        files = [`test/features/${commitModal.commitData.client}/feature/modulos/`]; // Commit all features for this client
+        console.log(
+          'Header commit detected, using stored data:',
+          commitModal.commitData,
+        );
+        files = [
+          `test/features/${commitModal.commitData.client}/feature/modulos/`,
+        ]; // Commit all features for this client
       } else if (activeFeature) {
         // Regular IDE commit - commit only the active feature
         files = [
@@ -464,6 +552,12 @@ async function initializeAppControls(socket) {
             }
           }, 100);
         }
+
+        // Ocultar el título del editor
+        const editorTitle = document.getElementById('editor-title');
+        if (editorTitle) {
+          editorTitle.style.display = 'none';
+        }
       }
 
       // Clear feature list and update git status for the new branch (solo si no se está buscando automáticamente)
@@ -527,7 +621,6 @@ async function loadLocalDevices() {
 }
 
 function updateCommitStatusIndicator(branch) {
-  
   // Validate branch parameter
   if (!branch || branch === 'Cargando...' || branch.trim() === '') {
     return;
@@ -566,7 +659,8 @@ function updateCommitStatusIndicator(branch) {
 
           // Show yellow indicator with change count (only tracked files)
           uncommittedIndicator.classList.remove('hidden');
-          const totalChanges = workspaceStatus.modifiedFiles + workspaceStatus.stagedFiles;
+          const totalChanges =
+            workspaceStatus.modifiedFiles + workspaceStatus.stagedFiles;
           uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
         } else {
           // Hide yellow indicator
@@ -697,6 +791,12 @@ function initializeUiEventListeners(socket) {
       if (contentData !== null) {
         const newActiveFeature = { branch, client, featureName };
         appState.setState({ activeFeature: newActiveFeature });
+        console.log(
+          '🔍 openFeatureFromTree - contentData.isLocal:',
+          contentData.isLocal,
+          'contentData:',
+          contentData,
+        );
         setIdeEditorContent({
           content: contentData.content,
           isReadOnly: !contentData.isLocal,
@@ -886,9 +986,9 @@ function initializeEventListeners() {
 function initializeToolbarCollapse() {
   const toolbar = document.getElementById('ide-toolbar');
   const collapseBtn = document.getElementById('toolbar-collapse-btn');
-  
+
   if (!toolbar || !collapseBtn) return;
-  
+
   // Show collapse button only on mobile
   function checkMobile() {
     if (window.innerWidth <= 768) {
@@ -898,15 +998,17 @@ function initializeToolbarCollapse() {
       toolbar.classList.remove('collapsed');
     }
   }
-  
+
   // Check on load and resize
   checkMobile();
   window.addEventListener('resize', checkMobile);
-  
+
   // Toggle collapse on button click
   collapseBtn.addEventListener('click', () => {
     toolbar.classList.toggle('collapsed');
-    collapseBtn.textContent = toolbar.classList.contains('collapsed') ? '▼' : '☰';
+    collapseBtn.textContent = toolbar.classList.contains('collapsed')
+      ? '▼'
+      : '☰';
   });
 }
 
