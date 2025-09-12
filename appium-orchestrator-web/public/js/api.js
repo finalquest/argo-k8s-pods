@@ -35,7 +35,8 @@ export async function getWorkspaceStatus(branch) {
   try {
     const response = await fetch(`/api/workspace-status/${branch}`);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
+    const data = await response.json();
+      return data;
   } catch (error) {
     console.error(
       `Error fetching workspace status for branch ${branch}:`,
@@ -73,7 +74,15 @@ export async function saveFeatureContent(branch, client, feature, content) {
       body: JSON.stringify({ branch, client, feature, content }),
     });
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData;
+      try {
+        errorData = await response.json();
+        console.error('Server error response:', errorData);
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
+        console.error('Raw response text:', await response.text());
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
       // Handle specific error for missing workspace
       if (errorData.actionRequired === 'prepare_workspace') {
@@ -90,7 +99,7 @@ export async function saveFeatureContent(branch, client, feature, content) {
         return null;
       }
 
-      throw new Error(errorData.error || 'Error del servidor');
+      throw new Error(errorData.error || errorData.message || `Error del servidor (${response.status})`);
     }
     return await response.json();
   } catch (error) {
@@ -224,7 +233,14 @@ export async function fetchFeatures() {
     // Auto-refresh git status after fetching features
     if (config.persistentWorkspacesEnabled) {
       const status = await getWorkspaceStatus(selectedBranch);
-      updateFeaturesWithGitStatus(status.modified_features);
+      updateFeaturesWithGitStatus(
+    status.modified_features, 
+    status.untracked_features || 
+    status.untracked_files || 
+    status.new_files || 
+    status.untracked || 
+    []
+  );
 
       // Emit event to update commit status indicators
       globalEvents.emit('features:loaded', {

@@ -159,16 +159,11 @@ export function updateSelectedCount() {
   ).length;
   runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
   runSelectedBtn.disabled = selectedCount === 0;
-  console.log('🔍 updateSelectedCount - Selected count:', selectedCount);
-  updateCommitButtonState(); // Update commit button state as well
+    updateCommitButtonState(); // Update commit button state as well
 }
 
 export function updateCommitButtonState() {
   const commitBtn = document.getElementById('ide-commit-btn');
-  console.log(
-    '🔍 updateCommitButtonState - commitBtn (ide-commit-btn) encontrado:',
-    !!commitBtn,
-  );
   if (!commitBtn) return;
 
   const hasModifiedFiles = document.querySelectorAll('li.modified').length > 0;
@@ -402,54 +397,128 @@ export function filterFeatureListByText() {
   filterFeatureList();
 }
 
-export function updateFeaturesWithGitStatus(modifiedFeatures) {
+export function updateFeaturesWithGitStatus(modifiedFeatures, newFeatures = []) {
   // The modifiedFeatures from server are full paths, e.g., test/features/nbch/feature/modulos/folder/file.feature
+  // The newFeatures are untracked files, e.g., test/features/nbch/feature/modulos/folder/new_file.feature
   // The featureName in the dataset is relative to modulos, e.g., folder/file
   console.log(
     '🔍 updateFeaturesWithGitStatus - Modified features recibidos:',
     modifiedFeatures,
   );
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - New features recibidos:',
+    newFeatures,
+  );
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Tipos de datos:',
+    {
+      modifiedFeaturesType: typeof modifiedFeatures,
+      newFeaturesType: typeof newFeatures,
+      modifiedIsArray: Array.isArray(modifiedFeatures),
+      newIsArray: Array.isArray(newFeatures),
+    }
+  );
+  
   const modifiedSet = new Set(modifiedFeatures);
+  const newSet = new Set(newFeatures);
   const featureItems = document.querySelectorAll('#features-list .file');
   console.log(
     '🔍 updateFeaturesWithGitStatus - Encontrados .file elements:',
     featureItems.length,
   );
 
-  featureItems.forEach((item) => {
+  featureItems.forEach((item, index) => {
     const featureName = item.dataset.featureName;
+    
     if (!featureName) return;
 
     // We can't know the full client/branch path here easily,
-    // so we check if any path in the modified set *ends with* our feature path.
+    // so we check if any path in the modified/new set *ends with* our feature path.
     const featurePathSuffix = `${featureName}.feature`;
 
     let isModified = false;
+    let isNew = false;
+
+    // Check if modified
     for (const modifiedFile of modifiedSet) {
       if (modifiedFile.endsWith(featurePathSuffix)) {
         isModified = true;
         console.log(
           '🔍 updateFeaturesWithGitStatus - Marcando como modificado:',
           featureName,
+          'Coincide con:',
+          modifiedFile,
         );
         break;
       }
     }
 
+    // Check if new (only if not modified)
+    if (!isModified) {
+      for (const newFile of newSet) {
+        if (newFile.endsWith(featurePathSuffix)) {
+          isNew = true;
+          console.log(
+            '🔍 updateFeaturesWithGitStatus - Marcando como nuevo:',
+            featureName,
+            'Coincide con:',
+            newFile,
+          );
+          break;
+        }
+      }
+    }
+
+    // Apply classes
+    const oldClasses = Array.from(item.classList);
+    item.classList.remove('modified', 'new-file');
+    
     if (isModified) {
       item.classList.add('modified');
       console.log(
         '🔍 updateFeaturesWithGitStatus - Clase "modified" agregada a:',
         featureName,
+        'Clases antes:',
+        oldClasses,
+        'Clases después:',
+        Array.from(item.classList),
+      );
+    } else if (isNew) {
+      item.classList.add('new-file');
+      console.log(
+        '🔍 updateFeaturesWithGitStatus - Clase "new-file" agregada a:',
+        featureName,
+        'Clases antes:',
+        oldClasses,
+        'Clases después:',
+        Array.from(item.classList),
       );
     } else {
-      item.classList.remove('modified');
+      console.log(
+        '🔍 updateFeaturesWithGitStatus - Archivo sin cambios:',
+        featureName,
+        'Clases finales:',
+        Array.from(item.classList),
+      );
     }
   });
 
   console.log(
     '🔍 updateFeaturesWithGitStatus - Total elementos con clase modified después de actualizar:',
     document.querySelectorAll('li.modified').length,
+  );
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Total elementos con clase new-file después de actualizar:',
+    document.querySelectorAll('li.new-file').length,
+  );
+  console.log(
+    '🔍 updateFeaturesWithGitStatus - Resumen final:',
+    {
+      totalFiles: featureItems.length,
+      modifiedFiles: document.querySelectorAll('li.modified').length,
+      newFiles: document.querySelectorAll('li.new-file').length,
+      normalFiles: featureItems.length - document.querySelectorAll('li.modified').length - document.querySelectorAll('li.new-file').length
+    }
   );
 
   // Actualizar el estado del botón de commit después de marcar los archivos modificados
@@ -511,7 +580,7 @@ export function renderFeatureTree(parentElement, nodes, config) {
       itemDiv.appendChild(checkbox);
       itemDiv.appendChild(featureNameSpan);
 
-      addFeatureControls(itemDiv, node.featureName, config);
+      addFeatureControls(itemDiv, node.featureName);
       li.appendChild(itemDiv);
     }
 
@@ -538,6 +607,25 @@ export function createCommitModal() {
                 <label for="commit-message">Mensaje de Commit:</label>
                 <textarea id="commit-message" rows="4" required></textarea>
                 <button id="confirm-commit-btn" style="width: 100%; margin-top: 1rem;">Confirmar Commit</button>
+            </div>
+        </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+export function createNewTestModal() {
+  const modalHTML = `
+    <div id="new-test-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nuevo Test</h2>
+                <span id="close-new-test-modal" class="close-btn">&times;</span>
+            </div>
+            <div>
+                <p>Ubicación actual: <span id="test-location-path"></span></p>
+                <label for="test-name">Nombre del Test:</label>
+                <input type="text" id="test-name" placeholder="Ej: mi_nuevo_test" required style="width: 100%; margin-bottom: 1rem;">
+                <button id="confirm-new-test-btn" style="width: 100%;">Crear Test</button>
             </div>
         </div>
     </div>`;
@@ -603,9 +691,10 @@ export function initIdeView({ onSave, onCommit, onRun }) {
   if (runBtn && typeof onRun === 'function') {
     runBtn.addEventListener('click', onRun);
   }
-}
 
-export function setIdeEditorContent({ content, isReadOnly, isModified }) {
+  }
+
+export function setIdeEditorContent({ content, isReadOnly, isModified, isLocal }) {
   const saveBtn = document.getElementById('ide-save-btn');
   const commitBtn = document.getElementById('ide-commit-btn');
   const runBtn = document.getElementById('ide-run-btn');
@@ -617,6 +706,8 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
     isModified,
     'isReadOnly:',
     isReadOnly,
+    'isLocal:',
+    isLocal,
   );
 
   // Remove existing read-only indicator
@@ -664,7 +755,7 @@ export function setIdeEditorContent({ content, isReadOnly, isModified }) {
       '🔍 setIdeEditorContent - Botón commit display set to inline-block',
     );
   }
-  if (editorTitle) {
+    if (editorTitle) {
     // Si hay contenido real (no el mensaje por defecto), mostrar el título
     if (
       content &&

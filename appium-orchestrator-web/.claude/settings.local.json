@@ -16,7 +16,8 @@
       "Bash(npx prettier:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(xxd:*)"
     ],
     "deny": [],
     "ask": []

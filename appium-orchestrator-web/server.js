@@ -192,6 +192,7 @@ app.get('/api/workspace-status/:branch', async (req, res) => {
       res.json({
         exists: false,
         modified_features: [],
+        untracked_features: [],
         message: 'No existe workspace local para esta branch',
       });
     } else if (result.status === 'ready') {
@@ -199,9 +200,14 @@ app.get('/api/workspace-status/:branch', async (req, res) => {
         (file) =>
           file.includes('/feature/modulos/') && file.endsWith('.feature'),
       );
+      const untrackedFeatures = workspace.not_added.filter(
+        (file) =>
+          file.includes('/feature/modulos/') && file.endsWith('.feature'),
+      );
       res.json({
         exists: true,
         modified_features: modifiedFeatures,
+        untracked_features: untrackedFeatures,
         message: 'Workspace local existe y está disponible para edición',
       });
     } else {

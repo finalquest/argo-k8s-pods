@@ -34,6 +34,7 @@ import {
   filterFeatureList,
   filterFeatureListByText,
   createCommitModal,
+  createNewTestModal,
   initIdeView,
   setIdeEditorContent,
   getIdeEditorContent,
@@ -45,6 +46,9 @@ import { initializeWiremockTab } from './wiremock.js';
 import './progress-indicator-manager.js';
 import { StateManager } from './state/state-manager.js';
 import { globalEvents } from './state/event-manager.js';
+
+// Current folder path for new test creation
+let currentFolderPath = null;
 
 // Application state manager
 const appState = new StateManager({
@@ -129,6 +133,108 @@ async function hideAuthElementsInDevMode() {
   }
 }
 
+async function createNewTestFile(featureName) {
+  const folderPath = currentFolderPath;
+  
+  if (!folderPath) {
+    alert('No hay una carpeta seleccionada para crear el test.');
+    return false;
+  }
+
+  // Extract branch and client from folder path (format: branch/client/path/to/folder)
+  const pathParts = folderPath.split('/');
+  const branch = pathParts[0];
+  const client = pathParts[1];
+  
+  // Extract the relative path from the folder path (remove branch/client/feature/modulos/)
+  const relativePath = pathParts.slice(4).join('/'); // Skip branch, client, feature, modulos
+  
+  // Construct the full feature path with .feature extension
+  const featurePath = relativePath ? `${relativePath}/${featureName}.feature` : `${featureName}.feature`;
+  
+  const fileName = `${featureName}.feature`;
+
+  // Basic test template
+  const testTemplate = `Feature: ${featureName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+
+  Como usuario
+  Quiero realizar una acción
+  Para obtener un resultado
+
+  Scenario: Escenario básico
+    Dado que estoy en la aplicación
+    Cuando realizo una acción
+    Entonces veo el resultado esperado
+`;
+
+  appState.setState({ isLoading: true });
+  globalEvents.emit('test:creating', { branch, client, featureName });
+
+  try {
+    console.log('🔧 Creating test file with params:', {
+      branch,
+      client, 
+      featurePath,
+      contentLength: testTemplate.length
+    });
+    
+    // Use the existing saveFeatureContent API to create the file
+    const result = await saveFeatureContent(branch, client, featurePath, testTemplate);
+    
+    console.log('✅ Test file created successfully:', result);
+    
+    appState.setState({ isLoading: false });
+    globalEvents.emit('test:created', { branch, client, featureName });
+    
+    alert(`Test "${fileName}" creado exitosamente en la ubicación actual.`);
+    
+    // Refresh git status to show the new file as untracked
+    setTimeout(async () => {
+      try {
+        const status = await getWorkspaceStatus(branch);
+        updateFeaturesWithGitStatus(
+    status.modified_features, 
+    status.untracked_features || 
+    status.untracked_files || 
+    status.new_files || 
+    status.untracked || 
+    []
+  );
+      } catch (error) {
+        console.error('Error refreshing git status after creating file:', error);
+      }
+    }, 500);
+    
+    // Also refresh the features list
+    const refreshBtn = document.getElementById('refresh-features-btn');
+    if (refreshBtn) {
+      refreshBtn.click();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Error creating test file:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      branch,
+      client,
+      featurePath
+    });
+    
+    appState.setState({ isLoading: false });
+    
+    // Handle specific error cases
+    if (error.message && error.message.includes('workspace')) {
+      alert('No existe un workspace local para esta branch. Por favor, prepara el workspace primero.');
+    } else {
+      alert(`Error al crear el test: ${error.message || 'Error desconocido'}`);
+    }
+    
+    return false;
+  }
+}
+
 async function handleSave() {
   const activeFeature = appState.getState().activeFeature;
   if (!activeFeature) {
@@ -197,10 +303,110 @@ async function handleIdeRun(socket) {
   runTest(socket, branch, client, featureName, false);
 }
 
+function sanitizeFolderName(text) {
+  // Remove emojis and special characters, keep only letters, numbers, underscores, hyphens and spaces
+  return text.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+}
+
+function getFolderPathFromElement(folderElement) {
+  const branchSelect = document.getElementById('branch-select');
+  const clientSelect = document.getElementById('client-select');
+  
+  if (!branchSelect || !clientSelect) return null;
+  
+  const branch = branchSelect.value;
+  const client = clientSelect.value;
+  
+  if (!branch || !client || branch === 'Cargando...' || client === 'Cargando...') return null;
+  
+  // Get the folder name from the element and sanitize it
+  const folderNameElement = folderElement.querySelector('.feature-item');
+  const rawFolderName = folderNameElement ? folderNameElement.textContent.trim() : '';
+  const folderName = sanitizeFolderName(rawFolderName);
+  
+  if (!folderName) return null;
+  
+  // Build the path by traversing up the tree to get parent folders
+  let pathParts = [];
+  let currentElement = folderElement;
+  
+  // Traverse up to collect all parent folder names
+  while (currentElement && currentElement.classList.contains('folder')) {
+    const itemElement = currentElement.querySelector('.feature-item');
+    if (itemElement) {
+      const rawName = itemElement.textContent.trim();
+      const sanitizedName = sanitizeFolderName(rawName);
+      if (sanitizedName) {
+        pathParts.unshift(sanitizedName); // Add to beginning to build path from root
+      }
+    }
+    
+    // Go to parent folder
+    const parentFolder = currentElement.parentElement.closest('.folder');
+    currentElement = parentFolder;
+  }
+  
+  // If we couldn't build a proper path, just use the folder name
+  if (pathParts.length === 0) {
+    return `${branch}/${client}/feature/modulos/${folderName}`;
+  }
+  
+  // Construct full path
+  const relativePath = pathParts.join('/');
+  return `${branch}/${client}/feature/modulos/${relativePath}`;
+}
+
+function updateNewTestButtonVisibility(folderPath = null) {
+  const newTestBtn = document.getElementById('new-test-btn');
+  
+  // Save current folder path globally
+  currentFolderPath = folderPath;
+  
+  if (newTestBtn) {
+    // Show button if we have a folder path (from expanded folder)
+    const shouldShow = folderPath;
+    newTestBtn.style.display = shouldShow ? 'inline-block' : 'none';
+    
+    // Update button title
+    if (shouldShow) {
+      newTestBtn.title = `Crear nuevo test en: ${folderPath}`;
+    }
+  }
+}
+
+function handleIdeNewTest() {
+    
+  // Get current folder path from global variable
+  if (!currentFolderPath) {
+    alert('Debes desplegar una carpeta en el árbol para crear un nuevo test.');
+    return;
+  }
+
+  // Create modal if it doesn't exist
+  let modal = document.getElementById('new-test-modal');
+  if (!modal) {
+    createNewTestModal();
+    modal = document.getElementById('new-test-modal');
+  }
+
+  // Set the current location path
+  const modalLocationPath = document.getElementById('test-location-path');
+  if (modalLocationPath) {
+    modalLocationPath.textContent = currentFolderPath;
+  }
+  
+  // Clear previous input
+  const testNameInput = document.getElementById('test-name');
+  if (testNameInput) {
+    testNameInput.value = '';
+  }
+
+  // Show modal
+  modal.style.display = 'block';
+}
+
 function handleIdeCommit() {
-  console.log('=== HANDLE IDE COMMIT DEBUG ===');
   const activeFeature = appState.getState().activeFeature;
-  console.log('Active feature:', activeFeature);
 
   if (!activeFeature) {
     alert('No hay ningún archivo activo para commitear.');
@@ -213,16 +419,11 @@ function handleIdeCommit() {
 
   // Check if there are actual changes to commit
   const branch = activeFeature.branch;
-  console.log('Branch for commit check:', branch);
 
   getWorkspaceChanges(branch)
     .then((workspaceStatus) => {
-      console.log('Workspace status from API:', workspaceStatus);
-      console.log('Has changes:', workspaceStatus.hasChanges);
-      console.log('Modified files count:', workspaceStatus.modifiedFiles);
 
       if (!workspaceStatus.hasChanges) {
-        console.log('No changes detected, showing alert');
         alert('No hay archivos modificados para commitear.');
         return;
       }
@@ -285,7 +486,6 @@ function initializeApp() {
 
   // Listen for commit completed event to update UI after successful commit
   globalEvents.on('commit:completed', async (data) => {
-    console.log('🔍 commit:completed event received:', data);
     const { branch, client } = data;
 
     try {
@@ -294,7 +494,14 @@ function initializeApp() {
 
       // Refresh git status to update the modified files display
       const status = await getWorkspaceStatus(branch);
-      updateFeaturesWithGitStatus(status.modified_features, client);
+      updateFeaturesWithGitStatus(
+    status.modified_features, 
+    status.untracked_features || 
+    status.untracked_files || 
+    status.new_files || 
+    status.untracked || 
+    []
+  );
 
       // Update commit button state
       updateCommitButtonState();
@@ -310,7 +517,6 @@ function initializeApp() {
 
   // Listen for commit status update events
   globalEvents.on('commit:status_updated', async (data) => {
-    console.log('🔍 commit:status_updated event received:', data);
     const { branch } = data;
 
     try {
@@ -331,6 +537,7 @@ async function initializeAppControls(socket) {
   displayGitControls(config.persistentWorkspacesEnabled);
   displayFeatureFilter(config.persistentWorkspacesEnabled);
   createCommitModal();
+  createNewTestModal();
 
   // --- Event Listeners for new controls ---
   const prepareWorkspaceBtn = document.getElementById('prepare-workspace-btn');
@@ -356,7 +563,14 @@ async function initializeAppControls(socket) {
         return;
       }
       const status = await getWorkspaceStatus(selectedBranch);
-      updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+      updateFeaturesWithGitStatus(
+    status.modified_features, 
+    status.untracked_features || 
+    status.untracked_files || 
+    status.new_files || 
+    status.untracked || 
+    []
+  );
       // Also update commit status indicator
       await updateCommitStatusIndicator(selectedBranch);
     });
@@ -373,16 +587,11 @@ async function initializeAppControls(socket) {
         return;
       }
 
-      console.log('=== HEADER COMMIT DEBUG ===');
-      console.log('Selected branch:', selectedBranch);
-      console.log('Selected client:', selectedClient);
-
+      
       getWorkspaceChanges(selectedBranch)
         .then((workspaceStatus) => {
-          console.log('Workspace status:', workspaceStatus);
 
           if (!workspaceStatus.hasChanges) {
-            console.log('No changes detected');
             alert('No hay archivos modificados para commitear.');
             return;
           }
@@ -456,11 +665,7 @@ async function initializeAppControls(socket) {
       const client = document.getElementById('client-select').value;
       const activeFeature = appState.getState().activeFeature;
 
-      console.log('=== CONFIRM COMMIT DEBUG ===');
-      console.log('Branch:', branch);
-      console.log('Client:', client);
-      console.log('Active feature:', activeFeature);
-
+      
       let files;
 
       // Check if this is a header commit (stored data in modal)
@@ -491,10 +696,41 @@ async function initializeAppControls(socket) {
     });
   }
 
+  // --- New Test Modal Listeners ---
+  const newTestModal = document.getElementById('new-test-modal');
+  const closeNewTestModalBtn = document.getElementById('close-new-test-modal');
+  const confirmNewTestBtn = document.getElementById('confirm-new-test-btn');
+
+  if (newTestModal && closeNewTestModalBtn && confirmNewTestBtn) {
+    closeNewTestModalBtn.onclick = () => (newTestModal.style.display = 'none');
+    confirmNewTestBtn.addEventListener('click', async () => {
+      const testName = document.getElementById('test-name').value;
+      if (!testName.trim()) {
+        alert('El nombre del test no puede estar vacío.');
+        return;
+      }
+
+      // Validate test name format
+      if (!/^[a-zA-Z0-9_]+$/.test(testName)) {
+        alert('El nombre del test solo puede contener letras, números y guiones bajos (_).');
+        return;
+      }
+
+      const success = await createNewTestFile(testName.trim());
+      if (success) {
+        newTestModal.style.display = 'none';
+        document.getElementById('test-name').value = '';
+      }
+    });
+  }
+
   // Close modals on outside click
   window.onclick = (event) => {
     if (event.target == commitModal) {
       commitModal.style.display = 'none';
+    }
+    if (event.target == newTestModal) {
+      newTestModal.style.display = 'none';
     }
   };
 
@@ -512,6 +748,9 @@ async function initializeAppControls(socket) {
         activeFeature: null,
       });
       window.currentFeatureFile = null;
+
+      // Hide new test button when no feature is active
+      updateNewTestButtonVisibility(false);
 
       globalEvents.emit('branch:changed', { selectedBranch, selectedClient });
 
@@ -544,6 +783,7 @@ async function initializeAppControls(socket) {
               '// Selecciona una branch y luego un archivo para ver su contenido.',
             isReadOnly: true,
             isModified: false,
+            isLocal: false,
           });
           // Marcar como limpio después de establecer el texto por defecto
           setTimeout(() => {
@@ -574,7 +814,14 @@ async function initializeAppControls(socket) {
         // Also update git status for features if both branch and client are selected
         if (selectedClient) {
           const status = await getWorkspaceStatus(selectedBranch);
-          updateFeaturesWithGitStatus(status.modified_features, selectedClient);
+          updateFeaturesWithGitStatus(
+    status.modified_features, 
+    status.untracked_features || 
+    status.untracked_files || 
+    status.new_files || 
+    status.untracked || 
+    []
+  );
         }
       } else {
         // Hide indicator if persistent workspaces are not enabled
@@ -743,10 +990,16 @@ function initializeUiEventListeners(socket) {
     'refresh-apk-versions-btn',
   );
   const refreshFeaturesBtn = document.getElementById('refresh-features-btn');
+  const newTestBtn = document.getElementById('new-test-btn');
 
   if (refreshFeaturesBtn) {
     refreshFeaturesBtn.addEventListener('click', () => fetchFeatures());
   }
+
+  if (newTestBtn) {
+    newTestBtn.addEventListener('click', handleIdeNewTest);
+  }
+
   runSelectedBtn.addEventListener('click', () => runSelectedTests(socket));
   stopAllBtn.addEventListener('click', () => stopAllExecution(socket));
   selectAllCheckbox.addEventListener('change', toggleSelectAll);
@@ -772,7 +1025,12 @@ function initializeUiEventListeners(socket) {
       window.ideCodeMirror.markClean();
     }
 
-    setIdeEditorContent('// Cargando...', true);
+    setIdeEditorContent({
+      content: '// Cargando...',
+      isReadOnly: true,
+      isModified: false,
+      isLocal: false,
+    });
     appState.setState({ activeFeature: null });
     window.currentFeatureFile = null;
 
@@ -801,6 +1059,7 @@ function initializeUiEventListeners(socket) {
           content: contentData.content,
           isReadOnly: !contentData.isLocal,
           isModified: false,
+          isLocal: contentData.isLocal,
         });
         window.currentFeatureFile = `${featureName}.feature`;
 
@@ -871,7 +1130,18 @@ function initializeUiEventListeners(socket) {
     if (folderItem) {
       // Prevent toggling when a button inside is clicked
       if (e.target.closest('button, input')) return;
+      
+      const isExpanded = folderItem.parentElement.classList.contains('expanded');
       folderItem.parentElement.classList.toggle('expanded');
+      
+      // If folder is being expanded (not collapsed), get its path and show new test button
+      if (!isExpanded) {
+        const folderPath = getFolderPathFromElement(folderItem.parentElement);
+        updateNewTestButtonVisibility(folderPath);
+      } else {
+        // If folder is being collapsed, hide the new test button
+        updateNewTestButtonVisibility(null);
+      }
       return;
     }
 
@@ -943,7 +1213,8 @@ function initializeEventListeners() {
   // Listen for feature events
   globalEvents.on('feature:opened', (data) => {
     console.log('Feature opened:', data.featureName);
-    // Could update UI elements that depend on active feature
+    // Don't update new test button visibility when opening a feature
+    // Keep the current folder path that was set when expanding a folder
   });
 
   globalEvents.on('feature:saved', (data) => {

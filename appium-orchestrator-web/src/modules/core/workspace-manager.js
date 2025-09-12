@@ -69,6 +69,7 @@ class WorkspaceManager {
         added: status.created,
         deleted: status.deleted,
         staged: status.staged,
+        not_added: status.not_added,
         workspacePath,
         lastChecked: new Date().toISOString(),
       };

@@ -129,7 +129,7 @@ body {
 }
 
 #queue-status-header::before {
-  content: "⚡";
+  content: '⚡';
   font-size: 1rem;
 }
 
@@ -777,6 +777,83 @@ button[style*='17a2b8']:hover:not(:disabled) {
   border-color: var(--gray-600);
 }
 
+.tree-controls .new-test-btn {
+  background: var(--info-color) !important;
+  border-color: var(--info-color) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.tree-controls .new-test-btn:hover:not(:disabled) {
+  background: var(--info-hover) !important;
+  border-color: var(--info-hover) !important;
+}
+
+[data-theme='dark'] .tree-controls .new-test-btn {
+  background: var(--info-color) !important;
+  border-color: var(--info-color) !important;
+  color: white !important;
+}
+
+[data-theme='dark'] .tree-controls .new-test-btn:hover:not(:disabled) {
+  background: var(--info-hover) !important;
+  border-color: var(--info-hover) !important;
+}
+
+.tree-controls {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--gray-50);
+}
+
+[data-theme='dark'] .tree-controls {
+  background: var(--gray-50);
+  border-bottom-color: var(--gray-600);
+}
+
+.location-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--gray-100);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin-left: auto;
+}
+
+.location-label {
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.location-path {
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+  color: var(--info-color);
+  font-weight: 500;
+}
+
+[data-theme='dark'] .location-indicator {
+  background: var(--gray-700);
+  color: var(--gray-300);
+}
+
+[data-theme='dark'] .location-label {
+  color: var(--gray-400);
+}
+
+[data-theme='dark'] .location-path {
+  color: var(--info-color);
+}
+
 .execute-btn {
   background: var(--info-color);
   color: white;
@@ -894,6 +971,37 @@ button[style*='17a2b8']:hover:not(:disabled) {
 }
 
 [data-theme='dark'] #features-list li.modified .feature-checkbox {
+  filter: brightness(1.5) contrast(1.2); /* Make checkbox more visible */
+}
+
+/* New/untracked files styling */
+#features-list li.new-file {
+  background-color: #eff6ff; /* Light blue */
+  border-left: 5px solid #3b82f6; /* Blue */
+  font-weight: 500;
+}
+
+#features-list li.new-file:hover {
+  background-color: #dbeafe; /* Slightly darker blue on hover */
+}
+
+/* Dark mode styles for new files */
+[data-theme='dark'] #features-list li.new-file {
+  background-color: #1e3a8a; /* Dark blue background for contrast */
+  border-left: 5px solid #60a5fa; /* Light blue border for visibility */
+  color: #dbeafe; /* Light blue text for contrast */
+}
+
+[data-theme='dark'] #features-list li.new-file:hover {
+  background-color: #1e40af; /* Darker blue on hover */
+  color: #dbeafe; /* Keep light text */
+}
+
+[data-theme='dark'] #features-list li.new-file .feature-item {
+  color: #dbeafe; /* Light blue text for feature names */
+}
+
+[data-theme='dark'] #features-list li.new-file .feature-checkbox {
   filter: brightness(1.5) contrast(1.2); /* Make checkbox more visible */
 }
 
@@ -2442,53 +2550,55 @@ textarea {
 }
 
 /* 2×2 centrado: label | checkbox | checkbox | label */
-.toggle-matrix{
-  display:grid;
+.toggle-matrix {
+  display: grid;
   grid-template-columns: max-content 22px 22px max-content;
   grid-auto-rows: 24px;
-  column-gap: 10px;   /* separación entre columnas */
-  row-gap: 8px;       /* separación entre filas */
-  align-items:center;
-  justify-content:center; /* centra todo el bloque en la toolbar */
+  column-gap: 10px; /* separación entre columnas */
+  row-gap: 8px; /* separación entre filas */
+  align-items: center;
+  justify-content: center; /* centra todo el bloque en la toolbar */
 }
 
-.toggle-chk{
-  width:18px; height:18px; margin:0;
+.toggle-chk {
+  width: 18px;
+  height: 18px;
+  margin: 0;
 }
 
-.toggle-label{
+.toggle-label {
   font-size: 0.95rem;
   line-height: 1;
-  cursor: pointer;     /* clickable gracias al for= */
+  cursor: pointer; /* clickable gracias al for= */
 }
 
 .toolbar-section.no-gap {
   gap: 0;
 }
 /* --- Mantener TODO en una sola fila --- */
-.ide-toolbar{
-  justify-content: flex-start;   /* evitá space-between que “agranda” huecos */
-  gap: 1rem;                     /* usá gap para el espaciado */
-  flex-wrap: nowrap;             /* no permitir saltos de línea */
+.ide-toolbar {
+  justify-content: flex-start; /* evitá space-between que “agranda” huecos */
+  gap: 1rem; /* usá gap para el espaciado */
+  flex-wrap: nowrap; /* no permitir saltos de línea */
 }
 
 /* --- Cada sección puede encogerse --- */
-.ide-toolbar .toolbar-section{
-  min-width: 0;                  /* permite que el contenido pueda shrinkear */
-  flex-wrap: nowrap;             /* no envolver grupos internos */
+.ide-toolbar .toolbar-section {
+  min-width: 0; /* permite que el contenido pueda shrinkear */
+  flex-wrap: nowrap; /* no envolver grupos internos */
 }
 
 /* --- El primer bloque (cliente/branch/apk/device) ocupa el resto y se encoje --- */
-.ide-toolbar .toolbar-section:first-of-type{
-  flex: 1 1 auto;                /* crece y se encoje */
+.ide-toolbar .toolbar-section:first-of-type {
+  flex: 1 1 auto; /* crece y se encoje */
 }
 
 /* --- Los otros bloques (toggles y botones) se mantienen compactos --- */
 /* Opción A con :has() (moderno) */
 .ide-toolbar .toolbar-section:has(.toggle-matrix),
-.ide-toolbar .toolbar-section:last-of-type{
-  flex: 0 0 auto;                /* no crece, no ocupa de más */
-  gap: 0;                        /* si querés quitar el gap de ese bloque */
+.ide-toolbar .toolbar-section:last-of-type {
+  flex: 0 0 auto; /* no crece, no ocupa de más */
+  gap: 0; /* si querés quitar el gap de ese bloque */
 }
 
 /* Opción B (si no querés usar :has), usá nth-of-type(2) para el de los toggles: */
@@ -2501,7 +2611,12 @@ textarea {
 */
 
 /* --- Que los elementos internos tampoco “claven” un ancho mínimo --- */
-.ide-toolbar .toolbar-section .toolbar-group{ flex-wrap: nowrap; }
+.ide-toolbar .toolbar-section .toolbar-group {
+  flex-wrap: nowrap;
+}
 .ide-toolbar select,
 .ide-toolbar .compact-input-with-button,
-.ide-toolbar label{ min-width: 0; white-space: nowrap; }
+.ide-toolbar label {
+  min-width: 0;
+  white-space: nowrap;
+}
