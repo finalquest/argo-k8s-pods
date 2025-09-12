@@ -427,6 +427,11 @@ async function initializeAppControls(socket) {
 
       globalEvents.emit('branch:changed', { selectedBranch, selectedClient });
 
+      // Búsqueda automática de features al cambiar branch
+      if (selectedClient) {
+        await fetchFeatures();
+      }
+
       // Actualizar el estado del editor
       if (window.progressIndicatorManager) {
         window.progressIndicatorManager.updateEditorStateForCurrentFile();
@@ -461,9 +466,9 @@ async function initializeAppControls(socket) {
         }
       }
 
-      // Clear feature list and update git status for the new branch
+      // Clear feature list and update git status for the new branch (solo si no se está buscando automáticamente)
       const featuresList = document.getElementById('features-list');
-      if (featuresList) {
+      if (featuresList && !selectedClient) {
         featuresList.innerHTML = '<li>Cargando...</li>';
       }
 
@@ -634,7 +639,6 @@ async function refreshLocalDevices() {
 }
 
 function initializeUiEventListeners(socket) {
-  const fetchBtn = document.getElementById('fetch-features-btn');
   const runSelectedBtn = document.getElementById('run-selected-btn');
   const stopAllBtn = document.getElementById('stop-all-btn');
   const selectAllCheckbox = document.getElementById('select-all-features');
@@ -644,8 +648,11 @@ function initializeUiEventListeners(socket) {
   const refreshApkVersionsBtn = document.getElementById(
     'refresh-apk-versions-btn',
   );
+  const refreshFeaturesBtn = document.getElementById('refresh-features-btn');
 
-  fetchBtn.addEventListener('click', () => fetchFeatures());
+  if (refreshFeaturesBtn) {
+    refreshFeaturesBtn.addEventListener('click', () => fetchFeatures());
+  }
   runSelectedBtn.addEventListener('click', () => runSelectedTests(socket));
   stopAllBtn.addEventListener('click', () => stopAllExecution(socket));
   selectAllCheckbox.addEventListener('change', toggleSelectAll);

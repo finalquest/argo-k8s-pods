@@ -181,12 +181,20 @@ export async function fetchFeatures() {
   const branchSelect = document.getElementById('branch-select');
   const clientSelect = document.getElementById('client-select');
   const featuresList = document.getElementById('features-list');
+  const refreshBtn = document.getElementById('refresh-features-btn');
   const selectedBranch = branchSelect.value;
   const selectedClient = clientSelect.value;
 
   if (!selectedBranch || !selectedClient) {
     alert('Por favor, selecciona una branch y un cliente.');
     return;
+  }
+
+  // Mostrar indicador de carga
+  const originalRefreshContent = refreshBtn ? refreshBtn.innerHTML : '↻';
+  if (refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '⏳';
   }
 
   featuresList.innerHTML = '<li>Cargando...</li>';
@@ -225,6 +233,12 @@ export async function fetchFeatures() {
   } catch (error) {
     console.error('Error al buscar features:', error);
     featuresList.innerHTML = '<li>Error al buscar features.</li>';
+  } finally {
+    // Restaurar botón refresh
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = originalRefreshContent;
+    }
   }
 }
 

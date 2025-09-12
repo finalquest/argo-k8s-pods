@@ -108,9 +108,14 @@
             </div>
             <div class="toolbar-group">
               <label for="branch-select">Branch:</label>
-              <select id="branch-select" class="compact-select">
-                <option>Cargando...</option>
-              </select>
+              <div class="compact-input-with-button">
+                <select id="branch-select" class="compact-select">
+                  <option>Cargando...</option>
+                </select>
+                <button id="refresh-features-btn" class="compact-refresh-btn" title="Refrescar Features">
+                  ↻
+                </button>
+              </div>
             </div>
             <div class="toolbar-group">
               <label for="apk-version-select">APK:</label>
@@ -176,14 +181,7 @@
             >
               🔄
             </button>
-            <button
-              id="fetch-features-btn"
-              class="compact-btn primary-btn"
-              title="Buscar Features"
-            >
-              🔍
-            </button>
-          </div>
+                      </div>
         </div>
 
         <!-- IDE Container with Integrated Controls -->
