@@ -57,10 +57,15 @@
           <img id="user-photo" src="/placeholder.svg" alt="User photo" />
           <a href="/auth/logout">Logout</a>
         </div>
-        
+
         <!-- Theme Toggle -->
         <div class="theme-toggle-container">
-          <button id="theme-toggle" class="theme-toggle-btn" title="Cambiar tema" aria-label="Cambiar tema">
+          <button
+            id="theme-toggle"
+            class="theme-toggle-btn"
+            title="Cambiar tema"
+            aria-label="Cambiar tema"
+          >
             <span class="theme-icon" aria-hidden="true">🌞</span>
             <span class="theme-text">Light</span>
           </button>
@@ -82,149 +87,158 @@
 
       <!-- Setup Tab -->
       <div id="setup-view" class="tab-content active">
-        <!-- Environment Configuration Card -->
-        <div class="config-card">
-          <div class="card-header">
-            <h3>⚙️ Configuración del Entorno</h3>
-            <div class="header-actions">
-              <button id="prepare-workspace-btn" class="secondary-btn hidden">
-                ⚙️ Preparar Workspace
-              </button>
-              <button id="refresh-git-status-btn" class="secondary-btn hidden">
-                🔄 Refrescar Cambios (Git)
-              </button>
+        <!-- Compact Toolbar -->
+        <div class="ide-toolbar" id="ide-toolbar">
+          <button
+            class="toolbar-collapse-toggle"
+            id="toolbar-collapse-btn"
+            style="display: none"
+          >
+            ☰
+          </button>
+          <!-- Environment Controls -->
+          <div class="toolbar-section">
+            <div class="toolbar-group">
+              <label for="client-select">Cliente:</label>
+              <select id="client-select" class="compact-select">
+                <option value="nbch">nbch</option>
+                <option value="bpn">bpn</option>
+                <option value="bind">bind</option>
+              </select>
             </div>
-          </div>
-          <div class="card-content">
-            <div class="config-grid">
-              <div class="config-item">
-                <label for="client-select">Cliente:</label>
-                <select id="client-select">
-                  <option value="nbch">nbch</option>
-                  <option value="bpn">bpn</option>
-                  <option value="bind">bind</option>
+            <div class="toolbar-group">
+              <label for="branch-select">Branch:</label>
+              <select id="branch-select" class="compact-select">
+                <option>Cargando...</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="apk-version-select">APK:</label>
+              <div class="compact-input-with-button">
+                <select id="apk-version-select" class="compact-select" disabled>
+                  <option>N/A</option>
                 </select>
+                <button
+                  id="refresh-apk-versions-btn"
+                  class="compact-refresh-btn"
+                  title="Refresh APK Versions"
+                >
+                  ↻
+                </button>
               </div>
-              <div class="config-item">
-                <label for="branch-select">Branch:</label>
-                <select id="branch-select">
-                  <option>Cargando...</option>
-                </select>
-              </div>
-              <div class="config-item">
-                <label for="apk-version-select">Versión APK:</label>
-                <div class="input-with-button">
-                  <select id="apk-version-select" disabled>
-                    <option>N/A</option>
-                  </select>
-                  <button
-                    id="refresh-apk-versions-btn"
-                    class="refresh-btn"
-                    title="Refresh APK Versions"
-                  >
-                    &#x21bb;
-                  </button>
-                </div>
-              </div>
-              <div
-                class="config-item"
-                id="device-selector-container"
-                class="hidden"
-              >
-                <label for="device-select">Device:</label>
-                <div class="input-with-button">
-                  <select id="device-select"></select>
-                  <button
-                    id="refresh-devices-btn"
-                    class="refresh-btn"
-                    title="Refresh Devices"
-                  >
-                    &#x21bb;
-                  </button>
-                </div>
+            </div>
+            <div class="toolbar-group hidden" id="device-selector-container">
+              <label for="device-select">Device:</label>
+              <div class="compact-input-with-button">
+                <select id="device-select" class="compact-select"></select>
+                <button
+                  id="refresh-devices-btn"
+                  class="compact-refresh-btn"
+                  title="Refresh Devices"
+                >
+                  ↻
+                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Execution Options Card -->
-        <div class="config-card">
-          <div class="card-header">
-            <h3>⚙️ Opciones de Ejecución</h3>
-          </div>
-          <div class="card-content">
-            <div class="options-grid">
-              <label class="checkbox-label">
-                <input type="checkbox" id="batch-priority-checkbox" />
-                Alta Prioridad ⚡
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" id="record-mappings-checkbox" />
-                Grabar Mappings 🔴
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" id="use-local-mappings-checkbox" />
-                Usar Mappings Locales 💾
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" id="persistent-workspace-checkbox" />
-                Workspace Persistente 🔄
-              </label>
-            </div>
-          </div>
-        </div>
+        <div class="toolbar-section">
+  <div class="toolbar-group">
+    <div class="toggle-matrix">
+      <!-- Fila 1 -->
+      <label class="toggle-label left"  for="batch-priority-checkbox">⚡ Prioridad</label>
+      <input class="toggle-chk" type="checkbox" id="batch-priority-checkbox" />
+      <input class="toggle-chk" type="checkbox" id="record-mappings-checkbox" />
+      <label class="toggle-label right" for="record-mappings-checkbox">🔴 Record Mapping</label>
 
-        <!-- Search and Execution Card -->
-        <div class="config-card">
-          <div class="card-header">
-            <h3>⚙️ Búsqueda y Ejecución</h3>
-            <button id="fetch-features-btn" class="secondary-btn">
-              🔍 Buscar Features
+      <!-- Fila 2 -->
+      <label class="toggle-label left"  for="use-local-mappings-checkbox">💾 Use Mappings</label>
+      <input class="toggle-chk" type="checkbox" id="use-local-mappings-checkbox" />
+      <input class="toggle-chk" type="checkbox" id="persistent-workspace-checkbox" />
+      <label class="toggle-label right" for="persistent-workspace-checkbox">🔄 Persistent Workspace</label>
+    </div>
+  </div>
+</div>
+
+          <!-- Action Buttons -->
+          <div class="toolbar-section">
+            <button
+              id="prepare-workspace-btn"
+              class="compact-btn hidden"
+              title="Preparar Workspace"
+            >
+              ⚙️
+            </button>
+            <button
+              id="refresh-git-status-btn"
+              class="compact-btn hidden"
+              title="Refrescar Cambios (Git)"
+            >
+              🔄
+            </button>
+            <button
+              id="fetch-features-btn"
+              class="compact-btn primary-btn"
+              title="Buscar Features"
+            >
+              🔍
             </button>
           </div>
-          <div class="card-content">
-            <div class="search-controls">
-              <div class="search-input-group">
-                <label for="features-filter">Buscar:</label>
+        </div>
+
+        <!-- IDE Container with Integrated Controls -->
+        <div class="ide-main-container">
+          <!-- IDE Header with Search and Execution -->
+          <div class="ide-header">
+            <div class="ide-search-section">
+              <div class="search-group">
                 <input
                   type="text"
                   id="features-filter"
-                  placeholder="Filtrar por feature completa..."
-                  class="features-filter-input"
+                  placeholder="Buscar features..."
+                  class="compact-search-input"
                 />
-              </div>
-              <div class="status-filter-group">
-                <label for="feature-filter-select">Estado:</label>
-                <select id="feature-filter-select">
+                <select
+                  id="feature-filter-select"
+                  class="compact-filter-select"
+                >
                   <option value="all">Todos</option>
-                  <option value="modified">Solo Modificados</option>
+                  <option value="modified">Modificados</option>
                 </select>
               </div>
             </div>
-
-            <div class="execution-controls">
-              <div class="selection-controls">
-                <label class="checkbox-label">
+            <div class="ide-execution-section">
+              <div class="execution-controls">
+                <label class="compact-checkbox-label">
                   <input type="checkbox" id="select-all-features" />
-                  Seleccionar Todo
+                  <span>Seleccionar Todo</span>
                 </label>
-                <button id="commit-changes-btn" class="commit-btn hidden">
-                  ← Hacer Commit de Cambios
+                <button
+                  id="commit-changes-btn"
+                  class="compact-btn commit-btn hidden"
+                  title="Hacer Commit de Cambios"
+                >
+                  📝 Commit
+                </button>
+                <button
+                  id="run-selected-btn"
+                  class="compact-btn execute-btn"
+                  disabled
+                >
+                  ▷ Ejecutar (0)
                 </button>
               </div>
-              <button id="run-selected-btn" class="execute-btn" disabled>
-                ▷ Ejecutar Selección (0)
-              </button>
             </div>
+          </div>
 
-            <div id="ide-container">
-              <div id="feature-tree-panel">
-                <ul id="features-list">
-                  <li>Selecciona cliente y branch para buscar features.</li>
-                </ul>
-              </div>
-              <div id="editor-panel"></div>
+          <!-- IDE Container -->
+          <div id="ide-container">
+            <div id="feature-tree-panel">
+              <ul id="features-list">
+                <li>Selecciona cliente y branch para buscar features.</li>
+              </ul>
             </div>
+            <div id="editor-panel"></div>
           </div>
         </div>
       </div>

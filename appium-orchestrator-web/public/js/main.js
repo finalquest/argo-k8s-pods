@@ -874,3 +874,36 @@ function initializeEventListeners() {
     }
   });
 }
+
+// Toolbar collapse functionality for mobile
+function initializeToolbarCollapse() {
+  const toolbar = document.getElementById('ide-toolbar');
+  const collapseBtn = document.getElementById('toolbar-collapse-btn');
+  
+  if (!toolbar || !collapseBtn) return;
+  
+  // Show collapse button only on mobile
+  function checkMobile() {
+    if (window.innerWidth <= 768) {
+      collapseBtn.style.display = 'block';
+    } else {
+      collapseBtn.style.display = 'none';
+      toolbar.classList.remove('collapsed');
+    }
+  }
+  
+  // Check on load and resize
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+  
+  // Toggle collapse on button click
+  collapseBtn.addEventListener('click', () => {
+    toolbar.classList.toggle('collapsed');
+    collapseBtn.textContent = toolbar.classList.contains('collapsed') ? '▼' : '☰';
+  });
+}
+
+// Initialize toolbar collapse when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  initializeToolbarCollapse();
+});

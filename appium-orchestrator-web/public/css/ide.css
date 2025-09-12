@@ -1,10 +1,11 @@
 /* --- IDE Layout --- */
 #ide-container {
   display: flex;
-  height: 60vh; /* Or a suitable height */
+  height: 60vh; /* Fallback - overridden by new layout */
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   overflow: hidden;
+  flex: 1; /* Take available space in new layout */
 }
 
 #feature-tree-panel {
