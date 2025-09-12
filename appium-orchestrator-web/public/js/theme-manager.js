@@ -7,10 +7,10 @@ class ThemeManager {
   init() {
     // Aplicar tema inicial
     this.applyTheme(this.currentTheme);
-    
+
     // Configurar event listeners
     this.setupEventListeners();
-    
+
     // Observar cambios de sistema
     this.setupSystemThemeObserver();
   }
@@ -21,7 +21,10 @@ class ThemeManager {
 
   getPreferredTheme() {
     // Verificar preferencia del sistema
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    ) {
       return 'dark';
     }
     return 'light';
@@ -35,9 +38,11 @@ class ThemeManager {
     document.documentElement.setAttribute('data-theme', theme);
     this.currentTheme = theme;
     this.updateToggleUI();
-    
+
     // Disparar evento personalizado
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
+    window.dispatchEvent(
+      new CustomEvent('themeChanged', { detail: { theme } }),
+    );
   }
 
   toggleTheme() {
@@ -72,12 +77,14 @@ class ThemeManager {
 
     // Escuchar cambios de tema de sistema
     if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!this.getStoredTheme()) {
-          // Solo cambiar si el usuario no ha establecido preferencia
-          this.applyTheme(e.matches ? 'dark' : 'light');
-        }
-      });
+      window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', (e) => {
+          if (!this.getStoredTheme()) {
+            // Solo cambiar si el usuario no ha establecido preferencia
+            this.applyTheme(e.matches ? 'dark' : 'light');
+          }
+        });
     }
   }
 

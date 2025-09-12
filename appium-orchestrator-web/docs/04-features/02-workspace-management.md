@@ -4,6 +4,8 @@
 
 La gestión de workspaces es una feature fundamental que permite preparar y mantener entornos de trabajo aislados para cada branch del repositorio. Cada workspace contiene el código fuente, dependencias y configuración necesaria para ejecutar tests de forma independiente.
 
+El sistema incluye detección precisa de cambios Git para mostrar indicadores visuales solo cuando hay archivos trackeados que necesitan commit.
+
 ## 🏗️ Arquitectura de Workspaces
 
 ### 1. Estructura de Directorios

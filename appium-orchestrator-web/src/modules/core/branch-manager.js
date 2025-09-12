@@ -63,28 +63,94 @@ class BranchManager {
     }
 
     try {
-      const git = simpleGit();
-      const authenticatedUrl = this.getAuthenticatedUrl();
-
-      // Get the latest commit hash for the branch
-      const commitInfo = await git.listRemote([
-        '--heads',
-        authenticatedUrl,
-        `refs/heads/${branch}`,
-      ]);
-
-      if (!commitInfo) {
+      // Check if persistent workspaces are enabled
+      if (!this.configManager.isEnabled('persistentWorkspaces')) {
         return {
-          success: false,
-          error: `No se encontró información para la branch '${branch}'`,
+          success: true,
+          hasPendingCommits: false,
+          commitCount: 0,
+          branch,
+          timestamp: new Date().toISOString(),
         };
       }
 
-      const commitHash = commitInfo.split('\t')[0];
+      // Get workspace path for the branch
+      const workspacePath = this.getWorkspacePath(branch);
+
+      // Check if workspace exists
+      if (!require('fs').existsSync(workspacePath)) {
+        return {
+          success: true,
+          hasPendingCommits: false,
+          commitCount: 0,
+          branch,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const git = simpleGit(workspacePath);
+      const authenticatedUrl = this.getAuthenticatedUrl();
+
+      // Get current branch and check if it matches
+      const status = await git.status();
+      if (status.current !== branch) {
+        return {
+          success: true,
+          hasPendingCommits: false,
+          commitCount: 0,
+          branch,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Get the latest commit hash for the branch from remote
+      let remoteHash = null;
+      try {
+        const commitInfo = await git.listRemote([
+          '--heads',
+          authenticatedUrl,
+          `refs/heads/${branch}`,
+        ]);
+
+        if (commitInfo) {
+          remoteHash = commitInfo.split('\t')[0];
+        }
+      } catch (error) {
+        console.warn(
+          `Could not get remote info for branch ${branch}:`,
+          error.message,
+        );
+      }
+
+      // Get local commits that are not in remote
+      let pendingCommits = 0;
+      if (remoteHash) {
+        try {
+          const log = await git.log([`${remoteHash}..HEAD`]);
+          pendingCommits = log.total;
+        } catch (error) {
+          console.warn(
+            `Could not compare with remote for branch ${branch}:`,
+            error.message,
+          );
+        }
+      } else {
+        // If no remote hash, assume all local commits are pending
+        try {
+          const log = await git.log();
+          pendingCommits = log.total;
+        } catch (error) {
+          console.warn(
+            `Could not get local log for branch ${branch}:`,
+            error.message,
+          );
+        }
+      }
 
       return {
         success: true,
-        commitHash,
+        hasPendingCommits: pendingCommits > 0,
+        commitCount: pendingCommits,
         branch,
         timestamp: new Date().toISOString(),
       };
@@ -136,19 +202,25 @@ class BranchManager {
       const git = simpleGit(workspacePath);
       const status = await git.status();
 
-      const changes = {
-        modified: status.modified,
-        added: status.created,
-        deleted: status.deleted,
-        renamed: status.renamed,
-        staged: status.staged,
-        hasChanges: !status.isClean(),
-      };
+      const modifiedFiles = status.modified.length;
+      const stagedFiles = status.staged.length;
+      const unstagedFiles = status.not_added.length;
+      const deletedFiles = status.deleted.length;
+      const createdFiles = status.created.length;
+      const renamedFiles = status.renamed.length;
+
+      // Only show header for tracked files that have been modified (not untracked files)
+      const hasChanges = modifiedFiles + stagedFiles > 0;
 
       return {
         success: true,
-        changes,
-        hasChanges: changes.hasChanges,
+        hasChanges,
+        modifiedFiles,
+        stagedFiles,
+        unstagedFiles,
+        message: hasChanges
+          ? `Hay ${modifiedFiles + stagedFiles} archivo(s) modificado(s)`
+          : '',
       };
     } catch (error) {
       console.error(

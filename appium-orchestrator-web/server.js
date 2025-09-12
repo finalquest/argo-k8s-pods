@@ -125,14 +125,14 @@ app.get('/api/branches', async (req, res) => {
 
 app.get('/api/apk/versions', async (req, res) => {
   const { repo, client } = req.query;
-  
+
   try {
     let result;
-    
+
     // If repo parameter is provided, use legacy method
     if (repo) {
       result = await apkManager.getRegistryApkVersions(repo);
-    } 
+    }
     // If client parameter is provided, use client-specific method
     else if (client) {
       result = await apkManager.getClientApkVersions(client);
@@ -141,7 +141,7 @@ app.get('/api/apk/versions', async (req, res) => {
     else {
       result = await apkManager.getApkVersions();
     }
-    
+
     if (result.success) {
       res.json({ source: result.source, versions: result.versions });
     } else {
@@ -149,7 +149,9 @@ app.get('/api/apk/versions', async (req, res) => {
     }
   } catch (error) {
     console.error('Error en /api/apk/versions:', error);
-    res.status(500).json({ error: 'Error interno al obtener versiones de APK.' });
+    res
+      .status(500)
+      .json({ error: 'Error interno al obtener versiones de APK.' });
   }
 });
 
@@ -219,7 +221,10 @@ app.get('/api/feature-content', async (req, res) => {
     feature,
   );
   if (result.success) {
-    res.json({ content: result.content });
+    res.json({
+      content: result.content,
+      isLocal: result.source === 'persistent',
+    });
   } else {
     res.status(500).json({ error: result.error });
   }
@@ -227,12 +232,14 @@ app.get('/api/feature-content', async (req, res) => {
 
 app.post('/api/feature-content', async (req, res) => {
   const { branch, client, feature, content } = req.body;
+
   const result = await featureManager.saveFeatureContent(
     branch,
     client,
     feature,
     content,
   );
+
   if (result.success) {
     res.json({ message: result.message });
   } else {
@@ -468,9 +475,6 @@ function saveMappingsAsSingleFile(mappings, recordingName) {
 }
 
 app.post('/api/wiremock/recordings/stop', async (req, res) => {
-  console.log('--- DEBUG: /api/wiremock/recordings/stop ---');
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
   try {
     const { recordingName, saveAsSingleFile } = req.body;
     if (!recordingName) {
@@ -594,11 +598,13 @@ app.post('/api/mappings/download-batch', (req, res) => {
 
 server.listen(PORT, () => {
   loggingUtilities.logStartup(PORT);
-  
+
   // Display authentication mode
   if (authManager.isDevelopmentMode()) {
     console.log('🔓 MODO DESARROLLO: Autenticación deshabilitada');
-    console.log('   Para habilitar autenticación, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET');
+    console.log(
+      '   Para habilitar autenticación, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET',
+    );
   } else {
     console.log('🔒 MODO PRODUCCIÓN: Autenticación habilitada');
   }

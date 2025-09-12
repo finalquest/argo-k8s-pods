@@ -52,34 +52,136 @@ const REPO_STATES = {
 // public/js/api.js - Funciones de estado Git
 export async function getCommitStatus(branch) {
   try {
-    const response = await fetch(`/api/git/${branch}/commit-status`);
+    const response = await fetch(`/api/commit-status/${branch}`);
 
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Normalize the response to match expected format
+    if (data.success) {
+      return {
+        hasPendingCommits: data.hasPendingCommits || false,
+        commitCount: data.commitCount || 0,
+      };
+    } else {
+      console.error('Server error in commit status:', data.error);
+      return { hasPendingCommits: false, commitCount: 0 };
+    }
   } catch (error) {
     console.error('Error getting commit status:', error);
-    return { hasPendingCommits: false, commits: [] };
+    return { hasPendingCommits: false, commitCount: 0 };
   }
 }
 
 export async function getWorkspaceChanges(branch) {
   try {
-    const response = await fetch(`/api/workspace/${branch}/changes`);
+    const response = await fetch(`/api/workspace-changes/${branch}`);
 
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    // Normalize the response to match expected format
+    return {
+      hasChanges: data.hasChanges || false,
+      modifiedFiles: data.modifiedFiles || 0,
+      stagedFiles: data.stagedFiles || 0,
+      unstagedFiles: data.unstagedFiles || 0,
+      message: data.message || '',
+    };
   } catch (error) {
     console.error('Error getting workspace changes:', error);
-    return { hasChanges: false, modifiedFiles: [] };
+    return { 
+      hasChanges: false, 
+      modifiedFiles: 0, 
+      stagedFiles: 0, 
+      unstagedFiles: 0 
+    };
   }
 }
 ```
+
+### 2. Detección Precisa de Cambios
+
+El sistema implementa una lógica precisa para determinar qué archivos deben mostrar el indicador de commit:
+
+#### Lógica de Detección en el Backend
+
+```javascript
+// src/modules/core/branch-manager.js - Cálculo de hasChanges
+async getWorkspaceChanges(branch) {
+  // ... validación y setup ...
+  
+  const git = simpleGit(workspacePath);
+  const status = await git.status();
+
+  const modifiedFiles = status.modified.length;    // Archivos trackeados modificados
+  const stagedFiles = status.staged.length;        // Archivos en staging area
+  const unstagedFiles = status.not_added.length;  // Archivos no trackeados
+  const deletedFiles = status.deleted.length;      // Archivos eliminados
+  const createdFiles = status.created.length;      // Archivos nuevos trackeados
+  const renamedFiles = status.renamed.length;      // Archivos renombrados
+
+  // Solo mostrar header si hay archivos trackeados que necesitan commit
+  const hasChanges = modifiedFiles + stagedFiles > 0;
+
+  return {
+    success: true,
+    hasChanges,
+    modifiedFiles,
+    stagedFiles,
+    unstagedFiles,
+    message: hasChanges 
+      ? `Hay ${modifiedFiles + stagedFiles} archivo(s) modificado(s)` 
+      : '',
+  };
+}
+```
+
+#### Comportamiento del Frontend
+
+```javascript
+// public/js/main.js - Lógica de indicadores
+function updateCommitStatusIndicator(branch) {
+  Promise.all([getCommitStatus(branch), getWorkspaceChanges(branch)])
+    .then(([commitStatus, workspaceStatus]) => {
+      
+      // Handle uncommitted changes (yellow indicator)
+      if (workspaceStatus.hasChanges) {
+        // Mostrar indicador amarillo con conteo de archivos trackeados
+        const totalChanges = workspaceStatus.modifiedFiles + workspaceStatus.stagedFiles;
+        uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
+        uncommittedIndicator.classList.remove('hidden');
+      } else {
+        // Ocultar indicador si no hay archivos trackeados modificados
+        uncommittedIndicator.classList.add('hidden');
+      }
+
+      // Handle pending commits (red indicator)
+      if (commitStatus.hasPendingCommits) {
+        pendingStatusText.textContent = `${commitStatus.commitCount} commit(s) pendiente(s) de push`;
+        pendingCommitsIndicator.classList.remove('hidden');
+      } else {
+        pendingCommitsIndicator.classList.add('hidden');
+      }
+    });
+}
+```
+
+#### Escenarios Comportamentales
+
+| Escenario | hasChanges | Header Visible | Mensaje |
+|-----------|------------|----------------|---------|
+| Solo archivos no trackeados | `false` | ❌ Oculto | No se muestra |
+| Archivos modificados | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
+| Archivos staged | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
+| Mixto (modificados + no trackeados) | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
+| Workspace limpio | `false` | ❌ Oculto | No se muestra |
+| Solo commits pendientes | `false` | ❌ Oculto (commit) | ✅ Visible (push) |
 
 ### 2. Backend - Endpoints Git
 

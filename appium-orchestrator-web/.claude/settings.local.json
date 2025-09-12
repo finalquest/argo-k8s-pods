@@ -14,7 +14,8 @@
       "Bash(git add:*)",
       "Bash(npm test:*)",
       "Bash(npx prettier:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

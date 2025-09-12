@@ -61,22 +61,28 @@ describe('Server.js Smoke Test', () => {
 
     // Verificar que todos los managers se inicialicen
     expect(serverContent).toContain(
-      'const authManager = new AuthenticationManager()',
+      'const configManager = new ConfigurationManager()',
     );
     expect(serverContent).toContain(
-      'const configManager = new ConfigurationManager()',
+      'const authManager = new AuthenticationManager(configManager)',
     );
     expect(serverContent).toContain(
       'const validationManager = new ValidationManager()',
     );
-    expect(serverContent).toContain('const branchManager = new BranchManager(');
-    expect(serverContent).toContain('const deviceManager = new DeviceManager(');
-    expect(serverContent).toContain('const apkManager = new ApkManager(');
     expect(serverContent).toContain(
-      'const featureManager = new FeatureManager(',
+      'const branchManager = new BranchManager(configManager, validationManager)',
     );
     expect(serverContent).toContain(
-      'const workspaceManager = new WorkspaceManager(',
+      'const deviceManager = new DeviceManager(configManager, validationManager)',
+    );
+    expect(serverContent).toContain(
+      'const apkManager = new ApkManager(configManager, validationManager)',
+    );
+    expect(serverContent).toContain(
+      'const featureManager = new FeatureManager(configManager, validationManager)',
+    );
+    expect(serverContent).toContain(
+      'const workspaceManager = new WorkspaceManager(configManager, validationManager)',
     );
   });
 

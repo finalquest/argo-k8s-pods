@@ -57,13 +57,21 @@ class ConfigurationManager {
   validateConfiguration() {
     // Si Google OAuth no está configurado, usar modo de desarrollo
     if (!this.isEnabled('googleAuth')) {
-      console.warn('⚠️  Google OAuth no configurado - Modo desarrollo (sin autenticación)');
-      console.warn('   Para habilitar autenticación, define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET');
-      
+      console.warn(
+        '⚠️  Google OAuth no configurado - Modo desarrollo (sin autenticación)',
+      );
+      console.warn(
+        '   Para habilitar autenticación, define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET',
+      );
+
       // Solo requerir SESSION_SECRET para modo desarrollo
       if (!this.config.SESSION_SECRET) {
-        console.warn('⚠️  Generando SESSION_SECRET aleatoria para modo desarrollo...');
-        this.config.SESSION_SECRET = require('crypto').randomBytes(32).toString('hex');
+        console.warn(
+          '⚠️  Generando SESSION_SECRET aleatoria para modo desarrollo...',
+        );
+        this.config.SESSION_SECRET = require('crypto')
+          .randomBytes(32)
+          .toString('hex');
       }
     } else {
       // Validar variables de autenticación si Google OAuth está habilitado
@@ -160,7 +168,7 @@ class ConfigurationManager {
       displayName: 'Development User',
       email: 'dev@localhost',
       photos: [{ value: 'https://via.placeholder.com/40' }],
-      isDevelopment: true
+      isDevelopment: true,
     };
   }
 

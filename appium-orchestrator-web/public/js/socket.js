@@ -264,51 +264,20 @@ export function initializeSocketListeners(socket) {
     console.log(`Commit status update for branch ${data.branch}:`, data);
     const selectedBranch = document.getElementById('branch-select').value;
     if (data.branch === selectedBranch) {
-      // Also check for workspace changes to determine the correct state
-      const workspaceStatus = await getWorkspaceChanges(data.branch);
-
-      const header = document.getElementById('main-header');
-      const uncommittedIndicator = document.getElementById(
-        'uncommitted-changes-indicator',
-      );
-      const pendingCommitsIndicator = document.getElementById(
-        'pending-commits-indicator',
-      );
-      const uncommittedStatusText =
-        uncommittedIndicator.querySelector('.status-text');
-      const pendingStatusText =
-        pendingCommitsIndicator.querySelector('.status-text');
-
-      // Clear all header status classes first
-      header.classList.remove('has-pending-commits', 'has-uncommitted-changes');
-
-      // Handle uncommitted changes (yellow indicator)
-      if (workspaceStatus.hasChanges) {
-        header.classList.add('has-uncommitted-changes');
-        uncommittedIndicator.classList.remove('hidden');
-        const totalChanges = workspaceStatus.modifiedFiles;
-        uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
-      } else {
-        uncommittedIndicator.classList.add('hidden');
+      // Update the commit status indicator
+      if (window.updateCommitStatusIndicator) {
+        await window.updateCommitStatusIndicator(data.branch);
       }
+    }
+  });
 
-      // Handle pending commits (red indicator)
-      if (data.hasPendingCommits) {
-        header.classList.add('has-pending-commits');
-        header.classList.remove('has-uncommitted-changes');
-        pendingCommitsIndicator.classList.remove('hidden');
-        pendingStatusText.textContent =
-          data.message || 'Commits pendientes de push';
-      } else {
-        pendingCommitsIndicator.classList.add('hidden');
-      }
-
-      // If no indicators are showing, ensure header is clean
-      if (!workspaceStatus.hasChanges && !data.hasPendingCommits) {
-        header.classList.remove(
-          'has-pending-commits',
-          'has-uncommitted-changes',
-        );
+  socket.on('workspace_changes_committed', async (data) => {
+    console.log(`Workspace changes committed for branch ${data.branch}`);
+    const selectedBranch = document.getElementById('branch-select').value;
+    if (data.branch === selectedBranch) {
+      // Update the commit status indicator to reflect the committed changes
+      if (window.updateCommitStatusIndicator) {
+        await window.updateCommitStatusIndicator();
       }
     }
   });

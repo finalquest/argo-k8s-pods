@@ -92,29 +92,47 @@ class WorkerPoolManager {
     let workerWorkspacePath;
     let isPersistent = false;
 
-    if (persistentWorkspace && process.env.PERSISTENT_WORKSPACES_ROOT) {
-      // Use persistent workspace
-      workerWorkspacePath = path.join(
+    // Check if persistent workspace exists for this branch (regardless of checkbox)
+    if (process.env.PERSISTENT_WORKSPACES_ROOT) {
+      const persistentWorkspacePath = path.join(
         process.env.PERSISTENT_WORKSPACES_ROOT,
         sanitizedBranch,
       );
-      isPersistent = true;
-      console.log(
-        `[WORKER POOL] Usando workspace persistente para worker ${workerId}: ${workerWorkspacePath}`,
-      );
+
+      if (fs.existsSync(persistentWorkspacePath)) {
+        // Use persistent workspace automatically if it exists
+        workerWorkspacePath = persistentWorkspacePath;
+        isPersistent = true;
+        console.log(
+          `[WORKER POOL] Usando workspace persistente existente para worker ${workerId}: ${workerWorkspacePath}`,
+        );
+      } else {
+        // Use temporary workspace if persistent doesn't exist
+        workerWorkspacePath = path.join(
+          os.tmpdir(),
+          `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`,
+        );
+        isPersistent = false;
+        console.log(
+          `[WORKER POOL] Workspace persistente no encontrado para branch ${sanitizedBranch}, usando temporal: ${workerWorkspacePath}`,
+        );
+      }
     } else {
-      // Use temporary workspace
+      // Use temporary workspace if PERSISTENT_WORKSPACES_ROOT not configured
       workerWorkspacePath = path.join(
         os.tmpdir(),
         `appium-orchestrator-${workerId}-${sanitizedBranch}-${Date.now()}`,
       );
       isPersistent = false;
       console.log(
-        `[WORKER POOL] Usando workspace temporal para worker ${workerId}: ${workerWorkspacePath}`,
+        `[WORKER POOL] PERSISTENT_WORKSPACES_ROOT no configurado, usando workspace temporal: ${workerWorkspacePath}`,
       );
     }
 
-    fs.mkdirSync(workerWorkspacePath, { recursive: true });
+    // Only create directory if using temporary workspace (persistent workspace should already exist)
+    if (!isPersistent) {
+      fs.mkdirSync(workerWorkspacePath, { recursive: true });
+    }
     const initMessage = {
       type: 'INIT',
       branch,

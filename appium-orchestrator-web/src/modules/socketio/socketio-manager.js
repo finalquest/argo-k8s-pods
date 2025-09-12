@@ -1,6 +1,10 @@
 // Socket.io Manager Module
 // Handles real-time communication, event handling, and client connections
 
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
 class SocketIOManager {
   constructor(
     authenticationManager,
@@ -295,32 +299,92 @@ class SocketIOManager {
    * Handle prepare_workspace event
    */
   handlePrepareWorkspace(socket) {
-    socket.on('prepare_workspace', async (data) => {
-      console.log('--- DEBUG: Preparando workspace ---', data);
+    socket.on('prepare_workspace', (data) => {
       const { branch } = data;
+      const logPrefix = `[Workspace Prep: ${branch}]`;
+      const logSlot = { slotId: 'system' }; // Use system log panel
 
-      try {
+      if (!this.configManager.isEnabled('persistentWorkspaces')) {
         this.emitLogUpdate({
-          logLine: `--- 🔧 Preparando workspace para branch '${branch}'... ---
-`,
+          ...logSlot,
+          logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada en el servidor.\n`,
         });
+        return;
+      }
 
-        // This would need workspace manager integration
-        // For now, simulating workspace preparation
-        setTimeout(() => {
+      if (!branch) {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `${logPrefix} ❌ Error: No se ha especificado una branch.\n`,
+        });
+        return;
+      }
+
+      // Limpiar el panel de sistema antes de empezar
+      this.io.emit('log_clear', logSlot);
+      this.emitLogUpdate({
+        ...logSlot,
+        logLine: `--- 🚀 Iniciando preparación del workspace para la branch: ${branch} ---\n`,
+      });
+
+      const sanitizedBranch = this.validationManager.sanitize(branch);
+      const workspacePath = path.join(
+        this.configManager.get('PERSISTENT_WORKSPACES_ROOT'),
+        sanitizedBranch,
+      );
+
+      // Create parent directory if it doesn't exist
+      if (!fs.existsSync(workspacePath)) {
+        fs.mkdirSync(workspacePath, { recursive: true });
+      }
+
+      const setupScript = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'scripts',
+        'setup-workspace.sh',
+      );
+      const scriptProcess = spawn('bash', [setupScript, workspacePath, branch]);
+
+      scriptProcess.stdout.on('data', (data) => {
+        this.emitLogUpdate({ ...logSlot, logLine: data.toString() });
+      });
+
+      scriptProcess.stderr.on('data', (data) => {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `[stderr] ${data.toString()}`,
+        });
+      });
+
+      scriptProcess.on('close', (code) => {
+        if (code === 0) {
           this.emitLogUpdate({
-            logLine: `--- ✅ Workspace preparado para branch '${branch}'. ---
-`,
+            ...logSlot,
+            logLine: `\n--- ✅ Workspace preparado exitosamente para la branch: ${branch} ---\n`,
           });
           socket.emit('workspace_ready', { branch });
-        }, 2000);
-      } catch (error) {
+        } else {
+          this.emitLogUpdate({
+            ...logSlot,
+            logLine: `\n--- ❌ Error durante la preparación del workspace. Código de salida: ${code} ---\n`,
+          });
+          socket.emit('workspace_error', {
+            error: `Workspace preparation failed with exit code ${code}`,
+          });
+        }
+      });
+
+      scriptProcess.on('error', (err) => {
+        console.error('Error al ejecutar el script de workspace:', err);
         this.emitLogUpdate({
-          logLine: `--- ❌ Error preparando workspace: ${error.message} ---
-`,
+          ...logSlot,
+          logLine: `\n--- ❌ Error al ejecutar el script: ${err.message} ---\n`,
         });
-        socket.emit('workspace_error', { error: error.message });
-      }
+        socket.emit('workspace_error', { error: err.message });
+      });
     });
   }
 
@@ -329,13 +393,131 @@ class SocketIOManager {
    */
   handleCommitChanges(socket) {
     socket.on('commit_changes', async (data) => {
-      console.log('--- DEBUG: Commit changes ---', data);
-      // This would need branch manager integration
-      // For now, just emitting log updates
+      const { branch, files, message } = data;
+      const logPrefix = `[Git Commit: ${branch}]`;
+      const logSlot = { slotId: 'system' }; // Use system log panel
+
+      if (!this.configManager.isEnabled('persistentWorkspaces')) {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `${logPrefix} ❌ Error: La función de workspaces persistentes no está habilitada.\n`,
+        });
+        return;
+      }
+
+      if (!branch || !files || files.length === 0 || !message) {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `${logPrefix} ❌ Error: Faltan datos para realizar el commit (branch, archivos o mensaje).\n`,
+        });
+        return;
+      }
+
       this.emitLogUpdate({
-        logLine: `--- 📝 Iniciando commit de cambios... ---
-`,
+        ...logSlot,
+        logLine: `--- 🚀 Iniciando commit local para la branch: ${branch} ---\n`,
       });
+
+      const sanitizedBranch = this.validationManager.sanitize(branch);
+      const workspacePath = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
+      const appiumWorkspacePath = require('path').join(workspacePath, sanitizedBranch, 'appium');
+
+      if (!require('fs').existsSync(appiumWorkspacePath)) {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `${logPrefix} ❌ Error: No se encontró el workspace local.\n`,
+        });
+        return;
+      }
+
+      // --- Validación de Seguridad de Archivos ---
+      for (const file of files) {
+        const fullPath = require('path').join(appiumWorkspacePath, file);
+        const resolvedPath = require('path').resolve(fullPath);
+        if (!resolvedPath.startsWith(require('path').resolve(appiumWorkspacePath))) {
+          this.emitLogUpdate({
+            ...logSlot,
+            logLine: `${logPrefix} ❌ Error de seguridad: Se intentó acceder a un archivo fuera del workspace: ${file}\n`,
+          });
+          return;
+        }
+      }
+
+      const executeGitCommand = (command, args) => {
+        return new Promise((resolve, reject) => {
+          const { spawn } = require('child_process');
+          const gitProcess = spawn(command, args, { cwd: appiumWorkspacePath });
+
+          gitProcess.stdout.on('data', (data) => {
+            this.emitLogUpdate({ ...logSlot, logLine: data.toString() });
+          });
+
+          gitProcess.stderr.on('data', (data) => {
+            this.emitLogUpdate({
+              ...logSlot,
+              logLine: `[stderr] ${data.toString()}`,
+            });
+          });
+
+          gitProcess.on('close', (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`El comando de Git falló con código ${code}`));
+            }
+          });
+
+          gitProcess.on('error', (err) => {
+            reject(err);
+          });
+        });
+      };
+
+      try {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `${logPrefix} étape 1/3: Añadiendo archivos...
+`,
+        });
+        
+        // Handle both individual files and directories
+        const gitAddArgs = files.length === 1 && files[0].endsWith('/') 
+          ? [files[0]] // Add directory
+          : [...files]; // Add individual files
+        
+        await executeGitCommand('git', ['add', ...gitAddArgs]);
+
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `
+${logPrefix} étape 2/3: Realizando commit local...
+`,
+        });
+        await executeGitCommand('git', ['commit', '-m', message]);
+
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `
+--- ✅ Commit local realizado con éxito para la branch: ${branch} ---
+`,
+        });
+
+        // Notificar al frontend que hay commits pendientes de push
+        this.emitCommitStatusUpdate({
+          branch,
+          hasPendingCommits: true,
+          message:
+            'Hay commits locales que no han sido subidos al repositorio remoto.',
+        });
+        
+        // Notificar al frontend para que actualice el status de cambios del workspace
+        this.io.emit('workspace_changes_committed', { branch });
+      } catch (error) {
+        this.emitLogUpdate({
+          ...logSlot,
+          logLine: `\n--- ❌ Error durante el commit local: ${error.message} ---\n`,
+        });
+      }
     });
   }
 

@@ -139,11 +139,36 @@ class WorkspaceManager {
       // Verify the workspace was created successfully
       const status = await git.status();
 
+      // Install dependencies
+      await new Promise((resolve, reject) => {
+        const yarnProcess = exec('yarn install', { cwd: workspacePath });
+
+        yarnProcess.stdout.on('data', (data) => {
+          console.log(`yarn install stdout: ${data}`);
+        });
+
+        yarnProcess.stderr.on('data', (data) => {
+          console.error(`yarn install stderr: ${data}`);
+        });
+
+        yarnProcess.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`yarn install failed with code ${code}`));
+          }
+        });
+
+        yarnProcess.on('error', (err) => {
+          reject(err);
+        });
+      });
+
       const workspaceInfo = {
         branch: status.current,
         workspacePath,
         createdAt: new Date().toISOString(),
-        status: 'created',
+        status: 'ready',
       };
 
       // Add to active workspaces

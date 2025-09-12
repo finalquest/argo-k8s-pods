@@ -66,7 +66,10 @@ class AuthenticationManager {
     // Puedes buscar en tu base de datos si el usuario existe, o crearlo.
     // Por ahora, simplemente pasamos el perfil.
     // Asegúrate de que el usuario pertenece al dominio correcto si `hd` no es suficiente.
-    if (oauthConfig.hostedDomain && profile._json.hd !== oauthConfig.hostedDomain) {
+    if (
+      oauthConfig.hostedDomain &&
+      profile._json.hd !== oauthConfig.hostedDomain
+    ) {
       return done(new Error('Dominio de Google no autorizado'));
     }
     return done(null, profile);

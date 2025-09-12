@@ -253,13 +253,17 @@ class ApkManager {
           });
         }
 
-        const versions = stdout.trim().split('\n').filter(Boolean).map((tag) => ({
-          name: tag,
-          source: 'registry',
-          client: client,
-          repository: repo,
-          registryUrl: process.env.APK_REGISTRY,
-        }));
+        const versions = stdout
+          .trim()
+          .split('\n')
+          .filter(Boolean)
+          .map((tag) => ({
+            name: tag,
+            source: 'registry',
+            client: client,
+            repository: repo,
+            registryUrl: process.env.APK_REGISTRY,
+          }));
 
         console.log('--- DEBUG: ORAS results ---');
         console.log('Versions count:', versions.length);
