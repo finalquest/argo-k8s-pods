@@ -473,9 +473,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/gherkin/gherkin.min.js"></script>
     <!-- Split.js for resizable panels -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+    <!-- Core Services -->
+    <script type="module" src="js/core/service-registry.js"></script>
+    <script type="module" src="js/core/global-services.js"></script>
     <!-- Theme Manager -->
     <script type="module" src="js/theme-manager.js"></script>
+    <!-- Glosario Service -->
+    <script type="module" src="js/glosario-service.js"></script>
+    <!-- Glosario UI -->
+    <script type="module" src="js/glosario-ui.js"></script>
+    <!-- Main Application -->
     <script type="module" src="js/main.js"></script>
+    
+    <!-- Legacy Compatibility (to be removed) -->
+    <script type="module">
+      import { createLegacyAliases } from './js/core/service-registry.js';
+      createLegacyAliases();
+    </script>
 
     <!-- Mappings Download Modal -->
     <div id="mappings-download-modal" class="modal">

@@ -17,6 +17,7 @@ const DeviceManager = require('./src/modules/core/device-manager');
 const ApkManager = require('./src/modules/core/apk-manager');
 const FeatureManager = require('./src/modules/core/feature-manager');
 const WorkspaceManager = require('./src/modules/core/workspace-manager');
+const StepScannerManager = require('./src/modules/core/step-scanner-manager');
 
 // Import worker management modules
 const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
@@ -40,6 +41,10 @@ const deviceManager = new DeviceManager(configManager, validationManager);
 const apkManager = new ApkManager(configManager, validationManager);
 const featureManager = new FeatureManager(configManager, validationManager);
 const workspaceManager = new WorkspaceManager(configManager, validationManager);
+const stepScannerManager = new StepScannerManager(
+  configManager,
+  validationManager,
+);
 
 // Initialize worker management modules
 const processManager = new ProcessManager(configManager, validationManager);
@@ -589,6 +594,77 @@ app.post('/api/mappings/download-batch', (req, res) => {
   });
 
   archive.finalize();
+});
+
+// Step Scanner API Endpoints
+app.get('/api/steps/scan', async (req, res) => {
+  const { branch } = req.query;
+
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+
+  try {
+    const result = await stepScannerManager.scanSteps(branch);
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      const statusCode = result.code === 'WORKSPACE_NOT_EXISTS' ? 404 : 400;
+      res.status(statusCode).json(result);
+    }
+  } catch (error) {
+    console.error('Error en /api/steps/scan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.get('/api/steps/status', async (req, res) => {
+  const { branch } = req.query;
+
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+
+  try {
+    const result = await stepScannerManager.getStatus(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/steps/status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.post('/api/steps/cache/clear', async (req, res) => {
+  const { branch } = req.body;
+
+  try {
+    const result = await stepScannerManager.clearCache(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/steps/cache/clear:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
 });
 
 // --- Lógica de Workers ---

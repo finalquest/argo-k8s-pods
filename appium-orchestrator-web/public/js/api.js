@@ -36,7 +36,7 @@ export async function getWorkspaceStatus(branch) {
     const response = await fetch(`/api/workspace-status/${branch}`);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-      return data;
+    return data;
   } catch (error) {
     console.error(
       `Error fetching workspace status for branch ${branch}:`,
@@ -99,7 +99,11 @@ export async function saveFeatureContent(branch, client, feature, content) {
         return null;
       }
 
-      throw new Error(errorData.error || errorData.message || `Error del servidor (${response.status})`);
+      throw new Error(
+        errorData.error ||
+          errorData.message ||
+          `Error del servidor (${response.status})`,
+      );
     }
     return await response.json();
   } catch (error) {
@@ -234,13 +238,13 @@ export async function fetchFeatures() {
     if (config.persistentWorkspacesEnabled) {
       const status = await getWorkspaceStatus(selectedBranch);
       updateFeaturesWithGitStatus(
-    status.modified_features, 
-    status.untracked_features || 
-    status.untracked_files || 
-    status.new_files || 
-    status.untracked || 
-    []
-  );
+        status.modified_features,
+        status.untracked_features ||
+          status.untracked_files ||
+          status.new_files ||
+          status.untracked ||
+          [],
+      );
 
       // Emit event to update commit status indicators
       globalEvents.emit('features:loaded', {
