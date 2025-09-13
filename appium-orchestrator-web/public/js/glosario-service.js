@@ -1,8 +1,6 @@
 // Glosario Service
 // Handles API communication for step definitions scanning
 
-import { logDebug, logError } from './utils/error-handling.js';
-
 class GlosarioService {
   constructor() {
     this.baseApiUrl = '/api/steps';
@@ -15,18 +13,28 @@ class GlosarioService {
    * Get steps for a specific branch (uses cache if available)
    */
   async getSteps(branch, forceRefresh = false) {
-    console.log('[GLOSARIO-SERVICE] getSteps called for branch:', branch, 'forceRefresh:', forceRefresh);
-    
+    console.log(
+      '[GLOSARIO-SERVICE] getSteps called for branch:',
+      branch,
+      'forceRefresh:',
+      forceRefresh,
+    );
+
     // Update current branch if changed
     if (this.currentBranch !== branch) {
-      console.log('[GLOSARIO-SERVICE] Branch changed, clearing cache for old branch');
+      console.log(
+        '[GLOSARIO-SERVICE] Branch changed, clearing cache for old branch',
+      );
       this.currentBranch = branch;
       forceRefresh = true; // Force refresh when branch changes
     }
 
     // Return cached data if available and not forcing refresh
     if (!forceRefresh && this.cache.has(branch)) {
-      console.log('[GLOSARIO-SERVICE] Returning cached data for branch:', branch);
+      console.log(
+        '[GLOSARIO-SERVICE] Returning cached data for branch:',
+        branch,
+      );
       const cachedData = this.cache.get(branch);
       return { ...cachedData, cached: true };
     }
@@ -46,7 +54,10 @@ class GlosarioService {
       const result = await response.json();
 
       if (result.success) {
-        console.log('[GLOSARIO-SERVICE] Scan successful, caching result for branch:', branch);
+        console.log(
+          '[GLOSARIO-SERVICE] Scan successful, caching result for branch:',
+          branch,
+        );
         const dataWithCacheFlag = { ...result.data, cached: false };
         this.cache.set(branch, dataWithCacheFlag);
         return dataWithCacheFlag;
@@ -224,8 +235,8 @@ class GlosarioService {
 const glosarioService = new GlosarioService();
 
 // Registrar en el service registry
-if (typeof serviceRegistry !== 'undefined') {
-  serviceRegistry.register('glosario', glosarioService);
+if (typeof window !== 'undefined' && window.serviceRegistry) {
+  window.serviceRegistry.register('glosario', glosarioService);
 } else if (typeof window !== 'undefined') {
   // Fallback para compatibilidad temporal
   window.glosarioService = glosarioService;

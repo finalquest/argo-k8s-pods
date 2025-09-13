@@ -84,7 +84,7 @@ class StepScannerManager {
     const persistentRoot = this.configManager.get('PERSISTENT_WORKSPACES_ROOT');
     const sanitizedBranch = this.validationManager.sanitize(branch);
     const workspacePath = path.join(persistentRoot, sanitizedBranch, 'appium');
-      return workspacePath;
+    return workspacePath;
   }
 
   /**
@@ -106,7 +106,6 @@ class StepScannerManager {
         return;
       }
 
-  
       const scriptProcess = spawn('bash', [scanScript, workspacePath, branch]);
       let stdout = '';
       let stderr = '';

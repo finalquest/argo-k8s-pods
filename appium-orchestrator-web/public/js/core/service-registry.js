@@ -5,7 +5,7 @@
  * en lugar de usar variables globales window.xxx
  */
 
-import { logDebug, logError } from '../utils/error-handling.js';
+import { logDebug } from '../utils/error-handling.js';
 
 export class ServiceRegistry {
   constructor() {
@@ -20,9 +20,9 @@ export class ServiceRegistry {
     if (this.services.has(name)) {
       logDebug(`Service '${name}' already registered, overwriting`);
     }
-    
+
     this.services.set(name, service);
-    
+
     if (this.debugMode) {
       logDebug(`Service registered: ${name}`, { service });
     }
@@ -35,7 +35,7 @@ export class ServiceRegistry {
     if (!this.services.has(name)) {
       throw new Error(`Service '${name}' not registered`);
     }
-    
+
     return this.services.get(name);
   }
 
@@ -51,11 +51,11 @@ export class ServiceRegistry {
    */
   unregister(name) {
     const removed = this.services.delete(name);
-    
+
     if (removed && this.debugMode) {
       logDebug(`Service unregistered: ${name}`);
     }
-    
+
     return removed;
   }
 
@@ -71,7 +71,7 @@ export class ServiceRegistry {
    */
   clear() {
     this.services.clear();
-    
+
     if (this.debugMode) {
       logDebug('All services cleared');
     }
@@ -94,7 +94,8 @@ export const serviceRegistry = new ServiceRegistry();
  * Funciones de conveniencia para acceder a los servicios
  */
 export const getService = (name) => serviceRegistry.get(name);
-export const registerService = (name, service) => serviceRegistry.register(name, service);
+export const registerService = (name, service) =>
+  serviceRegistry.register(name, service);
 export const hasService = (name) => serviceRegistry.has(name);
 
 /**
@@ -106,24 +107,32 @@ export const createLegacyAliases = () => {
   if (typeof window !== 'undefined') {
     Object.defineProperty(window, 'glosarioService', {
       get() {
-        console.warn('Deprecated: Use serviceRegistry.get("glosario") instead of window.glosarioService');
+        console.warn(
+          'Deprecated: Use serviceRegistry.get("glosario") instead of window.glosarioService',
+        );
         return serviceRegistry.get('glosario');
       },
       set(value) {
-        console.warn('Deprecated: Use serviceRegistry.register("glosario", service) instead of window.glosarioService');
+        console.warn(
+          'Deprecated: Use serviceRegistry.register("glosario", service) instead of window.glosarioService',
+        );
         serviceRegistry.register('glosario', value);
-      }
+      },
     });
 
     Object.defineProperty(window, 'glosarioUI', {
       get() {
-        console.warn('Deprecated: Use serviceRegistry.get("glosarioUI") instead of window.glosarioUI');
+        console.warn(
+          'Deprecated: Use serviceRegistry.get("glosarioUI") instead of window.glosarioUI',
+        );
         return serviceRegistry.get('glosarioUI');
       },
       set(value) {
-        console.warn('Deprecated: Use serviceRegistry.register("glosarioUI", service) instead of window.glosarioUI');
+        console.warn(
+          'Deprecated: Use serviceRegistry.register("glosarioUI", service) instead of window.glosarioUI',
+        );
         serviceRegistry.register('glosarioUI', value);
-      }
+      },
     });
   }
 };

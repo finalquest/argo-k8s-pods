@@ -1330,8 +1330,11 @@ function initializeGlosarioButton() {
   document.addEventListener('click', (event) => {
     if (event.target && event.target.id === 'glosario-toggle-btn') {
       // Toggle glosario panel
-      if (typeof serviceRegistry !== 'undefined' && serviceRegistry.has('glosarioUI')) {
-        serviceRegistry.get('glosarioUI').toggle();
+      if (
+        typeof window.serviceRegistry !== 'undefined' &&
+        window.serviceRegistry.has('glosarioUI')
+      ) {
+        window.serviceRegistry.get('glosarioUI').toggle();
       } else if (window.glosarioUI) {
         // Fallback para compatibilidad temporal
         window.glosarioUI.toggle();
@@ -1344,12 +1347,12 @@ function initializeGlosarioButton() {
   if (branchSelect) {
     branchSelect.addEventListener('change', () => {
       const selectedBranch = branchSelect.value;
-      if (typeof serviceRegistry !== 'undefined') {
-        if (serviceRegistry.has('glosarioUI') && selectedBranch) {
-          serviceRegistry.get('glosarioUI').setBranch(selectedBranch);
+      if (typeof window.serviceRegistry !== 'undefined') {
+        if (window.serviceRegistry.has('glosarioUI') && selectedBranch) {
+          window.serviceRegistry.get('glosarioUI').setBranch(selectedBranch);
         }
-        if (serviceRegistry.has('glosario') && selectedBranch) {
-          serviceRegistry.get('glosario').onBranchChange(selectedBranch);
+        if (window.serviceRegistry.has('glosario') && selectedBranch) {
+          window.serviceRegistry.get('glosario').onBranchChange(selectedBranch);
         }
       } else {
         // Fallback para compatibilidad temporal

@@ -1,7 +1,7 @@
 // Glosario UI Component
 // Handles the glosario panel UI and user interactions
 
-import { logDebug, logError } from './utils/error-handling.js';
+import { GlosarioInsertController } from './glosario-insert-controller.js';
 
 class GlosarioUI {
   constructor() {
@@ -13,6 +13,7 @@ class GlosarioUI {
     this.filterType = 'all';
     this.searchQuery = '';
     this.debugMode = false;
+    this.insertController = null;
 
     this.init();
   }
@@ -24,20 +25,57 @@ class GlosarioUI {
     this.createPanel();
     this.setupEventListeners();
     this.setupKeyboardShortcuts();
+    this.initializeInsertController();
   }
 
   /**
    * Get glosario service instance
    */
   getGlosarioService() {
-    if (typeof serviceRegistry !== 'undefined' && serviceRegistry.has('glosario')) {
-      return serviceRegistry.get('glosario');
+    if (
+      typeof window.serviceRegistry !== 'undefined' &&
+      window.serviceRegistry.has('glosario')
+    ) {
+      return window.serviceRegistry.get('glosario');
     } else if (typeof window !== 'undefined' && window.glosarioService) {
-      console.warn('Deprecated: Using window.glosarioService instead of service registry');
+      console.warn(
+        'Deprecated: Using window.glosarioService instead of service registry',
+      );
       return window.glosarioService;
     } else {
       throw new Error('Glosario service not available');
     }
+  }
+
+  /**
+   * Initialize the insert controller
+   */
+  initializeInsertController() {
+    // Wait for CodeMirror to be available
+    const initializeController = () => {
+      if (typeof window !== 'undefined' && window.ideCodeMirror) {
+        try {
+          this.insertController = new GlosarioInsertController(
+            this,
+            window.ideCodeMirror,
+          );
+          console.log(
+            '[GLOSARIO-UI] Insert controller initialized successfully',
+          );
+        } catch (error) {
+          console.error(
+            '[GLOSARIO-UI] Failed to initialize insert controller:',
+            error,
+          );
+        }
+      } else {
+        // Retry after a short delay
+        setTimeout(initializeController, 100);
+      }
+    };
+
+    // Start initialization
+    initializeController();
   }
 
   /**
@@ -316,6 +354,25 @@ class GlosarioUI {
       .glosario-step-item:hover {
         background: #333;
         border-color: #4fc3f7;
+        cursor: pointer;
+        transform: translateX(-2px);
+        box-shadow: 2px 2px 8px rgba(79, 195, 247, 0.3);
+      }
+
+      .glosario-step-item {
+        transition: all 0.2s ease;
+        position: relative;
+        border-left: 3px solid transparent;
+      }
+
+      .glosario-step-item:hover {
+        border-left-color: #4fc3f7;
+        padding-left: 7px;
+      }
+
+      .glosario-step-item.insert-ready {
+        border-left-color: #4caf50;
+        background: linear-gradient(90deg, rgba(76, 175, 80, 0.1) 0%, transparent 100%);
       }
 
       .step-header {
@@ -469,18 +526,24 @@ class GlosarioUI {
     this.isVisible = true;
     this.panel.classList.add('visible');
     await this.updateStatus();
-    
+
     // Load steps only if not already cached for current branch
     if (this.currentBranch) {
       const glosarioService = this.getGlosarioService();
       const cached = glosarioService.getCachedSteps();
       if (cached) {
-        console.log('[GLOSARIO-UI] Using cached steps for branch:', this.currentBranch);
+        console.log(
+          '[GLOSARIO-UI] Using cached steps for branch:',
+          this.currentBranch,
+        );
         this.displaySteps(cached);
         this.updateStats(cached.result ? cached.result.summary : null);
         this.setStatus('Steps cargados desde caché', '🟢');
       } else {
-        console.log('[GLOSARIO-UI] No cached steps, scanning for branch:', this.currentBranch);
+        console.log(
+          '[GLOSARIO-UI] No cached steps, scanning for branch:',
+          this.currentBranch,
+        );
         await this.loadSteps();
       }
     }
@@ -534,7 +597,7 @@ class GlosarioUI {
         this.setStatus('Workspace no encontrado', '🔴');
         this.showEmptyState('Ejecute "preparar workspace" para esta branch');
       }
-    } catch (error) {
+    } catch {
       this.setStatus('Error al verificar workspace', '🔴');
     }
   }
@@ -571,7 +634,7 @@ class GlosarioUI {
       const data = await glosarioService.getSteps(this.currentBranch, false);
       this.displaySteps(data);
       this.updateStats(data.result ? data.result.summary : null);
-      
+
       if (data.cached) {
         this.setStatus('Steps cargados desde caché', '🟢');
       } else {
@@ -668,9 +731,13 @@ class GlosarioUI {
       </div>
     `;
 
-    stepDiv.addEventListener('click', () => {
-      this.copyStepToClipboard(step);
-    });
+    // Only add click handler if no insert controller is available
+    // (the insert controller will handle its own event registration)
+    if (!this.insertController) {
+      stepDiv.addEventListener('click', () => {
+        this.insertStepIntoEditorFallback(step);
+      });
+    }
 
     return stepDiv;
   }
@@ -740,7 +807,105 @@ class GlosarioUI {
   }
 
   /**
-   * Copy step to clipboard
+   * Detect Gherkin context to determine appropriate keyword
+   */
+  detectGherkinContext(cursorPos) {
+    if (!window.ideCodeMirror) return 'first';
+
+    const doc = window.ideCodeMirror.getDoc();
+    const currentLine = cursorPos.line;
+
+    // Look backwards to find the first Gherkin keyword
+    for (let i = currentLine - 1; i >= 0; i--) {
+      const lineText = doc.getLine(i).trim();
+      if (lineText.match(/^(Given|When|Then|And|But)\s/)) {
+        // Found a previous Gherkin step, use And
+        return 'subsequent';
+      }
+
+      // If we hit a Scenario or Feature line, reset to first
+      if (lineText.match(/^(Scenario|Feature|Background|Scenario Outline):/)) {
+        return 'first';
+      }
+
+      // If we hit an empty line after some content, might be new section
+      if (lineText === '' && i < currentLine - 1) {
+        const prevLine = doc.getLine(i - 1);
+        if (prevLine && prevLine.trim() !== '') {
+          // Check if this looks like a section break
+          return 'first';
+        }
+      }
+    }
+
+    // No previous Gherkin steps found, use the original type
+    return 'first';
+  }
+
+  /**
+   * Get appropriate Gherkin keyword based on context
+   */
+  getGherkinKeyword(step, context) {
+    if (context === 'subsequent') {
+      return 'And';
+    }
+    return step.type; // Given, When, or Then for first step
+  }
+
+  /**
+   * Fallback method to insert step into editor
+   */
+  insertStepIntoEditorFallback(step) {
+    try {
+      if (!window.ideCodeMirror) {
+        this.setStatus('Editor no encontrado', '🔴');
+        return;
+      }
+
+      // Get current cursor position
+      const cursorPos = window.ideCodeMirror.getCursor();
+
+      // Detect context to determine keyword
+      const context = this.detectGherkinContext(cursorPos);
+      const keyword = this.getGherkinKeyword(step, context);
+
+      // Format step as Gherkin line
+      const gherkinLine = `${keyword} ${step.text}`;
+
+      // Insert the step
+      window.ideCodeMirror.replaceRange(
+        gherkinLine + '\n',
+        cursorPos,
+        cursorPos,
+      );
+
+      // Move cursor to next line
+      const newCursorPos = {
+        line: cursorPos.line + 1,
+        ch: 0,
+      };
+      window.ideCodeMirror.setCursor(newCursorPos);
+
+      // Focus the editor
+      window.ideCodeMirror.focus();
+
+      // Show feedback with context info
+      const contextMsg = context === 'first' ? `(${step.type})` : '(And)';
+      this.setStatus(`Step insertado ${contextMsg}`, '🟢');
+
+      console.log(
+        '[GLOSARIO-UI] Step inserted via fallback:',
+        gherkinLine,
+        'context:',
+        context,
+      );
+    } catch {
+      this.setStatus('Error al insertar step', '🔴');
+    }
+  }
+
+  /**
+   * Copy step to clipboard (fallback for Ctrl+Click)
    */
   async copyStepToClipboard(step) {
     const stepText = `${step.type} ${step.text}`;
@@ -757,7 +922,7 @@ class GlosarioUI {
         event.target.textContent = originalText;
         event.target.style.background = '';
       }, 1000);
-    } catch (error) {
+    } catch {
       alert('Error al copiar el step al portapapeles');
     }
   }
@@ -771,7 +936,7 @@ class GlosarioUI {
       await glosarioService.clearCache(this.currentBranch);
       this.setStatus('Caché limpiado', '🟢');
       this.showEmptyState('Caché limpiado. Click en refresh para recargar.');
-    } catch (error) {
+    } catch {
       alert('Error al limpiar el caché');
     }
   }
@@ -789,10 +954,10 @@ class GlosarioUI {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   const glosarioUI = new GlosarioUI();
-  
+
   // Registrar en el service registry
-  if (typeof serviceRegistry !== 'undefined') {
-    serviceRegistry.register('glosarioUI', glosarioUI);
+  if (typeof window.serviceRegistry !== 'undefined') {
+    window.serviceRegistry.register('glosarioUI', glosarioUI);
   } else if (typeof window !== 'undefined') {
     // Fallback para compatibilidad temporal
     window.glosarioUI = glosarioUI;
