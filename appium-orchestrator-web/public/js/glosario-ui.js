@@ -123,9 +123,7 @@ class GlosarioUI {
     }
 
     // Right-click for JSON references
-    const jsonContainer = this.panel?.querySelector(
-      '.json-reference-container',
-    );
+    const jsonContainer = this.jsonContainer;
     if (jsonContainer) {
       jsonContainer.addEventListener('contextmenu', (e) => {
         const jsonElement = e.target.closest('.json-key-item');
@@ -153,16 +151,13 @@ class GlosarioUI {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
-          const jsonContainer = this.panel.querySelector(
-            '.json-reference-container',
-          );
-          if (jsonContainer) {
+          if (this.jsonContainer) {
             // Remove existing listeners and re-add
-            jsonContainer.removeEventListener(
+            this.jsonContainer.removeEventListener(
               'contextmenu',
               this.handleJsonContextMenu,
             );
-            jsonContainer.addEventListener(
+            this.jsonContainer.addEventListener(
               'contextmenu',
               this.handleJsonContextMenu.bind(this),
             );
@@ -956,6 +951,43 @@ class GlosarioUI {
         }
       }
 
+      /* Enhanced placeholder replacement feedback */
+      .smart-action-feedback.placeholder-replaced {
+        background: linear-gradient(135deg, #4caf50, #45a049);
+        color: white;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        border-left: 4px solid #2e7d32;
+      }
+
+      .feedback-message {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .feedback-reference {
+        font-size: 12px;
+        opacity: 0.9;
+        font-family: 'Courier New', monospace;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+
+      .feedback-hint {
+        font-size: 11px;
+        opacity: 0.8;
+        margin-top: 4px;
+        padding: 2px 0;
+      }
+
+      .smart-action-feedback.error .feedback-hint {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding-top: 6px;
+        margin-top: 6px;
+      }
+
       /* Dark theme support for smart actions */
       [data-theme="dark"] .smart-actions-menu-container {
         background: #1e1e1e;
@@ -1058,12 +1090,17 @@ class GlosarioUI {
     this.jsonContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('key-action')) {
         const keyItem = e.target.closest('.json-key-item');
-        const keyName = keyItem.dataset.key;
-        const jsonReferenceItem = keyItem.closest('.json-reference-item');
-        const fileName = jsonReferenceItem
-          ? jsonReferenceItem.dataset.filename
-          : null;
-        this.copyJsonReferenceToClipboard(keyName, e, fileName);
+        if (keyItem && this.smartActionsManager) {
+          // Ejecutar la smart action de insert JSON reference directamente
+          const context = this.smartActionsManager.createContext(
+            keyItem,
+            'json-reference',
+          );
+          this.smartActionsManager.executeAction(
+            'insert-json-reference',
+            context,
+          );
+        }
       } else if (
         e.target.classList.contains('json-header') ||
         e.target.closest('.json-header')
@@ -1328,7 +1365,7 @@ class GlosarioUI {
           <div class="key-header">
             <span class="key-collapse-indicator">▶</span>
             <span class="key-name">${key}</span>
-            <span class="key-action">copiar</span>
+            <span class="key-action">insertar</span>
           </div>
           <div class="key-value-container">
             <span class="key-value">${value}</span>

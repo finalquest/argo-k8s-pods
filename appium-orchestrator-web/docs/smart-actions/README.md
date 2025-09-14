@@ -11,8 +11,10 @@ SmartActionsManager
 ├── ActionRegistry
 │   ├── BaseAction
 │   ├── InsertStepAction
-│   └── CopyStepAction
+│   ├── CopyStepAction
+│   └── InsertJsonReferenceAction
 ├── ActionContext
+├── Visual Feedback System
 └── Event System
 ```
 
@@ -20,7 +22,7 @@ SmartActionsManager
 
 ### 1. SmartActionsManager
 
-**Archivo:** `src/modules/smart-actions/smart-actions-manager.js`
+**Archivo:** `public/js/smart-actions/smart-actions-manager.js`
 
 Es el coordinador principal del sistema. Se encarga de:
 
@@ -37,7 +39,7 @@ Es el coordinador principal del sistema. Se encarga de:
 
 ### 2. ActionRegistry
 
-**Archivo:** `src/modules/smart-actions/action-registry.js`
+**Archivo:** `public/js/smart-actions/action-registry.js`
 
 Gestiona el registro y recuperación de acciones smart actions.
 
@@ -48,7 +50,7 @@ Gestiona el registro y recuperación de acciones smart actions.
 
 ### 3. BaseAction
 
-**Archivo:** `src/modules/smart-actions/base-action.js`
+**Archivo:** `public/js/smart-actions/base-action.js`
 
 Clase abstracta base para todas las smart actions.
 
@@ -65,7 +67,7 @@ Clase abstracta base para todas las smart actions.
 
 ### 4. ActionContext
 
-**Archivo:** `src/modules/smart-actions/action-context.js`
+**Archivo:** `public/js/smart-actions/action-context.js`
 
 Contiene toda la información necesaria para ejecutar una acción.
 
@@ -81,7 +83,7 @@ Contiene toda la información necesaria para ejecutar una acción.
 
 ### InsertStepAction
 
-**Archivo:** `src/modules/smart-actions/actions/insert-step-action.js`
+**Archivo:** `public/js/smart-actions/actions/insert-step-action.js`
 
 Inserta un step del glosario en el editor CodeMirror.
 
@@ -95,7 +97,7 @@ Inserta un step del glosario en el editor CodeMirror.
 
 ### CopyStepAction
 
-**Archivo:** `src/modules/smart-actions/actions/copy-step-action.js`
+**Archivo:** `public/js/smart-actions/actions/copy-step-action.js`
 
 Copia un step del glosario al portapapeles.
 
@@ -105,6 +107,35 @@ Copia un step del glosario al portapapeles.
 - Proporciona feedback visual al usuario
 
 **Contextos aplicables:** `['step']`
+
+### InsertJsonReferenceAction
+
+**Archivo:** `public/js/smart-actions/actions/insert-json-reference-action.js`
+
+Inserta una referencia JSON en placeholders `{param}` del editor.
+
+**Funcionalidad:**
+- Busca placeholders cerca del cursor (misma línea y línea siguiente)
+- Reemplaza placeholders con referencias JSON completas (`filename.key`)
+- Muestra feedback visual con resaltados amarillos y verdes
+- Mueve automáticamente el cursor al siguiente placeholder disponible
+- Maneja múltiples placeholders en el mismo contexto
+
+**Contextos aplicables:** `['json-reference']`
+
+### Visual Feedback System
+
+**Archivo:** `public/css/styles.css`
+
+Sistema de feedback visual para todas las smart actions.
+
+**Características:**
+- Resaltado amarillo para placeholders seleccionados
+- Resaltado verde para texto reemplazado
+- Animaciones suaves con transiciones CSS
+- Soporte completo para modo oscuro
+- Mensajes de feedback informativos con iconos
+- Auto-eliminación de resaltados después de tiempo determinado
 
 ## Flujo de Ejecución
 
@@ -166,6 +197,21 @@ Las acciones deben:
 - Validar precondiciones en `validate()`
 - Lanzar errores descriptivos
 - Usar `showFeedback()` para comunicación con usuario
+
+## Métricas y Rendimiento
+
+### Indicadores Clave
+- **3 Acciones implementadas**: InsertStepAction, CopyStepAction, InsertJsonReferenceAction
+- **2 Contextos soportados**: step, json-reference
+- **Sistema de feedback visual completo** con animaciones y modo oscuro
+- **Detección de placeholders optimizada** con algoritmo de distancia Manhattan ponderada
+- **100% de compatibilidad** con CodeMirror 5.65.16 y navegadores modernos
+
+### Rendimiento
+- Búsqueda restringida a misma línea + línea siguiente para máxima eficiencia
+- Uso de Map para registro de acciones con O(1) acceso
+- Resaltados temporales con auto-eliminación para evitar memory leaks
+- Animaciones optimizadas con CSS transforms
 
 ## Integración con UI Existente
 

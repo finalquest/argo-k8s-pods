@@ -15,37 +15,21 @@ class GlosarioService {
    * Get steps for a specific branch (uses cache if available)
    */
   async getSteps(branch, forceRefresh = false) {
-    console.log(
-      '[GLOSARIO-SERVICE] getSteps called for branch:',
-      branch,
-      'forceRefresh:',
-      forceRefresh,
-    );
-
     // Update current branch if changed
     if (this.currentBranch !== branch) {
-      console.log(
-        '[GLOSARIO-SERVICE] Branch changed, clearing cache for old branch',
-      );
       this.currentBranch = branch;
       forceRefresh = true; // Force refresh when branch changes
     }
 
     // Return cached data if available and not forcing refresh
     if (!forceRefresh && this.cache.has(branch)) {
-      console.log(
-        '[GLOSARIO-SERVICE] Returning cached data for branch:',
-        branch,
-      );
       const cachedData = this.cache.get(branch);
       return { ...cachedData, cached: true };
     }
 
     // Scan fresh data
-    console.log('[GLOSARIO-SERVICE] Scanning fresh data for branch:', branch);
     try {
       const url = `${this.baseApiUrl}/scan?branch=${encodeURIComponent(branch)}`;
-      console.log('[GLOSARIO-SERVICE] Fetching URL:', url);
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -56,10 +40,6 @@ class GlosarioService {
       const result = await response.json();
 
       if (result.success) {
-        console.log(
-          '[GLOSARIO-SERVICE] Scan successful, caching result for branch:',
-          branch,
-        );
         const dataWithCacheFlag = { ...result.data, cached: false };
         this.cache.set(branch, dataWithCacheFlag);
         return dataWithCacheFlag;
@@ -76,7 +56,6 @@ class GlosarioService {
    * Force refresh steps for current branch
    */
   async refreshSteps(branch) {
-    console.log('[GLOSARIO-SERVICE] refreshSteps called for branch:', branch);
     return this.getSteps(branch, true);
   }
 
@@ -84,29 +63,19 @@ class GlosarioService {
    * Get status for a specific branch
    */
   async getStatus(branch) {
-    console.log('[GLOSARIO-SERVICE] getStatus called for branch:', branch);
-    try {
-      const url = `${this.baseApiUrl}/status?branch=${encodeURIComponent(branch)}`;
-      console.log('[GLOSARIO-SERVICE] Fetching URL:', url);
-      const response = await fetch(url);
+    const url = `${this.baseApiUrl}/status?branch=${encodeURIComponent(branch)}`;
+    const response = await fetch(url);
 
-      console.log('[GLOSARIO-SERVICE] Response status:', response.status);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
 
-      const result = await response.json();
-      console.log('[GLOSARIO-SERVICE] Response result:', result);
+    const result = await response.json();
 
-      if (result.success) {
-        console.log('[GLOSARIO-SERVICE] Returning data:', result.data);
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Error al obtener status');
-      }
-    } catch (error) {
-      console.error('[GLOSARIO-SERVICE] Error getting status:', error);
-      throw error;
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.error || 'Error al obtener status');
     }
   }
 
@@ -150,20 +119,10 @@ class GlosarioService {
    * Get cached steps for current branch
    */
   getCachedSteps() {
-    console.log(
-      '[GLOSARIO-SERVICE] getCachedSteps called, currentBranch:',
-      this.currentBranch,
-    );
-    console.log(
-      '[GLOSARIO-SERVICE] Cache keys:',
-      Array.from(this.cache.keys()),
-    );
     if (!this.currentBranch) {
-      console.log('[GLOSARIO-SERVICE] No current branch set');
       return null;
     }
     const cached = this.cache.get(this.currentBranch);
-    console.log('[GLOSARIO-SERVICE] Cached data for branch:', cached);
     return cached;
   }
 
@@ -171,54 +130,29 @@ class GlosarioService {
    * Get JSON references for a specific branch (uses cache if available)
    */
   async getJsonReferences(branch, forceRefresh = false) {
-    console.log(
-      '[GLOSARIO-SERVICE] getJsonReferences called for branch:',
-      branch,
-      'forceRefresh:',
-      forceRefresh,
-    );
-
     // Return cached data if available and not forcing refresh
     if (!forceRefresh && this.jsonCache.has(branch)) {
-      console.log(
-        '[GLOSARIO-SERVICE] Returning cached JSON data for branch:',
-        branch,
-      );
       const cachedData = this.jsonCache.get(branch);
       return { ...cachedData, cached: true };
     }
 
     // Scan fresh data
-    console.log(
-      '[GLOSARIO-SERVICE] Scanning fresh JSON data for branch:',
-      branch,
-    );
-    try {
-      const url = `${this.jsonRefsApiUrl}/scan?branch=${encodeURIComponent(branch)}`;
-      console.log('[GLOSARIO-SERVICE] Fetching URL:', url);
-      const response = await fetch(url);
+    const url = `${this.jsonRefsApiUrl}/scan?branch=${encodeURIComponent(branch)}`;
+    const response = await fetch(url);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (result.success) {
-        console.log(
-          '[GLOSARIO-SERVICE] JSON scan successful, caching result for branch:',
-          branch,
-        );
-        const dataWithCacheFlag = { ...result, cached: false };
-        this.jsonCache.set(branch, dataWithCacheFlag);
-        return dataWithCacheFlag;
-      } else {
-        throw new Error(result.error || 'Error al escanear JSON references');
-      }
-    } catch (error) {
-      console.error('Error scanning JSON references:', error);
-      throw error;
+    if (result.success) {
+      const dataWithCacheFlag = { ...result, cached: false };
+      this.jsonCache.set(branch, dataWithCacheFlag);
+      return dataWithCacheFlag;
+    } else {
+      throw new Error(result.error || 'Error al escanear JSON references');
     }
   }
 
@@ -226,10 +160,6 @@ class GlosarioService {
    * Force refresh JSON references for current branch
    */
   async refreshJsonReferences(branch) {
-    console.log(
-      '[GLOSARIO-SERVICE] refreshJsonReferences called for branch:',
-      branch,
-    );
     return this.getJsonReferences(branch, true);
   }
 
@@ -237,16 +167,10 @@ class GlosarioService {
    * Get cached JSON references for current branch
    */
   getCachedJsonReferences() {
-    console.log(
-      '[GLOSARIO-SERVICE] getCachedJsonReferences called, currentBranch:',
-      this.currentBranch,
-    );
     if (!this.currentBranch) {
-      console.log('[GLOSARIO-SERVICE] No current branch set');
       return null;
     }
     const cached = this.jsonCache.get(this.currentBranch);
-    console.log('[GLOSARIO-SERVICE] Cached JSON data for branch:', cached);
     return cached;
   }
 
@@ -254,7 +178,6 @@ class GlosarioService {
    * Clear cache when branch changes
    */
   onBranchChange(newBranch) {
-    console.log('[GLOSARIO-SERVICE] Branch changed to:', newBranch);
     if (this.currentBranch !== newBranch) {
       this.currentBranch = newBranch;
       // Clear both caches when branch changes

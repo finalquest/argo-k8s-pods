@@ -2,6 +2,7 @@ import { ActionRegistry } from './action-registry.js';
 import { ActionContext } from './action-context.js';
 import { InsertStepAction } from './actions/insert-step-action.js';
 import { CopyStepAction } from './actions/copy-step-action.js';
+import { InsertJsonReferenceAction } from './actions/insert-json-reference-action.js';
 
 export class SmartActionsManager {
   constructor(glosarioUI, insertController) {
@@ -23,11 +24,9 @@ export class SmartActionsManager {
     // Registrar acciones básicas
     this.actionRegistry.registerAction(InsertStepAction);
     this.actionRegistry.registerAction(CopyStepAction);
+    this.actionRegistry.registerAction(InsertJsonReferenceAction);
 
-    console.log('[SMART-ACTIONS] Default actions registered:', {
-      insertStep: this.actionRegistry.hasAction('insert-step'),
-      copyStep: this.actionRegistry.hasAction('copy-step'),
-    });
+    console.log('[SMART-ACTIONS] Default actions registered');
   }
 
   /**
@@ -122,10 +121,14 @@ export class SmartActionsManager {
     const jsonItem = element.closest('.json-key-item');
     if (!jsonItem) return {};
 
+    // El filename está en el elemento padre .json-reference-item
+    const jsonReferenceItem = jsonItem.closest('.json-reference-item');
+    const filename = jsonReferenceItem?.dataset.filename || '';
+
     return {
       key: jsonItem.dataset.key || '',
       value: jsonItem.dataset.value || '',
-      file: jsonItem.dataset.filename || '',
+      file: filename,
     };
   }
 

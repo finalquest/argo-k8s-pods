@@ -2617,7 +2617,7 @@ textarea {
 }
 */
 
-/* --- Que los elementos internos tampoco “claven” un ancho mínimo --- */
+/* --- Que los elementos internos tampoco "claven" un ancho mínimo --- */
 .ide-toolbar .toolbar-section .toolbar-group {
   flex-wrap: nowrap;
 }
@@ -2626,4 +2626,82 @@ textarea {
 .ide-toolbar label {
   min-width: 0;
   white-space: nowrap;
+}
+
+/* Smart Actions - Visual Feedback Styles */
+.smart-action-target-highlight {
+  background-color: rgba(251, 191, 36, 0.3) !important;
+  border: 2px solid rgba(251, 191, 36, 0.6) !important;
+  border-radius: 2px;
+  animation: pulse-target 1.5s ease-in-out;
+}
+
+.smart-action-replacement-highlight {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+  border: 2px solid rgba(34, 197, 94, 0.5) !important;
+  border-radius: 2px;
+  animation: pulse-replacement 2s ease-in-out;
+}
+
+.smart-action-cursor-indicator {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  animation: bounce-cursor 1s ease-in-out;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes pulse-target {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pulse-replacement {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.01);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-cursor {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+/* Dark mode adjustments for smart actions */
+[data-theme='dark'] .smart-action-target-highlight {
+  background-color: rgba(251, 191, 36, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.5) !important;
+}
+
+[data-theme='dark'] .smart-action-replacement-highlight {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
+[data-theme='dark'] .smart-action-cursor-indicator {
+  color: var(--primary-color);
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
