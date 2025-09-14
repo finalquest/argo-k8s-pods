@@ -3,6 +3,7 @@
 
 import { GlosarioInsertController } from './glosario-insert-controller.js';
 import { SmartActionsManager } from './smart-actions-loader.js';
+import AutocompleteService from './autocomplete/autocomplete-service.js';
 
 class GlosarioUI {
   constructor() {
@@ -30,6 +31,7 @@ class GlosarioUI {
     this.setupKeyboardShortcuts();
     this.initializeInsertController();
     this.initializeSmartActions();
+    this.initializeAutocomplete();
   }
 
   /**
@@ -100,6 +102,51 @@ class GlosarioUI {
     } catch (error) {
       console.error(
         '[GLOSARIO-UI] Failed to initialize Smart Actions Manager:',
+        error,
+      );
+    }
+  }
+
+  /**
+   * Initialize the autocomplete service
+   */
+  initializeAutocomplete() {
+    try {
+      // Esperar a que CodeMirror esté disponible
+      const initializeWhenReady = () => {
+        if (typeof window.ideCodeMirror !== 'undefined') {
+          const glosarioService = this.getGlosarioService();
+          this.autocompleteService = new AutocompleteService(
+            glosarioService,
+            window.ideCodeMirror,
+          );
+
+          // Registrar en el service registry
+          if (typeof window.serviceRegistry !== 'undefined') {
+            window.serviceRegistry.register(
+              'autocomplete',
+              this.autocompleteService,
+            );
+            console.log(
+              '[GLOSARIO-UI] Autocomplete Service initialized and registered',
+            );
+          } else {
+            // Fallback para compatibilidad
+            window.autocompleteService = this.autocompleteService;
+            console.log(
+              '[GLOSARIO-UI] Autocomplete Service initialized (fallback mode)',
+            );
+          }
+        } else {
+          // Esperar y reintentar
+          setTimeout(initializeWhenReady, 100);
+        }
+      };
+
+      initializeWhenReady();
+    } catch (error) {
+      console.error(
+        '[GLOSARIO-UI] Failed to initialize Autocomplete Service:',
         error,
       );
     }

@@ -1,0 +1,262 @@
+/* Autocomplete Widget Styles */
+
+.autocomplete-widget {
+  background: var(--autocomplete-bg, #ffffff);
+  border: 1px solid var(--autocomplete-border, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 250px;
+  max-width: 500px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  animation: autocompleteFadeIn 0.2s ease-out;
+}
+
+/* CSS Variables for theme support */
+:root {
+  --autocomplete-bg: #ffffff;
+  --autocomplete-border: #e0e0e0;
+  --autocomplete-item-border: #f0f0f0;
+  --autocomplete-item-hover: #f8f9fa;
+  --autocomplete-item-selected: #e3f2fd;
+  --autocomplete-accent: #2196f3;
+  --autocomplete-text: #333333;
+  --autocomplete-description: #666666;
+  --autocomplete-scrollbar-track: #f1f1f1;
+  --autocomplete-scrollbar-thumb: #c1c1c1;
+  --autocomplete-scrollbar-thumb-hover: #a8a8a8;
+  --autocomplete-loading: #666666;
+  --autocomplete-empty: #999999;
+}
+
+/* Dark theme variables */
+[data-theme="dark"] {
+  --autocomplete-bg: #1e1e1e;
+  --autocomplete-border: #404040;
+  --autocomplete-item-border: #333333;
+  --autocomplete-item-hover: #2a2a2a;
+  --autocomplete-item-selected: #0d47a1;
+  --autocomplete-accent: #64b5f6;
+  --autocomplete-text: #ffffff;
+  --autocomplete-description: #cccccc;
+  --autocomplete-scrollbar-track: #2a2a2a;
+  --autocomplete-scrollbar-thumb: #555555;
+  --autocomplete-scrollbar-thumb-hover: #777777;
+  --autocomplete-loading: #cccccc;
+  --autocomplete-empty: #666666;
+}
+
+@keyframes autocompleteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.autocomplete-hints-container {
+  padding: 4px 0;
+}
+
+.autocomplete-hint {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid var(--autocomplete-item-border, #f0f0f0);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.autocomplete-hint:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-hint:hover {
+  background: var(--autocomplete-item-hover, #f8f9fa);
+}
+
+.autocomplete-hint.selected {
+  background: var(--autocomplete-item-selected, #e3f2fd);
+  border-left: 3px solid var(--autocomplete-accent, #2196f3);
+}
+
+.autocomplete-hint-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--autocomplete-text, #333333);
+}
+
+.autocomplete-hint-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.autocomplete-hint-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.autocomplete-hint-description {
+  font-size: 12px;
+  color: var(--autocomplete-description, #666666);
+  margin-left: 24px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type-specific styling */
+.autocomplete-hint-step {
+  border-left: 3px solid transparent;
+}
+
+.autocomplete-hint-step.selected {
+  border-left-color: #ffc107;
+  background: #fff8e1;
+}
+
+.autocomplete-hint-json {
+  border-left: 3px solid transparent;
+}
+
+.autocomplete-hint-json.selected {
+  border-left-color: #2196f3;
+  background: #e3f2fd;
+}
+
+.autocomplete-hint-keyword {
+  border-left: 3px solid transparent;
+}
+
+.autocomplete-hint-keyword.selected {
+  border-left-color: #4caf50;
+  background: #e8f5e8;
+}
+
+.autocomplete-hint-contextual {
+  border-left: 3px solid transparent;
+}
+
+.autocomplete-hint-contextual.selected {
+  border-left-color: #ff9800;
+  background: #fff3e0;
+}
+
+/* Dark mode support - simplified since we use CSS variables */
+[data-theme="dark"] .autocomplete-widget {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Type-specific dark mode */
+[data-theme="dark"] .autocomplete-hint-step.selected {
+  background: #3e2723;
+  border-left-color: #ffc107;
+}
+
+[data-theme="dark"] .autocomplete-hint-json.selected {
+  background: #0d47a1;
+  border-left-color: #2196f3;
+}
+
+[data-theme="dark"] .autocomplete-hint-keyword.selected {
+  background: #1b5e20;
+  border-left-color: #4caf50;
+}
+
+[data-theme="dark"] .autocomplete-hint-contextual.selected {
+  background: #e65100;
+  border-left-color: #ff9800;
+}
+
+/* Custom scrollbar */
+.autocomplete-widget::-webkit-scrollbar {
+  width: 8px;
+}
+
+.autocomplete-widget::-webkit-scrollbar-track {
+  background: var(--autocomplete-scrollbar-track, #f1f1f1);
+  border-radius: 4px;
+}
+
+.autocomplete-widget::-webkit-scrollbar-thumb {
+  background: var(--autocomplete-scrollbar-thumb, #c1c1c1);
+  border-radius: 4px;
+}
+
+.autocomplete-widget::-webkit-scrollbar-thumb:hover {
+  background: var(--autocomplete-scrollbar-thumb-hover, #a8a8a8);
+}
+
+[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-track {
+  background: var(--autocomplete-scrollbar-track-dark, #2a2a2a);
+}
+
+[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-thumb {
+  background: var(--autocomplete-scrollbar-thumb-dark, #555555);
+}
+
+[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-thumb:hover {
+  background: var(--autocomplete-scrollbar-thumb-hover-dark, #777777);
+}
+
+/* Loading state */
+.autocomplete-widget.loading {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--autocomplete-loading, #666666);
+}
+
+/* Empty state */
+.autocomplete-widget.empty {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--autocomplete-empty, #999999);
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .autocomplete-widget {
+    max-width: calc(100vw - 40px);
+    left: 20px !important;
+    right: 20px !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .autocomplete-widget {
+    border-width: 2px;
+  }
+
+  .autocomplete-hint.selected {
+    border-left-width: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .autocomplete-widget {
+    animation: none;
+  }
+
+  .autocomplete-hint {
+    transition: none;
+  }
+}

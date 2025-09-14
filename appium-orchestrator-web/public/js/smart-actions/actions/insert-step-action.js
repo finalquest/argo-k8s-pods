@@ -44,7 +44,7 @@ export class InsertStepAction extends BaseAction {
     for (let i = position.line - 1; i >= 0; i--) {
       const lineText = doc.getLine(i);
 
-      if (lineText.match(/^(Given|When|Then|And|But)\s+/)) {
+      if (lineText.match(/^\s*(Given|When|Then|And|But)\s+/)) {
         return 'And'; // Si hay steps anteriores, usar And
       }
 
