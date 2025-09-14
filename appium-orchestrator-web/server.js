@@ -18,6 +18,7 @@ const ApkManager = require('./src/modules/core/apk-manager');
 const FeatureManager = require('./src/modules/core/feature-manager');
 const WorkspaceManager = require('./src/modules/core/workspace-manager');
 const StepScannerManager = require('./src/modules/core/step-scanner-manager');
+const JsonReferenceScannerManager = require('./src/modules/core/json-reference-scanner-manager');
 
 // Import worker management modules
 const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
@@ -42,6 +43,10 @@ const apkManager = new ApkManager(configManager, validationManager);
 const featureManager = new FeatureManager(configManager, validationManager);
 const workspaceManager = new WorkspaceManager(configManager, validationManager);
 const stepScannerManager = new StepScannerManager(
+  configManager,
+  validationManager,
+);
+const jsonReferenceScannerManager = new JsonReferenceScannerManager(
   configManager,
   validationManager,
 );
@@ -659,6 +664,71 @@ app.post('/api/steps/cache/clear', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Error en /api/steps/cache/clear:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+// JSON Reference Scanner API Endpoints
+app.get('/api/json-references/scan', async (req, res) => {
+  const { branch } = req.query;
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+  try {
+    const result = await jsonReferenceScannerManager.scanJsonReferences(branch);
+    if (result.success) {
+      res.json(result);
+    } else {
+      const statusCode = result.code === 'WORKSPACE_NOT_EXISTS' ? 404 : 400;
+      res.status(statusCode).json(result);
+    }
+  } catch (error) {
+    console.error('Error en /api/json-references/scan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.get('/api/json-references/status', async (req, res) => {
+  const { branch } = req.query;
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+  try {
+    const result = await jsonReferenceScannerManager.getStatus(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/json-references/status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.post('/api/json-references/cache/clear', async (req, res) => {
+  const { branch } = req.body;
+  try {
+    const result = await jsonReferenceScannerManager.clearCache(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/json-references/cache/clear:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',

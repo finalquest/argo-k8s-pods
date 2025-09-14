@@ -14,6 +14,7 @@ class GlosarioUI {
     this.searchQuery = '';
     this.debugMode = false;
     this.insertController = null;
+    this.currentTab = 'steps';
 
     this.init();
   }
@@ -113,25 +114,51 @@ class GlosarioUI {
         </div>
       </div>
       
-      <div class="glosario-search-container">
-        <input 
-          type="text" 
-          class="glosario-search-input" 
-          placeholder="Buscar steps..."
-          id="glosario-search-input"
-        >
-        <div class="glosario-filters">
-          <button class="filter-btn active" data-type="all">Todos</button>
-          <button class="filter-btn" data-type="Given">Given</button>
-          <button class="filter-btn" data-type="When">When</button>
-          <button class="filter-btn" data-type="Then">Then</button>
+      <div class="glosario-tabs">
+        <button class="glosario-tab active" data-tab="steps">Steps</button>
+        <button class="glosario-tab" data-tab="objects">Objects</button>
+      </div>
+      
+      <!-- Steps Content -->
+      <div id="steps-content">
+        <div class="glosario-search-container">
+          <input 
+            type="text" 
+            class="glosario-search-input" 
+            placeholder="Buscar steps..."
+            id="glosario-search-input"
+          >
+          <div class="glosario-filters">
+            <button class="filter-btn active" data-type="all">Todos</button>
+            <button class="filter-btn" data-type="Given">Given</button>
+            <button class="filter-btn" data-type="When">When</button>
+            <button class="filter-btn" data-type="Then">Then</button>
+          </div>
+        </div>
+        
+        <div class="glosario-steps-container" id="glosario-steps-container">
+          <div class="glosario-empty-state">
+            <div class="empty-icon">📝</div>
+            <p>Seleccione una branch y prepare el workspace para ver los steps disponibles</p>
+          </div>
         </div>
       </div>
       
-      <div class="glosario-steps-container" id="glosario-steps-container">
-        <div class="glosario-empty-state">
-          <div class="empty-icon">📝</div>
-          <p>Seleccione una branch y prepare el workspace para ver los steps disponibles</p>
+      <!-- Objects Content -->
+      <div id="objects-content" style="display: none; flex: 1; overflow: hidden; flex-direction: column;">
+        <div class="glosario-search-container">
+          <input 
+            type="text" 
+            class="glosario-search-input" 
+            placeholder="Buscar JSON references..."
+            id="glosario-json-search-input"
+          >
+        </div>
+        <div class="glosario-json-container" id="glosario-json-container">
+          <div class="glosario-empty-state">
+            <div class="empty-icon">📄</div>
+            <p>Cargando JSON references...</p>
+          </div>
         </div>
       </div>
       
@@ -155,7 +182,11 @@ class GlosarioUI {
 
     // Cache DOM elements
     this.searchInput = document.getElementById('glosario-search-input');
+    this.jsonSearchInput = document.getElementById(
+      'glosario-json-search-input',
+    );
     this.stepsContainer = document.getElementById('glosario-steps-container');
+    this.jsonContainer = document.getElementById('glosario-json-container');
     this.branchName = document.getElementById('glosario-branch-name');
     this.statusElement = document.getElementById('glosario-status');
     this.statsElement = document.getElementById('glosario-stats');
@@ -327,7 +358,17 @@ class GlosarioUI {
       .glosario-steps-container {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 10px;
+        min-height: 0;
+      }
+
+      .glosario-json-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 10px;
+        min-height: 0;
       }
 
       .glosario-empty-state {
@@ -433,6 +474,41 @@ class GlosarioUI {
         margin-right: 15px;
       }
 
+      /* Tabs styles */
+      .glosario-tabs {
+        display: flex;
+        background: #2d2d2d;
+        border-bottom: 1px solid #333;
+      }
+
+      .glosario-tab {
+        flex: 1;
+        padding: 10px;
+        background: none;
+        border: none;
+        color: #ccc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+      }
+
+      .glosario-tab.active {
+        color: #4fc3f7;
+        border-bottom: 2px solid #4fc3f7;
+        background: rgba(79, 195, 247, 0.1);
+      }
+
+      .glosario-tab:hover {
+        color: #fff;
+      }
+
+      #steps-content, #objects-content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
       /* Dark mode support */
       [data-theme="dark"] .glosario-panel {
         background: #1a1a1a;
@@ -453,8 +529,238 @@ class GlosarioUI {
       [data-theme="dark"] .glosario-step-item:hover {
         background: #2a2a2a;
       }
+
+      [data-theme="dark"] .glosario-tabs {
+        background: #252525;
+        border-bottom-color: #333;
+      }
+
+      [data-theme="dark"] .glosario-tab {
+        color: #ccc;
+      }
+
+      [data-theme="dark"] .glosario-tab.active {
+        color: #4fc3f7;
+        background: rgba(79, 195, 247, 0.1);
+      }
+
+      [data-theme="dark"] .glosario-tab:hover {
+        color: #fff;
+      }
+
+      /* JSON References styles */
+      .json-reference-item {
+        background: #2a2a2a;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .json-reference-item:hover {
+        background: #333;
+        border-color: #4fc3f7;
+        transform: translateX(-2px);
+      }
+
+      .json-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 1px solid #444;
+      }
+
+      .json-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .json-collapse-indicator {
+        font-size: 12px;
+        color: #888;
+        transition: transform 0.2s ease;
+      }
+
+      .json-reference-item.expanded .json-collapse-indicator {
+        transform: rotate(90deg);
+      }
+
+      .json-reference-item.collapsed .json-keys-container {
+        display: none;
+      }
+
+      .json-reference-item.expanded .json-keys-container {
+        display: block;
+      }
+
+      .json-filename {
+        font-weight: bold;
+        color: #ffa726;
+        font-size: 14px;
+      }
+
+      .json-file-path {
+        color: #888;
+        font-size: 12px;
+      }
+
+      .json-key-count {
+        background: #4fc3f7;
+        color: #000;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .json-keys-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .json-key-item {
+        display: flex;
+        flex-direction: column;
+        padding: 4px 8px;
+        background: #252525;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .json-key-item:hover {
+        background: #333;
+      }
+
+      .key-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 24px;
+      }
+
+      .key-collapse-indicator {
+        font-size: 10px;
+        color: #888;
+        transition: transform 0.2s ease;
+        cursor: pointer;
+      }
+
+      .json-key-item.expanded .key-collapse-indicator {
+        transform: rotate(90deg);
+      }
+
+      .key-name {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #e0e0e0;
+        font-weight: bold;
+        flex: 1;
+      }
+
+      .key-action {
+        font-size: 11px;
+        color: #4fc3f7;
+        background: rgba(79, 195, 247, 0.1);
+        padding: 2px 6px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .key-action:hover {
+        background: rgba(79, 195, 247, 0.2);
+      }
+
+      .key-value-container {
+        display: none;
+        margin-top: 4px;
+        padding-left: 16px;
+        border-left: 2px solid #444;
+      }
+
+      .json-key-item.expanded .key-value-container {
+        display: block;
+      }
+
+      .key-value {
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        color: #888;
+        word-break: break-all;
+        display: block;
+        padding: 4px 0;
+      }
+
+      [data-theme="dark"] .json-reference-item {
+        background: #222;
+        border-color: #444;
+      }
+
+      [data-theme="dark"] .json-reference-item:hover {
+        background: #2a2a2a;
+        border-color: #4fc3f7;
+      }
+
+      [data-theme="dark"] .json-header {
+        border-bottom-color: #444;
+      }
+
+      [data-theme="dark"] .json-key-item {
+        background: #2a2a2a;
+      }
+
+      [data-theme="dark"] .json-key-item:hover {
+        background: #333;
+      }
+
+      [data-theme="dark"] .key-value-container {
+        border-left-color: #555;
+      }
+
+      [data-theme="dark"] .key-value {
+        color: #aaa;
+      }
+
+      [data-theme="dark"] .key-collapse-indicator {
+        color: #aaa;
+      }
     `;
     document.head.appendChild(styles);
+  }
+
+  /**
+   * Switch between tabs
+   */
+  switchTab(tabName) {
+    console.log(`[GLOSARIO-UI] Switching to tab: ${tabName}`);
+
+    // Update tab buttons
+    this.panel.querySelectorAll('.glosario-tab').forEach((tab) => {
+      tab.classList.remove('active');
+    });
+    this.panel.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Update content areas
+    document.getElementById('steps-content').style.display =
+      tabName === 'steps' ? 'flex' : 'none';
+    document.getElementById('objects-content').style.display =
+      tabName === 'objects' ? 'flex' : 'none';
+
+    this.currentTab = tabName;
+
+    // Load JSON references when switching to objects tab
+    if (tabName === 'objects') {
+      this.loadJsonReferences();
+    }
   }
 
   /**
@@ -486,6 +792,60 @@ class GlosarioUI {
     this.searchInput.addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase();
       this.filterSteps();
+    });
+
+    // JSON search input
+    if (this.jsonSearchInput) {
+      this.jsonSearchInput.addEventListener('input', (e) => {
+        this.filterJsonReferences(e.target.value.toLowerCase());
+      });
+    }
+
+    // Tab buttons
+    this.panel.querySelectorAll('.glosario-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        this.switchTab(tab.dataset.tab);
+      });
+    });
+
+    // JSON key items (delegated event since they're dynamically created)
+    this.jsonContainer.addEventListener('click', (e) => {
+      if (e.target.classList.contains('key-action')) {
+        const keyItem = e.target.closest('.json-key-item');
+        const keyName = keyItem.dataset.key;
+        const jsonReferenceItem = keyItem.closest('.json-reference-item');
+        const fileName = jsonReferenceItem
+          ? jsonReferenceItem.dataset.filename
+          : null;
+        this.copyJsonReferenceToClipboard(keyName, e, fileName);
+      } else if (
+        e.target.classList.contains('json-header') ||
+        e.target.closest('.json-header')
+      ) {
+        const header = e.target.classList.contains('json-header')
+          ? e.target
+          : e.target.closest('.json-header');
+        const item = header.closest('.json-reference-item');
+        if (item) {
+          item.classList.toggle('collapsed');
+          item.classList.toggle('expanded');
+        }
+      } else if (
+        e.target.classList.contains('key-header') ||
+        e.target.closest('.key-header') ||
+        e.target.classList.contains('key-collapse-indicator')
+      ) {
+        const header =
+          e.target.classList.contains('key-header') ||
+          e.target.classList.contains('key-collapse-indicator')
+            ? e.target
+            : e.target.closest('.key-header');
+        const keyItem = header.closest('.json-key-item');
+        if (keyItem) {
+          keyItem.classList.toggle('collapsed');
+          keyItem.classList.toggle('expanded');
+        }
+      }
     });
 
     // Filter buttons
@@ -648,6 +1008,172 @@ class GlosarioUI {
       } else {
         this.showEmptyState(`Error: ${error.message}`);
       }
+    }
+  }
+
+  /**
+   * Load JSON references for current branch
+   */
+  async loadJsonReferences() {
+    if (!this.currentBranch) {
+      console.log('[GLOSARIO-UI] No current branch set for JSON references');
+      this.showJsonEmptyState('Seleccione una branch primero');
+      return;
+    }
+
+    try {
+      console.log(
+        '[GLOSARIO-UI] Loading JSON references for branch:',
+        this.currentBranch,
+      );
+      const glosarioService = this.getGlosarioService();
+      const jsonRefs = await glosarioService.getJsonReferences(
+        this.currentBranch,
+        false,
+      );
+      console.log('[GLOSARIO-UI] JSON references loaded:', jsonRefs);
+      this.displayJsonReferences(jsonRefs);
+    } catch (error) {
+      console.warn('[GLOSARIO-UI] Error loading JSON references:', error);
+      this.showJsonEmptyState(`Error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Display JSON references in the container
+   */
+  displayJsonReferences(jsonRefs) {
+    if (!jsonRefs || !jsonRefs.success) {
+      this.showJsonEmptyState('No se pudieron cargar las referencias JSON');
+      return;
+    }
+
+    const { references = [] } = jsonRefs.data || {};
+
+    if (references.length === 0) {
+      this.showJsonEmptyState(
+        'No se encontraron archivos JSON de page-objects',
+      );
+      return;
+    }
+
+    console.log(
+      `[GLOSARIO-UI] Displaying ${references.length} JSON references`,
+    );
+
+    const html = references
+      .map((ref) => this.createJsonReferenceItem(ref))
+      .join('');
+    this.jsonContainer.innerHTML = html;
+  }
+
+  /**
+   * Create HTML for a JSON reference item
+   */
+  createJsonReferenceItem(ref) {
+    const keys = ref.keys || [];
+    const keysHtml = keys
+      .map((keyData) => {
+        const key = keyData.key || '';
+        const value =
+          keyData.value !== undefined ? JSON.stringify(keyData.value) : '';
+        return `
+        <div class="json-key-item collapsed" data-key="${key}">
+          <div class="key-header">
+            <span class="key-collapse-indicator">▶</span>
+            <span class="key-name">${key}</span>
+            <span class="key-action">copiar</span>
+          </div>
+          <div class="key-value-container">
+            <span class="key-value">${value}</span>
+          </div>
+        </div>
+      `;
+      })
+      .join('');
+
+    return `
+      <div class="json-reference-item collapsed" data-filename="${ref.filename}">
+        <div class="json-header">
+          <div class="json-header-left">
+            <span class="json-collapse-indicator">▶</span>
+            <div>
+              <div class="json-filename">${ref.filename}</div>
+              <div class="json-file-path">${ref.file}</div>
+            </div>
+          </div>
+          <span class="json-key-count">${keys.length} keys</span>
+        </div>
+        <div class="json-keys-container">
+          ${keysHtml || '<div class="no-keys">No keys found</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Show empty state for JSON references
+   */
+  showJsonEmptyState(message) {
+    this.jsonContainer.innerHTML = `
+      <div class="glosario-empty-state">
+        <div class="empty-icon">📄</div>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+
+  /**
+   * Filter JSON references based on search query
+   */
+  filterJsonReferences(query) {
+    const items = this.jsonContainer.querySelectorAll('.json-reference-item');
+
+    items.forEach((item) => {
+      const filename = item.dataset.filename.toLowerCase();
+      const keys = Array.from(item.querySelectorAll('.key-name')).map((key) =>
+        key.textContent.toLowerCase(),
+      );
+
+      const matchesSearch =
+        filename.includes(query) || keys.some((key) => key.includes(query));
+
+      item.style.display = matchesSearch ? 'block' : 'none';
+    });
+  }
+
+  /**
+   * Copy JSON reference to clipboard
+   */
+  async copyJsonReferenceToClipboard(keyName, event, fileName = null) {
+    try {
+      // Build the reference string with filename if provided
+      const reference = fileName ? `"${fileName}.${keyName}"` : `"${keyName}"`;
+      await navigator.clipboard.writeText(reference);
+
+      // Show visual feedback
+      const originalText = event.target.textContent;
+      event.target.textContent = '✓ copiado';
+      event.target.style.background = '#4caf50';
+      event.target.style.color = '#fff';
+
+      setTimeout(() => {
+        event.target.textContent = originalText;
+        event.target.style.background = '';
+        event.target.style.color = '';
+      }, 2000);
+
+      console.log(`[GLOSARIO-UI] Copied to clipboard: ${reference}`);
+    } catch (error) {
+      console.error('[GLOSARIO-UI] Failed to copy to clipboard:', error);
+      // Fallback: create temporary input element
+      const reference = fileName ? `"${fileName}.${keyName}"` : `"${keyName}"`;
+      const input = document.createElement('input');
+      input.value = reference;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
     }
   }
 
