@@ -209,6 +209,13 @@ body {
   letter-spacing: 0.025em;
 }
 
+[data-theme='dark'] .commit-status-indicator .status-text {
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.025em;
+  color: var(--gray-300);
+}
+
 .commit-status-indicator .commit-btn,
 .commit-status-indicator .push-btn {
   padding: 0.25rem 0.75rem;
