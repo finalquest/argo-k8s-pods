@@ -51,7 +51,11 @@ class GlosarioInsertController {
       stepElement.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        this.insertStepIntoEditor(step, stepElement);
+
+        // Pequeño retraso para asegurar que el cursor esté en la posición correcta
+        setTimeout(() => {
+          this.insertStepIntoEditor(step, stepElement);
+        }, 10);
       });
 
       // Add hover effect to show insert capability
@@ -89,15 +93,50 @@ class GlosarioInsertController {
         return;
       }
 
-      // Get current cursor position
-      const cursorPos = this.codeMirror.getCursor();
-      this.logDebug('Inserting step at position:', cursorPos);
+      // Forzar cursor al final del documento para evitar inserciones en medio de líneas
+      const doc = this.codeMirror.getDoc();
+      const lastLine = doc.lineCount() - 1;
+      const endOfDocument = {
+        line: lastLine,
+        ch: doc.getLine(lastLine).length,
+      };
+
+      // Mover cursor al final del documento
+      this.codeMirror.setCursor(endOfDocument);
+
+      // Obtener la posición final (debería ser el inicio de una nueva línea)
+      let cursorPos = {
+        line: endOfDocument.line,
+        ch: 0,
+      };
+
+      // Si la última línea no está vacía, agregar un salto de línea primero
+      const lastLineText = doc.getLine(lastLine).trim();
+      if (lastLineText !== '') {
+        doc.replaceRange('\n', endOfDocument, endOfDocument);
+        cursorPos = {
+          line: lastLine + 1,
+          ch: 0,
+        };
+      }
 
       // Format step as Gherkin line with context awareness
       const gherkinLine = this.formatAsGherkin(step, cursorPos);
 
       // Insert the step
-      this.codeMirror.replaceRange(gherkinLine + '\n', cursorPos, cursorPos);
+      const textToInsert = gherkinLine + '\n';
+      this.codeMirror.replaceRange(textToInsert, cursorPos, cursorPos);
+
+      // Aplicar indentación manual
+      const lineText = doc.getLine(cursorPos.line);
+      if (!lineText.startsWith('    ')) {
+        const indentedText = '    ' + lineText;
+        doc.replaceRange(
+          indentedText,
+          { line: cursorPos.line, ch: 0 },
+          { line: cursorPos.line + 1, ch: 0 },
+        );
+      }
 
       // Move cursor to next line
       const newCursorPos = {

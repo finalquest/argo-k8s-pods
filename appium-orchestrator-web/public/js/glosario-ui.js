@@ -2,6 +2,7 @@
 // Handles the glosario panel UI and user interactions
 
 import { GlosarioInsertController } from './glosario-insert-controller.js';
+import { SmartActionsManager } from './smart-actions-loader.js';
 
 class GlosarioUI {
   constructor() {
@@ -15,6 +16,7 @@ class GlosarioUI {
     this.debugMode = false;
     this.insertController = null;
     this.currentTab = 'steps';
+    this.smartActionsManager = null;
 
     this.init();
   }
@@ -27,6 +29,7 @@ class GlosarioUI {
     this.setupEventListeners();
     this.setupKeyboardShortcuts();
     this.initializeInsertController();
+    this.initializeSmartActions();
   }
 
   /**
@@ -77,6 +80,116 @@ class GlosarioUI {
 
     // Start initialization
     initializeController();
+  }
+
+  /**
+   * Initialize the smart actions manager
+   */
+  initializeSmartActions() {
+    try {
+      // SmartActionsManager ya está importado como módulo
+      this.smartActionsManager = new SmartActionsManager(
+        this,
+        this.insertController,
+      );
+      console.log(
+        '[GLOSARIO-UI] Smart Actions Manager initialized successfully',
+      );
+
+      this.setupSmartActionsEventListeners();
+    } catch (error) {
+      console.error(
+        '[GLOSARIO-UI] Failed to initialize Smart Actions Manager:',
+        error,
+      );
+    }
+  }
+
+  /**
+   * Setup smart actions event listeners
+   */
+  setupSmartActionsEventListeners() {
+    if (!this.smartActionsManager) return;
+
+    // Right-click for steps
+    if (this.stepsContainer) {
+      this.stepsContainer.addEventListener('contextmenu', (e) => {
+        const stepElement = e.target.closest('.glosario-step-item');
+        if (stepElement) {
+          e.preventDefault();
+          this.smartActionsManager.showSmartActionsMenu(e, stepElement, 'step');
+        }
+      });
+    }
+
+    // Right-click for JSON references
+    const jsonContainer = this.panel?.querySelector(
+      '.json-reference-container',
+    );
+    if (jsonContainer) {
+      jsonContainer.addEventListener('contextmenu', (e) => {
+        const jsonElement = e.target.closest('.json-key-item');
+        if (jsonElement) {
+          e.preventDefault();
+          this.smartActionsManager.showSmartActionsMenu(
+            e,
+            jsonElement,
+            'json-reference',
+          );
+        }
+      });
+    }
+
+    // Re-setup when JSON container is updated
+    this.setupJsonContainerObserver();
+  }
+
+  /**
+   * Setup observer for JSON container changes
+   */
+  setupJsonContainerObserver() {
+    if (!this.panel || !window.MutationObserver) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          const jsonContainer = this.panel.querySelector(
+            '.json-reference-container',
+          );
+          if (jsonContainer) {
+            // Remove existing listeners and re-add
+            jsonContainer.removeEventListener(
+              'contextmenu',
+              this.handleJsonContextMenu,
+            );
+            jsonContainer.addEventListener(
+              'contextmenu',
+              this.handleJsonContextMenu.bind(this),
+            );
+          }
+        }
+      });
+    });
+
+    observer.observe(this.panel, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  /**
+   * Handle JSON context menu events
+   */
+  handleJsonContextMenu(e) {
+    const jsonElement = e.target.closest('.json-key-item');
+    if (jsonElement && this.smartActionsManager) {
+      e.preventDefault();
+      this.smartActionsManager.showSmartActionsMenu(
+        e,
+        jsonElement,
+        'json-reference',
+      );
+    }
   }
 
   /**
@@ -732,6 +845,139 @@ class GlosarioUI {
 
       [data-theme="dark"] .key-collapse-indicator {
         color: #aaa;
+      }
+
+      /* Smart Actions Menu */
+      .smart-actions-menu-container {
+        position: absolute;
+        background: #2d2d2d;
+        border: 1px solid #444;
+        border-radius: 6px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1000;
+        padding: 4px 0;
+      }
+
+      .smart-actions-menu {
+        position: relative;
+      }
+
+      .menu-header {
+        padding: 8px 16px;
+        font-size: 12px;
+        color: #888;
+        border-bottom: 1px solid #444;
+        margin-bottom: 4px;
+        font-weight: 500;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        user-select: none;
+      }
+
+      .menu-item:hover {
+        background: #3a3a3a;
+      }
+
+      .action-icon {
+        margin-right: 12px;
+        font-size: 14px;
+        width: 16px;
+        text-align: center;
+      }
+
+      .action-label {
+        flex: 1;
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+
+      .action-shortcut {
+        font-size: 11px;
+        color: #888;
+        background: #1a1a1a;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+      }
+
+      /* Smart Action Feedback */
+      .smart-action-feedback {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        min-width: 200px;
+        max-width: 400px;
+      }
+
+      .smart-action-feedback.success {
+        background: #4caf50;
+        color: white;
+      }
+
+      .smart-action-feedback.error {
+        background: #f44336;
+        color: white;
+      }
+
+      .feedback-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .feedback-icon {
+        font-size: 16px;
+      }
+
+      .feedback-text {
+        flex: 1;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Dark theme support for smart actions */
+      [data-theme="dark"] .smart-actions-menu-container {
+        background: #1e1e1e;
+        border-color: #333;
+      }
+
+      [data-theme="dark"] .menu-header {
+        color: #666;
+        border-bottom-color: #333;
+      }
+
+      [data-theme="dark"] .menu-item:hover {
+        background: #2a2a2a;
+      }
+
+      [data-theme="dark"] .action-label {
+        color: #ccc;
+      }
+
+      [data-theme="dark"] .action-shortcut {
+        background: #0a0a0a;
+        color: #666;
       }
     `;
     document.head.appendChild(styles);
@@ -1477,8 +1723,8 @@ class GlosarioUI {
   }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when DOM is ready and serviceRegistry is available
+function initializeGlosarioUI() {
   const glosarioUI = new GlosarioUI();
 
   // Registrar en el service registry
@@ -1488,4 +1734,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fallback para compatibilidad temporal
     window.glosarioUI = glosarioUI;
   }
-});
+}
+
+// Esperar a que tanto el DOM como el serviceRegistry estén disponibles
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Esperar un poco más para asegurar que los módulos se cargaron
+    setTimeout(initializeGlosarioUI, 100);
+  });
+} else {
+  // El DOM ya está cargado, esperar solo al serviceRegistry
+  setTimeout(initializeGlosarioUI, 100);
+}
