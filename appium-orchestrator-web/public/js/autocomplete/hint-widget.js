@@ -8,6 +8,8 @@ class HintWidget {
     this.selectedIndex = -1;
     this.widgetElement = null;
     this.isVisible = false;
+    this.isPersistentMode = false; // Nuevo: modo persistente
+    this.hintUpdateTimer = null;   // Nuevo: timer para actualizaciones
   }
 
   show(hints, from, to) {
@@ -32,6 +34,7 @@ class HintWidget {
     }
     this.widgetElement = null;
     this.isVisible = false;
+    this.isPersistentMode = false; // Desactivar modo persistente al ocultar
     this.currentHints = [];
     this.selectedIndex = -1;
   }
@@ -47,6 +50,9 @@ class HintWidget {
     this.widgetElement.style.left = `${coords.left}px`;
     this.widgetElement.style.top = `${coords.bottom + 2}px`;
     this.widgetElement.style.zIndex = '1000';
+
+    // NUEVO: Crear header para modo persistente
+    this.createPersistentHeader();
 
     // Crear contenedor de hints
     const hintsContainer = document.createElement('div');
@@ -117,6 +123,31 @@ class HintWidget {
       contextual: '💡',
     };
     return icons[type] || '💬';
+  }
+
+  /**
+   * Crea el header informativo para modo persistente
+   */
+  createPersistentHeader() {
+    const header = document.createElement('div');
+    header.className = 'persistent-header';
+
+    const icon = document.createElement('div');
+    icon.className = 'persistent-icon';
+
+    const text = document.createElement('div');
+    text.className = 'persistent-text';
+    text.textContent = 'MODO PERSISTENTE';
+
+    const hint = document.createElement('div');
+    hint.className = 'persistent-hint';
+    hint.textContent = 'Sigue escribiendo...';
+
+    header.appendChild(icon);
+    header.appendChild(text);
+    header.appendChild(hint);
+
+    this.widgetElement.appendChild(header);
   }
 
   selectHint(index) {
@@ -236,20 +267,25 @@ class HintWidget {
           return false; // Prevenir cualquier otro procesamiento
 
         default:
-          // Para otros eventos, decidir si dejamos que el editor los maneje
+          // NUEVA LÓGICA: Diferenciar entre modo persistente y modo normal
           if (
             event.key.length === 1 && // Teclas de caracteres
             !event.ctrlKey &&
             !event.altKey &&
-            !event.metaKey &&
-            !event.shiftKey // Permitir Shift+letras
+            !event.metaKey
           ) {
-            // Si el usuario escribe texto, ocultar el widget y dejar que el editor maneje el evento
-            this.hide();
-            return true; // Dejar que el editor procese el evento
+            if (this.isPersistentMode) {
+              // MODO PERSISTENTE: dejar que el editor procese el evento pero mantener widget visible
+              this.scheduleHintUpdate(); // Actualizar suggestions en tiempo real
+              return true; // Dejar que el editor procese el evento
+            } else {
+              // MODO NORMAL: ocultar widget al escribir
+              this.hide();
+              return true; // Dejar que el editor procese el evento
+            }
           }
 
-          // Para otras teclas (Backspace, Delete, Home, End, etc.), ocultar widget y dejar pasar
+          // Para otras teclas (Backspace, Delete, Home, End, etc.), comportamiento diferenciado
           if (
             [
               'Backspace',
@@ -260,7 +296,13 @@ class HintWidget {
               'PageDown',
             ].includes(event.key)
           ) {
-            this.hide();
+            if (this.isPersistentMode) {
+              // En modo persistente, actualizar suggestions al borrar
+              this.scheduleHintUpdate();
+            } else {
+              // En modo normal, ocultar widget
+              this.hide();
+            }
             return true;
           }
 
@@ -351,11 +393,76 @@ class HintWidget {
     }
   }
 
+  /**
+   * Establece el modo persistente del widget
+   * @param {boolean} enabled - true para modo persistente, false para modo normal
+   */
+  setPersistentMode(enabled) {
+    this.isPersistentMode = enabled;
+    if (enabled && this.widgetElement) {
+      this.widgetElement.classList.add('persistent-mode');
+    } else if (this.widgetElement) {
+      this.widgetElement.classList.remove('persistent-mode');
+    }
+  }
+
+  /**
+   * Programa una actualización de hints (usado en modo persistente)
+   */
+  scheduleHintUpdate() {
+    if (this.hintUpdateTimer) {
+      clearTimeout(this.hintUpdateTimer);
+    }
+
+    this.hintUpdateTimer = setTimeout(() => {
+      if (this.autocompleteService && this.autocompleteService.updateHintsInRealTime) {
+        this.autocompleteService.updateHintsInRealTime();
+      }
+    }, 100); // 100ms para respuestas rápidas
+  }
+
+  /**
+   * Actualiza los hints del widget sin recrearlo (para modo persistente)
+   * @param {Array} hints - Nuevos hints a mostrar
+   * @param {Object} from - Posición inicial
+   * @param {Object} to - Posición final
+   */
+  updateHints(hints, from, to) {
+    if (!this.widgetElement || !this.isVisible) return;
+
+    this.currentHints = hints.map((hint) => ({
+      ...hint,
+      from,
+      to,
+    }));
+    this.selectedIndex = -1;
+
+    // Actualizar contenido del widget existente
+    const container = this.widgetElement.querySelector('.autocomplete-hints-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    hints.forEach((hint, index) => {
+      const hintElement = this.createHintElement(hint, index);
+      container.appendChild(hintElement);
+    });
+  }
+
   destroy() {
     this.hide();
     this.removeEventListeners();
+
+    // Limpiar timers de modo persistente
+    if (this.hintUpdateTimer) {
+      clearTimeout(this.hintUpdateTimer);
+      this.hintUpdateTimer = null;
+    }
+
     this.autocompleteService = null;
     this.currentHints = [];
+    this.selectedIndex = -1;
+    this.isPersistentMode = false;
   }
 }
 

@@ -22,6 +22,11 @@ class AutocompleteService {
     this.isAutoTriggerEnabled = true;
     this.debounceTimer = null;
 
+    // Nuevas propiedades para modo persistente
+    this.persistentUpdateTimer = null;
+    this.lastContext = null;
+    this.lastHints = null;
+
     this.initializeProviders();
     this.setupEventListeners();
     this.setupKeyboardShortcuts();
@@ -86,6 +91,12 @@ class AutocompleteService {
       // Detectar patrones de activación automática - validar que change exista
       if (!change || !change.from) {
         return;
+      }
+
+      // NUEVO: Actualización en tiempo real para modo persistente
+      if (this.hintWidget.isPersistentMode && this.hintWidget.isVisible) {
+        this.schedulePersistentUpdate();
+        return; // Salir early para no procesar auto-triggers
       }
 
       const { from } = change;
@@ -372,6 +383,10 @@ class AutocompleteService {
   // Método público para activar autocompletado manualmente (Ctrl+Space)
   async triggerManualAutocomplete() {
     await this.showHints();
+    // NUEVO: Activar modo persistente para Ctrl+Space
+    if (this.hintWidget.isVisible) {
+      this.hintWidget.setPersistentMode(true);
+    }
   }
 
   // Métodos públicos para control del autocompletado
@@ -386,6 +401,54 @@ class AutocompleteService {
   toggleAutoTrigger() {
     this.isAutoTriggerEnabled = !this.isAutoTriggerEnabled;
     return this.isAutoTriggerEnabled;
+  }
+
+  /**
+   * Programa una actualización persistente (usado en modo persistente)
+   */
+  schedulePersistentUpdate() {
+    if (this.persistentUpdateTimer) {
+      clearTimeout(this.persistentUpdateTimer);
+    }
+
+    this.persistentUpdateTimer = setTimeout(() => {
+      this.updateHintsInRealTime();
+    }, 100); // 100ms para respuestas rápidas
+  }
+
+  /**
+   * Actualiza hints en tiempo real (para modo persistente)
+   */
+  async updateHintsInRealTime() {
+    const context = this.buildContext();
+
+    // Optimización: si el contexto no cambió significativamente, reusar resultados
+    if (this.lastContext && this.isContextSimilar(this.lastContext, context)) {
+      return;
+    }
+
+    try {
+      const hints = await this.getHints(context);
+
+      if (hints && hints.list.length > 0 && this.hintWidget.isVisible) {
+        this.hintWidget.updateHints(hints.list, hints.from, hints.to);
+      }
+
+      // Cache para optimización
+      this.lastContext = context;
+      this.lastHints = hints;
+    } catch (error) {
+      console.error('Error updating hints in real time:', error);
+    }
+  }
+
+  /**
+   * Compara si dos contextos son similares (para optimización)
+   */
+  isContextSimilar(context1, context2) {
+    return context1.line === context2.line &&
+           Math.abs(context1.ch - context2.ch) <= 1 &&
+           context1.currentWord === context2.currentWord;
   }
 
   // Limpiar recursos
@@ -409,6 +472,15 @@ class AutocompleteService {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
+
+    // NUEVO: Limpiar timers de modo persistente
+    if (this.persistentUpdateTimer) {
+      clearTimeout(this.persistentUpdateTimer);
+      this.persistentUpdateTimer = null;
+    }
+
+    this.lastContext = null;
+    this.lastHints = null;
 
     // Remover event listeners
     if (this.keydownHandler) {

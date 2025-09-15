@@ -2705,3 +2705,462 @@ textarea {
   color: var(--primary-color);
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
+
+/* ==========================================================================
+   HELP MODAL STYLES
+   ========================================================================== */
+
+/* Help Button */
+.help-container {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+.help-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--info-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.help-btn:hover {
+  background: var(--info-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.help-btn:active {
+  transform: translateY(0);
+}
+
+.help-icon {
+  font-size: 1rem;
+}
+
+.help-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Help Modal Styles */
+.help-modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  margin: 2rem auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.help-modal-header {
+  background: linear-gradient(135deg, var(--info-color), var(--primary-color));
+  color: white;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.help-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.help-modal-footer {
+  padding: 1.5rem;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  text-align: center;
+}
+
+.help-section {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.help-section:last-child {
+  border-bottom: none;
+}
+
+.help-section-title {
+  margin: 0;
+  padding: 1.5rem;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-content {
+  padding: 1.5rem;
+}
+
+.help-feature {
+  margin-bottom: 2rem;
+}
+
+.help-feature:last-child {
+  margin-bottom: 0;
+}
+
+.help-feature h4 {
+  margin: 0 0 1rem 0;
+  color: var(--gray-800);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-code {
+  background: var(--gray-800);
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.help-features-list {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.help-features-list li {
+  margin-bottom: 0.5rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.help-features-list li:last-child {
+  margin-bottom: 0;
+}
+
+.help-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.help-type {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.help-type:hover {
+  background: var(--gray-100);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.help-type-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.help-type strong {
+  display: block;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.help-type-desc {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.help-example {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.help-example pre {
+  margin: 0;
+  padding: 1rem;
+  background: var(--gray-800);
+  color: #e2e8f0;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  border-left: 4px solid var(--success-color);
+}
+
+.help-example-note {
+  margin: 0.75rem 0 0 0;
+  font-style: italic;
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.help-example-steps {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.help-example-steps li {
+  margin-bottom: 0.75rem;
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+
+.help-example-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.help-shortcuts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.shortcut:hover {
+  background: var(--gray-100);
+  border-color: var(--primary-color);
+}
+
+.shortcut kbd {
+  background: var(--gray-800);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut span {
+  flex: 1;
+  color: var(--gray-700);
+}
+
+/* Help Modal in Dark Mode */
+[data-theme='dark'] .help-modal-content {
+  background: var(--gray-900);
+  border-color: var(--gray-700);
+}
+
+[data-theme='dark'] .help-section-title {
+  background: var(--gray-800);
+  color: var(--gray-200);
+  border-color: var(--gray-700);
+}
+
+[data-theme='dark'] .help-content {
+  color: var(--gray-300);
+}
+
+[data-theme='dark'] .help-feature h4 {
+  color: var(--gray-200);
+}
+
+[data-theme='dark'] .help-code {
+  background: var(--gray-700);
+  color: #f1f5f9;
+  border-color: var(--primary-color);
+}
+
+[data-theme='dark'] .help-features-list li {
+  color: var(--gray-400);
+}
+
+[data-theme='dark'] .help-type {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+[data-theme='dark'] .help-type:hover {
+  background: var(--gray-700);
+  border-color: var(--primary-color);
+}
+
+[data-theme='dark'] .help-type strong {
+  color: var(--gray-200);
+}
+
+[data-theme='dark'] .help-type-desc {
+  color: var(--gray-500);
+}
+
+[data-theme='dark'] .help-example {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+[data-theme='dark'] .help-example pre {
+  background: var(--gray-700);
+  color: #f1f5f9;
+  border-color: var(--success-color);
+}
+
+[data-theme='dark'] .help-example-note {
+  color: var(--gray-500);
+}
+
+[data-theme='dark'] .help-example-steps li {
+  color: var(--gray-400);
+}
+
+[data-theme='dark'] .shortcut {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+[data-theme='dark'] .shortcut:hover {
+  background: var(--gray-700);
+  border-color: var(--primary-color);
+}
+
+[data-theme='dark'] .shortcut span {
+  color: var(--gray-400);
+}
+
+[data-theme='dark'] .help-modal-footer {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .help-container {
+    margin-left: 0.5rem;
+  }
+
+  .help-text {
+    display: none;
+  }
+
+  .help-btn {
+    padding: 0.5rem;
+  }
+
+  .help-modal-content {
+    width: 98%;
+    margin: 1rem;
+    max-height: 95vh;
+  }
+
+  .help-modal-header {
+    padding: 1rem;
+  }
+
+  .help-modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .help-section-title {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .help-content {
+    padding: 1rem;
+  }
+
+  .help-types-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .help-shortcuts {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-types-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes helpModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.help-modal-content {
+  animation: helpModalFadeIn 0.2s ease-out;
+}
+
+/* Smooth scrolling for help content */
+.help-modal-body {
+  scroll-behavior: smooth;
+}
+
+/* Code styling in help content */
+.help-content code {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+}
+
+[data-theme='dark'] .help-content code {
+  background: var(--gray-700);
+  color: var(--gray-200);
+}
+
+/* Print styles */
+@media print {
+  .help-modal-content {
+    box-shadow: none;
+    border: 1px solid var(--gray-300);
+  }
+}
