@@ -7,3 +7,10 @@ docs/
 .DS_Store
 wiremock/
 .env
+test/
+tests/
+*.test.*
+*.spec.*
+test_*
+_tests/
+__tests__/

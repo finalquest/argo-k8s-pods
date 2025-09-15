@@ -30,48 +30,15 @@ class ApkManager {
     };
 
     try {
-      // Try local APK directory first
-      if (process.env.LOCAL_APK_DIRECTORY) {
-        console.log('--- DEBUG: Trying local APK directory ---');
-        const localResult = await this.getLocalApkVersions();
-        console.log('Local result:', localResult);
-        if (localResult.success) {
-          results.local = localResult.versions;
-          results.versions.push(...localResult.versions);
-        }
+      console.log('--- DEBUG: Trying local APK directory ---');
+      const localResult = await this.getLocalApkVersions();
+      console.log('Local result:', localResult);
+      if (localResult.success) {
+        results.local = localResult.versions;
+        results.versions.push(...localResult.versions);
       }
 
-      // Only try client-specific registry if client is specified
-      if (client && process.env.APK_REGISTRY) {
-        console.log('--- DEBUG: Trying client-specific registry ---');
-        const clientResult = await this.getClientApkVersions(client);
-        console.log('Client result:', clientResult);
-        if (clientResult.success) {
-          results.registry = clientResult.versions;
-          results.versions.push(...clientResult.versions);
-        }
-      } else {
-        console.log(
-          '--- DEBUG: Skipping registry - no client or APK_REGISTRY not set ---',
-        );
-        console.log('Client exists:', !!client);
-        console.log('APK_REGISTRY exists:', !!process.env.APK_REGISTRY);
-      }
-
-      // Remove duplicates
-      results.versions = this.removeDuplicateVersions(results.versions);
-
-      // Determine source based on what was actually found
-      if (results.local.length > 0 && results.registry.length > 0) {
-        results.source = 'mixed';
-      } else if (results.local.length > 0) {
-        results.source = 'local';
-      } else if (results.registry.length > 0) {
-        results.source = 'registry';
-      } else {
-        results.source = 'none';
-      }
-
+      results.source = 'local';
       console.log('--- DEBUG: Final results ---');
       console.log('Total versions:', results.versions.length);
       console.log('Local versions:', results.local.length);

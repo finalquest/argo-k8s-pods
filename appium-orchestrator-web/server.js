@@ -138,17 +138,13 @@ app.get('/api/apk/versions', async (req, res) => {
   try {
     let result;
 
-    // If repo parameter is provided, use legacy method
-    if (repo) {
-      result = await apkManager.getRegistryApkVersions(repo);
-    }
-    // If client parameter is provided, use client-specific method
-    else if (client) {
-      result = await apkManager.getClientApkVersions(client);
-    }
-    // If no parameters, try to get all available versions
-    else {
+    // If LOCAL_APK_DIRECTORY is defined, use local method (ignore repo parameter)
+    if (process.env.LOCAL_APK_DIRECTORY) {
       result = await apkManager.getApkVersions();
+    } else if (repo) {
+      result = await apkManager.getRegistryApkVersions(repo);
+    } else if (client) {
+      result = await apkManager.getClientApkVersions(client);
     }
 
     if (result.success) {
