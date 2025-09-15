@@ -8,12 +8,12 @@ describe('Validación de errores corregidos', () => {
   beforeEach(() => {
     // Guardar variables originales
     originalProcessEnv = { ...process.env };
-    
+
     // Mock de process.env
     process.env = {
       ...process.env,
       LOCAL_APK_DIRECTORY: undefined,
-      APK_REGISTRY: 'harbor:8080'
+      APK_REGISTRY: 'harbor:8080',
     };
   });
 
@@ -30,13 +30,13 @@ describe('Validación de errores corregidos', () => {
         getRegistryApkVersions: jest.fn().mockResolvedValue({
           success: true,
           source: 'registry',
-          versions: ['2.45.0']
-        })
+          versions: ['2.45.0'],
+        }),
       };
 
       // Simular la lógica del endpoint refactorizado
       const { repo, client } = mockReq.query;
-      
+
       if (repo) {
         return mockApkManager.getRegistryApkVersions(repo);
       } else if (client) {
@@ -45,20 +45,22 @@ describe('Validación de errores corregidos', () => {
         return mockApkManager.getApkVersions();
       }
 
-      expect(mockApkManager.getRegistryApkVersions).toHaveBeenCalledWith('apks/nbch/int');
+      expect(mockApkManager.getRegistryApkVersions).toHaveBeenCalledWith(
+        'apks/nbch/int',
+      );
     });
 
     test('debería rechazar parámetro repo inválido', () => {
       const mockApkManager = {
         getRegistryApkVersions: jest.fn().mockResolvedValue({
           success: false,
-          error: "Parámetro 'repo' contiene caracteres inválidos."
-        })
+          error: "Parámetro 'repo' contiene caracteres inválidos.",
+        }),
       };
 
       const repo = 'apks/invalid@client/int';
       const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-/.]/g, '');
-      
+
       // Simular la validación del apk-manager
       if (sanitizedRepo !== repo) {
         return mockApkManager.getRegistryApkVersions(repo);
@@ -73,8 +75,10 @@ describe('Validación de errores corregidos', () => {
       const apkRegistry = 'harbor:8080';
       const sanitizedRepo = repo.replace(/[^a-zA-Z0-9_\-/.]/g, '');
       const command = `oras repo tags ${apkRegistry}/${sanitizedRepo} --plain-http`;
-      
-      expect(command).toBe('oras repo tags harbor:8080/apks/nbch/int --plain-http');
+
+      expect(command).toBe(
+        'oras repo tags harbor:8080/apks/nbch/int --plain-http',
+      );
     });
   });
 
@@ -91,7 +95,7 @@ describe('Validación de errores corregidos', () => {
       }
 
       const jobQueueManager = new JobQueueManager();
-      
+
       expect(jobQueueManager.workerPoolManager).toBeNull();
       expect(jobQueueManager.jobQueue).toEqual([]);
       expect(jobQueueManager.jobIdCounter).toBe(0);
@@ -106,9 +110,9 @@ describe('Validación de errores corregidos', () => {
 
       const jobQueueManager = new JobQueueManager();
       const mockWorkerPoolManager = { findSuitableWorker: jest.fn() };
-      
+
       jobQueueManager.workerPoolManager = mockWorkerPoolManager;
-      
+
       expect(jobQueueManager.workerPoolManager).toBe(mockWorkerPoolManager);
     });
 
@@ -117,7 +121,7 @@ describe('Validación de errores corregidos', () => {
         constructor() {
           this.workerPoolManager = null;
         }
-        
+
         addJob(job) {
           if (!this.workerPoolManager) {
             throw new Error('workerPoolManager no inicializado');
@@ -127,7 +131,7 @@ describe('Validación de errores corregidos', () => {
       }
 
       const jobQueueManager = new JobQueueManager();
-      
+
       expect(() => {
         jobQueueManager.addJob({ feature: 'test' });
       }).toThrow('workerPoolManager no inicializado');
@@ -139,29 +143,32 @@ describe('Validación de errores corregidos', () => {
       // Simular path.join
       const path = {
         join: (...args) => args.join('/'),
-        resolve: (path) => path
+        resolve: (path) => path,
       };
 
       // Simular __dirname
       const __dirname = '/project/src/modules/worker-management';
-      
+
       // Construir ruta como en el código real
       const workerPath = path.join(__dirname, '..', '..', '..', 'worker.js');
-      
+
       // La ruta correcta debería ser /project/worker.js
-      expect(workerPath).toBe('/project/src/modules/worker-management/../../../worker.js');
+      expect(workerPath).toBe(
+        '/project/src/modules/worker-management/../../../worker.js',
+      );
     });
 
     test('debería manejar diferentes estructuras de directorio', () => {
       const testCases = [
         {
           dirname: '/app/src/modules/worker-management',
-          expected: '/app/src/modules/worker-management/../../../worker.js'
+          expected: '/app/src/modules/worker-management/../../../worker.js',
         },
         {
           dirname: '/usr/local/app/src/modules/worker-management',
-          expected: '/usr/local/app/src/modules/worker-management/../../../worker.js'
-        }
+          expected:
+            '/usr/local/app/src/modules/worker-management/../../../worker.js',
+        },
       ];
 
       testCases.forEach(({ dirname, expected }) => {
@@ -176,7 +183,7 @@ describe('Validación de errores corregidos', () => {
     test('debería construir correctamente repo desde cliente', () => {
       const selectedClient = 'nbch';
       const repo = `apks/${selectedClient}/int`;
-      
+
       expect(repo).toBe('apks/nbch/int');
     });
 
@@ -184,7 +191,7 @@ describe('Validación de errores corregidos', () => {
       const testCases = [
         { client: 'nbch', expected: 'apks/nbch/int' },
         { client: 'client1', expected: 'apks/client1/int' },
-        { client: 'test-client', expected: 'apks/test-client/int' }
+        { client: 'test-client', expected: 'apks/test-client/int' },
       ];
 
       testCases.forEach(({ client, expected }) => {
@@ -195,18 +202,18 @@ describe('Validación de errores corregidos', () => {
 
     test('debería priorizar directorio local cuando está configurado', () => {
       process.env.LOCAL_APK_DIRECTORY = '/test/apks';
-      
+
       const hasLocalDirectory = !!process.env.LOCAL_APK_DIRECTORY;
-      
+
       expect(hasLocalDirectory).toBe(true);
     });
 
     test('debería usar registry cuando no hay directorio local', () => {
       process.env.LOCAL_APK_DIRECTORY = undefined;
-      
+
       const hasLocalDirectory = !!process.env.LOCAL_APK_DIRECTORY;
       const hasRegistry = !!process.env.APK_REGISTRY;
-      
+
       expect(hasLocalDirectory).toBe(false);
       expect(hasRegistry).toBe(true);
     });
@@ -217,7 +224,7 @@ describe('Validación de errores corregidos', () => {
       // Simular el escenario que causaba el error
       const jobQueueManager = {
         workerPoolManager: null,
-        processQueue: function() {
+        processQueue: function () {
           if (this.jobQueue && this.jobQueue.length > 0) {
             const job = this.jobQueue[0];
             // Esto antes lanzaba "Cannot read properties of undefined"
@@ -227,11 +234,11 @@ describe('Validación de errores corregidos', () => {
             return null;
           }
           return null;
-        }
+        },
       };
 
       jobQueueManager.jobQueue = [{ feature: 'test' }];
-      
+
       // No debería lanzar error
       const result = jobQueueManager.processQueue();
       expect(result).toBeNull();
@@ -247,12 +254,12 @@ describe('Validación de errores corregidos', () => {
             throw new Error('Ruta inválida');
           }
           return result;
-        }
+        },
       };
 
       const __dirname = '/project/src/modules/worker-management';
       const workerPath = path.join(__dirname, '..', '..', '..', 'worker.js');
-      
+
       expect(workerPath).toBeDefined();
       expect(workerPath.endsWith('worker.js')).toBe(true);
     });

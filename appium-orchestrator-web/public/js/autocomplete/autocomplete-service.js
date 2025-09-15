@@ -2,7 +2,6 @@
 // Gestiona la lógica principal de autocompletado en CodeMirror
 
 import StepHintProvider from './providers/step-hint-provider.js';
-import JsonReferenceHintProvider from './providers/json-reference-hint-provider.js';
 import GherkinKeywordHintProvider from './providers/gherkin-keyword-provider.js';
 import ContextualHintProvider from './providers/contextual-hint-provider.js';
 import HintWidget from './hint-widget.js';
@@ -21,6 +20,7 @@ class AutocompleteService {
     };
     this.isAutoTriggerEnabled = true;
     this.debounceTimer = null;
+    this.cursorActivityTimer = null;
 
     // Nuevas propiedades para modo persistente
     this.persistentUpdateTimer = null;
@@ -35,7 +35,6 @@ class AutocompleteService {
   initializeProviders() {
     this.providers = [
       new StepHintProvider(this.glosarioService),
-      new JsonReferenceHintProvider(this.glosarioService),
       new GherkinKeywordHintProvider(),
       new ContextualHintProvider(this.glosarioService),
     ];
@@ -44,7 +43,7 @@ class AutocompleteService {
   setupEventListeners() {
     // Configurar event listeners para triggers de autocompletado
     this.codeMirror.on('change', (instance, change) => {
-      this.handleTextChange(change);
+      this.handleTextChange(instance, change);
     });
 
     this.codeMirror.on('cursorActivity', () => {
@@ -94,9 +93,10 @@ class AutocompleteService {
       }
 
       // NUEVO: Actualización en tiempo real para modo persistente
+      // No salir early - permitir que los auto-triggers funcionen junto con el modo persistente
       if (this.hintWidget.isPersistentMode && this.hintWidget.isVisible) {
         this.schedulePersistentUpdate();
-        return; // Salir early para no procesar auto-triggers
+        // No return aquí - permitir que los auto-triggers también se ejecuten
       }
 
       const { from } = change;
@@ -104,44 +104,59 @@ class AutocompleteService {
       const cursorPos = from.ch;
 
       // Auto-trigger para Gherkin keywords
-      if (this.isGherkinKeywordTrigger(line, cursorPos)) {
-        this.showHints();
-      }
-
-      // Auto-trigger para JSON references
-      if (this.isJsonReferenceTrigger(line, cursorPos)) {
-        this.showHints();
-      }
+      const gherkinTrigger = this.isGherkinKeywordTrigger(line, cursorPos);
 
       // Auto-trigger para patrones de contexto
-      if (this.isContextualTrigger(line, cursorPos)) {
+      const contextualTrigger = this.isContextualTrigger(line, cursorPos);
+
+      if (gherkinTrigger || contextualTrigger) {
         this.showHints();
       }
     }, 300); // 300ms de debounce
   }
 
   handleCursorActivity() {
-    // Lógica para contextual awareness basada en posición del cursor
+    // Limpiar timer existente para cursor activity
+    if (this.cursorActivityTimer) {
+      clearTimeout(this.cursorActivityTimer);
+    }
+
+    // Debounce para evitar múltiples activaciones por movimiento de cursor
+    this.cursorActivityTimer = setTimeout(() => {
+      // Cursor activity handling sin triggers específicos
+    }, 200); // 200ms de debounce para cursor activity
   }
 
   isGherkinKeywordTrigger(line, cursorPos) {
-    const gherkinPatterns = [
-      /^Given\s$/,
-      /^When\s$/,
-      /^Then\s$/,
-      /^And\s$/,
-      /^But\s$/,
+    const textBeforeCursor = line.substring(0, cursorPos);
+
+    // Patrones más flexibles que funcionan con indentación
+    const patterns = [
+      /Given\s+$/, // "Given " al final (justo después de espacio)
+      /When\s+$/, // "When " al final
+      /Then\s+$/, // "Then " al final
+      /And\s+$/, // "And " al final
+      /But\s+$/, // "But " al final
+
+      // Patrones que no requieren word boundary (funcionan con espacios al inicio)
+      /(?:^|\s)Given\s+/, // "Given " precedido por inicio de línea o espacio
+      /(?:^|\s)When\s+/, // "When " precedido por inicio de línea o espacio
+      /(?:^|\s)Then\s+/, // "Then " precedido por inicio de línea o espacio
+      /(?:^|\s)And\s+/, // "And " precedido por inicio de línea o espacio
+      /(?:^|\s)But\s+/, // "But " precedido por inicio de línea o espacio
+
+      // También aceptar solo el keyword sin espacio (para cuando están escribiendo)
+      /(?:^|\s)Given$/, // "Given" al final (sin espacio aún)
+      /(?:^|\s)When$/,
+      /(?:^|\s)Then$/,
+      /(?:^|\s)And$/,
+      /(?:^|\s)But$/,
     ];
 
-    const textBeforeCursor = line.substring(0, cursorPos);
-    return gherkinPatterns.some((pattern) => pattern.test(textBeforeCursor));
+    return patterns.some((pattern) => pattern.test(textBeforeCursor));
   }
 
-  isJsonReferenceTrigger(line, cursorPos) {
-    const textBeforeCursor = line.substring(0, cursorPos);
-    return textBeforeCursor.includes('{');
-  }
-
+  
   isContextualTrigger(line, cursorPos) {
     const textBeforeCursor = line.substring(0, cursorPos);
 
@@ -189,6 +204,9 @@ class AutocompleteService {
     if (hints && hints.list.length > 0) {
       // Usar nuestro widget personalizado en lugar del showHint de CodeMirror
       this.hintWidget.show(hints.list, hints.from, hints.to);
+
+      // Importante: Los auto-triggers NO activan modo persistente
+      // Solo Ctrl+Space activa modo persistente en triggerManualAutocomplete()
     }
   }
 
@@ -245,6 +263,7 @@ class AutocompleteService {
     for (const provider of this.providers) {
       try {
         const providerHints = await provider.getHints(context);
+
         if (providerHints && providerHints.list.length > 0) {
           // Si el provider provee posiciones from/to, usarlas para calcular la posición general
           if (providerHints.from && providerHints.to) {
@@ -275,11 +294,13 @@ class AutocompleteService {
 
     // Si no se encontraron posiciones específicas, usar la posición actual del cursor
     const currentPos = this.codeMirror.getCursor();
-    return {
+    const finalResult = {
       list: sortedHints,
       from: fromPos || currentPos,
       to: toPos || currentPos,
     };
+
+    return finalResult;
   }
 
   getEarlierPosition(pos1, pos2) {
@@ -311,9 +332,8 @@ class AutocompleteService {
     // Score por tipo
     const typeScores = {
       step: 100,
-      json: 80,
-      keyword: 60,
-      contextual: 40,
+      keyword: 80,
+      contextual: 60,
     };
     score += typeScores[hint.type] || 0;
 
@@ -345,10 +365,6 @@ class AutocompleteService {
       );
     }
 
-    if (hint.type === 'json') {
-      return lineText.includes('{') || lineText.includes('json');
-    }
-
     return true;
   }
 
@@ -373,7 +389,6 @@ class AutocompleteService {
   getIconForType(type) {
     const icons = {
       step: '📝',
-      json: '🔗',
       keyword: '🏷️',
       contextual: '💡',
     };
@@ -446,9 +461,11 @@ class AutocompleteService {
    * Compara si dos contextos son similares (para optimización)
    */
   isContextSimilar(context1, context2) {
-    return context1.line === context2.line &&
-           Math.abs(context1.ch - context2.ch) <= 1 &&
-           context1.currentWord === context2.currentWord;
+    return (
+      context1.line === context2.line &&
+      context1.ch === context2.ch &&
+      context1.lineText === context2.lineText
+    );
   }
 
   // Limpiar recursos
@@ -471,6 +488,11 @@ class AutocompleteService {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
+    }
+
+    if (this.cursorActivityTimer) {
+      clearTimeout(this.cursorActivityTimer);
+      this.cursorActivityTimer = null;
     }
 
     // NUEVO: Limpiar timers de modo persistente

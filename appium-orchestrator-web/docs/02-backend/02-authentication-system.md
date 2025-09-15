@@ -63,10 +63,10 @@ passport.use(
 
 ```javascript
 // .env - Variables requeridas para autenticación
-GOOGLE_CLIENT_ID=tu-client-id-de-google
-GOOGLE_CLIENT_SECRET=tu-client-secret-de-google
-GOOGLE_HOSTED_DOMAIN=tu-dominio-empresarial.com
-SESSION_SECRET=tu-secreto-de-sesion-muy-seguro
+GOOGLE_CLIENT_ID = tu - client - id - de - google;
+GOOGLE_CLIENT_SECRET = tu - client - secret - de - google;
+GOOGLE_HOSTED_DOMAIN = tu - dominio - empresarial.com;
+SESSION_SECRET = tu - secreto - de - sesion - muy - seguro;
 ```
 
 **Modo Desarrollo (sin autenticación):**
@@ -100,7 +100,7 @@ const developmentUser = {
   displayName: 'Development User',
   email: 'dev@localhost',
   photos: [{ value: 'https://via.placeholder.com/40' }],
-  isDevelopment: true
+  isDevelopment: true,
 };
 ```
 
@@ -499,7 +499,7 @@ isEnabled(feature) {
   switch (feature) {
     case 'authentication':
       return !!(
-        this.config.GOOGLE_CLIENT_ID && 
+        this.config.GOOGLE_CLIENT_ID &&
         this.config.GOOGLE_CLIENT_SECRET
       );
     default:
@@ -515,12 +515,14 @@ isDevelopmentMode() {
 ### 2. Comportamiento del AuthenticationManager
 
 **Modo Producción:**
+
 - Configura Google OAuth 2.0
 - Protege todas las rutas /api
 - Requiere autenticación para Socket.IO
 - Valida dominio de Google
 
 **Modo Desarrollo:**
+
 - Omite configuración de OAuth
 - Permite acceso sin autenticación
 - Crea usuario de desarrollo automático
@@ -549,6 +551,7 @@ El frontend puede verificar el modo de autenticación:
 ### 4. Mensajes del Sistema
 
 **Inicio en Modo Desarrollo:**
+
 ```
 ⚠️  Google OAuth no configurado - Modo desarrollo (sin autenticación)
    Para habilitar autenticación, define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
@@ -559,6 +562,7 @@ El frontend puede verificar el modo de autenticación:
 ```
 
 **Inicio en Modo Producción:**
+
 ```
 🔒 MODO PRODUCCIÓN: Autenticación habilitada
 ```
@@ -566,12 +570,14 @@ El frontend puede verificar el modo de autenticación:
 ### 5. Consideraciones de Seguridad
 
 **Modo Desarrollo:**
+
 - Solo usar en entornos locales y desarrollo
 - No exponer a internet sin autenticación
 - Ideal para testing y desarrollo rápido
 - Misma funcionalidad que modo producción
 
 **Modo Producción:**
+
 - Requiere todas las variables de entorno
 - Seguridad completa con Google OAuth
 - Restricción de dominio opcional

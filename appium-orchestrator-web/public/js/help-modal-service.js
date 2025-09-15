@@ -14,7 +14,9 @@ class HelpModalService {
   init() {
     // Esperar a que el DOM esté cargado
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.setupHelpModal());
+      document.addEventListener('DOMContentLoaded', () =>
+        this.setupHelpModal(),
+      );
     } else {
       this.setupHelpModal();
     }
@@ -157,7 +159,7 @@ class HelpModalService {
     if (section) {
       section.scrollIntoView({
         behavior: 'smooth',
-        block: 'start'
+        block: 'start',
       });
     }
   }
@@ -165,7 +167,7 @@ class HelpModalService {
   // Métodos de accesibilidad
   trapFocus() {
     const focusableElements = this.modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     const firstElement = focusableElements[0];
@@ -205,7 +207,7 @@ class HelpModalService {
     const event = new CustomEvent(eventName, {
       detail: detail,
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
 
     this.modal.dispatchEvent(event);
@@ -221,9 +223,12 @@ class HelpModalService {
     // Esperar a que el modal sea visible
     setTimeout(() => {
       const sections = this.modal.querySelectorAll('.help-section');
-      sections.forEach(section => {
+      sections.forEach((section) => {
         const title = section.querySelector('.help-section-title');
-        if (title && title.textContent.toLowerCase().includes(sectionName.toLowerCase())) {
+        if (
+          title &&
+          title.textContent.toLowerCase().includes(sectionName.toLowerCase())
+        ) {
           section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
           // Resaltar la sección brevemente

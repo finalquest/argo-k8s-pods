@@ -9,7 +9,7 @@ class HintWidget {
     this.widgetElement = null;
     this.isVisible = false;
     this.isPersistentMode = false; // Nuevo: modo persistente
-    this.hintUpdateTimer = null;   // Nuevo: timer para actualizaciones
+    this.hintUpdateTimer = null; // Nuevo: timer para actualizaciones
   }
 
   show(hints, from, to) {
@@ -108,7 +108,14 @@ class HintWidget {
     // Event listeners
     hintElement.addEventListener('click', () => {
       this.selectHint(index);
-      this.insertHint(this.currentHints[index]);
+
+      if (this.currentHints && this.currentHints[index]) {
+        this.insertHint(this.currentHints[index]);
+      } else {
+        console.error('Hint is undefined at index:', index);
+        // Intentar obtener los hints originales del servicio
+        this.autocompleteService.showHints();
+      }
     });
     hintElement.addEventListener('mouseenter', () => this.selectHint(index));
 
@@ -118,7 +125,6 @@ class HintWidget {
   getIconForType(type) {
     const icons = {
       step: '📝',
-      json: '🔗',
       keyword: '🏷️',
       contextual: '💡',
     };
@@ -415,7 +421,10 @@ class HintWidget {
     }
 
     this.hintUpdateTimer = setTimeout(() => {
-      if (this.autocompleteService && this.autocompleteService.updateHintsInRealTime) {
+      if (
+        this.autocompleteService &&
+        this.autocompleteService.updateHintsInRealTime
+      ) {
         this.autocompleteService.updateHintsInRealTime();
       }
     }, 100); // 100ms para respuestas rápidas
@@ -430,20 +439,25 @@ class HintWidget {
   updateHints(hints, from, to) {
     if (!this.widgetElement || !this.isVisible) return;
 
+    // IMPORTANTE: Actualizar this.currentHints con las posiciones correctas
     this.currentHints = hints.map((hint) => ({
       ...hint,
       from,
       to,
     }));
+
     this.selectedIndex = -1;
 
     // Actualizar contenido del widget existente
-    const container = this.widgetElement.querySelector('.autocomplete-hints-container');
+    const container = this.widgetElement.querySelector(
+      '.autocomplete-hints-container',
+    );
     if (!container) return;
 
     container.innerHTML = '';
 
-    hints.forEach((hint, index) => {
+    // Usar los hints con posiciones para renderizar
+    this.currentHints.forEach((hint, index) => {
       const hintElement = this.createHintElement(hint, index);
       container.appendChild(hintElement);
     });

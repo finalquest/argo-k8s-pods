@@ -9,7 +9,8 @@
   overflow-y: auto;
   min-width: 250px;
   max-width: 500px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   backdrop-filter: blur(10px);
   animation: autocompleteFadeIn 0.2s ease-out;
@@ -33,7 +34,7 @@
 }
 
 /* Dark theme variables */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --autocomplete-bg: #1e1e1e;
   --autocomplete-border: #404040;
   --autocomplete-item-border: #333333;
@@ -155,27 +156,27 @@
 }
 
 /* Dark mode support - simplified since we use CSS variables */
-[data-theme="dark"] .autocomplete-widget {
+[data-theme='dark'] .autocomplete-widget {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Type-specific dark mode */
-[data-theme="dark"] .autocomplete-hint-step.selected {
+[data-theme='dark'] .autocomplete-hint-step.selected {
   background: #3e2723;
   border-left-color: #ffc107;
 }
 
-[data-theme="dark"] .autocomplete-hint-json.selected {
+[data-theme='dark'] .autocomplete-hint-json.selected {
   background: #0d47a1;
   border-left-color: #2196f3;
 }
 
-[data-theme="dark"] .autocomplete-hint-keyword.selected {
+[data-theme='dark'] .autocomplete-hint-keyword.selected {
   background: #1b5e20;
   border-left-color: #4caf50;
 }
 
-[data-theme="dark"] .autocomplete-hint-contextual.selected {
+[data-theme='dark'] .autocomplete-hint-contextual.selected {
   background: #e65100;
   border-left-color: #ff9800;
 }
@@ -199,15 +200,15 @@
   background: var(--autocomplete-scrollbar-thumb-hover, #a8a8a8);
 }
 
-[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-track {
+[data-theme='dark'] .autocomplete-widget::-webkit-scrollbar-track {
   background: var(--autocomplete-scrollbar-track-dark, #2a2a2a);
 }
 
-[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-thumb {
+[data-theme='dark'] .autocomplete-widget::-webkit-scrollbar-thumb {
   background: var(--autocomplete-scrollbar-thumb-dark, #555555);
 }
 
-[data-theme="dark"] .autocomplete-widget::-webkit-scrollbar-thumb:hover {
+[data-theme='dark'] .autocomplete-widget::-webkit-scrollbar-thumb:hover {
   background: var(--autocomplete-scrollbar-thumb-hover-dark, #777777);
 }
 
@@ -361,19 +362,19 @@
 }
 
 /* Dark mode persistent mode styles */
-[data-theme="dark"] .autocomplete-widget.persistent-mode {
+[data-theme='dark'] .autocomplete-widget.persistent-mode {
   background: rgba(30, 30, 30, 0.98) !important;
   border-left-color: #64b5f6 !important;
   box-shadow: 0 4px 12px rgba(100, 181, 246, 0.2) !important;
 }
 
-[data-theme="dark"] .autocomplete-widget .persistent-header {
+[data-theme='dark'] .autocomplete-widget .persistent-header {
   background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
   border-bottom-color: #1976d2;
   color: #90caf9;
 }
 
-[data-theme="dark"] .autocomplete-widget .persistent-header .persistent-icon {
+[data-theme='dark'] .autocomplete-widget .persistent-header .persistent-icon {
   background: #66bb6a;
   animation: pulse-dark 2s infinite;
 }
@@ -390,10 +391,10 @@
   }
 }
 
-[data-theme="dark"] .autocomplete-widget.persistent-mode::before {
+[data-theme='dark'] .autocomplete-widget.persistent-mode::before {
   background: #66bb6a;
 }
 
-[data-theme="dark"] .autocomplete-hint .matched-text {
+[data-theme='dark'] .autocomplete-hint .matched-text {
   background: rgba(255, 193, 7, 0.3);
 }

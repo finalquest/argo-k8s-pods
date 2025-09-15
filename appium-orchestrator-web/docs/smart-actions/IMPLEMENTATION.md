@@ -22,7 +22,7 @@ export class MyAction extends BaseAction {
   constructor() {
     super();
     this.type = 'my-action'; // identificador único
-    this.icon = '🎯';      // emoji para mostrar en menú
+    this.icon = '🎯'; // emoji para mostrar en menú
     this.label = 'My Action'; // texto descriptivo
     this.shortcut = 'Ctrl+M'; // atajo opcional
     this.applicableContexts = ['step', 'json-reference']; // contextos donde aplica
@@ -160,7 +160,7 @@ export class InsertFormattedAction extends BaseAction {
     // Mover cursor
     doc.setCursor({
       line: position.line + 1,
-      ch: 0
+      ch: 0,
     });
   }
 }
@@ -190,7 +190,11 @@ async execute(context) {
 doc.replaceRange(text, start, end);
 
 // Reemplazar línea
-doc.replaceRange(newLine, {line: lineNumber, ch: 0}, {line: lineNumber + 1, ch: 0});
+doc.replaceRange(
+  newLine,
+  { line: lineNumber, ch: 0 },
+  { line: lineNumber + 1, ch: 0 },
+);
 
 // Obtener línea actual
 const currentLine = doc.getLine(cursor.line);

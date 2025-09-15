@@ -2,7 +2,11 @@ import { When, Then, setDefaultTimeout } from '@wdio/cucumber-framework';
 import { browser, driver } from '@wdio/globals';
 import { FindElement } from '../../helpers/ClassFactory';
 import { Gestures } from '../../helpers/Gestures';
-import { keyPress, tapElementByPositionOCR, asyncForEach } from '../../helpers/utils';
+import {
+  keyPress,
+  tapElementByPositionOCR,
+  asyncForEach,
+} from '../../helpers/utils';
 import { World } from './World';
 import allureReporter from '@wdio/allure-reporter';
 import assert from 'assert';
@@ -41,44 +45,59 @@ When(' number {int} on field {string}', async (number, selector) => {
   await browser.pause(1500);
 });
 
-When('user types {int} on field {string} and click on {string}', async (number, selector, ele) => {
-  const element = FindElement(selector);
-  const element2 = FindElement(ele);
-  await (await element).click();
-  await (await element).addValue(number);
-  await (await element2).click();
-});
+When(
+  'user types {int} on field {string} and click on {string}',
+  async (number, selector, ele) => {
+    const element = FindElement(selector);
+    const element2 = FindElement(ele);
+    await (await element).click();
+    await (await element).addValue(number);
+    await (await element2).click();
+  },
+);
 
-When('user types {string} on field {string} and press Enter', async (string, selector) => {
-  const element = FindElement(selector);
-  await (await element).click();
-  await (await element).setValue(string);
-});
+When(
+  'user types {string} on field {string} and press Enter',
+  async (string, selector) => {
+    const element = FindElement(selector);
+    await (await element).click();
+    await (await element).setValue(string);
+  },
+);
 
-When('user types {string} on field {string} and press Esc', async (string, selector) => {
-  const element = FindElement(selector);
-  await (await element).click();
-  await (await element).setValue(string);
-  await driver.keys(['Esc']);
-});
+When(
+  'user types {string} on field {string} and press Esc',
+  async (string, selector) => {
+    const element = FindElement(selector);
+    await (await element).click();
+    await (await element).setValue(string);
+    await driver.keys(['Esc']);
+  },
+);
 
-When('user types {string} on field {string} and press TabEnter', async (string, selector) => {
-  const element = FindElement(selector);
-  await (await element).click();
-  await (await element).addValue(string);
-  await browser.pause(1500);
-  await driver.keys(['Tab']);
-  await driver.keys(['Enter']);
-});
+When(
+  'user types {string} on field {string} and press TabEnter',
+  async (string, selector) => {
+    const element = FindElement(selector);
+    await (await element).click();
+    await (await element).addValue(string);
+    await browser.pause(1500);
+    await driver.keys(['Tab']);
+    await driver.keys(['Enter']);
+  },
+);
 
-When('user types {string} on field {string} and press double Enter', async (string, selector) => {
-  const element = FindElement(selector);
-  await (await element).click();
-  await (await element).addValue(string);
-  await browser.pause(1500);
-  await driver.keys(['Enter']);
-  await driver.keys(['Enter']);
-});
+When(
+  'user types {string} on field {string} and press double Enter',
+  async (string, selector) => {
+    const element = FindElement(selector);
+    await (await element).click();
+    await (await element).addValue(string);
+    await browser.pause(1500);
+    await driver.keys(['Enter']);
+    await driver.keys(['Enter']);
+  },
+);
 
 When('user set {string} on field {string}', async (amount, selector) => {
   const element = FindElement(selector);
@@ -130,22 +149,31 @@ When('user scrolls down to see and click on {string}', async (selector) => {
   await element.click();
 });
 
-When('user scrolls down to see and double click on {string}', async (selector) => {
-  const element = FindElement(selector);
-  await Gestures.checkIfDisplayedWithScrollDown(await element, 10);
-  await browser.pause(1000);
-  await element.doubleClick();
-});
+When(
+  'user scrolls down to see and double click on {string}',
+  async (selector) => {
+    const element = FindElement(selector);
+    await Gestures.checkIfDisplayedWithScrollDown(await element, 10);
+    await browser.pause(1000);
+    await element.doubleClick();
+  },
+);
 
 When('user scrolls up to see {string}', async (selector) => {
   const element = FindElement(selector);
   await Gestures.checkIfDisplayedWithScrollUp(await element, 10);
 });
 
-When('user scrolls up {int} percent until see {string}', async (percentage, selector) => {
-  const element = FindElement(selector);
-  await Gestures.swipeUpPassingPercentageUntilSeeElement(element, percentage / 100);
-});
+When(
+  'user scrolls up {int} percent until see {string}',
+  async (percentage, selector) => {
+    const element = FindElement(selector);
+    await Gestures.swipeUpPassingPercentageUntilSeeElement(
+      element,
+      percentage / 100,
+    );
+  },
+);
 
 When('user scrolls to left to see {string}', async (selector) => {
   const element = FindElement(selector);
@@ -218,7 +246,10 @@ When('user wait to see and click on left {string}', async (screen) => {
   const element = await FindElement(screen);
   await expect(element).toBeDisplayed({
     wait: 90000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 90s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 90s',
   });
   await browser.pause(500);
   await element.click({ button: 'left' });
@@ -228,7 +259,10 @@ When('user wait to see and click on {string}', async (screen) => {
   const element = await FindElement(screen);
   await expect(element).toBeDisplayed({
     wait: 90000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 90s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 90s',
   });
   await expect(element).toBeEnabled({
     timeout: 25000,
@@ -240,8 +274,14 @@ When('user wait to see and click on {string}', async (screen) => {
 
 When('user wait to see 10 seconds and click on {string}', async (screen) => {
   const element = await FindElement(screen, { timeout: 10000 });
-  await expect(element).toBeDisplayed({ wait: 5000, message: 'No se pudo hacer click en : ' + element + ' en 10s' });
-  await expect(element).toBeEnabled({ timeout: 5000, message: 'No se pudo hacer click en : ' + element + ' en 10s' });
+  await expect(element).toBeDisplayed({
+    wait: 5000,
+    message: 'No se pudo hacer click en : ' + element + ' en 10s',
+  });
+  await expect(element).toBeEnabled({
+    timeout: 5000,
+    message: 'No se pudo hacer click en : ' + element + ' en 10s',
+  });
   await browser.pause(1000);
   await await element.click();
 });
@@ -250,11 +290,17 @@ When('user wait to see and retry click on {string}', async (string) => {
   const element = await FindElement(string);
   await expect(element).toBeDisplayed({
     wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 40s',
   });
   await expect(element).toBeEnabled({
     timeout: 25000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 40s',
   });
   await element.click();
   await browser.pause(1000);
@@ -263,7 +309,9 @@ When('user wait to see and retry click on {string}', async (string) => {
       await element.click();
       await browser.pause(2500); // Esperar después del clic
     } catch (error) {
-      console.warn(`⚠️ No se pudo hacer click en ${string}, probablemente ya desapareció. Saliendo del bucle.`);
+      console.warn(
+        `⚠️ No se pudo hacer click en ${string}, probablemente ya desapareció. Saliendo del bucle.`,
+      );
       break;
     }
   }
@@ -273,11 +321,17 @@ When('user wait to see and retry click on another {string}', async (string) => {
   const element = await FindElement(string);
   await expect(element).toBeDisplayed({
     wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 40s',
   });
   await expect(element).toBeEnabled({
     timeout: 25000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 40s',
   });
   await element.click();
   await browser.pause(1000);
@@ -286,7 +340,9 @@ When('user wait to see and retry click on another {string}', async (string) => {
       await element.click({ x: 100 });
       await browser.pause(1500); // Esperar después del clic
     } catch (error) {
-      console.warn(`⚠️ No se pudo hacer click en ${string}, probablemente ya desapareció. Saliendo del bucle.`);
+      console.warn(
+        `⚠️ No se pudo hacer click en ${string}, probablemente ya desapareció. Saliendo del bucle.`,
+      );
       break;
     }
   }
@@ -337,77 +393,113 @@ When('user select about service {string}', async (string) => {
 When('visual snapshot {string}', function (id) {
   World.visualSnapshotId = id; // lo usará el hook AfterStep
 });
-When('optional user wait to see and click on {string} after to see {string}', async (string, screen) => {
-  if (!World.optionalBlock) return; // se saltea sin fallar
-  const element = await FindElement(string);
-  await expect(element).toBeDisplayed({
-    wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
-  });
-  await expect(element).toBeEnabled({
-    timeout: 25000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 25s',
-  });
-  await element.click();
-  const secondElement = await FindElement(screen);
-  await expect(secondElement).toBeDisplayed({ wait: 40000, message: 'No se encontro el segundo elemento' });
-});
+When(
+  'optional user wait to see and click on {string} after to see {string}',
+  async (string, screen) => {
+    if (!World.optionalBlock) return; // se saltea sin fallar
+    const element = await FindElement(string);
+    await expect(element).toBeDisplayed({
+      wait: 40000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 40s',
+    });
+    await expect(element).toBeEnabled({
+      timeout: 25000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 25s',
+    });
+    await element.click();
+    const secondElement = await FindElement(screen);
+    await expect(secondElement).toBeDisplayed({
+      wait: 40000,
+      message: 'No se encontro el segundo elemento',
+    });
+  },
+);
 
-When('user wait to see and click on {string} after to see {string}', async (string, screen) => {
-  const element = await FindElement(string);
-  await expect(element).toBeDisplayed({
-    wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
-  });
-  await expect(element).toBeEnabled({
-    timeout: 25000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 25s',
-  });
-  await element.click();
-  const secondElement = await FindElement(screen);
-  await expect(secondElement).toBeDisplayed({ wait: 40000, message: 'No se encontro el segundo elemento' });
-});
+When(
+  'user wait to see and click on {string} after to see {string}',
+  async (string, screen) => {
+    const element = await FindElement(string);
+    await expect(element).toBeDisplayed({
+      wait: 40000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 40s',
+    });
+    await expect(element).toBeEnabled({
+      timeout: 25000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 25s',
+    });
+    await element.click();
+    const secondElement = await FindElement(screen);
+    await expect(secondElement).toBeDisplayed({
+      wait: 40000,
+      message: 'No se encontro el segundo elemento',
+    });
+  },
+);
 
-When('user wait to see and retry click on another {string} after to see {string}', async (string, screen) => {
-  const element = await FindElement(string);
-  await element.click();
+When(
+  'user wait to see and retry click on another {string} after to see {string}',
+  async (string, screen) => {
+    const element = await FindElement(string);
+    await element.click();
 
-  if (await (await FindElement(screen)).isDisplayed({ timeout: 10000 })) {
-    console.log('Second element is displayed. Exiting the loop.');
-  }
-});
-
-When('user wait to see and retry click on {string} after to see {string}', async (string, screen) => {
-  const element = await FindElement(string);
-  await element.click();
-
-  if (await (await FindElement(screen)).isDisplayed({ timeout: 10000 })) {
-    console.log('Second element is displayed. Exiting the loop.');
-  }
-});
-
-When('user wait to see and retry click on {string} after to be enable {string}', async (string, screen) => {
-  const element = await FindElement(string);
-  await expect(element).toBeDisplayed({
-    wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
-  });
-  const elementScreen = await FindElement(screen);
-  await browser.waitUntil(
-    async () => {
-      if (await elementScreen.isEnabled()) {
-        return true;
-      }
-      await element.click();
-      await browser.pause(1000);
-      return false;
-    },
-    {
-      timeout: 60000,
-      timeoutMsg: `El elemento '${screen}' no se habilitó en 60s`,
+    if (await (await FindElement(screen)).isDisplayed({ timeout: 10000 })) {
+      console.log('Second element is displayed. Exiting the loop.');
     }
-  );
-});
+  },
+);
+
+When(
+  'user wait to see and retry click on {string} after to see {string}',
+  async (string, screen) => {
+    const element = await FindElement(string);
+    await element.click();
+
+    if (await (await FindElement(screen)).isDisplayed({ timeout: 10000 })) {
+      console.log('Second element is displayed. Exiting the loop.');
+    }
+  },
+);
+
+When(
+  'user wait to see and retry click on {string} after to be enable {string}',
+  async (string, screen) => {
+    const element = await FindElement(string);
+    await expect(element).toBeDisplayed({
+      wait: 40000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 40s',
+    });
+    const elementScreen = await FindElement(screen);
+    await browser.waitUntil(
+      async () => {
+        if (await elementScreen.isEnabled()) {
+          return true;
+        }
+        await element.click();
+        await browser.pause(1000);
+        return false;
+      },
+      {
+        timeout: 60000,
+        timeoutMsg: `El elemento '${screen}' no se habilitó en 60s`,
+      },
+    );
+  },
+);
 
 Then('user wait to see share', async () => {
   // Espera que la actividad actual sea ChooserActivity
@@ -419,7 +511,7 @@ Then('user wait to see share', async () => {
     {
       timeout: 5000,
       timeoutMsg: 'No se abrió el share sheet',
-    }
+    },
   );
   await browser.pause(SHARE_RENDERING_WAITING_TIME);
 });
@@ -431,7 +523,10 @@ Then('user goes back and see {string}', async (screen) => {
   const element = await FindElement(screen);
   await expect(element).toBeDisplayed({
     wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 40s',
   });
 });
 
@@ -443,55 +538,68 @@ When('user types random text on field {string}', async (selector) => {
   await element.setValue(randomString);
 });
 
-When('user wait to see and retry press Back after to see {string}', async (screen) => {
-  await browser.waitUntil(
-    async () => {
-      if (await (await FindElement(screen)).isDisplayed()) {
-        return true;
-      }
-      await driver.back();
-      await browser.pause(500);
-      return false;
-    },
-    {
-      timeout: 60000,
-      timeoutMsg: `El elemento '${screen}' no apareció después de presionar 'back' repetidamente durante 60s`,
-    }
-  );
-});
+When(
+  'user wait to see and retry press Back after to see {string}',
+  async (screen) => {
+    await browser.waitUntil(
+      async () => {
+        if (await (await FindElement(screen)).isDisplayed()) {
+          return true;
+        }
+        await driver.back();
+        await browser.pause(500);
+        return false;
+      },
+      {
+        timeout: 60000,
+        timeoutMsg: `El elemento '${screen}' no apareció después de presionar 'back' repetidamente durante 60s`,
+      },
+    );
+  },
+);
 
-When('user wait to see and retry Enter and click on {string}', async (string) => {
-  const element = await FindElement(string);
-  await expect(element).toBeDisplayed({
-    wait: 40000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 40s',
-  });
-  await expect(element).toBeEnabled({
-    timeout: 25000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 25s',
-  });
-  await browser.waitUntil(
-    async () => {
-      if (await element.isDisplayed()) {
-        await element.click();
-        return true;
-      }
-      await driver.keys(['Enter']);
-      await browser.pause(1000);
-      return false;
-    },
-    {
-      timeout: 60000,
-      timeoutMsg: `No se pudo hacer click en '${string}' después de presionar Enter repetidamente.`,
-    }
-  );
-});
+When(
+  'user wait to see and retry Enter and click on {string}',
+  async (string) => {
+    const element = await FindElement(string);
+    await expect(element).toBeDisplayed({
+      wait: 40000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 40s',
+    });
+    await expect(element).toBeEnabled({
+      timeout: 25000,
+      message:
+        'No se encontro el elemento o texto user wait to see and click on : ' +
+        element +
+        ' en 25s',
+    });
+    await browser.waitUntil(
+      async () => {
+        if (await element.isDisplayed()) {
+          await element.click();
+          return true;
+        }
+        await driver.keys(['Enter']);
+        await browser.pause(1000);
+        return false;
+      },
+      {
+        timeout: 60000,
+        timeoutMsg: `No se pudo hacer click en '${string}' después de presionar Enter repetidamente.`,
+      },
+    );
+  },
+);
 
 When('user wait to see and double click on {string}', async (screen) => {
   const element = await FindElement(screen);
   await expect(element).toBeDisplayed({
     wait: 90000,
-    message: 'No se encontro el elemento o texto : ' + element + ' en la vista en 90s',
+    message:
+      'No se encontro el elemento o texto : ' + element + ' en la vista en 90s',
   });
   await element.click();
   await element.click();
@@ -502,16 +610,20 @@ When('user tap on text {string} by OCR', async (text) => {
   await tapElementByPositionOCR(text);
 });
 
-Then('user tap on {string} after wait {int} seconds', { timeout: 140000 }, async (element, timeout) => {
-  const object = await FindElement(element);
-  await (
-    await object
-  ).waitForDisplayed({
-    timeout: timeout * 1000,
-    reverse: false,
-  });
-  await (await object).click();
-});
+Then(
+  'user tap on {string} after wait {int} seconds',
+  { timeout: 140000 },
+  async (element, timeout) => {
+    const object = await FindElement(element);
+    await (
+      await object
+    ).waitForDisplayed({
+      timeout: timeout * 1000,
+      reverse: false,
+    });
+    await (await object).click();
+  },
+);
 
 Then('user select date', async () => {
   const fechaActual = new Date();
@@ -596,7 +708,10 @@ Then('user insert token', async () => {
   const registerDeviceToken = await FindElement('registerDeviceToken.tittle');
   await expect(registerDeviceToken).toBeDisplayed({
     wait: 90000,
-    message: 'No se envío el Token/elemento : ' + registerDeviceToken + ' en la vista 90s',
+    message:
+      'No se envío el Token/elemento : ' +
+      registerDeviceToken +
+      ' en la vista 90s',
   });
   await driver.pressKeyCode(8);
   await driver.pressKeyCode(9);
@@ -611,7 +726,10 @@ Then('user insert password key BPN', async () => {
   const registerDeviceToken = await FindElement('registerDeviceToken.tittle');
   await expect(registerDeviceToken).toBeDisplayed({
     wait: 90000,
-    message: 'No se envío el Token/elemento : ' + registerDeviceToken + ' en la vista 90s',
+    message:
+      'No se envío el Token/elemento : ' +
+      registerDeviceToken +
+      ' en la vista 90s',
   });
   await driver.pressKeyCode(8);
   await driver.pressKeyCode(9);
@@ -715,7 +833,9 @@ When('user select order {string}', async () => {
       break;
       // Continue with your other actions if needed
     } else {
-      console.log(`Elementos específicos NO encontrados en ${currentDivSelector}`);
+      console.log(
+        `Elementos específicos NO encontrados en ${currentDivSelector}`,
+      );
       continue;
     }
   }
@@ -746,116 +866,146 @@ When('user see modal error', async () => {
 //Reintenta presionar el botón Confirmar, caso contrario copia ID y luego vuelve al menú.
 When('user wait to see and try click on {string}', async (screen) => {
   const element = await FindElement(screen, { timeout: 20000 });
-  await expect(element).toBeDisplayed({ timeout: 250000, message: `No se encontró el elemento ${screen} en 90s` });
-  await expect(element).toBeEnabled({ timeout: 25000, message: `El elemento ${screen} no está habilitado en 25s` });
+  await expect(element).toBeDisplayed({
+    timeout: 250000,
+    message: `No se encontró el elemento ${screen} en 90s`,
+  });
+  await expect(element).toBeEnabled({
+    timeout: 25000,
+    message: `El elemento ${screen} no está habilitado en 25s`,
+  });
 
   await element.click();
 });
 
-When('user wait to see and try click on {string} with alert timeout {int} seconds', async (screen, time) => {
-  let attempts = 0;
-  const maxAttempts = 3;
+When(
+  'user wait to see and try click on {string} with alert timeout {int} seconds',
+  async (screen, time) => {
+    let attempts = 0;
+    const maxAttempts = 3;
 
-  while (attempts < maxAttempts) {
-    try {
-      const element = await FindElement(screen, { timeout: 20000 });
-      await expect(element).toBeDisplayed({ timeout: 250000, message: `No se encontró el elemento ${screen} en 90s` });
-      await expect(element).toBeEnabled({ timeout: 25000, message: `El elemento ${screen} no está habilitado en 25s` });
+    while (attempts < maxAttempts) {
+      try {
+        const element = await FindElement(screen, { timeout: 20000 });
+        await expect(element).toBeDisplayed({
+          timeout: 250000,
+          message: `No se encontró el elemento ${screen} en 90s`,
+        });
+        await expect(element).toBeEnabled({
+          timeout: 25000,
+          message: `El elemento ${screen} no está habilitado en 25s`,
+        });
 
-      await browser.pause(500);
-      await element.click();
-      console.log(`Intento ${attempts + 1}: Se hizo click en ${screen}`);
-      await browser.pause(5000);
-      const errorModal = await FindElement('android.errorModal');
-      const modalAppeared = await browser
-        .waitUntil(
-          async () => {
-            return await errorModal.isDisplayed();
-          },
-          { timeout: time * 1000, interval: 500 }
-        )
-        .catch(() => false);
+        await browser.pause(500);
+        await element.click();
+        console.log(`Intento ${attempts + 1}: Se hizo click en ${screen}`);
+        await browser.pause(5000);
+        const errorModal = await FindElement('android.errorModal');
+        const modalAppeared = await browser
+          .waitUntil(
+            async () => {
+              return await errorModal.isDisplayed();
+            },
+            { timeout: time * 1000, interval: 500 },
+          )
+          .catch(() => false);
 
-      if (modalAppeared) {
-        console.log(`Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`);
+        if (modalAppeared) {
+          console.log(
+            `Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`,
+          );
 
-        const closeButton = await FindElement('android.btnOk');
-        if (await closeButton.isDisplayed()) {
-          //Cambiar Xpath cuando Mobile actualice el path
-          const xpathError =
-            '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.TextView[4]';
-          // Se obtiene el elemento por el XPath provisto para trackear el error
-          const trackingElement = await $(xpathError, 10000);
-          const trackingValue = await trackingElement.getText();
-          // Se agrega el step con el valor obtenido para trackear el error
-          addStep(`Tracking Error ID: ${trackingValue} `, await browser.takeScreenshot());
-          await closeButton.click();
-          console.log(`Botón "Entendido" presionado.`);
-        } else {
-          console.log(`El botón "Entendido" no está visible.`);
+          const closeButton = await FindElement('android.btnOk');
+          if (await closeButton.isDisplayed()) {
+            //Cambiar Xpath cuando Mobile actualice el path
+            const xpathError =
+              '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.TextView[4]';
+            // Se obtiene el elemento por el XPath provisto para trackear el error
+            const trackingElement = await $(xpathError, 10000);
+            const trackingValue = await trackingElement.getText();
+            // Se agrega el step con el valor obtenido para trackear el error
+            addStep(
+              `Tracking Error ID: ${trackingValue} `,
+              await browser.takeScreenshot(),
+            );
+            await closeButton.click();
+            console.log(`Botón "Entendido" presionado.`);
+          } else {
+            console.log(`El botón "Entendido" no está visible.`);
+          }
+
+          // Volvemos a intentar presionar el botón "Confirmar"
+          attempts++;
+          continue;
         }
+        const btnRetry = await browser
+          .waitUntil(
+            async () => {
+              return await element.isDisplayed();
+            },
+            { timeout: 2000, interval: 500 },
+          )
+          .catch(() => false);
 
-        // Volvemos a intentar presionar el botón "Confirmar"
-        attempts++;
-        continue;
-      }
-      const btnRetry = await browser
-        .waitUntil(
-          async () => {
-            return await element.isDisplayed();
-          },
-          { timeout: 2000, interval: 500 }
-        )
-        .catch(() => false);
+        if (btnRetry) {
+          console.log(
+            `Botón detectado después del intento ${attempts + 1}, intentando cerrarlo...`,
+          );
 
-      if (btnRetry) {
-        console.log(`Botón detectado después del intento ${attempts + 1}, intentando cerrarlo...`);
+          if (await element.isDisplayed()) {
+            await element.click();
+            addStep(
+              `Reintento ${attempts + 1} haciendo Click :`,
+              await browser.takeScreenshot(),
+            );
+          } else {
+            console.log(`El botón "Entendido" no está visible.`);
+          }
 
-        if (await element.isDisplayed()) {
-          await element.click();
-          addStep(`Reintento ${attempts + 1} haciendo Click :`, await browser.takeScreenshot());
+          // Volvemos a intentar presionar el botón "Confirmar"
+          attempts++;
+          continue;
         } else {
-          console.log(`El botón "Entendido" no está visible.`);
+          // Si no apareció el modal de error, salimos del loop
+          console.log(
+            `No apareció el botón de click, continuando con el test.`,
+          );
+          break;
         }
-
-        // Volvemos a intentar presionar el botón "Confirmar"
+      } catch (error) {
+        console.log(`Error en intento ${attempts + 1}: ${error.message}`);
         attempts++;
-        continue;
-      } else {
-        // Si no apareció el modal de error, salimos del loop
-        console.log(`No apareció el botón de click, continuando con el test.`);
-        break;
       }
-    } catch (error) {
-      console.log(`Error en intento ${attempts + 1}: ${error.message}`);
-      attempts++;
     }
-  }
 
-  if (attempts === maxAttempts) {
-    await browser.waitUntil(
-      async () => {
-        const menu = await $('//*[@resource-id="menu_button"]');
-        if (await menu.isDisplayed()) {
-          return true;
-        }
-        try {
-          const element2 = await $('~Cerrar');
-          await element2.click();
-        } catch (e) {
-          // ignore if close button is not found and continue polling for menu
-        }
-        await browser.pause(1000);
-        return false;
-      },
-      {
-        timeout: 30000,
-        timeoutMsg: 'No se pudo volver al menú principal después de fallar la acción.',
-      }
-    );
-    assert.fail(`No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`);
-  }
-});
+    if (attempts === maxAttempts) {
+      await browser.waitUntil(
+        async () => {
+          const menu = await $('//*[@resource-id="menu_button"]');
+          if (await menu.isDisplayed()) {
+            return true;
+          }
+          try {
+            const element2 = await $('~Cerrar');
+            await element2.click();
+          } catch (e) {
+            // ignore if close button is not found and continue polling for menu
+          }
+          await browser.pause(1000);
+          return false;
+        },
+        {
+          timeout: 30000,
+          timeoutMsg:
+            'No se pudo volver al menú principal después de fallar la acción.',
+        },
+      );
+      assert.fail(
+        `No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`,
+      );
+    }
+  },
+);
 
 When('user wait to see and try click on menu {string}', async (screen) => {
   let attempts = 0;
@@ -870,24 +1020,35 @@ When('user wait to see and try click on menu {string}', async (screen) => {
           async () => {
             return await errorModal.isDisplayed();
           },
-          { timeout: 6000, interval: 500 }
+          { timeout: 6000, interval: 500 },
         )
         .catch(() => false);
 
       if (modalAppeared) {
-        console.log(`Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`);
+        console.log(
+          `Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`,
+        );
 
         const closeButton = await FindElement('android.btnOk');
         if (await closeButton.isDisplayed()) {
           try {
             const xpathError =
               '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.TextView[4]';
-            const trackingElement = await $(xpathError, setDefaultTimeout(5000));
+            const trackingElement = await $(
+              xpathError,
+              setDefaultTimeout(5000),
+            );
             const trackingValue = await trackingElement.getText();
-            addStep(`Tracking Error ID: ${trackingValue} `, await browser.takeScreenshot());
+            addStep(
+              `Tracking Error ID: ${trackingValue} `,
+              await browser.takeScreenshot(),
+            );
           } catch (error) {
             console.log('no se visualizó el xpathError');
-            addStep(`No se visualizó el Tracking Error ID`, await browser.takeScreenshot());
+            addStep(
+              `No se visualizó el Tracking Error ID`,
+              await browser.takeScreenshot(),
+            );
           }
           await closeButton.click();
           console.log(`Botón "Entendido" presionado.`);
@@ -901,7 +1062,7 @@ When('user wait to see and try click on menu {string}', async (screen) => {
         async () => {
           return await mainElement.isDisplayed();
         },
-        { timeout: 10000, interval: 1000 }
+        { timeout: 10000, interval: 1000 },
       );
 
       if (isElementVisible) {
@@ -910,12 +1071,16 @@ When('user wait to see and try click on menu {string}', async (screen) => {
         console.log(`Intento ${attempts + 1}: Se hizo click en ${screen}`);
         break; // Si el clic fue exitoso, salimos del bucle
       } else {
-        console.log(`Intento ${attempts + 1}: El elemento "${screen}" no se visualizó correctamente.`);
+        console.log(
+          `Intento ${attempts + 1}: El elemento "${screen}" no se visualizó correctamente.`,
+        );
         attempts++;
       }
     } catch (error) {
       console.log(`Error en intento ${attempts + 1}: ${error.message}`);
-      console.log('Intentando hacer clic en "btnCerrar" debido a error al interactuar con el elemento...');
+      console.log(
+        'Intentando hacer clic en "btnCerrar" debido a error al interactuar con el elemento...',
+      );
       try {
         const btnCerrar = await $('~Cerrar');
         if (await btnCerrar.isDisplayed()) {
@@ -931,7 +1096,9 @@ When('user wait to see and try click on menu {string}', async (screen) => {
           attempts++;
         }
       } catch (errorCerrar) {
-        console.log(`Error al intentar hacer clic en "btnCerrar": ${errorCerrar.message}`);
+        console.log(
+          `Error al intentar hacer clic en "btnCerrar": ${errorCerrar.message}`,
+        );
         attempts++;
       }
     }
@@ -957,10 +1124,13 @@ When('user wait to see and try click on menu {string}', async (screen) => {
       },
       {
         timeout: 30000,
-        timeoutMsg: 'No se pudo volver al menú principal después de fallar la acción.',
-      }
+        timeoutMsg:
+          'No se pudo volver al menú principal después de fallar la acción.',
+      },
     );
-    assert.fail(`No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`);
+    assert.fail(
+      `No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`,
+    );
   }
 });
 
@@ -994,14 +1164,16 @@ When('user tap {string} from path {string}', async (text, path) => {
       timeout: 10000, // 10 segundos
       timeoutMsg: `No se encontró el path "${path}" dentro del tiempo especificado`,
       interval: 100, // Verificar cada 100 milisegundos
-    }
+    },
   );
 
   // Manejar el evento 'Network.responseReceived'
   browser.on('Network.responseReceived', async (event) => {
     if (event.requestId === requestId) {
       console.log(`Response: ${event.response.status} ${event.response.url}`);
-      const responseBody = await browser.cdp('Network', 'getResponseBody', { requestId });
+      const responseBody = await browser.cdp('Network', 'getResponseBody', {
+        requestId,
+      });
       const responseBodyText = responseBody.body;
       const responseBodyJson = JSON.parse(responseBodyText);
       let transactionId;
@@ -1012,7 +1184,9 @@ When('user tap {string} from path {string}', async (text, path) => {
       }
 
       console.log(`Transaction ID: ${transactionId}`);
-      addStep(`URL: ${event.response.url} \n Body Response: ${JSON.stringify(responseBody)}`);
+      addStep(
+        `URL: ${event.response.url} \n Body Response: ${JSON.stringify(responseBody)}`,
+      );
       addStep(`Transaction ID: ${transactionId}`);
     }
   });
@@ -1024,15 +1198,22 @@ When('user wait to see {string} and get response', async (text) => {
   let requestId;
 
   const element = await FindElement(text);
-  await expect(element).toBeDisplayed({ timeout: 60000, message: `No se encontró el elemento ${element} en 60s` });
+  await expect(element).toBeDisplayed({
+    timeout: 60000,
+    message: `No se encontró el elemento ${element} en 60s`,
+  });
 
   // Manejar el evento 'Network.responseReceived'
   browser.on('Network.responseReceived', async (event) => {
     if (event.requestId === requestId) {
       console.log(`Response: ${event.response.status} ${event.response.url}`);
-      const responseBody = await browser.cdp('Network', 'getResponseBody', { requestId });
+      const responseBody = await browser.cdp('Network', 'getResponseBody', {
+        requestId,
+      });
 
-      addStep(`URL: ${event.response.url} \n Body Response: ${JSON.stringify(responseBody)}`);
+      addStep(
+        `URL: ${event.response.url} \n Body Response: ${JSON.stringify(responseBody)}`,
+      );
     }
   });
 });
@@ -1049,20 +1230,28 @@ When('user returns to home and waits', async function () {
   const maxAttempts = 5;
   let onHomeScreen = false;
 
-  await addStep('Intentando regresar a la pantalla de inicio y esperar...', await browser.takeScreenshot());
+  await addStep(
+    'Intentando regresar a la pantalla de inicio y esperar...',
+    await browser.takeScreenshot(),
+  );
 
   while (attempts < maxAttempts && !onHomeScreen) {
     attempts++;
     await addStep(
       `Intento de navegación ${attempts}/${maxAttempts} para llegar al Home.`,
-      await browser.takeScreenshot()
+      await browser.takeScreenshot(),
     );
 
     try {
-      const homeElement = await FindElement(homeScreenIdentifier, { timeout: 2000 });
+      const homeElement = await FindElement(homeScreenIdentifier, {
+        timeout: 2000,
+      });
       if (await homeElement.isDisplayed()) {
         onHomeScreen = true;
-        await addStep(`Elemento del Home ("${homeScreenIdentifier}") encontrado.`, await browser.takeScreenshot());
+        await addStep(
+          `Elemento del Home ("${homeScreenIdentifier}") encontrado.`,
+          await browser.takeScreenshot(),
+        );
         break;
       }
     } catch (e) {
@@ -1075,8 +1264,14 @@ When('user returns to home and waits', async function () {
     for (const buttonKey of backButtonIdentifiers) {
       try {
         const backButton = await FindElement(buttonKey, { timeout: 1000 });
-        if ((await backButton.isDisplayed()) && (await backButton.isEnabled())) {
-          await addStep(`Intentando clic en botón de retroceso: "${buttonKey}"`, await browser.takeScreenshot());
+        if (
+          (await backButton.isDisplayed()) &&
+          (await backButton.isEnabled())
+        ) {
+          await addStep(
+            `Intentando clic en botón de retroceso: "${buttonKey}"`,
+            await browser.takeScreenshot(),
+          );
           await backButton.click();
           specificButtonActionTaken = true;
           break;
@@ -1091,12 +1286,15 @@ When('user returns to home and waits', async function () {
       try {
         await addStep(
           'Ningún botón de retroceso específico funcionó/encontró. Intentando acción "Atrás" del sistema.',
-          await browser.takeScreenshot()
+          await browser.takeScreenshot(),
         );
         await browser.back();
         browserBackActionTaken = true;
       } catch (e) {
-        await addStep('Acción "Atrás" del sistema falló.', await browser.takeScreenshot());
+        await addStep(
+          'Acción "Atrás" del sistema falló.',
+          await browser.takeScreenshot(),
+        );
       }
     }
 
@@ -1104,17 +1302,22 @@ When('user returns to home and waits', async function () {
       await browser.pause(2000);
     } else if (attempts > 1) {
       // Solo loguear si no es el primer intento y no se pudo hacer nada
-      await addStep('Ninguna acción de retroceso pudo ser realizada en este intento.', await browser.takeScreenshot());
+      await addStep(
+        'Ninguna acción de retroceso pudo ser realizada en este intento.',
+        await browser.takeScreenshot(),
+      );
     }
   }
 
   if (onHomeScreen) {
     await addStep(
       `Éxito: En pantalla de Home. Verificando elemento "${homeScreenIdentifier}".`,
-      await browser.takeScreenshot()
+      await browser.takeScreenshot(),
     );
     try {
-      const homeElementFinal = await FindElement(homeScreenIdentifier, { timeout: 20000 });
+      const homeElementFinal = await FindElement(homeScreenIdentifier, {
+        timeout: 20000,
+      });
       await expect(homeElementFinal).toBeDisplayed({
         timeout: 25000,
         message: `Elemento del Home "${homeScreenIdentifier}" NO se mostró después de la navegación.`,
@@ -1123,7 +1326,10 @@ When('user returns to home and waits', async function () {
         timeout: 25000,
         message: `Elemento del Home "${homeScreenIdentifier}" NO está habilitado después de la navegación.`,
       });
-      await addStep('Verificación del Home completada. Esperando brevemente.', await browser.takeScreenshot());
+      await addStep(
+        'Verificación del Home completada. Esperando brevemente.',
+        await browser.takeScreenshot(),
+      );
       await browser.pause(1000);
     } catch (error) {
       const errorMessage = `Error en Home: Aunque se detectó la pantalla, la verificación final del elemento "${homeScreenIdentifier}" falló: ${error.message}`;
@@ -1144,8 +1350,14 @@ When('user wait to see and try click on feature {string}', async (screen) => {
   while (attempts < maxAttempts) {
     try {
       const element = await FindElement(screen, { timeout: 20000 });
-      await expect(element).toBeDisplayed({ timeout: 250000, message: `No se encontró el elemento ${screen} en 90s` });
-      await expect(element).toBeEnabled({ timeout: 25000, message: `El elemento ${screen} no está habilitado en 25s` });
+      await expect(element).toBeDisplayed({
+        timeout: 250000,
+        message: `No se encontró el elemento ${screen} en 90s`,
+      });
+      await expect(element).toBeEnabled({
+        timeout: 25000,
+        message: `El elemento ${screen} no está habilitado en 25s`,
+      });
 
       await browser.pause(500);
       await element.click();
@@ -1157,12 +1369,14 @@ When('user wait to see and try click on feature {string}', async (screen) => {
           async () => {
             return await errorModal.isDisplayed();
           },
-          { timeout: 10000, interval: 500 }
+          { timeout: 10000, interval: 500 },
         )
         .catch(() => false);
 
       if (modalAppeared) {
-        console.log(`Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`);
+        console.log(
+          `Modal de error detectado después del intento ${attempts + 1}, intentando cerrarlo...`,
+        );
 
         const closeButton = await FindElement('android.btnOk');
         if (await closeButton.isDisplayed()) {
@@ -1170,7 +1384,10 @@ When('user wait to see and try click on feature {string}', async (screen) => {
             '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.view.ViewGroup/android.view.ViewGroup/android.widget.TextView[4]';
           const trackingElement = await $(xpathError, 10000);
           const trackingValue = await trackingElement.getText();
-          addStep(`Tracking Error ID: ${trackingValue} `, await browser.takeScreenshot());
+          addStep(
+            `Tracking Error ID: ${trackingValue} `,
+            await browser.takeScreenshot(),
+          );
           await closeButton.click();
           console.log(`Botón "Entendido" presionado.`);
           const btnRetry = await browser
@@ -1179,16 +1396,21 @@ When('user wait to see and try click on feature {string}', async (screen) => {
                 console.log(`aparece botón nuevamente?`);
                 return await $(element).isDisplayed();
               },
-              { timeout: 2000, interval: 500 }
+              { timeout: 2000, interval: 500 },
             )
             .catch(() => false);
 
           if (btnRetry) {
-            console.log(`Botón detectado después del intento ${attempts + 1}, intentando cerrarlo...`);
+            console.log(
+              `Botón detectado después del intento ${attempts + 1}, intentando cerrarlo...`,
+            );
 
             if (await element.isDisplayed()) {
               await element.click();
-              addStep(`Reintento ${attempts + 1} haciendo Click :`, await browser.takeScreenshot());
+              addStep(
+                `Reintento ${attempts + 1} haciendo Click :`,
+                await browser.takeScreenshot(),
+              );
             } else {
               console.log(`El botón no está visible`);
               break;
@@ -1230,10 +1452,13 @@ When('user wait to see and try click on feature {string}', async (screen) => {
       },
       {
         timeout: 30000,
-        timeoutMsg: 'No se pudo volver al menú principal después de fallar la acción.',
-      }
+        timeoutMsg:
+          'No se pudo volver al menú principal después de fallar la acción.',
+      },
     );
-    assert.fail(`No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`);
+    assert.fail(
+      `No se pudo completar la acción en el botón ${screen} después de ${maxAttempts} intentos.`,
+    );
   }
 });
 
@@ -1241,7 +1466,10 @@ When('user extract value from {string}', async (screen) => {
   const element = await FindElement(screen);
   await expect(element).toBeDisplayed({
     wait: 60000,
-    message: 'No se encontro el elemento o texto user wait to see and click on : ' + element + ' en 90s',
+    message:
+      'No se encontro el elemento o texto user wait to see and click on : ' +
+      element +
+      ' en 90s',
   });
   const data = await $(element).getText();
   console.log('data impresa:', data);

@@ -11,6 +11,7 @@ El backend de Appium Orchestrator Web ha sido refactorizado en una arquitectura 
 #### 1. **authentication.js** - Gestión de Autenticación
 
 **Responsabilidades:**
+
 - Configuración de Google OAuth 2.0 con Passport.js
 - Gestión de sesiones de usuario
 - Serialización/deserialización de usuarios
@@ -19,6 +20,7 @@ El backend de Appium Orchestrator Web ha sido refactorizado en una arquitectura 
 **Clase Principal:** `AuthenticationManager`
 
 **Dependencias:**
+
 - `ConfigurationManager` para obtener credenciales OAuth
 - `ValidationManager` para validar perfiles de usuario
 
@@ -34,6 +36,7 @@ app.get('/auth/google/callback', authManager.authenticateCallback());
 #### 2. **configuration.js** - Gestión de Configuración
 
 **Responsabilidades:**
+
 - Carga y validación de variables de entorno
 - Gestión de configuración segura
 - Proveer configuración a otros módulos
@@ -42,6 +45,7 @@ app.get('/auth/google/callback', authManager.authenticateCallback());
 **Clase Principal:** `ConfigurationManager`
 
 **Características:**
+
 - Validación de variables requeridas
 - Tipos de datos fuertes
 - Valores por defecto seguros
@@ -59,6 +63,7 @@ const port = configManager.get('PORT', 3000);
 #### 3. **validation.js** - Validación de Entradas
 
 **Responsabilidades:**
+
 - Validación de datos de entrada
 - Sanitización de strings y rutas
 - Validación de perfiles de usuario
@@ -67,6 +72,7 @@ const port = configManager.get('PORT', 3000);
 **Clase Principal:** `ValidationManager`
 
 **Validaciones:**
+
 - Nombres de archivos y rutas
 - Datos de usuario y perfiles
 - Parámetros de API
@@ -86,6 +92,7 @@ const isSafe = validationManager.validatePath(userPath);
 #### 4. **branch-manager.js** - Operaciones Git
 
 **Responsabilidades:**
+
 - Gestión de branches Git
 - Operaciones de commit y push
 - Verificación de estado de repositorios
@@ -94,6 +101,7 @@ const isSafe = validationManager.validatePath(userPath);
 **Clase Principal:** `BranchManager`
 
 **Dependencias:**
+
 - `ConfigurationManager`
 - `ValidationManager`
 - `GitOperationsService`
@@ -111,6 +119,7 @@ await branchManager.commitChanges('develop', ['file1.js'], 'Commit message');
 #### 5. **device-manager.js** - Gestión de Dispositivos
 
 **Responsabilidades:**
+
 - Detección y gestión de dispositivos locales
 - Conexión con dispositivos Appium
 - Verificación de estado de dispositivos
@@ -119,6 +128,7 @@ await branchManager.commitChanges('develop', ['file1.js'], 'Commit message');
 **Clase Principal:** `DeviceManager`
 
 **Características:**
+
 - Detección automática de dispositivos
 - Verificación de compatibilidad Appium
 - Monitoreo de estado de dispositivos
@@ -135,6 +145,7 @@ const isAvailable = await deviceManager.isDeviceAvailable(deviceId);
 #### 6. **apk-manager.js** - Manejo de APKs
 
 **Responsabilidades:**
+
 - Gestión de archivos APK
 - Instalación y desinstalación de APKs
 - Verificación de integridad de APKs
@@ -143,6 +154,7 @@ const isAvailable = await deviceManager.isDeviceAvailable(deviceId);
 **Clase Principal:** `ApkManager`
 
 **Dependencias:**
+
 - `ConfigurationManager`
 - `ValidationManager`
 - `FileOperationsService`
@@ -159,6 +171,7 @@ const version = await apkManager.getApkVersion(apkPath);
 #### 7. **feature-manager.js** - Gestión de Features
 
 **Responsabilidades:**
+
 - Gestión de archivos de features
 - Lectura y escritura de features
 - Validación de sintaxis de features
@@ -167,6 +180,7 @@ const version = await apkManager.getApkVersion(apkPath);
 **Clase Principal:** `FeatureManager`
 
 **Características:**
+
 - Soporte para múltiples formatos
 - Validación de sintaxis
 - Gestión de dependencias
@@ -184,6 +198,7 @@ await featureManager.saveFeatureContent(branch, client, feature, content);
 #### 8. **workspace-manager.js** - Operaciones con Workspaces
 
 **Responsabilidades:**
+
 - Gestión de workspaces por branch
 - Preparación y limpieza de workspaces
 - Verificación de estado de workspaces
@@ -192,6 +207,7 @@ await featureManager.saveFeatureContent(branch, client, feature, content);
 **Clase Principal:** `WorkspaceManager`
 
 **Dependencias:**
+
 - `ConfigurationManager`
 - `ValidationManager`
 - `FileOperationsService`
@@ -212,6 +228,7 @@ await workspaceManager.cleanupWorkspace('develop');
 #### 9. **worker-pool-manager.js** - Gestión del Pool de Workers
 
 **Responsabilidades:**
+
 - Gestión del pool de workers
 - Creación y destrucción de workers
 - Asignación de trabajos a workers
@@ -220,6 +237,7 @@ await workspaceManager.cleanupWorkspace('develop');
 **Clase Principal:** `WorkerPoolManager`
 
 **Características:**
+
 - Escalado automático
 - Monitoreo de recursos
 - Manejo de errores
@@ -227,7 +245,12 @@ await workspaceManager.cleanupWorkspace('develop');
 
 ```javascript
 const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
-const workerPoolManager = new WorkerPoolManager(configManager, validationManager, processManager, jobQueueManager);
+const workerPoolManager = new WorkerPoolManager(
+  configManager,
+  validationManager,
+  processManager,
+  jobQueueManager,
+);
 
 // Gestión del pool
 const status = await workerPoolManager.getPoolStatus();
@@ -237,6 +260,7 @@ const success = await workerPoolManager.assignJob(job);
 #### 10. **job-queue-manager.js** - Cola de Trabajos
 
 **Responsabilidades:**
+
 - Gestión de la cola de trabajos
 - Priorización de trabajos
 - Gestión de estados de trabajos
@@ -245,6 +269,7 @@ const success = await workerPoolManager.assignJob(job);
 **Clase Principal:** `JobQueueManager`
 
 **Características:**
+
 - Priorización de trabajos
 - Reintentos automáticos
 - Estados de trabajos
@@ -262,6 +287,7 @@ const queueStatus = await jobQueueManager.getQueueStatus();
 #### 11. **process-manager.js** - Gestión de Procesos
 
 **Responsabilidades:**
+
 - Gestión de procesos child
 - Monitoreo de procesos
 - Manejo de señales
@@ -270,6 +296,7 @@ const queueStatus = await jobQueueManager.getQueueStatus();
 **Clase Principal:** `ProcessManager`
 
 **Características:**
+
 - Manejo de ciclos de vida
 - Monitoreo de recursos
 - Señales y eventos
@@ -287,6 +314,7 @@ await processManager.monitorProcess(process);
 #### 12. **resource-manager.js** - Gestión de Recursos
 
 **Responsabilidades:**
+
 - Gestión de recursos del sistema
 - Monitoreo de memoria y CPU
 - Limpieza de recursos
@@ -295,6 +323,7 @@ await processManager.monitorProcess(process);
 **Clase Principal:** `ResourceManager`
 
 **Características:**
+
 - Monitoreo en tiempo real
 - Límites de recursos
 - Limpieza automática
@@ -314,6 +343,7 @@ const canCreate = await resourceManager.canCreateWorker();
 #### 13. **socketio-manager.js** - Comunicación en Tiempo Real
 
 **Responsabilidades:**
+
 - Gestión de conexiones Socket.IO
 - Manejo de eventos en tiempo real
 - Emisión de eventos a clientes
@@ -322,6 +352,7 @@ const canCreate = await resourceManager.canCreateWorker();
 **Clase Principal:** `SocketIOManager`
 
 **Características:**
+
 - Eventos personalizados
 - Gestión de salas
 - Manejo de desconexiones
@@ -342,6 +373,7 @@ socketIOManager.broadcastToRoom(room, 'event', data);
 #### 14. **git-operations.js** - Servicios Git Avanzados
 
 **Responsabilidades:**
+
 - Operaciones Git complejas
 - Gestión de repositorios
 - Manejo de conflictos
@@ -350,6 +382,7 @@ socketIOManager.broadcastToRoom(room, 'event', data);
 **Clase Principal:** `GitOperationsService`
 
 **Características:**
+
 - Operaciones asíncronas
 - Manejo de errores
 - Estados de repositorios
@@ -368,6 +401,7 @@ await gitService.mergeBranch(source, target);
 #### 15. **file-operations.js** - Operaciones de Archivos
 
 **Responsabilidades:**
+
 - Operaciones de sistema de archivos
 - Gestión de directorios
 - Manejo de permisos
@@ -376,6 +410,7 @@ await gitService.mergeBranch(source, target);
 **Clase Principal:** `FileOperationsService`
 
 **Características:**
+
 - Operaciones seguras
 - Manejo de permisos
 - Operaciones asíncronas
@@ -396,6 +431,7 @@ await fileService.writeFile(filePath, content);
 #### 16. **path-utilities.js** - Utilidades de Rutas
 
 **Responsabilidades:**
+
 - Utilidades de manipulación de rutas
 - Normalización de rutas
 - Validación de rutas seguras
@@ -404,6 +440,7 @@ await fileService.writeFile(filePath, content);
 **Clase Principal:** `PathUtilities`
 
 **Características:**
+
 - Rutas seguras
 - Normalización
 - Resolución
@@ -422,6 +459,7 @@ const resolved = pathUtils.resolvePath(relativePath);
 #### 17. **string-utilities.js** - Utilidades de Strings
 
 **Responsabilidades:**
+
 - Utilidades de manipulación de strings
 - Sanitización de strings
 - Validación de formatos
@@ -430,6 +468,7 @@ const resolved = pathUtils.resolvePath(relativePath);
 **Clase Principal:** `StringUtilities`
 
 **Características:**
+
 - Sanitización
 - Validación
 - Formateo
@@ -448,6 +487,7 @@ const formatted = stringUtils.formatFileSize(bytes);
 #### 18. **logging-utilities.js** - Sistema de Logging
 
 **Responsabilidades:**
+
 - Sistema de logging estructurado
 - Múltiples niveles de log
 - Rotación de archivos
@@ -456,6 +496,7 @@ const formatted = stringUtils.formatFileSize(bytes);
 **Clase Principal:** `LoggingUtilities`
 
 **Características:**
+
 - Logging estructurado
 - Múltiples niveles
 - Rotación automática
@@ -499,7 +540,12 @@ const loggingUtilities = new LoggingUtilities(configManager);
 const jobQueueManager = new JobQueueManager(configManager, validationManager);
 const processManager = new ProcessManager(configManager, validationManager);
 const resourceManager = new ResourceManager(configManager, validationManager);
-const workerPoolManager = new WorkerPoolManager(configManager, validationManager, processManager, jobQueueManager);
+const workerPoolManager = new WorkerPoolManager(
+  configManager,
+  validationManager,
+  processManager,
+  jobQueueManager,
+);
 
 // Módulo Socket.IO
 const socketIOManager = new SocketIOManager(configManager, validationManager);

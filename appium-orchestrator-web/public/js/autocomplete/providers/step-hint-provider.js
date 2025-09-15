@@ -67,7 +67,6 @@ class StepHintProvider {
     const cursor = context.ch;
     const lineStart = context.lineText.substring(0, cursor);
 
-
     // Si la línea ya comienza con un keyword, solo agregar el step text
     if (this.lineHasKeyword(lineStart)) {
       return step.text;
@@ -79,14 +78,12 @@ class StepHintProvider {
   }
 
   getStepKeyword(context, originalStepType) {
-
     if (!context.codeMirror) {
       return originalStepType; // fallback al tipo original
     }
 
     const doc = context.codeMirror.getDoc();
     const currentLine = context.line;
-
 
     // Buscar cualquier step anterior (Given/When/Then/And/But)
     for (let i = currentLine - 1; i >= 0; i--) {
@@ -98,7 +95,9 @@ class StepHintProvider {
       }
 
       // Si encontramos un Scenario/Feature/Background, resetear
-      if (lineText.match(/^\s*(Scenario|Feature|Background|Scenario Outline):/)) {
+      if (
+        lineText.match(/^\s*(Scenario|Feature|Background|Scenario Outline):/)
+      ) {
         break; // Salir del loop, será el primer step
       }
     }

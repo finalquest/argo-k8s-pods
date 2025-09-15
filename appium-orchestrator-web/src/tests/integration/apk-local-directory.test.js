@@ -32,13 +32,9 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
     tempApkDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-apks-'));
 
     // Crear APKs de prueba en el directorio temporal
-    const testApks = [
-      'app-debug.apk',
-      'app-release.apk',
-      'app-staging.apk'
-    ];
+    const testApks = ['app-debug.apk', 'app-release.apk', 'app-staging.apk'];
 
-    testApks.forEach(apkName => {
+    testApks.forEach((apkName) => {
       const apkPath = path.join(tempApkDir, apkName);
       fs.writeFileSync(apkPath, `mock apk content for ${apkName}`);
     });
@@ -83,7 +79,9 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
         }
       } catch (error) {
         console.error('Error en /api/apk/versions:', error);
-        res.status(500).json({ error: 'Error interno al obtener versiones de APK.' });
+        res
+          .status(500)
+          .json({ error: 'Error interno al obtener versiones de APK.' });
       }
     });
 
@@ -118,12 +116,16 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
 
       // Debería encontrar los APKs del directorio local
       expect(response.body.versions).toHaveLength(3);
-      expect(response.body.versions.map(v => v.name)).toEqual(
-        expect.arrayContaining(['app-debug.apk', 'app-release.apk', 'app-staging.apk'])
+      expect(response.body.versions.map((v) => v.name)).toEqual(
+        expect.arrayContaining([
+          'app-debug.apk',
+          'app-release.apk',
+          'app-staging.apk',
+        ]),
       );
 
       // Todas las versiones deberían tener source: 'local'
-      response.body.versions.forEach(version => {
+      response.body.versions.forEach((version) => {
         expect(version.source).toBe('local');
         expect(version).toHaveProperty('path');
         expect(version).toHaveProperty('size');
@@ -151,8 +153,14 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
 
     test('no debería llamar a métodos ORAS/registro', async () => {
       // Espiar los métodos del apkManager
-      const spyGetRegistryApkVersions = jest.spyOn(apkManager, 'getRegistryApkVersions');
-      const spyGetClientApkVersions = jest.spyOn(apkManager, 'getClientApkVersions');
+      const spyGetRegistryApkVersions = jest.spyOn(
+        apkManager,
+        'getRegistryApkVersions',
+      );
+      const spyGetClientApkVersions = jest.spyOn(
+        apkManager,
+        'getClientApkVersions',
+      );
       const spyGetApkVersions = jest.spyOn(apkManager, 'getApkVersions');
 
       await request(server)
@@ -187,7 +195,7 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
         name: expect.any(String),
         source: 'local',
         path: expect.stringContaining(tempApkDir),
-        size: expect.any(Number)
+        size: expect.any(Number),
       });
 
       // Verificar que el path existe y es un archivo
@@ -223,7 +231,10 @@ describe('APK Manager - LOCAL_APK_DIRECTORY Integration', () => {
       delete process.env.LOCAL_APK_DIRECTORY;
 
       const spyGetApkVersions = jest.spyOn(apkManager, 'getApkVersions');
-      const spyGetRegistryApkVersions = jest.spyOn(apkManager, 'getRegistryApkVersions');
+      const spyGetRegistryApkVersions = jest.spyOn(
+        apkManager,
+        'getRegistryApkVersions',
+      );
 
       await request(server)
         .get('/api/apk/versions')

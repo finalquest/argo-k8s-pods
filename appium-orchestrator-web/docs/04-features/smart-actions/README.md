@@ -7,12 +7,14 @@ Sistema de acciones contextuales e inteligentes para el glosario.
 Esta carpeta contiene la documentación completa del sistema de Smart Actions. Para aprender sobre el sistema, consulta los siguientes documentos:
 
 ### 🚀 Quick Start
+
 - **[01-overview.md](./01-overview.md)** - Documentación técnica principal
   - Visión general y arquitectura del sistema
   - Flujo de ejecución y componentes clave
   - Ejemplos de uso y guía de troubleshooting
 
 ### 🔧 Guías Técnicas Detalladas
+
 - **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Guía completa de implementación
   - Cómo implementar nuevas acciones
   - Patrones y mejores prácticas
@@ -26,6 +28,7 @@ Esta carpeta contiene la documentación completa del sistema de Smart Actions. P
 ## 🎯 Características Principales
 
 ### ✅ Funcionalidades Implementadas
+
 - **Acciones contextuales** - Right-click en steps para acciones inteligentes
 - **Inserción con formato** - Inserta steps con indentación correcta automáticamente
 - **Detección de contexto** - Usa Given/When/Then/And según posición en el escenario
@@ -61,6 +64,7 @@ Es el coordinador principal del sistema. Se encarga de:
 - Coordinar la ejecución de acciones
 
 **Métodos clave:**
+
 - `executeAction(actionType, context)`: Ejecuta una acción específica
 - `getAvailableActions(context)`: Obtiene acciones disponibles para un contexto
 - `showSmartActionsMenu(event, element, type)`: Muestra menú contextual
@@ -73,6 +77,7 @@ Es el coordinador principal del sistema. Se encarga de:
 Gestiona el registro y recuperación de acciones smart actions.
 
 **Características:**
+
 - Registro dinámico de acciones
 - Filtrado por contexto aplicable
 - Gestión de dependencias entre acciones
@@ -84,6 +89,7 @@ Gestiona el registro y recuperación de acciones smart actions.
 Clase abstracta base para todas las smart actions.
 
 **Propiedades requeridas:**
+
 - `type`: Identificador único de la acción
 - `icon`: Emoji o icono para mostrar en menú
 - `label`: Texto descriptivo de la acción
@@ -91,6 +97,7 @@ Clase abstracta base para todas las smart actions.
 - `applicableContexts`: Array de contextos donde aplica
 
 **Métodos a implementar:**
+
 - `execute(context)`: Lógica principal de la acción
 - `validate(context)`: Validación de precondiciones
 
@@ -101,6 +108,7 @@ Clase abstracta base para todas las smart actions.
 Contiene toda la información necesaria para ejecutar una acción.
 
 **Propiedades:**
+
 - `element`: Elemento DOM que originó la acción
 - `type`: Tipo de contexto ('step', 'json-reference', 'multiple')
 - `data`: Datos específicos del elemento
@@ -117,6 +125,7 @@ Contiene toda la información necesaria para ejecutar una acción.
 Inserta un step del glosario en el editor CodeMirror.
 
 **Funcionalidad:**
+
 - Detecta automáticamente el keyword apropiado (Given/When/Then/And)
 - Formatea placeholders como marcadores visibles (`{param}` → `«param»`)
 - Inserta en la posición actual del cursor
@@ -131,6 +140,7 @@ Inserta un step del glosario en el editor CodeMirror.
 Copia un step del glosario al portapapeles.
 
 **Funcionalidad:**
+
 - Formatea el step completo (keyword + texto)
 - Usa Clipboard API con fallback para navegadores antiguos
 - Proporciona feedback visual al usuario
@@ -150,16 +160,21 @@ Copia un step del glosario al portapapeles.
 ## Tipos de Contexto
 
 ### step
+
 Aplica a elementos de steps en el glosario.
+
 - **Data:** `{ text, type, file }`
 - **Elemento:** `.glosario-step-item`
 
 ### json-reference
+
 Aplica a referencias JSON.
+
 - **Data:** `{ key, value, file }`
 - **Elemento:** `.json-key-item`
 
 ### multiple
+
 Para selecciones múltiples (futuro).
 
 ## Extensión del Sistema
@@ -167,6 +182,7 @@ Para selecciones múltiples (futuro).
 ### Crear Nueva Acción
 
 1. Extender de `BaseAction`:
+
 ```javascript
 import { BaseAction } from '../base-action.js';
 
@@ -187,6 +203,7 @@ export class MyCustomAction extends BaseAction {
 ```
 
 2. Registrar la acción:
+
 ```javascript
 smartActionsManager.registerAction(MyCustomAction);
 ```
@@ -194,6 +211,7 @@ smartActionsManager.registerAction(MyCustomAction);
 ### Manejo de Errores
 
 Las acciones deben:
+
 - Validar precondiciones en `validate()`
 - Lanzar errores descriptivos
 - Usar `showFeedback()` para comunicación con usuario
@@ -205,7 +223,10 @@ Las acciones deben:
 El SmartActionsManager se integra con el GlosarioUI existente:
 
 ```javascript
-const smartActionsManager = new SmartActionsManager(glosarioUI, insertController);
+const smartActionsManager = new SmartActionsManager(
+  glosarioUI,
+  insertController,
+);
 ```
 
 ### Event Listeners
@@ -217,6 +238,7 @@ Los eventos de clic derecho se configuran automáticamente en los elementos del 
 ### Estilos CSS
 
 Los menús contextuales usan clases CSS personalizables:
+
 - `.smart-actions-menu-container`
 - `.smart-actions-menu`
 - `.menu-item`

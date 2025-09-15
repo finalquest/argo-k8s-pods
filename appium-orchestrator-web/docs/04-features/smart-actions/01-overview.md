@@ -28,6 +28,7 @@ Esta es la documentación principal del sistema de Smart Actions. Para informaci
 Smart Actions es un sistema de acciones contextuales e inteligentes que permite a los desarrolladores realizar operaciones avanzadas sobre steps y referencias JSON directamente desde el glosario, sin necesidad de copiar y pegar manualmente.
 
 ### **Propósito Principal:**
+
 - **Incrementar productividad** reduciendo pasos manuales
 - **Mantener consistencia** en el formato del código
 - **Proveer contexto inteligente** según la posición del cursor
@@ -85,6 +86,7 @@ Smart Actions es un sistema de acciones contextuales e inteligentes que permite 
 ## 🔄 Flujo de Ejecución
 
 ### **1. Inicialización:**
+
 ```javascript
 // 1. Carga del bundle (smart-actions-bundle.js)
 // 2. Disponibilidad global: window.SmartActionsManager
@@ -94,6 +96,7 @@ Smart Actions es un sistema de acciones contextuales e inteligentes que permite 
 ```
 
 ### **2. Interacción del Usuario:**
+
 ```javascript
 // 1. Usuario hace right-click en step/JSON
 // 2. event.preventDefault() bloquea menú del navegador
@@ -103,6 +106,7 @@ Smart Actions es un sistema de acciones contextuales e inteligentes que permite 
 ```
 
 ### **3. Ejecución de Acción:**
+
 ```javascript
 // 1. Usuario selecciona acción del menú
 // 2. Recreación de contexto con elemento y tipo
@@ -118,12 +122,14 @@ Smart Actions es un sistema de acciones contextuales e inteligentes que permite 
 ### **1. SmartActionsManager**
 
 **Responsabilidades:**
+
 - Coordinar todo el sistema de smart actions
 - Gestionar el registro de acciones
 - Manejar el ciclo de vida de los menús contextuales
 - Proveer APIs para integración con otros componentes
 
 **Métodos Principales:**
+
 ```javascript
 class SmartActionsManager {
   constructor(glosarioUI, insertController)
@@ -137,6 +143,7 @@ class SmartActionsManager {
 ### **2. ActionRegistry**
 
 **Responsabilidades:**
+
 - Mantener registro de acciones disponibles
 - Filtrar acciones por contexto aplicable
 - Proveer métodos de búsqueda y consulta
@@ -146,11 +153,13 @@ class SmartActionsManager {
 ### **3. BaseAction**
 
 **Responsabilidades:**
+
 - Definir interfaz común para todas las acciones
 - Proveer métodos de validación y feedback
 - Implementar comportamiento por defecto
 
 **Métodos a Implementar:**
+
 ```javascript
 class BaseAction {
   constructor() // Define metadatos (icono, label, etc.)
@@ -164,11 +173,13 @@ class BaseAction {
 ### **4. ActionContext**
 
 **Responsabilidades:**
+
 - Encapsular toda la información del contexto
 - Proveer métodos de análisis de contexto
 - Facilitar la extracción de datos del DOM
 
 **Propiedades Clave:**
+
 ```javascript
 {
   element: HTMLElement,    // Elemento DOM clickeado
@@ -207,6 +218,7 @@ smart-actions/
 ### **¿Por qué un Bundle?**
 
 **Razones:**
+
 - **Evitar import dinámicos** problemáticos en el navegador
 - **Garantizar orden de carga** correcto
 - **Simplificar dependencias** entre módulos
@@ -219,14 +231,17 @@ smart-actions/
 ### **1. Sistema de Carga:**
 
 **HTML (index.html):**
+
 ```html
 <!-- Orden crítico de carga -->
 <script type="module" src="js/glosario-insert-controller.js"></script>
-<script src="js/smart-actions-bundle.js"></script>  <!-- Bundle primero -->
+<script src="js/smart-actions-bundle.js"></script>
+<!-- Bundle primero -->
 <script type="module" src="js/glosario-ui.js"></script>
 ```
 
 **Detección en GlosarioUI:**
+
 ```javascript
 initializeSmartActions() {
   if (typeof SmartActionsManager !== 'undefined') {
@@ -242,6 +257,7 @@ initializeSmartActions() {
 ### **2. Manejo de Eventos:**
 
 **Prevención de Menú del Navegador:**
+
 ```javascript
 setupSmartActionsEventListeners() {
   this.stepsContainer.addEventListener('contextmenu', (e) => {
@@ -257,6 +273,7 @@ setupSmartActionsEventListeners() {
 ### **3. Formato Gherkin Simplificado:**
 
 **Lógica Principal:**
+
 ```javascript
 getStepKeyword(position) {
   // Buscar cualquier step anterior
@@ -280,6 +297,7 @@ getStepKeyword(position) {
 ### **Puntos de Integración:**
 
 1. **Constructor:**
+
    ```javascript
    constructor() {
      // ... propiedades existentes
@@ -289,6 +307,7 @@ getStepKeyword(position) {
    ```
 
 2. **Inicialización:**
+
    ```javascript
    init() {
      this.createPanel();
@@ -323,6 +342,7 @@ GlosarioUI → SmartActionsManager → BaseAction → CodeMirror
 ### **1. Insert Step con Formato:**
 
 **Before (Manual):**
+
 ```
 1. Copiar step: Given I login with {username}
 2. Pegar en editor
@@ -331,6 +351,7 @@ GlosarioUI → SmartActionsManager → BaseAction → CodeMirror
 ```
 
 **After (Smart Action):**
+
 ```
 1. Right-click en step → "Insert Step"
 2. Auto-insert con formato correcto
@@ -340,6 +361,7 @@ Resultado: And I login with «username»
 ### **2. Copy Step:**
 
 **Before (Manual):**
+
 ```
 1. Seleccionar texto del step
 2. Ctrl+C
@@ -348,6 +370,7 @@ Resultado: And I login with «username»
 ```
 
 **After (Smart Action):**
+
 ```
 1. Right-click en step → "Copy Step"
 2. Listo para pegar
@@ -356,6 +379,7 @@ Resultado: And I login with «username»
 ### **3. Contexto Inteligente:**
 
 **Situación:**
+
 ```
 Scenario: Login functionality
   Given I am on the login page    ← Insertar aquí → usa Given
@@ -370,36 +394,42 @@ Scenario: Login functionality
 ### **Problemas Comunes:**
 
 #### **1. Menú del navegador aparece en lugar de menú smart:**
+
 **Causa:** Event listeners no conectados correctamente
 **Solución:** Verificar orden de carga de scripts en index.html
 
 #### **2. SmartActionsManager no está definido:**
+
 **Causa:** Bundle no cargó antes que glosario-ui.js
 **Solución:** Verificar que smart-actions-bundle.js cargue antes
 
 #### **3. Acciones no aparecen en el menú:**
+
 **Causa:** Acciones no registradas o contexto no aplicable
 **Solución:** Verificar console.log para mensajes de registro
 
 #### **4. Error "doc.focus is not a function":**
+
 **Causa:** Llamando focus() en documento en lugar de editor
 **Solución:** Usar `window.ideCodeMirror.focus()` en lugar de `doc.focus()`
 
 ### **Debugging:**
 
 **Console Commands:**
+
 ```javascript
 // Verificar si SmartActionsManager está disponible
-window.SmartActionsManager
+window.SmartActionsManager;
 
 // Verificar acciones registradas
-window.glosarioUI?.smartActionsManager?.actionRegistry?.getAllActions()
+window.glosarioUI?.smartActionsManager?.actionRegistry?.getAllActions();
 
 // Verificar estado del manager
-window.glosarioUI?.smartActionsManager?.getDebugInfo()
+window.glosarioUI?.smartActionsManager?.getDebugInfo();
 ```
 
 **Log Messages a Buscar:**
+
 ```
 [GLOSARIO-UI] Smart Actions Manager initialized successfully
 [SMART-ACTIONS] Default actions registered
@@ -411,12 +441,14 @@ Smart Action executed: insert-step
 ## 🚀 Próximos Pasos
 
 ### **Acciones Planeadas:**
+
 1. **InsertJsonReferenceAction** - Insertar referencias JSON en placeholders
 2. **FindUsagesAction** - Buscar todos los usos de un step
 3. **GoToDefinitionAction** - Navegar a definición de step
 4. **CreateSimilarStepAction** - Crear steps similares
 
 ### **Mejoras Técnicas:**
+
 1. **Keyboard Shortcuts** - Atajos para acciones comunes
 2. **Batch Actions** - Ejecutar múltiples acciones
 3. **Custom Actions** - Permitir acciones personalizadas por usuario
