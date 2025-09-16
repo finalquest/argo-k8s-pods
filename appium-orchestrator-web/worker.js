@@ -626,9 +626,13 @@ function runTest(job) {
   };
 
   if (mappingToLoad) {
+    // Extraer solo el nombre base del feature para el mapping
+    const featureName = path.basename(feature, '.feature');
+    const mappingFileName = `${featureName}.json`;
+
     const logMessage = job.usePreexistingMapping
-      ? `[worker] 💾 Usando mapping preexistente: ${mappingToLoad}\n`
-      : `[worker] 📼 Job de verificación detectado. Cargando mapping: ${mappingToLoad}\n`;
+      ? `[worker] 💾 Usando mapping preexistente: ${mappingFileName}\n`
+      : `[worker] 📼 Job de verificación detectado. Cargando mapping: ${mappingFileName}\n`;
 
     sendToParent({ type: 'LOG', data: logMessage });
 
@@ -639,13 +643,13 @@ function runTest(job) {
     );
     runScript(
       loadMappingScript,
-      [mappingToLoad],
+      [mappingFileName],
       null,
       (code) => {
         if (code !== 0) {
           sendToParent({
             type: 'LOG',
-            data: `[worker] ❌ Falló la carga del mapping ${mappingToLoad}. Abortando test.
+            data: `[worker] ❌ Falló la carga del mapping ${mappingFileName}. Abortando test.
 `,
           });
           sendToParent({
@@ -655,7 +659,7 @@ function runTest(job) {
         } else {
           sendToParent({
             type: 'LOG',
-            data: `[worker] ✅ Mapping ${mappingToLoad} cargado. Ejecutando test...
+            data: `[worker] ✅ Mapping ${mappingFileName} cargado. Ejecutando test...
 `,
           });
           executeTest();
