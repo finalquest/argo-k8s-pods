@@ -33,19 +33,20 @@ export function renderHistoryItem(item) {
   infoDiv.style.gap = '1em';
 
   const textSpan = document.createElement('span');
-  textSpan.textContent = `${item.feature} (${item.branch}) - ${item.timestamp}`;
+  const timestamp = new Date(item.modified).toLocaleString('es-AR');
+  textSpan.textContent = `${item.reportName} (${item.branch}) - ${timestamp}`;
 
   infoDiv.appendChild(textSpan);
 
   li.appendChild(infoDiv);
 
-  if (item.reportUrl) {
+  if (item.path) {
     const reportButton = document.createElement('button');
     reportButton.className = 'report-btn';
     reportButton.textContent = 'Ver Reporte';
     reportButton.onclick = () => {
       window.open(
-        item.reportUrl,
+        item.path,
         'reportPopup',
         'width=1200,height=800,scrollbars=yes,resizable=yes',
       );

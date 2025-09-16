@@ -27,9 +27,12 @@ class ProcessManager {
     const { id: slotId } = worker;
 
     try {
-      await fetch(`http://localhost:${this.configManager.get('PORT')}/api/wiremock/load-base-mappings`, {
-        method: 'POST',
-      });
+      await fetch(
+        `http://localhost:${this.configManager.get('PORT')}/api/wiremock/load-base-mappings`,
+        {
+          method: 'POST',
+        },
+      );
 
       this.io.emit('log_update', {
         slotId,
@@ -37,9 +40,12 @@ class ProcessManager {
 `,
       });
 
-      await fetch(`http://localhost:${this.configManager.get('PORT')}/api/wiremock/recordings/start`, {
-        method: 'POST',
-      });
+      await fetch(
+        `http://localhost:${this.configManager.get('PORT')}/api/wiremock/recordings/start`,
+        {
+          method: 'POST',
+        },
+      );
 
       this.io.emit('log_update', {
         slotId,
@@ -100,10 +106,7 @@ class ProcessManager {
 
       return result;
     } catch (error) {
-      console.error(
-        `Error al detener la grabación para el job ${id}:`,
-        error,
-      );
+      console.error(`Error al detener la grabación para el job ${id}:`, error);
       this.io.emit('log_update', {
         slotId,
         logLine: `--- ❌ Error al guardar los mappings para ${feature}: ${error.message} ---
@@ -119,16 +122,17 @@ class ProcessManager {
   handleReport(job, reportPath) {
     try {
       const branch = this.validationManager.sanitize(job.branch);
-      const feature = this.validationManager.sanitize(job.feature);
+      // const feature = this.validationManager.sanitize(job.feature);
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const destDir = path.join(
         __dirname,
         '..',
         '..',
+        '..',
         'public',
         'reports',
         branch,
-        feature,
+        // feature,
         timestamp,
       );
 
@@ -141,14 +145,16 @@ class ProcessManager {
         __dirname,
         '..',
         '..',
+        '..',
         'public',
         'reports',
         branch,
-        feature,
+        // feature,
       );
       this.cleanupOldReports(featureReportDir);
 
-      return `/reports/${branch}/${feature}/${timestamp}/`;
+      // return `/reports/${branch}/${feature}/${timestamp}/`;
+      return `/reports/${branch}/${timestamp}/`;
     } catch (error) {
       console.error('Error al manejar el reporte de Allure:', error);
       return null;
@@ -235,7 +241,7 @@ class ProcessManager {
   async healthCheck() {
     try {
       // Check if we can access the reports directory
-      const reportsDir = path.join(__dirname, '..', '..', 'reports');
+      const reportsDir = path.join(__dirname, '..', '..', '..', 'reports');
       const reportsAccessible =
         fs.existsSync(reportsDir) ||
         fs.mkdirSync(reportsDir, { recursive: true });
@@ -271,7 +277,7 @@ class ProcessManager {
    * Archive old reports
    */
   archiveOldReports() {
-    const reportsDir = path.join(__dirname, '..', '..', 'reports');
+    const reportsDir = path.join(__dirname, '..', '..', '..', 'reports');
     const archiveDir = path.join(reportsDir, 'archive');
 
     if (!fs.existsSync(reportsDir)) return;
@@ -305,7 +311,7 @@ class ProcessManager {
    * Get report statistics
    */
   getReportStatistics() {
-    const reportsDir = path.join(__dirname, '..', '..', 'reports');
+    const reportsDir = path.join(__dirname, '..', '..', '..', 'reports');
     const archiveDir = path.join(reportsDir, 'archive');
 
     const stats = {
