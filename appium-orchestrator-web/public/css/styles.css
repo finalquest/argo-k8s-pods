@@ -387,7 +387,7 @@ body {
   gap: 1rem;
   align-items: center;
   margin-bottom: 2rem;
-  padding: 1.5rem;
+  padding: 0.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
@@ -1209,6 +1209,11 @@ h3 {
 }
 
 /* Enhanced Sub-tabs */
+[data-theme='dark'] .sub-tabs {
+  background: var(--gray-100);
+}
+
+/* Enhanced Sub-tabs */
 .sub-tabs {
   display: flex;
   background: white;
@@ -1226,7 +1231,6 @@ h3 {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-600);
-  border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
 }
 
@@ -1237,7 +1241,6 @@ h3 {
 
 .sub-tab-btn.active {
   color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
   background: var(--gray-50);
 }
 
@@ -1269,6 +1272,13 @@ h3 {
     monospace;
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
+}
+
+[data-theme='dark'] #wiremock-requests-output,
+[data-theme='dark'] #wiremock-mappings-output,
+[data-theme='dark'] #wiremock-recording-output {
+  background: var(--gray-100);
+  color: var(--gray-900);
 }
 
 .log-entry {
@@ -1383,6 +1393,10 @@ h3 {
 
 #mappings-list-container label:hover {
   background: white;
+}
+
+#wiremock-requests-view label {
+  color: var(--gray-700);
 }
 
 .mapping-item {

@@ -257,7 +257,7 @@ export function initializeSocketListeners(socket) {
     const selectedBranch = document.getElementById('branch-select').value;
     if (data.branch === selectedBranch) {
       console.log('Refrescando features automáticamente...');
-      document.getElementById('fetch-features-btn').click();
+      document.getElementById('refresh-features-btn').click();
     }
   });
 

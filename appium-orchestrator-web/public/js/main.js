@@ -569,7 +569,7 @@ async function initializeAppControls(socket) {
       const selectedBranch = document.getElementById('branch-select').value;
 
       // Switch to workers tab to see the logs
-      switchTab('workers-tab');
+      switchTab('workers');
 
       // Start workspace preparation
       prepareWorkspace(socket, selectedBranch);
