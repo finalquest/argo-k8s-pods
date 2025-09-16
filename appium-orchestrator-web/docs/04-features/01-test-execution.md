@@ -108,6 +108,9 @@ export function runTest(
   jobPayload.persistentWorkspace = document.getElementById(
     'persistent-workspace-checkbox',
   ).checked;
+  jobPayload.quickTest = document.getElementById(
+    'quick-test-checkbox',
+  ).checked;
 
   // Enviar al servidor
   socket.emit('run_test', jobPayload);
@@ -132,6 +135,7 @@ socket.on('run_test', (data) => {
     record: data.record || false,
     usePreexistingMapping: data.usePreexistingMapping || false,
     persistentWorkspace: data.persistentWorkspace || false,
+    quickTest: data.quickTest || false,
     userId: socket.userId,
     timestamp: Date.now(),
   };
@@ -237,6 +241,9 @@ export function runSelectedTests(socket) {
   const recordMappings = document.getElementById(
     'record-mappings-checkbox',
   ).checked;
+  const quickTest = document.getElementById(
+    'quick-test-checkbox',
+  ).checked;
 
   const jobs = Array.from(selectedCheckboxes).map((cb) => ({
     branch,
@@ -255,6 +262,7 @@ export function runSelectedTests(socket) {
     persistentWorkspace: document.getElementById(
       'persistent-workspace-checkbox',
     ).checked,
+    quickTest,
   });
 }
 ```
@@ -271,6 +279,7 @@ socket.on('run_batch', (data) => {
     record: data.record || false,
     usePreexistingMapping: data.usePreexistingMapping || false,
     persistentWorkspace: data.persistentWorkspace || false,
+    quickTest: data.quickTest || false,
     userId: socket.userId,
     timestamp: Date.now(),
   }));
@@ -549,6 +558,64 @@ function handleIdeRun(socket) {
   border-left: 3px solid #dc3545;
 }
 ```
+
+### 3. Opciones de Ejecución
+
+El sistema provides varias opciones de configuración para controlar el comportamiento de la ejecución de tests:
+
+#### 🚀 Quick Test (Modo Rápido)
+
+**Checkbox**: `⚡ Quick Test`
+
+Esta opción permite saltar la instalación del APK cuando la aplicación ya está instalada en el dispositivo, reduciendo significativamente el tiempo de ejecución.
+
+**Características**:
+- **Función**: Omite la instalación del APK durante la inicialización del worker
+- **Indicador Visual**: Muestra un símbolo ⚡ en el estado del worker
+- **Log Message**: `[worker] ⚡ Quick test mode activado - Saltando instalación del APK.`
+- **Uso Ideal**: Cuando se ejecutan múltiples tests consecutivamente en el mismo dispositivo
+
+**Flujo con Quick Test**:
+```javascript
+// worker.js - Lógica condicional de instalación
+if (isQuickTest) {
+  // Skip APK installation in quick test mode
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] ⚡ Quick test mode activado - Saltando instalación del APK.`,
+  });
+  sendToParent({ type: 'READY' });
+} else {
+  // Install APK normally
+  runScript(installApkScript, [...], env, (code) => {
+    // Lógica de instalación normal
+  });
+}
+```
+
+#### ⚡ Prioridad Alta
+
+**Checkbox**: `⚡ Prioridad`
+
+Coloca los trabajos al frente de la cola de ejecución, permitiendo que se ejecuten antes que otros trabajos pendientes.
+
+#### 🔴 Grabar Mappings
+
+**Checkbox**: `🔴 Record Mapping`
+
+Activa la grabación de interacciones con WireMock antes y después de la ejecución del test.
+
+#### 💾 Usar Mappings Existentes
+
+**Checkbox**: `💾 Use Mappings`
+
+Carga mappings de WireMock existentes antes de ejecutar el test.
+
+#### 🔄 Workspace Persistente
+
+**Checkbox**: `🔄 Persistent Workspace`
+
+Utiliza un workspace persistente que no se elimina al finalizar la ejecución.
 
 ## 📊 Gestión de Resultados
 

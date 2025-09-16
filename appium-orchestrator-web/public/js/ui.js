@@ -72,6 +72,7 @@ export function renderWorkerStatus(workers) {
     if (worker.branch) text += ` - ${worker.branch}`;
     if (worker.apkVersion)
       text += ` - APK: ${worker.apkVersion.substring(0, 7)}...`;
+    if (worker.quickTest) text += ` ⚡`;
     btn.textContent = text;
     btn.onclick = () => {
       const panel = document.getElementById(`log-panel-${worker.slotId}`);
@@ -102,6 +103,7 @@ export function renderWorkerPool(workers, socket) {
     header.className = `panel-header status-${worker.status}`;
     let headerText = `Worker ${worker.slotId + 1} (${getStatusText(worker.status)}) - Branch: ${worker.branch}`;
     if (worker.apkVersion) headerText += ` - APK: ${worker.apkVersion}`;
+    if (worker.quickTest) headerText += ` ⚡`;
     if (worker.status === 'busy' && worker.job) {
       headerText = `Worker ${worker.slotId + 1} (Ocupado) - Job ${worker.job.id}: ${worker.job.featureName}`;
     }

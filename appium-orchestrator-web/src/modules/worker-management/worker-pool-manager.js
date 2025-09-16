@@ -34,7 +34,7 @@ class WorkerPoolManager {
   /**
    * Create a new worker
    */
-  createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial) {
+  createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial, quickTest = false) {
     const workerId =
       this.workerPool.length > 0
         ? Math.max(...this.workerPool.map((w) => w.id)) + 1
@@ -71,6 +71,7 @@ class WorkerPoolManager {
       status: 'initializing',
       currentJob: null,
       terminating: false,
+      quickTest: quickTest,
     };
 
     this.workerPool.push(worker);
@@ -132,6 +133,7 @@ class WorkerPoolManager {
       client,
       workerWorkspacePath,
       isPersistent,
+      quickTest,
     };
 
     if (apkSourceType === 'local') {

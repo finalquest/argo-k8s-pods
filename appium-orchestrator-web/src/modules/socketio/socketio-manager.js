@@ -112,6 +112,7 @@ class SocketIOManager {
         client: worker.client,
         apkIdentifier: worker.apkIdentifier,
         apkSourceType: worker.apkSourceType,
+        quickTest: worker.quickTest,
       })),
       status: {
         active: this.workerPoolManager.getStatistics().busyWorkers,

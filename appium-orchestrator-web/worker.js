@@ -361,6 +361,7 @@ let client = '';
 let apkVersion = '';
 let localApkPath = '';
 let isWorkspacePersistent = false; // Flag to prevent deleting persistent workspaces
+let isQuickTest = false; // Flag to skip APK installation in quick test mode
 let deviceSerialForLocalWorker = null; // Para workers locales, el serial se fija al inicio.
 let environment = {
   appiumPid: null,
@@ -552,28 +553,40 @@ function finishSetup() {
 
     const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');
     const env = { DEVICE_SOURCE: process.env.DEVICE_SOURCE };
-    runScript(
-      installApkScript,
-      [workspaceDir, environment.adbHost, client, apkVersion, localApkPath],
-      env,
-      (code) => {
-        if (code !== 0) {
+
+    if (isQuickTest) {
+      // Skip APK installation in quick test mode
+      sendToParent({
+        type: 'LOG',
+        data: `[worker] ⚡ Quick test mode activado - Saltando instalación del APK.
+`,
+      });
+      sendToParent({ type: 'READY' });
+    } else {
+      // Install APK normally
+      runScript(
+        installApkScript,
+        [workspaceDir, environment.adbHost, client, apkVersion, localApkPath],
+        env,
+        (code) => {
+          if (code !== 0) {
+            sendToParent({
+              type: 'LOG',
+              data: `[worker] ❌ Falló la instalación del APK. Terminando.
+`,
+            });
+            return cleanupAndExit(1);
+          }
           sendToParent({
             type: 'LOG',
-            data: `[worker] ❌ Falló la instalación del APK. Terminando.
+            data: `[worker] ✅ APK de cliente ${client} instalado.
 `,
           });
-          return cleanupAndExit(1);
-        }
-        sendToParent({
-          type: 'LOG',
-          data: `[worker] ✅ APK de cliente ${client} instalado.
-`,
-        });
 
-        sendToParent({ type: 'READY' });
-      },
-    );
+          sendToParent({ type: 'READY' });
+        },
+      );
+    }
   });
 }
 
@@ -732,6 +745,7 @@ process.on('message', (message) => {
       deviceSerialForLocalWorker = message.deviceSerial || null;
       workspaceDir = message.workerWorkspacePath; // Aceptar la ruta del workspace del servidor
       isWorkspacePersistent = message.isPersistent; // Aceptar el flag del servidor
+      isQuickTest = message.quickTest || false; // Aceptar el flag de quick test
       setupWorkerEnvironment();
       break;
     case 'START':

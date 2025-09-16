@@ -58,6 +58,10 @@ export function runTest(
   );
   jobPayload.persistentWorkspace = persistentWorkspaceCheckbox.checked;
 
+  // Get quick test checkbox value
+  const quickTestCheckbox = document.getElementById('quick-test-checkbox');
+  jobPayload.quickTest = quickTestCheckbox.checked;
+
   socket.emit('run_test', jobPayload);
 }
 
@@ -72,7 +76,8 @@ export function runSelectedTests(socket) {
   );
   const persistentWorkspaceCheckbox = document.getElementById(
     'persistent-workspace-checkbox',
-  ); // Get persistent workspace checkbox
+  );
+  const quickTestCheckbox = document.getElementById('quick-test-checkbox');
 
   const selectedBranch = branchSelect.value;
   const selectedClient = clientSelect.value;
@@ -80,7 +85,8 @@ export function runSelectedTests(socket) {
   const highPriority = priorityCheckbox.checked;
   const recordMappings = recordCheckbox.checked;
   const usePreexistingMapping = useLocalMappingsCheckbox.checked;
-  const persistentWorkspace = persistentWorkspaceCheckbox.checked; // Get persistent workspace value
+  const persistentWorkspace = persistentWorkspaceCheckbox.checked;
+  const quickTest = quickTestCheckbox.checked;
 
   const selectedCheckboxes = document.querySelectorAll(
     '.feature-checkbox:checked',
@@ -113,7 +119,8 @@ export function runSelectedTests(socket) {
     record: recordMappings,
     usePreexistingMapping,
     persistentWorkspace,
-  }); // Pass persistentWorkspace
+    quickTest,
+  });
 }
 
 export function initializeSocketListeners(socket) {

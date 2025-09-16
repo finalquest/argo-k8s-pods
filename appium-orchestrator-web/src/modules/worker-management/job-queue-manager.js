@@ -83,7 +83,7 @@ class JobQueueManager {
         apkIdentifier,
         apkSourceType,
         job.deviceSerial,
-        job.persistentWorkspace,
+        job.quickTest,
       );
       this.workerPoolManager.runJobOnWorker(job, newWorker);
       return true;

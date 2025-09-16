@@ -36,6 +36,26 @@ npm start
 4. Ejecutar tests individualmente o en lote
 5. Monitorear progreso en tiempo real
 
+### 🚀 Quick Test Mode
+
+El sistema incluye un modo de ejecución rápida que permite saltar la instalación del APK cuando la aplicación ya está instalada en el dispositivo:
+
+**Cuándo usarlo**:
+- Al ejecutar múltiples tests consecutivamente en el mismo dispositivo
+- Cuando la aplicación bajo prueba ya está instalada
+- Para ciclos de desarrollo iterativo donde la APK no cambia
+
+**Cómo activarlo**:
+1. Marcar el checkbox `⚡ Quick Test` en el panel de control
+2. Ejecutar tests normalmente
+3. El sistema mostrará un indicador ⚡ en los workers que usan este modo
+4. Los logs mostrarán: `[worker] ⚡ Quick test mode activado - Saltando instalación del APK.`
+
+**Beneficios**:
+- Reducción significativa del tiempo de ejecución
+- Ideal para debugging y desarrollo iterativo
+- Menor desgaste del dispositivo al evitar instalaciones repetitivas
+
 ## 📋 Características Principales
 
 - **Ejecución Paralela**: Múltiples workers ejecutando tests simultáneamente
@@ -44,6 +64,7 @@ npm start
 - **WireMock Integration**: Grabación y reproducción de mappings
 - **Indicadores de Progreso**: Visualización en tiempo real de la ejecución
 - **Workspaces Persistentes**: Optimización para desarrollo iterativo
+- **Quick Test Mode**: Saltar instalación de APK para ejecución más rápida
 - **Reportes**: Generación automática de reportes con Allure
 
 ## 📖 Documentación
