@@ -27,45 +27,33 @@ class ProcessManager {
     const { id: slotId } = worker;
 
     try {
+      await fetch(`http://localhost:${this.configManager.get('PORT')}/api/wiremock/load-base-mappings`, {
+        method: 'POST',
+      });
+
       this.io.emit('log_update', {
         slotId,
-        logLine: `--- ⏺ Iniciando secuencia de grabación para ${feature}... ---
+        logLine: `   -> Iniciando grabación...
 `,
       });
 
-      const featureName = path.basename(feature, '.feature');
-      const response = await fetch(
-        `http://localhost:${this.configManager.get('PORT')}/api/wiremock/recordings/start`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            recordingName: featureName,
-            targetBaseUrl: `http://wiremock:8080`, // This should be configurable
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to start recording: ${response.status}`);
-      }
-
-      const result = await response.json();
-      this.io.emit('log_update', {
-        slotId,
-        logLine: `--- 🎥 Grabación iniciada para ${feature} (ID: ${result.recordingId}) ---
-`,
+      await fetch(`http://localhost:${this.configManager.get('PORT')}/api/wiremock/recordings/start`, {
+        method: 'POST',
       });
 
-      return result;
+      this.io.emit('log_update', {
+        slotId,
+        logLine: `--- ▶️ Grabación iniciada. Ejecutando test... ---
+`,
+      });
     } catch (error) {
       console.error(
-        `Error al iniciar secuencia de grabación para job ${id}:`,
+        `Error durante la secuencia de grabación para el job ${id}:`,
         error,
       );
       this.io.emit('log_update', {
         slotId,
-        logLine: `--- ❌ Error al iniciar grabación para ${feature}: ${error.message} ---
+        logLine: `--- ❌ Error al iniciar la grabación para ${feature}: ${error.message} ---
 `,
       });
       throw error;
@@ -113,12 +101,12 @@ class ProcessManager {
       return result;
     } catch (error) {
       console.error(
-        `Error al detener secuencia de grabación para job ${id}:`,
+        `Error al detener la grabación para el job ${id}:`,
         error,
       );
       this.io.emit('log_update', {
         slotId,
-        logLine: `--- ❌ Error al detener grabación para ${feature}: ${error.message} ---
+        logLine: `--- ❌ Error al guardar los mappings para ${feature}: ${error.message} ---
 `,
       });
       throw error;
@@ -130,37 +118,39 @@ class ProcessManager {
    */
   handleReport(job, reportPath) {
     try {
-      // Ensure the report exists
-      if (!fs.existsSync(reportPath)) {
-        console.error(`Report file not found: ${reportPath}`);
-        return null;
-      }
+      const branch = this.validationManager.sanitize(job.branch);
+      const feature = this.validationManager.sanitize(job.feature);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const destDir = path.join(
+        __dirname,
+        '..',
+        '..',
+        'public',
+        'reports',
+        branch,
+        feature,
+        timestamp,
+      );
 
-      // Generate a URL-friendly report name
-      const sanitizedBranch = this.validationManager.sanitize(job.branch);
-      const sanitizedClient = this.validationManager.sanitize(job.client);
-      const sanitizedFeature = this.validationManager.sanitize(job.feature);
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.cpSync(reportPath, destDir, { recursive: true });
 
-      const reportFileName = `${sanitizedBranch}_${sanitizedClient}_${sanitizedFeature}_${Date.now()}.html`;
-      const reportsDir = path.join(__dirname, '..', '..', 'reports');
+      console.log(`Reporte copiado a ${destDir}`);
 
-      // Ensure reports directory exists
-      if (!fs.existsSync(reportsDir)) {
-        fs.mkdirSync(reportsDir, { recursive: true });
-      }
+      const featureReportDir = path.join(
+        __dirname,
+        '..',
+        '..',
+        'public',
+        'reports',
+        branch,
+        feature,
+      );
+      this.cleanupOldReports(featureReportDir);
 
-      const publicReportPath = path.join(reportsDir, reportFileName);
-
-      // Copy the report to public location
-      fs.copyFileSync(reportPath, publicReportPath);
-
-      // Generate URL
-      const reportUrl = `/reports/${reportFileName}`;
-
-      console.log(`Report generated: ${reportUrl}`);
-      return reportUrl;
+      return `/reports/${branch}/${feature}/${timestamp}/`;
     } catch (error) {
-      console.error('Error handling report:', error);
+      console.error('Error al manejar el reporte de Allure:', error);
       return null;
     }
   }
@@ -169,7 +159,7 @@ class ProcessManager {
    * Clean up old reports for a feature
    */
   cleanupOldReports(featureReportDir) {
-    const maxReports = this.configManager.get('MAX_REPORTS_PER_FEATURE');
+    const maxReports = parseInt(process.env.MAX_REPORTS_PER_FEATURE, 10) || 5;
     if (!fs.existsSync(featureReportDir)) return;
 
     const reports = fs
@@ -192,7 +182,7 @@ class ProcessManager {
               err,
             );
           } else {
-            console.log(`Reporte antiguo eliminado: ${report.path}`);
+            console.log(`Reporte antiguo eliminado: ${report.name}`);
           }
         });
       });

@@ -296,6 +296,9 @@ async function handleSave() {
 
 async function handleIdeRun(socket) {
   const activeFeature = appState.getState().activeFeature;
+  const saveMapping = document.getElementById(
+      'record-mappings-checkbox',
+    ).checked;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para ejecutar.');
     return;
@@ -314,7 +317,7 @@ async function handleIdeRun(socket) {
   // Run the test
   const { branch, client, featureName } = activeFeature;
   globalEvents.emit('test:running', { branch, client, featureName });
-  runTest(socket, branch, client, featureName, false);
+  runTest(socket, branch, client, featureName, false, saveMapping);
 }
 
 function sanitizeFolderName(text) {
@@ -1152,7 +1155,11 @@ function initializeUiEventListeners(socket) {
 
     const branch = document.getElementById('branch-select').value;
     const client = document.getElementById('client-select').value;
-    runTest(socket, branch, client, featureName, highPriority);
+    const saveMapping = document.getElementById(
+      'record-mappings-checkbox',
+    ).checked;
+
+    runTest(socket, branch, client, featureName, highPriority, saveMapping);
   }
 
   featuresList.addEventListener('click', async (e) => {
