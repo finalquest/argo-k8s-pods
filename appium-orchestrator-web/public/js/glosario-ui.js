@@ -187,6 +187,9 @@ class GlosarioUI {
 
     // Re-setup when JSON container is updated
     this.setupJsonContainerObserver();
+
+    // Setup context menu for editor placeholders
+    this.setupEditorPlaceholderListener();
   }
 
   /**
@@ -217,6 +220,21 @@ class GlosarioUI {
       childList: true,
       subtree: true,
     });
+  }
+
+  /**
+   * Setup context menu listener for editor placeholders
+   */
+  setupEditorPlaceholderListener() {
+    if (!this.smartActionsManager || !window.ideCodeMirror) return;
+
+    // Agregar listener para context menu en el editor
+    const editorElement = window.ideCodeMirror.getWrapperElement();
+    editorElement.addEventListener('contextmenu', (e) => {
+      this.smartActionsManager.handleEditorContextMenu(e);
+    });
+
+    console.log('[GLOSARIO-UI] Editor placeholder listener setup completed');
   }
 
   /**

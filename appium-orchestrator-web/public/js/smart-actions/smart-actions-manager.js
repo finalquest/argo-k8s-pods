@@ -3,6 +3,8 @@ import { ActionContext } from './action-context.js';
 import { InsertStepAction } from './actions/insert-step-action.js';
 import { CopyStepAction } from './actions/copy-step-action.js';
 import { InsertJsonReferenceAction } from './actions/insert-json-reference-action.js';
+import { ReplacePlaceholderAction } from './actions/replace-placeholder-action.js';
+import { JsonReferenceSearchWidget } from './widgets/json-reference-search-widget.js';
 
 export class SmartActionsManager {
   constructor(glosarioUI, insertController) {
@@ -12,6 +14,7 @@ export class SmartActionsManager {
     this.activeMenu = null;
     this.lastMenuElement = null;
     this.lastMenuType = null;
+    this.jsonSearchWidget = null;
 
     this.initializeDefaultActions();
     this.setupEventListeners();
@@ -25,6 +28,7 @@ export class SmartActionsManager {
     this.actionRegistry.registerAction(InsertStepAction);
     this.actionRegistry.registerAction(CopyStepAction);
     this.actionRegistry.registerAction(InsertJsonReferenceAction);
+    this.actionRegistry.registerAction(ReplacePlaceholderAction);
 
     console.log('[SMART-ACTIONS] Default actions registered');
   }
@@ -74,6 +78,11 @@ export class SmartActionsManager {
     const data = this.extractDataFromElement(element, type);
     const position = this.getCurrentCursorPosition();
 
+    // Para placeholders, usar los datos adicionales que se pasan
+    if (type === 'placeholder' && additionalData) {
+      Object.assign(data, additionalData);
+    }
+
     const context = new ActionContext({
       element,
       type,
@@ -95,6 +104,8 @@ export class SmartActionsManager {
         return this.extractStepData(element);
       case 'json-reference':
         return this.extractJsonData(element);
+      case 'placeholder':
+        return this.extractPlaceholderData(element);
       default:
         return {};
     }
@@ -133,6 +144,20 @@ export class SmartActionsManager {
   }
 
   /**
+   * Extrae datos de un placeholder en el editor
+   */
+  extractPlaceholderData(element) {
+    // Para placeholders, el elemento es el editor CodeMirror
+    // La posición y el texto del placeholder se pasan en additionalData
+    return {
+      // Estos datos se establecerán cuando se llame desde el editor
+      placeholderText: '',
+      placeholderPosition: null,
+      placeholderType: ''
+    };
+  }
+
+  /**
    * Obtiene la posición actual del cursor en el editor
    */
   getCurrentCursorPosition() {
@@ -141,6 +166,88 @@ export class SmartActionsManager {
     }
 
     return window.ideCodeMirror.getDoc().getCursor();
+  }
+
+  /**
+   * Detecta placeholders bajo el cursor en el editor
+   */
+  detectPlaceholderAtCursor() {
+    if (!window.ideCodeMirror) {
+      return null;
+    }
+
+    const cursor = window.ideCodeMirror.getCursor();
+    const line = window.ideCodeMirror.getLine(cursor.line);
+    const cursorPos = cursor.ch;
+
+    // Patrones para detectar placeholders: {string}, {int}, {float}, etc.
+    const placeholderPattern = /\{(string|int|float|bool|boolean|number|text|date|time)\w*\}/g;
+    let match;
+
+    while ((match = placeholderPattern.exec(line)) !== null) {
+      const placeholderStart = match.index;
+      const placeholderEnd = match.index + match[0].length;
+
+      // Verificar si el cursor está dentro de este placeholder
+      if (cursorPos >= placeholderStart && cursorPos <= placeholderEnd) {
+        return {
+          text: match[0],
+          type: match[1], // string, int, etc.
+          start: placeholderStart,
+          end: placeholderEnd,
+          line: cursor.line,
+          cursor: cursor
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Maneja el evento de contexto (botón derecho) en el editor
+   */
+  handleEditorContextMenu(event) {
+    const placeholder = this.detectPlaceholderAtCursor();
+
+    if (placeholder) {
+      event.preventDefault();
+
+      // Crear contexto para el placeholder
+      const context = this.createContext(
+        window.ideCodeMirror.getWrapperElement(), // El editor como elemento
+        'placeholder',
+        {
+          placeholderText: placeholder.text,
+          placeholderPosition: { line: placeholder.line, ch: placeholder.start },
+          placeholderEnd: { line: placeholder.line, ch: placeholder.end },
+          placeholderType: placeholder.type
+        }
+      );
+
+      // Obtener acciones disponibles para placeholders
+      const availableActions = this.getAvailableActions(context);
+
+      if (availableActions.length > 0) {
+        // Mostrar menú contextual o widget especial para placeholders
+        this.showPlaceholderActions(event, placeholder, availableActions);
+      }
+    }
+  }
+
+  /**
+   * Muestra acciones para placeholders (widget de búsqueda)
+   */
+  showPlaceholderActions(event, placeholder, availableActions) {
+    // Crear y mostrar el widget de búsqueda de JSON references
+    if (!this.jsonSearchWidget) {
+      this.jsonSearchWidget = new JsonReferenceSearchWidget(
+        this,
+        this.glosarioUI.getGlosarioService()
+      );
+    }
+
+    this.jsonSearchWidget.show(event, placeholder);
   }
 
   /**
@@ -288,5 +395,24 @@ export class SmartActionsManager {
       })),
       hasActiveMenu: !!this.activeMenu,
     };
+  }
+
+  /**
+   * Destruye el manager y limpia recursos
+   */
+  destroy() {
+    // Destruir widget de búsqueda si existe
+    if (this.jsonSearchWidget) {
+      this.jsonSearchWidget.destroy();
+      this.jsonSearchWidget = null;
+    }
+
+    // Ocultar menú activo
+    this.hideSmartActionsMenu();
+
+    // Limpiar referencias
+    this.glosarioUI = null;
+    this.insertController = null;
+    this.actionRegistry = null;
   }
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# JSON References Scanner Script
+# JSON References Scanner Script - Optimized Version
 # Scans JSON reference files in test/page-objects directory
 
 # === ARGUMENTOS ===
@@ -22,100 +22,102 @@ fi
 PAGE_OBJECTS_DIR="test/page-objects"
 FULL_PAGE_OBJECTS_DIR="${WORKSPACE_DIR}/${PAGE_OBJECTS_DIR}"
 
-# Array para almacenar resultados
-declare -a results
-result_count=0
+# Verificar si jq está disponible para mejor rendimiento
+USE_JQ=false
+if command -v jq >/dev/null 2>&1; then
+    USE_JQ=true
+fi
 
-# Función para agregar resultados
-add_result() {
-    results[result_count]="$1"
-    ((result_count++))
-}
-
-# Función para extraer keys y valores del JSON
-extract_json_data() {
-    local file="$1"
-    local json_data="$2"
-    
-    local data_json="[]"
-    
-    # Usar jq si está disponible
-    if command -v jq >/dev/null 2>&1; then
-        data_json=$(echo "$json_data" | jq -c 'to_entries | map({key: .key, value: .value})' 2>/dev/null || echo "[]")
-    else
-        # Fallback: extraer keys y valores con regex y construir JSON array
-        local entries=()
-        while IFS= read -r line; do
-            local key=$(echo "$line" | sed 's/^"\([^"]*\)":\s*\(.*\)$/\1/')
-            local value=$(echo "$line" | sed 's/^"\([^"]*\)":\s*\(.*\)$/\2/')
-            
-            # Remover comas al final de valores
-            value=$(echo "$value" | sed 's/,$//')
-            
-            # Escapar comillas en valores
-            value=$(echo "$value" | sed 's/"/\\"/g')
-            
-            if [[ -n "$key" ]]; then
-                entries+=("{\"key\":\"$key\",\"value\":$value}")
-            fi
-        done < <(echo "$json_data" | grep -o '"[^"]*":\s*[^,]*')
-        
-        if [[ ${#entries[@]} -gt 0 ]]; then
-            data_json="[$(IFS=,; echo "${entries[*]}")]"
-        fi
-    fi
-    
-    echo "$data_json"
-}
+# Variable para acumular resultados
+RESULTS_JSON="["
+TOTAL_KEYS=0
+FILE_COUNT=0
 
 # Función para escanear un archivo JSON específico
 scan_json_file() {
     local file="$1"
     local relative_path="${file#$WORKSPACE_DIR/}"
-    
-    # Verificar que el archivo exista y sea JSON válido
+
     if [[ ! -f "$file" ]]; then
         return
     fi
-    
-    # Intentar parsear el JSON
-    local json_content
-    json_content=$(cat "$file" 2>/dev/null || echo "")
-    
-    if [[ -z "$json_content" ]]; then
-        return
+
+    # Obtener metadatos del archivo de forma eficiente
+    local filename=$(basename "$file" .json)
+    local file_size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "0")
+    local modified=$(date -r "$file" -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)
+
+    # Escapar caracteres especiales
+    filename=$(printf '%s' "$filename" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    relative_path=$(printf '%s' "$relative_path" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+    # Extraer datos JSON de manera eficiente
+    local keys_json="[]"
+    local key_count=0
+
+    if [[ "$USE_JQ" == true ]]; then
+        # Usar jq para extracción rápida y eficiente
+        keys_json=$(jq -c 'to_entries | map({key: .key, value: .value})' "$file" 2>/dev/null || echo "[]")
+        key_count=$(jq 'length' "$file" 2>/dev/null || echo "0")
+    else
+        # Fallback más eficiente usando Node.js si está disponible
+        if command -v node >/dev/null 2>&1; then
+            keys_json=$(node -e "
+                try {
+                    const data = require('$file');
+                    const entries = Object.entries(data).map(([key, value]) => ({key, value}));
+                    console.log(JSON.stringify(entries));
+                } catch(e) {
+                    console.log('[]');
+                }
+            " 2>/dev/null || echo "[]")
+            key_count=$(node -e "
+                try {
+                    const data = require('$file');
+                    console.log(Object.keys(data).length);
+                } catch(e) {
+                    console.log('0');
+                }
+            " 2>/dev/null || echo "0")
+        else
+            # Último recurso - extracción simple con grep pero más eficiente
+            local temp_file=$(mktemp)
+            grep -o '"[^"]*":\s*[^,]*' "$file" > "$temp_file"
+            key_count=$(wc -l < "$temp_file" 2>/dev/null || echo "0")
+
+            # Construir JSON de forma más eficiente
+            local entries=()
+            while IFS= read -r line; do
+                local key=$(echo "$line" | sed -n 's/^"\([^"]*\)":\s*.*$/\1/p')
+                local value=$(echo "$line" | sed -n 's/^"[^"]*":\s*\(.*\)$/\1/p')
+                if [[ -n "$key" ]]; then
+                    value=$(echo "$value" | sed 's/,$//; s/"/\\"/g')
+                    entries+=("{\"key\":\"$key\",\"value\":$value}")
+                fi
+            done < "$temp_file"
+
+            if [[ ${#entries[@]} -gt 0 ]]; then
+                IFS=, eval 'keys_json="[${entries[*]}]"'
+            fi
+            rm -f "$temp_file"
+        fi
     fi
-    
-    # Extraer keys y valores del JSON
-    local data_json
-    data_json=$(extract_json_data "$file" "$json_content")
-    
-    # Obtener nombre del archivo
-    local filename
-    filename=$(basename "$file" .json)
-    
-    # Escapar caracteres especiales para JSON
-    filename=$(echo "$filename" | sed 's/"/\\"/g' | sed 's/\\/\\\\/g')
-    relative_path=$(echo "$relative_path" | sed 's/"/\\"/g' | sed 's/\\/\\\\/g')
-    
-    # Obtener tamaño del archivo
-    local file_size=0
-    if [[ -f "$file" ]]; then
-        file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+
+    # Agregar al resultado
+    if [[ "$FILE_COUNT" -gt 0 ]]; then
+        RESULTS_JSON="$RESULTS_JSON,"
     fi
-    
-    # Agregar al array de resultados
-    local json_result=$(cat << EOF
-{
-    "filename": "$filename",
-    "keys": $data_json,
-    "file": "$relative_path",
-    "size": $file_size,
-    "modified": "$(date -r "$file" -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
-}
-EOF
-)
-    add_result "$json_result"
+
+    RESULTS_JSON="$RESULTS_JSON{
+        \"filename\": \"$filename\",
+        \"keys\": $keys_json,
+        \"file\": \"$relative_path\",
+        \"size\": $file_size,
+        \"modified\": \"$modified\"
+    }"
+
+    TOTAL_KEYS=$((TOTAL_KEYS + key_count))
+    FILE_COUNT=$((FILE_COUNT + 1))
 }
 
 # Función para escanear directorio de page-objects
@@ -123,54 +125,36 @@ scan_page_objects_dir() {
     if [[ ! -d "$FULL_PAGE_OBJECTS_DIR" ]]; then
         return
     fi
-    
-    # Buscar archivos JSON con find
+
+    # Buscar archivos JSON de forma más eficiente
+    local json_files=()
     while IFS= read -r -d '' json_file; do
-        if [[ -f "$json_file" ]]; then
-            scan_json_file "$json_file"
-        fi
+        json_files+=("$json_file")
     done < <(find "$FULL_PAGE_OBJECTS_DIR" -name "*.json" -type f -print0 2>/dev/null)
+
+    # Procesar archivos en lotes para mejor rendimiento
+    for json_file in "${json_files[@]}"; do
+        scan_json_file "$json_file"
+    done
 }
 
 # Escanear directorio de page-objects
 scan_page_objects_dir
 
 # Generar resultado final
-if [[ $result_count -eq 0 ]]; then
-    echo '{
-        "success": true,
-        "references": [],
-        "summary": {
-            "total_references": 0,
-            "scanned_directory": "'$PAGE_OBJECTS_DIR'",
-            "workspace": "'"$WORKSPACE_DIR"'",
-            "branch": "'"$BRANCH_NAME"'",
-            "message": "No se encontraron archivos JSON de page-objects"
-        }
-    }'
-else
-    # Construir JSON array manualmente  
-    printf -v refs_json "["
-    for ((i=0; i<result_count; i++)); do
-        if [[ $i -gt 0 ]]; then
-            printf -v refs_json "%s," "$refs_json"
-        fi
-        printf -v refs_json "%s%s" "$refs_json" "${results[i]}"
-    done
-    printf -v refs_json "%s]" "$refs_json"
-    
-    echo '{
-        "success": true,
-        "references": '"$refs_json"',
-        "summary": {
-            "total_references": '$result_count',
-            "total_keys": '$(echo "$refs_json" | grep -o '"keys":\[\([^]]*\)\]' | sed 's/"keys":\[\(.*\)\]/\1/' | tr ',' '\n' | wc -l | tr -d ' ')',
-            "scanned_directory": "'$PAGE_OBJECTS_DIR'",
-            "workspace": "'"$WORKSPACE_DIR"'",
-            "branch": "'"$BRANCH_NAME"'",
-            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-        }
-    }'
-fi
+RESULTS_JSON="$RESULTS_JSON]"
 
-exit 0
+cat << EOF
+{
+    "success": true,
+    "references": $RESULTS_JSON,
+    "summary": {
+        "total_references": $FILE_COUNT,
+        "total_keys": $TOTAL_KEYS,
+        "scanned_directory": "$PAGE_OBJECTS_DIR",
+        "workspace": "$WORKSPACE_DIR",
+        "branch": "$BRANCH_NAME",
+        "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    }
+}
+EOF

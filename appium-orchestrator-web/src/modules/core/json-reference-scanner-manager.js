@@ -9,14 +9,98 @@ class JsonReferenceScannerManager {
   constructor(configManager, validationManager) {
     this.configManager = configManager;
     this.validationManager = validationManager;
+    this.cache = new Map();
+    this.cacheExpiryTime = 5 * 60 * 1000; // 5 minutos
+    this.cacheDir = path.join(process.cwd(), 'cache', 'json-references');
+    this.ensureCacheDir();
+  }
+
+  ensureCacheDir() {
+    try {
+      if (!fs.existsSync(this.cacheDir)) {
+        fs.mkdirSync(this.cacheDir, { recursive: true });
+      }
+    } catch (error) {
+      console.warn('No se pudo crear directorio de caché:', error.message);
+    }
+  }
+
+  getCacheKey(branch) {
+    return `${branch}_json_refs`;
+  }
+
+  getCacheFilePath(branch) {
+    return path.join(this.cacheDir, `${branch}.json`);
+  }
+
+  isCacheValid(cacheData) {
+    return cacheData && cacheData.timestamp &&
+           (Date.now() - cacheData.timestamp) < this.cacheExpiryTime;
+  }
+
+  getFromCache(branch) {
+    // Primero intentar caché en memoria
+    const memoryCache = this.cache.get(this.getCacheKey(branch));
+    if (memoryCache && this.isCacheValid(memoryCache)) {
+      return { ...memoryCache.data, cached: true, source: 'memory' };
+    }
+
+    // Luego intentar caché en disco
+    const cacheFile = this.getCacheFilePath(branch);
+    if (fs.existsSync(cacheFile)) {
+      try {
+        const cacheData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+        if (this.isCacheValid(cacheData)) {
+          // Guardar en caché de memoria para futuras solicitudes
+          this.cache.set(this.getCacheKey(branch), cacheData);
+          return { ...cacheData.data, cached: true, source: 'disk' };
+        }
+      } catch (error) {
+        console.warn('Error al leer caché de disco:', error.message);
+      }
+    }
+
+    return null;
+  }
+
+  saveToCache(branch, data) {
+    const cacheData = {
+      timestamp: Date.now(),
+      data: data
+    };
+
+    // Guardar en caché de memoria
+    this.cache.set(this.getCacheKey(branch), cacheData);
+
+    // Guardar en caché de disco
+    const cacheFile = this.getCacheFilePath(branch);
+    try {
+      fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
+    } catch (error) {
+      console.warn('Error al guardar caché en disco:', error.message);
+    }
   }
 
   /**
    * Main entry point for scanning JSON reference files
    */
-  async scanJsonReferences(branch) {
+  async scanJsonReferences(branch, forceRefresh = false) {
     try {
-      // 1. Validate persistent workspaces configuration
+      // 1. Check cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedData = this.getFromCache(branch);
+        if (cachedData) {
+          console.log(`[JSON-SCANNER] Using cached data for branch ${branch} (${cachedData.source})`);
+          return {
+            success: true,
+            data: cachedData,
+            cached: true,
+            message: 'Datos de referencias JSON cargados desde caché',
+          };
+        }
+      }
+
+      // 2. Validate persistent workspaces configuration
       if (!this.configManager.isEnabled('persistentWorkspaces')) {
         return {
           success: false,
@@ -25,7 +109,7 @@ class JsonReferenceScannerManager {
         };
       }
 
-      // 2. Validate branch parameter
+      // 3. Validate branch parameter
       const branchErrors = this.validationManager.validateBranchName(branch);
 
       if (branchErrors.length > 0) {
@@ -37,7 +121,7 @@ class JsonReferenceScannerManager {
         };
       }
 
-      // 3. Check if workspace exists
+      // 4. Check if workspace exists
       const workspacePath = this.getWorkspacePath(branch);
       if (!fs.existsSync(workspacePath)) {
         return {
@@ -48,7 +132,7 @@ class JsonReferenceScannerManager {
         };
       }
 
-      // 4. Check if this is a git repository
+      // 5. Check if this is a git repository
       const gitDir = path.join(workspacePath, '.git');
       if (!fs.existsSync(gitDir)) {
         return {
@@ -58,13 +142,22 @@ class JsonReferenceScannerManager {
         };
       }
 
-      // 5. Perform actual scan
+      // 6. Perform actual scan with performance tracking
+      console.log(`[JSON-SCANNER] Starting scan for branch ${branch}`);
+      const startTime = Date.now();
       const scanResult = await this.performScan(workspacePath, branch);
+      const endTime = Date.now();
+
+      console.log(`[JSON-SCANNER] Scan completed in ${endTime - startTime}ms`);
+
+      // 7. Save to cache
+      this.saveToCache(branch, scanResult);
 
       return {
         success: true,
         data: scanResult,
         cached: false,
+        scanTime: endTime - startTime,
         message: 'Escaneo de referencias JSON completado exitosamente',
       };
     } catch (error) {
@@ -155,12 +248,19 @@ class JsonReferenceScannerManager {
   clearCache(branch = null) {
     try {
       if (branch) {
-        const cacheFile = path.join(this.cacheDir, `${branch}.json`);
+        // Clear from memory cache
+        this.cache.delete(this.getCacheKey(branch));
+
+        // Clear from disk cache
+        const cacheFile = this.getCacheFilePath(branch);
         if (fs.existsSync(cacheFile)) {
           fs.unlinkSync(cacheFile);
         }
       } else {
-        // Clear all cache
+        // Clear all memory cache
+        this.cache.clear();
+
+        // Clear all disk cache
         if (fs.existsSync(this.cacheDir)) {
           const files = fs.readdirSync(this.cacheDir);
           files.forEach((file) => {

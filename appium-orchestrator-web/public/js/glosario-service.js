@@ -136,8 +136,8 @@ class GlosarioService {
       return { ...cachedData, cached: true };
     }
 
-    // Scan fresh data
-    const url = `${this.jsonRefsApiUrl}/scan?branch=${encodeURIComponent(branch)}`;
+    // Scan fresh data with server-side caching
+    const url = `${this.jsonRefsApiUrl}/scan?branch=${encodeURIComponent(branch)}&forceRefresh=${forceRefresh}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -148,7 +148,7 @@ class GlosarioService {
     const result = await response.json();
 
     if (result.success) {
-      const dataWithCacheFlag = { ...result, cached: false };
+      const dataWithCacheFlag = { ...result, cached: result.cached || false };
       this.jsonCache.set(branch, dataWithCacheFlag);
       return dataWithCacheFlag;
     } else {

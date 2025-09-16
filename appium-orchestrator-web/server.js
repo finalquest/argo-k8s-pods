@@ -670,7 +670,7 @@ app.post('/api/steps/cache/clear', async (req, res) => {
 
 // JSON Reference Scanner API Endpoints
 app.get('/api/json-references/scan', async (req, res) => {
-  const { branch } = req.query;
+  const { branch, forceRefresh } = req.query;
   if (!branch) {
     return res.status(400).json({
       success: false,
@@ -679,7 +679,8 @@ app.get('/api/json-references/scan', async (req, res) => {
     });
   }
   try {
-    const result = await jsonReferenceScannerManager.scanJsonReferences(branch);
+    const forceRefreshBool = forceRefresh === 'true' || forceRefresh === '1';
+    const result = await jsonReferenceScannerManager.scanJsonReferences(branch, forceRefreshBool);
     if (result.success) {
       res.json(result);
     } else {
