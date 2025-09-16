@@ -17,6 +17,8 @@ const DeviceManager = require('./src/modules/core/device-manager');
 const ApkManager = require('./src/modules/core/apk-manager');
 const FeatureManager = require('./src/modules/core/feature-manager');
 const WorkspaceManager = require('./src/modules/core/workspace-manager');
+const StepScannerManager = require('./src/modules/core/step-scanner-manager');
+const JsonReferenceScannerManager = require('./src/modules/core/json-reference-scanner-manager');
 
 // Import worker management modules
 const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
@@ -40,6 +42,14 @@ const deviceManager = new DeviceManager(configManager, validationManager);
 const apkManager = new ApkManager(configManager, validationManager);
 const featureManager = new FeatureManager(configManager, validationManager);
 const workspaceManager = new WorkspaceManager(configManager, validationManager);
+const stepScannerManager = new StepScannerManager(
+  configManager,
+  validationManager,
+);
+const jsonReferenceScannerManager = new JsonReferenceScannerManager(
+  configManager,
+  validationManager,
+);
 
 // Initialize worker management modules
 const processManager = new ProcessManager(configManager, validationManager);
@@ -128,17 +138,13 @@ app.get('/api/apk/versions', async (req, res) => {
   try {
     let result;
 
-    // If repo parameter is provided, use legacy method
-    if (repo) {
-      result = await apkManager.getRegistryApkVersions(repo);
-    }
-    // If client parameter is provided, use client-specific method
-    else if (client) {
-      result = await apkManager.getClientApkVersions(client);
-    }
-    // If no parameters, try to get all available versions
-    else {
+    // If LOCAL_APK_DIRECTORY is defined, use local method (ignore repo parameter)
+    if (process.env.LOCAL_APK_DIRECTORY) {
       result = await apkManager.getApkVersions();
+    } else if (repo) {
+      result = await apkManager.getRegistryApkVersions(repo);
+    } else if (client) {
+      result = await apkManager.getClientApkVersions(client);
     }
 
     if (result.success) {
@@ -589,6 +595,143 @@ app.post('/api/mappings/download-batch', (req, res) => {
   });
 
   archive.finalize();
+});
+
+// Step Scanner API Endpoints
+app.get('/api/steps/scan', async (req, res) => {
+  const { branch } = req.query;
+
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+
+  try {
+    const result = await stepScannerManager.scanSteps(branch);
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      const statusCode = result.code === 'WORKSPACE_NOT_EXISTS' ? 404 : 400;
+      res.status(statusCode).json(result);
+    }
+  } catch (error) {
+    console.error('Error en /api/steps/scan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.get('/api/steps/status', async (req, res) => {
+  const { branch } = req.query;
+
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+
+  try {
+    const result = await stepScannerManager.getStatus(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/steps/status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.post('/api/steps/cache/clear', async (req, res) => {
+  const { branch } = req.body;
+
+  try {
+    const result = await stepScannerManager.clearCache(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/steps/cache/clear:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+// JSON Reference Scanner API Endpoints
+app.get('/api/json-references/scan', async (req, res) => {
+  const { branch, forceRefresh } = req.query;
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+  try {
+    const forceRefreshBool = forceRefresh === 'true' || forceRefresh === '1';
+    const result = await jsonReferenceScannerManager.scanJsonReferences(branch, forceRefreshBool);
+    if (result.success) {
+      res.json(result);
+    } else {
+      const statusCode = result.code === 'WORKSPACE_NOT_EXISTS' ? 404 : 400;
+      res.status(statusCode).json(result);
+    }
+  } catch (error) {
+    console.error('Error en /api/json-references/scan:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.get('/api/json-references/status', async (req, res) => {
+  const { branch } = req.query;
+  if (!branch) {
+    return res.status(400).json({
+      success: false,
+      error: 'El parámetro branch es requerido',
+      code: 'MISSING_BRANCH',
+    });
+  }
+  try {
+    const result = await jsonReferenceScannerManager.getStatus(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/json-references/status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+});
+
+app.post('/api/json-references/cache/clear', async (req, res) => {
+  const { branch } = req.body;
+  try {
+    const result = await jsonReferenceScannerManager.clearCache(branch);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en /api/json-references/cache/clear:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+    });
+  }
 });
 
 // --- Lógica de Workers ---

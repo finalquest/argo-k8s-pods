@@ -112,7 +112,7 @@ class AuthenticationManager {
 
   setupGoogleStrategy() {
     const GoogleStrategy = require('passport-google-oauth20').Strategy;
-    
+
     passport.use(
       new GoogleStrategy(
         {
@@ -628,13 +628,13 @@ app.get('/health', async (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    
+
     // Métricas de módulos
     workers: await workerPoolManager.getPoolStatus(),
     queue: await jobQueueManager.getQueueStatus(),
     resources: await resourceManager.getResourceUsage(),
     config: await configManager.getHealthStatus(),
-    
+
     // Sistema general
     version: require('./package.json').version,
     environment: process.env.NODE_ENV,
@@ -647,21 +647,25 @@ app.get('/health', async (req, res) => {
 ## 💡 Beneficios de la Arquitectura Modular
 
 ### 🔧 Mantenibilidad
+
 - **Separación de responsabilidades**: Cada módulo tiene una función clara
 - **Código más limpio**: 2,232 líneas distribuidas en 17 módulos especializados
 - **Depuración simplificada**: Los errores se aíslan en módulos específicos
 
 ### 🚀 Rendimiento
+
 - **Carga bajo demanda**: Los módulos se inicializan solo cuando se necesitan
 - **Optimización de recursos**: Mejor gestión de memoria y CPU
 - **Inyección de dependencias**: Permite testing y mockeo fácil
 
 ### 🧪 Testing
+
 - **Tests específicos**: Cada módulo tiene sus propias pruebas unitarias
 - **Mocking simplificado**: Los módulos pueden ser mockeados independientemente
 - **259 tests**: Cobertura completa del sistema modularizado
 
 ### 🔄 Escalabilidad
+
 - **Fácil extensión**: Nuevas funcionalidades se añaden como módulos
 - **Reutilización**: Los módulos pueden ser usados en otros proyectos
 - **Desacoplamiento**: Los cambios en un módulo no afectan a otros

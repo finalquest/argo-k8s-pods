@@ -59,6 +59,7 @@ fi
 cat > "$CONFIG_FILE" <<- EOM
 import { config } from './wdio.local.shared';
 
+const originalAfterStep = config.afterStep;
 config.hostname = 'localhost';
 config.port = ${APPIUM_PORT};
 config.path = '/wd/hub';
@@ -71,9 +72,6 @@ config.logLevels = {
   '@wdio/utils': 'warn',
   '@wdio/config': 'warn'
 };
-
-// Usar reporters que muestren información en tiempo real
-config.reporters = ['spec'];
 
 // Modificar los formatos de cucumber para mostrar steps en tiempo real
 config.cucumberOpts = {
@@ -106,7 +104,8 @@ config.beforeStep = function (step /*, scenario */) {
   console.log('➡️  ' + k + ' ' + t);
 };
 
-config.afterStep = function (step, _scenario, result) {
+config.afterStep = async function (step, scenario, result) {
+
   var t = (step && step.text) ? step.text : '';
   if (result && result.passed) {
     var dur = (typeof result.duration === 'number') ? (' (' + result.duration + ' ms)') : '';
@@ -116,6 +115,9 @@ config.afterStep = function (step, _scenario, result) {
     if (result && result.error) {
       console.error('   → ' + (result.error.message || result.error));
     }
+  }
+  if (typeof originalAfterStep === 'function') {
+    await originalAfterStep.call(this, step, scenario, result);
   }
 };
 
@@ -154,10 +156,6 @@ export { config };
 EOM
 
 success "Configuración de WDIO generada para ${FEATURE_NAME}"
-
-debug "--- ENVIRONMENT VARIABLES ---"
-printenv
-debug "---------------------------"
 
 debug "🎬 Ejecutando test..."
 

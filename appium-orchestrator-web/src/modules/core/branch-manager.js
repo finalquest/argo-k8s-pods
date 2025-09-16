@@ -382,6 +382,7 @@ class BranchManager {
         __dirname,
         '..',
         '..',
+        '..',
         'public',
         'reports',
       );
@@ -398,6 +399,10 @@ class BranchManager {
       const history = [];
 
       for (const branch of branches) {
+        // Skip .DS_Store and other hidden files
+        if (branch.startsWith('.')) {
+          continue;
+        }
         if (branchFilter && branch !== branchFilter) {
           continue;
         }
@@ -406,6 +411,10 @@ class BranchManager {
         const reports = await fs.promises.readdir(branchPath);
 
         for (const report of reports) {
+          // Skip .DS_Store and other hidden files
+          if (report.startsWith('.')) {
+            continue;
+          }
           const reportPath = require('path').join(branchPath, report);
           const stats = await fs.promises.stat(reportPath);
 
@@ -413,7 +422,7 @@ class BranchManager {
             const reportData = {
               branch,
               reportName: report,
-              path: reportPath,
+              path: `/reports/${branch}/${report}`,
               created: stats.birthtime,
               modified: stats.mtime,
             };

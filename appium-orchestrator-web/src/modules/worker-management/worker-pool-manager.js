@@ -262,7 +262,7 @@ class WorkerPoolManager {
           if (message.data && message.data.reportPath) {
             const syntheticJob = {
               branch: worker.branch,
-              feature: `_ReporteUnificado_${worker.client}`,
+              feature: `_ReporteUnificado_ ${worker.client}`,
               client: worker.client,
             };
             this.processManager.handleReport(

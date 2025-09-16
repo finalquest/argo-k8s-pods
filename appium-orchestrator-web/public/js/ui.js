@@ -33,19 +33,20 @@ export function renderHistoryItem(item) {
   infoDiv.style.gap = '1em';
 
   const textSpan = document.createElement('span');
-  textSpan.textContent = `${item.feature} (${item.branch}) - ${item.timestamp}`;
+  const timestamp = new Date(item.modified).toLocaleString('es-AR');
+  textSpan.textContent = `${item.reportName} (${item.branch}) - ${timestamp}`;
 
   infoDiv.appendChild(textSpan);
 
   li.appendChild(infoDiv);
 
-  if (item.reportUrl) {
+  if (item.path) {
     const reportButton = document.createElement('button');
     reportButton.className = 'report-btn';
     reportButton.textContent = 'Ver Reporte';
     reportButton.onclick = () => {
       window.open(
-        item.reportUrl,
+        item.path,
         'reportPopup',
         'width=1200,height=800,scrollbars=yes,resizable=yes',
       );
@@ -159,7 +160,7 @@ export function updateSelectedCount() {
   ).length;
   runSelectedBtn.textContent = `Ejecutar Selección (${selectedCount})`;
   runSelectedBtn.disabled = selectedCount === 0;
-    updateCommitButtonState(); // Update commit button state as well
+  updateCommitButtonState(); // Update commit button state as well
 }
 
 export function updateCommitButtonState() {
@@ -168,39 +169,8 @@ export function updateCommitButtonState() {
 
   const hasModifiedFiles = document.querySelectorAll('li.modified').length > 0;
 
-  console.log(
-    '🔍 updateCommitButtonState - Hay archivos modificados:',
-    hasModifiedFiles,
-  );
-  console.log(
-    '🔍 updateCommitButtonState - Total elementos .modified:',
-    document.querySelectorAll('li.modified').length,
-  );
-  console.log(
-    '🔍 updateCommitButtonState - Antes de cambios - disabled:',
-    commitBtn.disabled,
-    'display:',
-    commitBtn.style.display,
-  );
-
   commitBtn.disabled = !hasModifiedFiles;
   commitBtn.style.display = hasModifiedFiles ? 'inline-block' : 'none';
-  console.log(
-    '🔍 updateCommitButtonState - Después de cambios - disabled:',
-    commitBtn.disabled,
-    'display:',
-    commitBtn.style.display,
-  );
-
-  // Verificar si hay algún atributo disabled directamente en el HTML
-  console.log(
-    '🔍 updateCommitButtonState - Atributo disabled HTML:',
-    commitBtn.hasAttribute('disabled'),
-  );
-  console.log(
-    '🔍 updateCommitButtonState - Clases del botón:',
-    commitBtn.className,
-  );
 }
 
 export function toggleSelectAll(event) {
@@ -397,39 +367,19 @@ export function filterFeatureListByText() {
   filterFeatureList();
 }
 
-export function updateFeaturesWithGitStatus(modifiedFeatures, newFeatures = []) {
+export function updateFeaturesWithGitStatus(
+  modifiedFeatures,
+  newFeatures = [],
+) {
   // The modifiedFeatures from server are full paths, e.g., test/features/nbch/feature/modulos/folder/file.feature
   // The newFeatures are untracked files, e.g., test/features/nbch/feature/modulos/folder/new_file.feature
   // The featureName in the dataset is relative to modulos, e.g., folder/file
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Modified features recibidos:',
-    modifiedFeatures,
-  );
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - New features recibidos:',
-    newFeatures,
-  );
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Tipos de datos:',
-    {
-      modifiedFeaturesType: typeof modifiedFeatures,
-      newFeaturesType: typeof newFeatures,
-      modifiedIsArray: Array.isArray(modifiedFeatures),
-      newIsArray: Array.isArray(newFeatures),
-    }
-  );
-  
   const modifiedSet = new Set(modifiedFeatures);
   const newSet = new Set(newFeatures);
   const featureItems = document.querySelectorAll('#features-list .file');
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Encontrados .file elements:',
-    featureItems.length,
-  );
-
-  featureItems.forEach((item, index) => {
+  featureItems.forEach((item) => {
     const featureName = item.dataset.featureName;
-    
+
     if (!featureName) return;
 
     // We can't know the full client/branch path here easily,
@@ -443,12 +393,6 @@ export function updateFeaturesWithGitStatus(modifiedFeatures, newFeatures = []) 
     for (const modifiedFile of modifiedSet) {
       if (modifiedFile.endsWith(featurePathSuffix)) {
         isModified = true;
-        console.log(
-          '🔍 updateFeaturesWithGitStatus - Marcando como modificado:',
-          featureName,
-          'Coincide con:',
-          modifiedFile,
-        );
         break;
       }
     }
@@ -458,68 +402,20 @@ export function updateFeaturesWithGitStatus(modifiedFeatures, newFeatures = []) 
       for (const newFile of newSet) {
         if (newFile.endsWith(featurePathSuffix)) {
           isNew = true;
-          console.log(
-            '🔍 updateFeaturesWithGitStatus - Marcando como nuevo:',
-            featureName,
-            'Coincide con:',
-            newFile,
-          );
           break;
         }
       }
     }
 
     // Apply classes
-    const oldClasses = Array.from(item.classList);
     item.classList.remove('modified', 'new-file');
-    
+
     if (isModified) {
       item.classList.add('modified');
-      console.log(
-        '🔍 updateFeaturesWithGitStatus - Clase "modified" agregada a:',
-        featureName,
-        'Clases antes:',
-        oldClasses,
-        'Clases después:',
-        Array.from(item.classList),
-      );
     } else if (isNew) {
       item.classList.add('new-file');
-      console.log(
-        '🔍 updateFeaturesWithGitStatus - Clase "new-file" agregada a:',
-        featureName,
-        'Clases antes:',
-        oldClasses,
-        'Clases después:',
-        Array.from(item.classList),
-      );
-    } else {
-      console.log(
-        '🔍 updateFeaturesWithGitStatus - Archivo sin cambios:',
-        featureName,
-        'Clases finales:',
-        Array.from(item.classList),
-      );
     }
   });
-
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Total elementos con clase modified después de actualizar:',
-    document.querySelectorAll('li.modified').length,
-  );
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Total elementos con clase new-file después de actualizar:',
-    document.querySelectorAll('li.new-file').length,
-  );
-  console.log(
-    '🔍 updateFeaturesWithGitStatus - Resumen final:',
-    {
-      totalFiles: featureItems.length,
-      modifiedFiles: document.querySelectorAll('li.modified').length,
-      newFiles: document.querySelectorAll('li.new-file').length,
-      normalFiles: featureItems.length - document.querySelectorAll('li.modified').length - document.querySelectorAll('li.new-file').length
-    }
-  );
 
   // Actualizar el estado del botón de commit después de marcar los archivos modificados
   updateCommitButtonState();
@@ -648,6 +544,7 @@ export function initIdeView({ onSave, onCommit, onRun }) {
       <div class="editor-title" id="editor-title" style="display: none;">Selecciona un archivo</div>
       <div class="editor-actions">
         <button id="ide-run-btn" class="execute-btn" style="display: none;">Ejecutar</button>
+        <button id="glosario-toggle-btn" class="toolbar-btn" title="Glosario de Steps (Ctrl+G)" style="display: none;">📚 Glosario</button>
         <button id="ide-commit-btn" class="commit-btn" style="display: none;">Hacer Commit</button>
         <button id="ide-save-btn" class="secondary-btn" style="display: none;" disabled>Guardar Cambios</button>
       </div>
@@ -691,10 +588,14 @@ export function initIdeView({ onSave, onCommit, onRun }) {
   if (runBtn && typeof onRun === 'function') {
     runBtn.addEventListener('click', onRun);
   }
+}
 
-  }
-
-export function setIdeEditorContent({ content, isReadOnly, isModified, isLocal }) {
+export function setIdeEditorContent({
+  content,
+  isReadOnly,
+  isModified,
+  isLocal,
+}) {
   const saveBtn = document.getElementById('ide-save-btn');
   const commitBtn = document.getElementById('ide-commit-btn');
   const runBtn = document.getElementById('ide-run-btn');
@@ -749,13 +650,17 @@ export function setIdeEditorContent({ content, isReadOnly, isModified, isLocal }
   if (runBtn) {
     runBtn.style.display = 'inline-block';
   }
+  const glosarioBtn = document.getElementById('glosario-toggle-btn');
+  if (glosarioBtn) {
+    glosarioBtn.style.display = 'inline-block';
+  }
   if (commitBtn) {
     commitBtn.style.display = 'inline-block';
     console.log(
       '🔍 setIdeEditorContent - Botón commit display set to inline-block',
     );
   }
-    if (editorTitle) {
+  if (editorTitle) {
     // Si hay contenido real (no el mensaje por defecto), mostrar el título
     if (
       content &&

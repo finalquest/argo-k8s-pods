@@ -18,12 +18,12 @@ describe('Workspace Changes Detection', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Setup mock managers
     configManager = new ConfigurationManager();
     // Mock the methods we need
     configManager.getGitConfig = jest.fn().mockReturnValue({
-      url: 'https://github.com/test/repo.git'
+      url: 'https://github.com/test/repo.git',
     });
     configManager.isEnabled = jest.fn().mockReturnValue(true);
     configManager.get = jest.fn().mockReturnValue('/tmp/workspaces');
@@ -31,18 +31,20 @@ describe('Workspace Changes Detection', () => {
     validationManager = new ValidationManager();
     // Mock the methods we need
     validationManager.validateBranchName = jest.fn().mockReturnValue([]);
-    validationManager.sanitize = jest.fn().mockImplementation(branch => branch.replace(/[^a-zA-Z0-9-_]/g, '-'));
+    validationManager.sanitize = jest
+      .fn()
+      .mockImplementation((branch) => branch.replace(/[^a-zA-Z0-9-_]/g, '-'));
 
     branchManager = new BranchManager(configManager, validationManager);
-    
+
     // Setup mock git instance
     mockGit = {
       status: jest.fn(),
       log: jest.fn(),
-      listRemote: jest.fn()
+      listRemote: jest.fn(),
     };
     simpleGit.mockReturnValue(mockGit);
-    
+
     // Mock fs.existsSync
     fs.existsSync = jest.fn().mockReturnValue(true);
   });
@@ -57,7 +59,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['test.feature', 'README.md'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -79,7 +81,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked.file'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -101,7 +103,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked.file'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -123,7 +125,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked.file'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -145,7 +147,7 @@ describe('Workspace Changes Detection', () => {
         not_added: [],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -167,7 +169,7 @@ describe('Workspace Changes Detection', () => {
         not_added: [],
         deleted: ['old-file.txt'],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -189,7 +191,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked.file'],
         deleted: [],
         created: ['new-tracked-file.txt'],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -223,7 +225,9 @@ describe('Workspace Changes Detection', () => {
       const result = await branchManager.getWorkspaceChanges('test-branch');
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('La funcionalidad de workspaces persistentes no está habilitada');
+      expect(result.error).toContain(
+        'La funcionalidad de workspaces persistentes no está habilitada',
+      );
     });
 
     it('should handle git status errors', async () => {
@@ -233,12 +237,16 @@ describe('Workspace Changes Detection', () => {
       const result = await branchManager.getWorkspaceChanges('test-branch');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Error interno al obtener los cambios del workspace.');
+      expect(result.error).toBe(
+        'Error interno al obtener los cambios del workspace.',
+      );
     });
 
     it('should validate branch names', async () => {
       // Simular error de validación
-      validationManager.validateBranchName.mockReturnValue(['Invalid branch name']);
+      validationManager.validateBranchName.mockReturnValue([
+        'Invalid branch name',
+      ]);
 
       const result = await branchManager.getWorkspaceChanges('invalid@branch');
 
@@ -258,14 +266,14 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked1.txt', 'untracked2.txt', 'untracked3.txt'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
 
       // Para el frontend, solo deberían contar los archivos trackeados
       const frontendTotalChanges = result.modifiedFiles + result.stagedFiles;
-      
+
       expect(result.hasChanges).toBe(true);
       expect(frontendTotalChanges).toBe(3); // 2 modificados + 1 staged
       expect(result.unstagedFiles).toBe(3); // Los no trackeados se mantienen separados
@@ -280,7 +288,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['untracked1.txt', 'untracked2.txt'],
         deleted: [],
         created: [],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');
@@ -298,7 +306,7 @@ describe('Workspace Changes Detection', () => {
         not_added: ['notes.txt', 'temp.log'],
         deleted: ['old-config.json'],
         created: ['new-helper.js'],
-        renamed: []
+        renamed: [],
       });
 
       const result = await branchManager.getWorkspaceChanges('test-branch');

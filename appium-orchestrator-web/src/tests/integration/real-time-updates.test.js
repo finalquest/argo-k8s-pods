@@ -3,7 +3,7 @@ const mockSocketIo = {
   on: jest.fn(),
   emit: jest.fn(),
   disconnect: jest.fn(),
-  connected: false
+  connected: false,
 };
 
 describe('Real-time Updates Integration Tests', () => {
@@ -25,7 +25,7 @@ describe('Real-time Updates Integration Tests', () => {
       const testData = {
         branch: 'test-branch',
         hasPendingCommits: true,
-        message: 'Test commit status update'
+        message: 'Test commit status update',
       };
 
       expect(testData).toBeDefined();
@@ -38,7 +38,7 @@ describe('Real-time Updates Integration Tests', () => {
 
     test('should validate workspace changes committed structure', () => {
       const testData = {
-        branch: 'test-branch'
+        branch: 'test-branch',
       };
 
       expect(testData).toBeDefined();
@@ -50,7 +50,7 @@ describe('Real-time Updates Integration Tests', () => {
       const testData = {
         slotId: 1,
         jobId: 'test-job-123',
-        featureName: 'test-feature'
+        featureName: 'test-feature',
       };
 
       expect(testData).toBeDefined();
@@ -64,13 +64,13 @@ describe('Real-time Updates Integration Tests', () => {
         {
           slotId: 1,
           status: 'busy',
-          job: { id: 'test-job', feature: 'test-feature' }
+          job: { id: 'test-job', feature: 'test-feature' },
         },
         {
           slotId: 2,
           status: 'available',
-          job: null
-        }
+          job: null,
+        },
       ];
 
       expect(Array.isArray(testData)).toBe(true);
@@ -84,7 +84,7 @@ describe('Real-time Updates Integration Tests', () => {
       const testData = {
         active: 2,
         queued: 5,
-        limit: 4
+        limit: 4,
       };
 
       expect(testData).toBeDefined();
@@ -99,7 +99,7 @@ describe('Real-time Updates Integration Tests', () => {
     test('should validate log update structure', () => {
       const testData = {
         slotId: 1,
-        logLine: 'Test log line output\n'
+        logLine: 'Test log line output\n',
       };
 
       expect(testData).toBeDefined();
@@ -115,8 +115,8 @@ describe('Real-time Updates Integration Tests', () => {
         data: {
           current: 50,
           total: 100,
-          message: 'Test progress update'
-        }
+          message: 'Test progress update',
+        },
       };
 
       expect(testData).toBeDefined();
@@ -133,7 +133,7 @@ describe('Real-time Updates Integration Tests', () => {
       const eventData = {
         branch: 'test-branch',
         hasPendingCommits: true,
-        message: 'Test status'
+        message: 'Test status',
       };
 
       expect(eventName).toBe('commit_status_update');
@@ -143,7 +143,7 @@ describe('Real-time Updates Integration Tests', () => {
     test('should validate workspace_changes_committed event', () => {
       const eventName = 'workspace_changes_committed';
       const eventData = {
-        branch: 'test-branch'
+        branch: 'test-branch',
       };
 
       expect(eventName).toBe('workspace_changes_committed');
@@ -155,7 +155,7 @@ describe('Real-time Updates Integration Tests', () => {
       const eventData = {
         slotId: 1,
         jobId: 'test-job-123',
-        featureName: 'test-feature'
+        featureName: 'test-feature',
       };
 
       expect(eventName).toBe('job_started');
@@ -168,7 +168,7 @@ describe('Real-time Updates Integration Tests', () => {
         slotId: 1,
         jobId: 'test-job-123',
         exitCode: 0,
-        reportUrl: '/reports/test-report.html'
+        reportUrl: '/reports/test-report.html',
       };
 
       expect(eventName).toBe('job_finished');
@@ -181,8 +181,8 @@ describe('Real-time Updates Integration Tests', () => {
         {
           slotId: 1,
           status: 'busy',
-          job: { id: 'test-job', feature: 'test-feature' }
-        }
+          job: { id: 'test-job', feature: 'test-feature' },
+        },
       ];
 
       expect(eventName).toBe('worker_pool_update');
@@ -194,7 +194,7 @@ describe('Real-time Updates Integration Tests', () => {
       const eventData = {
         active: 2,
         queued: 5,
-        limit: 4
+        limit: 4,
       };
 
       expect(eventName).toBe('queue_status_update');
@@ -205,7 +205,7 @@ describe('Real-time Updates Integration Tests', () => {
       const eventName = 'log_update';
       const eventData = {
         slotId: 1,
-        logLine: 'Test log line\n'
+        logLine: 'Test log line\n',
       };
 
       expect(eventName).toBe('log_update');
@@ -219,8 +219,8 @@ describe('Real-time Updates Integration Tests', () => {
         data: {
           current: 50,
           total: 100,
-          message: 'Test progress'
-        }
+          message: 'Test progress',
+        },
       };
 
       expect(eventName).toBe('progress_update');
@@ -232,23 +232,23 @@ describe('Real-time Updates Integration Tests', () => {
     test('should test SocketIOManager integration', () => {
       // Import the actual SocketIOManager
       const SocketIOManager = require('../../../src/modules/socketio/socketio-manager');
-      
+
       // Create mock dependencies
       const mockAuthManager = { isAuthenticationEnabled: () => false };
       const mockWorkerPool = { getWorkers: () => [] };
       const mockJobQueue = { addJob: jest.fn() };
       const mockConfigManager = { get: jest.fn(), isEnabled: jest.fn() };
       const mockValidationManager = { validateBranchName: jest.fn() };
-      
+
       // Create instance
       const socketManager = new SocketIOManager(
         mockAuthManager,
         mockWorkerPool,
         mockJobQueue,
         mockConfigManager,
-        mockValidationManager
+        mockValidationManager,
       );
-      
+
       expect(socketManager).toBeDefined();
       expect(typeof socketManager.handleCommitChanges).toBe('function');
       expect(typeof socketManager.handlePushChanges).toBe('function');
@@ -258,7 +258,7 @@ describe('Real-time Updates Integration Tests', () => {
     test('should test socket event handling', () => {
       const mockSocket = {
         on: jest.fn(),
-        emit: jest.fn()
+        emit: jest.fn(),
       };
 
       // Test that socket event handlers can be called without errors
@@ -271,16 +271,25 @@ describe('Real-time Updates Integration Tests', () => {
     test('should test real-time update flow', () => {
       // Mock the update flow that would happen in real-time
       const updateFlow = [
-        { type: 'commit_status_update', data: { branch: 'test-branch', hasPendingCommits: true } },
-        { type: 'workspace_changes_committed', data: { branch: 'test-branch' } },
+        {
+          type: 'commit_status_update',
+          data: { branch: 'test-branch', hasPendingCommits: true },
+        },
+        {
+          type: 'workspace_changes_committed',
+          data: { branch: 'test-branch' },
+        },
         { type: 'worker_pool_update', data: [{ slotId: 1, status: 'busy' }] },
-        { type: 'queue_status_update', data: { active: 2, queued: 5, limit: 4 } }
+        {
+          type: 'queue_status_update',
+          data: { active: 2, queued: 5, limit: 4 },
+        },
       ];
 
       expect(Array.isArray(updateFlow)).toBe(true);
       expect(updateFlow.length).toBeGreaterThan(0);
-      
-      updateFlow.forEach(update => {
+
+      updateFlow.forEach((update) => {
         expect(update).toHaveProperty('type');
         expect(update).toHaveProperty('data');
       });
@@ -289,16 +298,9 @@ describe('Real-time Updates Integration Tests', () => {
 
   describe('Error Handling Integration', () => {
     test('should handle malformed event data', () => {
-      const malformedData = [
-        null,
-        undefined,
-        '',
-        [],
-        {},
-        { invalid: 'data' }
-      ];
+      const malformedData = [null, undefined, '', [], {}, { invalid: 'data' }];
 
-      malformedData.forEach(data => {
+      malformedData.forEach((data) => {
         expect(() => {
           // Should handle malformed data gracefully
           if (data && typeof data === 'object') {
@@ -317,7 +319,7 @@ describe('Real-time Updates Integration Tests', () => {
         { jobId: 'test' }, // Missing slotId
       ];
 
-      incompleteData.forEach(data => {
+      incompleteData.forEach((data) => {
         expect(() => {
           // Should handle incomplete data gracefully
           Object.keys(data);
@@ -336,7 +338,7 @@ describe('Real-time Updates Integration Tests', () => {
         { field: 'limit', value: 4, expectedType: 'number' },
       ];
 
-      typeValidationTests.forEach(test => {
+      typeValidationTests.forEach((test) => {
         expect(typeof test.value).toBe(test.expectedType);
       });
     });

@@ -59,7 +59,7 @@ export async function getCommitStatus(branch) {
     }
 
     const data = await response.json();
-    
+
     // Normalize the response to match expected format
     if (data.success) {
       return {
@@ -95,11 +95,11 @@ export async function getWorkspaceChanges(branch) {
     };
   } catch (error) {
     console.error('Error getting workspace changes:', error);
-    return { 
-      hasChanges: false, 
-      modifiedFiles: 0, 
-      stagedFiles: 0, 
-      unstagedFiles: 0 
+    return {
+      hasChanges: false,
+      modifiedFiles: 0,
+      stagedFiles: 0,
+      unstagedFiles: 0,
     };
   }
 }
@@ -115,7 +115,7 @@ El sistema implementa una lógica precisa para determinar qué archivos deben mo
 // src/modules/core/branch-manager.js - Cálculo de hasChanges
 async getWorkspaceChanges(branch) {
   // ... validación y setup ...
-  
+
   const git = simpleGit(workspacePath);
   const status = await git.status();
 
@@ -135,8 +135,8 @@ async getWorkspaceChanges(branch) {
     modifiedFiles,
     stagedFiles,
     unstagedFiles,
-    message: hasChanges 
-      ? `Hay ${modifiedFiles + stagedFiles} archivo(s) modificado(s)` 
+    message: hasChanges
+      ? `Hay ${modifiedFiles + stagedFiles} archivo(s) modificado(s)`
       : '',
   };
 }
@@ -147,13 +147,13 @@ async getWorkspaceChanges(branch) {
 ```javascript
 // public/js/main.js - Lógica de indicadores
 function updateCommitStatusIndicator(branch) {
-  Promise.all([getCommitStatus(branch), getWorkspaceChanges(branch)])
-    .then(([commitStatus, workspaceStatus]) => {
-      
+  Promise.all([getCommitStatus(branch), getWorkspaceChanges(branch)]).then(
+    ([commitStatus, workspaceStatus]) => {
       // Handle uncommitted changes (yellow indicator)
       if (workspaceStatus.hasChanges) {
         // Mostrar indicador amarillo con conteo de archivos trackeados
-        const totalChanges = workspaceStatus.modifiedFiles + workspaceStatus.stagedFiles;
+        const totalChanges =
+          workspaceStatus.modifiedFiles + workspaceStatus.stagedFiles;
         uncommittedStatusText.textContent = `${totalChanges} archivo(s) modificado(s) sin commit`;
         uncommittedIndicator.classList.remove('hidden');
       } else {
@@ -168,20 +168,21 @@ function updateCommitStatusIndicator(branch) {
       } else {
         pendingCommitsIndicator.classList.add('hidden');
       }
-    });
+    },
+  );
 }
 ```
 
 #### Escenarios Comportamentales
 
-| Escenario | hasChanges | Header Visible | Mensaje |
-|-----------|------------|----------------|---------|
-| Solo archivos no trackeados | `false` | ❌ Oculto | No se muestra |
-| Archivos modificados | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
-| Archivos staged | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
-| Mixto (modificados + no trackeados) | `true` | ✅ Visible | "N archivo(s) modificado(s) sin commit" |
-| Workspace limpio | `false` | ❌ Oculto | No se muestra |
-| Solo commits pendientes | `false` | ❌ Oculto (commit) | ✅ Visible (push) |
+| Escenario                           | hasChanges | Header Visible     | Mensaje                                 |
+| ----------------------------------- | ---------- | ------------------ | --------------------------------------- |
+| Solo archivos no trackeados         | `false`    | ❌ Oculto          | No se muestra                           |
+| Archivos modificados                | `true`     | ✅ Visible         | "N archivo(s) modificado(s) sin commit" |
+| Archivos staged                     | `true`     | ✅ Visible         | "N archivo(s) modificado(s) sin commit" |
+| Mixto (modificados + no trackeados) | `true`     | ✅ Visible         | "N archivo(s) modificado(s) sin commit" |
+| Workspace limpio                    | `false`    | ❌ Oculto          | No se muestra                           |
+| Solo commits pendientes             | `false`    | ❌ Oculto (commit) | ✅ Visible (push)                       |
 
 ### 2. Backend - Endpoints Git
 

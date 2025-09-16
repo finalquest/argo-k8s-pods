@@ -205,13 +205,14 @@ appium-orchestrator-web/
 El servidor ha sido refactorizado en una arquitectura modular de 17 componentes especializados:
 
 - **Módulos Core (5)**: apk-manager, branch-manager, device-manager, feature-manager, workspace-manager
-- **Módulos Security (3)**: authentication, configuration, validation  
+- **Módulos Security (3)**: authentication, configuration, validation
 - **Módulos Services (2)**: file-operations, git-operations
 - **Módulos Worker Management (4)**: job-queue-manager, process-manager, resource-manager, worker-pool-manager
 - **Módulos Utils (3)**: logging-utilities, path-utilities, string-utilities
 - **Módulo SocketIO (1)**: socketio-manager
 
 **Características principales:**
+
 - **Autenticación**: Google OAuth 2.0 con AuthenticationManager
 - **API REST**: Endpoints gestionados por módulos especializados
 - **Socket.IO**: Comunicación en tiempo real con SocketIOManager

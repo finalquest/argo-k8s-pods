@@ -7,14 +7,15 @@
     <!-- CodeMirror CSS -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
     />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"
     />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/ide.css" />
+    <link rel="stylesheet" href="css/autocomplete.css" />
   </head>
   <body>
     <div id="auth-overlay">
@@ -27,7 +28,9 @@
 
     <div class="header" id="main-header">
       <div class="header-queue-section">
-        <div id="queue-status-header">Estado: 0 en ejecución / 0 en cola (Límite: 0)</div>
+        <div id="queue-status-header">
+          Estado: 0 en ejecución / 0 en cola (Límite: 0)
+        </div>
         <div class="header-indicators">
           <div
             id="uncommitted-changes-indicator"
@@ -67,6 +70,19 @@
           >
             <span class="theme-icon" aria-hidden="true">🌞</span>
             <span class="theme-text">Light</span>
+          </button>
+        </div>
+
+        <!-- Help Button -->
+        <div class="help-container">
+          <button
+            id="help-btn"
+            class="help-btn"
+            title="Ayuda - Autocompletado y Glosario"
+            aria-label="Ayuda"
+          >
+            <span class="help-icon" aria-hidden="true">❓</span>
+            <span class="help-text">Ayuda</span>
           </button>
         </div>
       </div>
@@ -111,7 +127,11 @@
                 <select id="branch-select" class="compact-select">
                   <option>Cargando...</option>
                 </select>
-                <button id="refresh-features-btn" class="compact-refresh-btn" title="Refrescar Features">
+                <button
+                  id="refresh-features-btn"
+                  class="compact-refresh-btn"
+                  title="Refrescar Features"
+                >
                   ↻
                 </button>
               </div>
@@ -146,23 +166,51 @@
             </div>
           </div>
 
-        <div class="toolbar-section">
-  <div class="toolbar-group">
-    <div class="toggle-matrix">
-      <!-- Fila 1 -->
-      <label class="toggle-label left"  for="batch-priority-checkbox">⚡ Prioridad</label>
-      <input class="toggle-chk" type="checkbox" id="batch-priority-checkbox" />
-      <input class="toggle-chk" type="checkbox" id="record-mappings-checkbox" />
-      <label class="toggle-label right" for="record-mappings-checkbox">🔴 Record Mapping</label>
+          <div class="toolbar-section">
+            <div class="toolbar-group">
+              <div class="toggle-matrix">
+                <!-- Fila 1 -->
+                <label class="toggle-label left" for="batch-priority-checkbox"
+                  >⚡ Prioridad</label
+                >
+                <input
+                  class="toggle-chk"
+                  type="checkbox"
+                  id="batch-priority-checkbox"
+                />
+                <input
+                  class="toggle-chk"
+                  type="checkbox"
+                  id="record-mappings-checkbox"
+                />
+                <label class="toggle-label right" for="record-mappings-checkbox"
+                  >🔴 Record Mapping</label
+                >
 
-      <!-- Fila 2 -->
-      <label class="toggle-label left"  for="use-local-mappings-checkbox">💾 Use Mappings</label>
-      <input class="toggle-chk" type="checkbox" id="use-local-mappings-checkbox" />
-      <input class="toggle-chk" type="checkbox" id="persistent-workspace-checkbox" />
-      <label class="toggle-label right" for="persistent-workspace-checkbox">🔄 Persistent Workspace</label>
-    </div>
-  </div>
-</div>
+                <!-- Fila 2 -->
+                <label
+                  class="toggle-label left"
+                  for="use-local-mappings-checkbox"
+                  >💾 Use Mappings</label
+                >
+                <input
+                  class="toggle-chk"
+                  type="checkbox"
+                  id="use-local-mappings-checkbox"
+                />
+                <input
+                  class="toggle-chk"
+                  type="checkbox"
+                  id="persistent-workspace-checkbox"
+                />
+                <label
+                  class="toggle-label right"
+                  for="persistent-workspace-checkbox"
+                  >🔄 Persistent Workspace</label
+                >
+              </div>
+            </div>
+          </div>
 
           <!-- Action Buttons -->
           <div class="toolbar-section">
@@ -180,7 +228,7 @@
             >
               🔄
             </button>
-                      </div>
+          </div>
         </div>
 
         <!-- IDE Container with Integrated Controls -->
@@ -225,10 +273,15 @@
           <div id="ide-container">
             <div id="feature-tree-panel">
               <div class="tree-controls">
-                <button id="new-test-btn" class="new-test-btn" style="display: none;" title="Crear nuevo test en la ubicación actual">
+                <button
+                  id="new-test-btn"
+                  class="new-test-btn"
+                  style="display: none"
+                  title="Crear nuevo test en la ubicación actual"
+                >
                   ➕ Nuevo Test
                 </button>
-                              </div>
+              </div>
               <ul id="features-list">
                 <li>Selecciona cliente y branch para buscar features.</li>
               </ul>
@@ -283,16 +336,6 @@
         </div>
         <ul
           id="history-list"
-          style="
-            list-style-type: none;
-            padding: 0;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--gray-200);
-            border-radius: 12px;
-            background: white;
-            box-shadow: var(--shadow-sm);
-          "
         ></ul>
       </div>
 
@@ -349,16 +392,6 @@
           </div>
           <pre
             id="wiremock-mappings-output"
-            style="
-              background: var(--gray-900);
-              color: var(--gray-100);
-              padding: 1.5rem;
-              border-radius: 12px;
-              max-height: 500px;
-              overflow-y: auto;
-              border: 1px solid var(--gray-200);
-              box-shadow: var(--shadow-sm);
-            "
           ></pre>
           <hr style="margin: 2em 0" />
           <h3>Import Mappings</h3>
@@ -449,19 +482,6 @@
           </div>
           <div
             id="wiremock-requests-output"
-            style="
-              background: var(--gray-900);
-              color: var(--gray-100);
-              padding: 1.5rem;
-              border-radius: 12px;
-              max-height: 70vh;
-              overflow-y: auto;
-              font-family:
-                'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas,
-                'Courier New', monospace;
-              border: 1px solid var(--gray-200);
-              box-shadow: var(--shadow-sm);
-            "
           ></div>
         </div>
       </div>
@@ -469,13 +489,38 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <!-- CodeMirror JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/gherkin/gherkin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gherkin/gherkin.min.js"></script>
     <!-- Split.js for resizable panels -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+    <!-- Core Services -->
+    <script type="module" src="js/core/service-registry.js"></script>
+    <script type="module" src="js/core/global-services.js"></script>
     <!-- Theme Manager -->
     <script type="module" src="js/theme-manager.js"></script>
+    <!-- Glosario Service -->
+    <script type="module" src="js/glosario-service.js"></script>
+    <!-- Glosario Insert Controller -->
+    <script type="module" src="js/glosario-insert-controller.js"></script>
+    <!-- Smart Actions Module -->
+    <script type="module" src="js/smart-actions-loader.js"></script>
+    <!-- Autocomplete Module -->
+    <script
+      type="module"
+      src="js/autocomplete/autocomplete-service.js"
+    ></script>
+    <!-- Glosario UI -->
+    <script type="module" src="js/glosario-ui.js"></script>
+    <!-- Help Modal Service -->
+    <script type="module" src="js/help-modal-service.js"></script>
+    <!-- Main Application -->
     <script type="module" src="js/main.js"></script>
+
+    <!-- Legacy Compatibility (to be removed) -->
+    <script type="module">
+      import { createLegacyAliases } from './js/core/service-registry.js';
+      createLegacyAliases();
+    </script>
 
     <!-- Mappings Download Modal -->
     <div id="mappings-download-modal" class="modal">
@@ -519,6 +564,220 @@
         >
           Descargar Selección
         </button>
+      </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+      <div class="modal-content help-modal-content">
+        <div class="modal-header">
+          <h2>🚀 Ayuda: Autocompletado y Glosario</h2>
+          <span class="close-btn" id="help-modal-close">&times;</span>
+        </div>
+        <div class="modal-body help-modal-body">
+          <!-- Sección: Autocompletado -->
+          <div class="help-section">
+            <h3 class="help-section-title">🎯 Autocompletado Inteligente</h3>
+            <div class="help-content">
+              <p>
+                El editor cuenta con un sistema de autocompletado inteligente
+                que te ayuda a escribir steps de Gherkin más rápido.
+              </p>
+
+              <div class="help-feature">
+                <h4>📝 <strong>Modo Persistente (Nuevo)</strong></h4>
+                <div class="help-code">
+                  <kbd>Ctrl+Space</kbd> - Activar autocompletado persistente
+                </div>
+                <ul class="help-features-list">
+                  <li>El widget se mantiene visible mientras escribes</li>
+                  <li>Las sugerencias se actualizan en tiempo real</li>
+                  <li>Usa las flechas para navegar</li>
+                  <li>
+                    Presiona <kbd>Enter</kbd> o <kbd>Tab</kbd> para seleccionar
+                  </li>
+                  <li>Presiona <kbd>Escape</kbd> para cerrar</li>
+                </ul>
+              </div>
+
+              <div class="help-feature">
+                <h4>🔄 <strong>Auto-triggers</strong></h4>
+                <p>El autocompletado se activa automáticamente cuando:</p>
+                <ul class="help-features-list">
+                  <li>Escribes <code>Given </code> (con espacio)</li>
+                  <li>Escribes <code>When </code> (con espacio)</li>
+                  <li>Escribes <code>Then </code> (con espacio)</li>
+                  <li>Escribes <code>{</code> para referencias JSON</li>
+                  <li>Estás en una línea vacía después de un Scenario</li>
+                </ul>
+              </div>
+
+              <div class="help-feature">
+                <h4>🎨 <strong>Tipos de Sugerencias</strong></h4>
+                <div class="help-types-grid">
+                  <div class="help-type">
+                    <span class="help-type-icon">📝</span>
+                    <strong>Steps</strong>
+                    <span class="help-type-desc">Steps del glosario</span>
+                  </div>
+                  <div class="help-type">
+                    <span class="help-type-icon">🔗</span>
+                    <strong>JSON</strong>
+                    <span class="help-type-desc">Referencias JSON</span>
+                  </div>
+                  <div class="help-type">
+                    <span class="help-type-icon">🏷️</span>
+                    <strong>Keywords</strong>
+                    <span class="help-type-desc">Given/When/Then</span>
+                  </div>
+                  <div class="help-type">
+                    <span class="help-type-icon">💡</span>
+                    <strong>Contextuales</strong>
+                    <span class="help-type-desc">Sugerencias inteligentes</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Glosario -->
+          <div class="help-section">
+            <h3 class="help-section-title">📚 Glosario de Steps</h3>
+            <div class="help-content">
+              <p>
+                El glosario es una colección de steps predefinidos que puedes
+                reutilizar en tus archivos de feature.
+              </p>
+
+              <div class="help-feature">
+                <h4>🔍 <strong>Acceso al Glosario</strong></h4>
+                <p>Puedes acceder al glosario de varias formas:</p>
+                <ul class="help-features-list">
+                  <li>
+                    <strong>Panel del glosario</strong> - Pestaña "Glosario" en
+                    el sidebar
+                  </li>
+                  <li>
+                    <strong>Click derecho</strong> - En el editor para ver steps
+                    disponibles
+                  </li>
+                  <li>
+                    <strong>Autocompletado</strong> - Los steps aparecen en las
+                    sugerencias
+                  </li>
+                  <li>
+                    <strong>Smart Actions</strong> - Actions inteligentes en el
+                    editor
+                  </li>
+                </ul>
+              </div>
+
+              <div class="help-feature">
+                <h4>🎯 <strong>Uso de Variables</strong></h4>
+                <p>
+                  Los steps pueden contener variables que se reemplazan al
+                  usarlos:
+                </p>
+                <div class="help-example">
+                  <pre><code># Step en el glosario:
+"Given the user is on {page}"
+
+# Se convierte en:
+"Given the user is on login page"
+"Given the user is on home page"</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Tips y Trucos -->
+          <div class="help-section">
+            <h3 class="help-section-title">💡 Tips y Trucos</h3>
+            <div class="help-content">
+              <div class="help-feature">
+                <h4>🎨 <strong>Smart Actions</strong></h4>
+                <p>Actions inteligentes disponibles en el editor:</p>
+                <ul class="help-features-list">
+                  <li>
+                    <strong>Insertar Step</strong> - Inserta un step del
+                    glosario
+                  </li>
+                  <li>
+                    <strong>Copiar Step</strong> - Copia un step al portapapeles
+                  </li>
+                  <li>
+                    <strong>Referencias JSON</strong> - Gestiona variables y
+                    datos
+                  </li>
+                  <li>
+                    <strong>Formato Automático</strong> - Indenta y formatea el
+                    código
+                  </li>
+                </ul>
+              </div>
+
+              <div class="help-feature">
+                <h4>🔄 <strong>Actualización en Tiempo Real</strong></h4>
+                <p>
+                  El modo persistente actualiza las sugerencias mientras
+                  escribes:
+                </p>
+                <ul class="help-features-list">
+                  <li>Escribe "Given" → Filtra steps que contienen "Given"</li>
+                  <li>Escribe "user" → Filtra steps que contienen "user"</li>
+                  <li>Las sugerencias se actualizan en ~100ms</li>
+                  <li>El texto coincidente se resalta</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Ejemplos -->
+          <div class="help-section">
+            <h3 class="help-section-title">📝 Ejemplos Prácticos</h3>
+            <div class="help-content">
+              <div class="help-example">
+                <h4>🎯 <strong>Ejemplo 1: Flujo Completo</strong></h4>
+                <ol class="help-example-steps">
+                  <li>
+                    Presiona <kbd>Ctrl+Space</kbd> → Se abre el widget
+                    persistente
+                  </li>
+                  <li>
+                    El widget muestra "MODO PERSISTENTE - Sigue escribiendo..."
+                  </li>
+                  <li>
+                    Escribe "Given" → Las sugerencias se filtran automáticamente
+                  </li>
+                  <li>
+                    Usa <kbd>↓</kbd> para seleccionar "Given the user is on
+                    login page"
+                  </li>
+                  <li>
+                    Presiona <kbd>Enter</kbd> → El step se inserta con
+                    indentación
+                  </li>
+                  <li>El widget se cierra automáticamente</li>
+                </ol>
+              </div>
+
+              <div class="help-example">
+                <h4>🎨 <strong>Ejemplo 2: Referencias JSON</strong></h4>
+                <pre><code>Scenario: Login with test data
+  Given the user is on login page
+  When the user enters credentials {"username":"test", "password":"123"}
+  Then the user should be redirected to home page</code></pre>
+                <p class="help-example-note">
+                  Las referencias JSON aparecen al escribir <code>{</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer help-modal-footer">
+          <button id="help-got-it-btn" class="btn-primary">¡Entendido!</button>
+        </div>
       </div>
     </div>
   </body>

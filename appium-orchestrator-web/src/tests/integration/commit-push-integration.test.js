@@ -27,7 +27,7 @@ describe('Commit/Push Integration Tests', () => {
       { getWorkers: () => [] },
       { addJob: jest.fn() },
       configManager,
-      validationManager
+      validationManager,
     );
     gitOperations = new GitOperations(configManager, validationManager);
 
@@ -44,7 +44,10 @@ describe('Commit/Push Integration Tests', () => {
   afterAll(async () => {
     // Cleanup test workspace
     if (fs.existsSync(process.env.PERSISTENT_WORKSPACES_ROOT)) {
-      fs.rmSync(process.env.PERSISTENT_WORKSPACES_ROOT, { recursive: true, force: true });
+      fs.rmSync(process.env.PERSISTENT_WORKSPACES_ROOT, {
+        recursive: true,
+        force: true,
+      });
     }
   });
 
@@ -86,24 +89,35 @@ describe('Commit/Push Integration Tests', () => {
     beforeEach(async () => {
       // Create test workspace
       const testBranch = 'test-branch-integration';
-      const workspacePath = path.join(process.env.PERSISTENT_WORKSPACES_ROOT, testBranch, 'appium');
-      
+      const workspacePath = path.join(
+        process.env.PERSISTENT_WORKSPACES_ROOT,
+        testBranch,
+        'appium',
+      );
+
       if (!fs.existsSync(workspacePath)) {
         fs.mkdirSync(workspacePath, { recursive: true });
       }
 
       // Create test files
-      fs.writeFileSync(path.join(workspacePath, 'test1.feature'), '# Test feature 1');
-      fs.writeFileSync(path.join(workspacePath, 'test2.feature'), '# Test feature 2');
+      fs.writeFileSync(
+        path.join(workspacePath, 'test1.feature'),
+        '# Test feature 1',
+      );
+      fs.writeFileSync(
+        path.join(workspacePath, 'test2.feature'),
+        '# Test feature 2',
+      );
 
       // Initialize git repo
       await new Promise((resolve, reject) => {
-        exec('git init && git add . && git commit -m "Initial commit"', 
-          { cwd: workspacePath }, 
+        exec(
+          'git init && git add . && git commit -m "Initial commit"',
+          { cwd: workspacePath },
           (error, stdout, stderr) => {
             if (error) reject(error);
             else resolve(stdout);
-          }
+          },
         );
       });
 
@@ -113,16 +127,26 @@ describe('Commit/Push Integration Tests', () => {
     afterEach(async () => {
       // Cleanup test workspace
       if (testWorkspace && fs.existsSync(testWorkspace.path)) {
-        fs.rmSync(path.join(process.env.PERSISTENT_WORKSPACES_ROOT, testWorkspace.branch), 
-          { recursive: true, force: true });
+        fs.rmSync(
+          path.join(
+            process.env.PERSISTENT_WORKSPACES_ROOT,
+            testWorkspace.branch,
+          ),
+          { recursive: true, force: true },
+        );
       }
     });
 
     test('should detect workspace changes', async () => {
       // Modify a file
-      fs.writeFileSync(path.join(testWorkspace.path, 'test1.feature'), '# Modified test feature 1');
+      fs.writeFileSync(
+        path.join(testWorkspace.path, 'test1.feature'),
+        '# Modified test feature 1',
+      );
 
-      const result = await branchManager.getWorkspaceChanges(testWorkspace.branch);
+      const result = await branchManager.getWorkspaceChanges(
+        testWorkspace.branch,
+      );
 
       expect(result).toHaveProperty('success');
       if (result.success) {
@@ -136,7 +160,9 @@ describe('Commit/Push Integration Tests', () => {
     });
 
     test('should return no changes for clean workspace', async () => {
-      const result = await branchManager.getWorkspaceChanges(testWorkspace.branch);
+      const result = await branchManager.getWorkspaceChanges(
+        testWorkspace.branch,
+      );
 
       expect(result.success).toBe(true);
       expect(result.hasChanges).toBe(false);
@@ -145,10 +171,10 @@ describe('Commit/Push Integration Tests', () => {
     test('should get commit status', () => {
       // This test might timeout due to network operations
       // We'll just test that the method exists and avoid actual network calls
-      
+
       // Test that the method exists
       expect(typeof branchManager.getCommitStatus).toBe('function');
-      
+
       // The method exists and that's what matters for integration testing
       // Actual network calls are tested in other ways
       expect(true).toBe(true);
@@ -165,12 +191,12 @@ describe('Commit/Push Integration Tests', () => {
 
       // Test that the handler exists and is a function
       expect(typeof socketIOManager.handleCommitChanges).toBe('function');
-      
+
       // Test the handler with mock data
       const mockData = {
         branch: 'test-branch',
         files: ['test1.feature', 'test2.feature'],
-        message: 'Test commit message'
+        message: 'Test commit message',
       };
 
       // Should not throw an error
@@ -188,10 +214,10 @@ describe('Commit/Push Integration Tests', () => {
 
       // Test that the handler exists and is a function
       expect(typeof socketIOManager.handlePushChanges).toBe('function');
-      
+
       // Test the handler with mock data
       const mockData = {
-        branch: 'test-branch'
+        branch: 'test-branch',
       };
 
       // Should not throw an error
@@ -207,7 +233,7 @@ describe('Commit/Push Integration Tests', () => {
       const testData = {
         branch: 'test-branch',
         hasPendingCommits: true,
-        message: 'Test commit status'
+        message: 'Test commit status',
       };
 
       expect(() => {
@@ -216,7 +242,7 @@ describe('Commit/Push Integration Tests', () => {
 
       expect(socketIOManager.io.emit).toHaveBeenCalledWith(
         'commit_status_update',
-        testData
+        testData,
       );
     });
   });
@@ -224,8 +250,12 @@ describe('Commit/Push Integration Tests', () => {
   describe('Git Operations Integration', () => {
     test('should handle git URL authentication', () => {
       const testUrl = 'https://github.com/test/repo.git';
-      const authUrl = gitOperations.getAuthenticatedUrl(testUrl, 'testuser', 'testpass');
-      
+      const authUrl = gitOperations.getAuthenticatedUrl(
+        testUrl,
+        'testuser',
+        'testpass',
+      );
+
       // The URL might contain actual credentials from config
       expect(authUrl).toContain('@');
       expect(typeof authUrl).toBe('string');
@@ -234,7 +264,7 @@ describe('Commit/Push Integration Tests', () => {
     test('should handle git URL without credentials', () => {
       const testUrl = 'https://github.com/test/repo.git';
       const authUrl = gitOperations.getAuthenticatedUrl(testUrl, '', '');
-      
+
       // Should return a valid URL string
       expect(typeof authUrl).toBe('string');
       expect(authUrl.length).toBeGreaterThan(0);
@@ -248,19 +278,19 @@ describe('Commit/Push Integration Tests', () => {
   describe('Critical Integration Points', () => {
     test('should verify all critical integration points exist', () => {
       // These are the integration points that were missing and caused issues
-      
+
       // 1. BranchManager should be able to detect workspace changes
       expect(typeof branchManager.getWorkspaceChanges).toBe('function');
-      
+
       // 2. SocketIOManager should handle commit events
       expect(typeof socketIOManager.handleCommitChanges).toBe('function');
-      
+
       // 3. SocketIOManager should handle push events
       expect(typeof socketIOManager.handlePushChanges).toBe('function');
-      
+
       // 4. GitOperations should be available for git commands
       expect(typeof gitOperations.commitAndPush).toBe('function');
-      
+
       // 5. All managers should be properly initialized
       expect(configManager).toBeDefined();
       expect(validationManager).toBeDefined();
@@ -271,18 +301,18 @@ describe('Commit/Push Integration Tests', () => {
 
     test('should verify module dependencies are satisfied', () => {
       // This test prevents the dependency injection issues we had
-      
+
       // BranchManager should have proper dependencies
       expect(branchManager.configManager).toBeDefined();
       expect(branchManager.validationManager).toBeDefined();
-      
+
       // SocketIOManager should have proper dependencies
       expect(socketIOManager.authenticationManager).toBeDefined();
       expect(socketIOManager.workerPoolManager).toBeDefined();
       expect(socketIOManager.jobQueueManager).toBeDefined();
       expect(socketIOManager.configManager).toBeDefined();
       expect(socketIOManager.validationManager).toBeDefined();
-      
+
       // GitOperations should have proper dependencies
       expect(gitOperations.configManager).toBeDefined();
       expect(gitOperations.validationManager).toBeDefined();
@@ -290,27 +320,27 @@ describe('Commit/Push Integration Tests', () => {
 
     test('should detect missing integration points', () => {
       // This test would have caught the missing commit/push functionality
-      
+
       const integrationPoints = [
         {
           name: 'BranchManager.getWorkspaceChanges',
-          exists: typeof branchManager.getWorkspaceChanges === 'function'
+          exists: typeof branchManager.getWorkspaceChanges === 'function',
         },
         {
           name: 'SocketIOManager.handleCommitChanges',
-          exists: typeof socketIOManager.handleCommitChanges === 'function'
+          exists: typeof socketIOManager.handleCommitChanges === 'function',
         },
         {
           name: 'SocketIOManager.handlePushChanges',
-          exists: typeof socketIOManager.handlePushChanges === 'function'
+          exists: typeof socketIOManager.handlePushChanges === 'function',
         },
         {
           name: 'GitOperations.commitAndPush',
-          exists: typeof gitOperations.commitAndPush === 'function'
-        }
+          exists: typeof gitOperations.commitAndPush === 'function',
+        },
       ];
 
-      integrationPoints.forEach(point => {
+      integrationPoints.forEach((point) => {
         expect(point.exists).toBe(true);
       });
     });
@@ -318,8 +348,10 @@ describe('Commit/Push Integration Tests', () => {
 
   describe('Error Handling Integration', () => {
     test('should handle missing workspace gracefully', async () => {
-      const result = await branchManager.getWorkspaceChanges('non-existent-branch');
-      
+      const result = await branchManager.getWorkspaceChanges(
+        'non-existent-branch',
+      );
+
       expect(result).toBeDefined();
       if (result.success) {
         expect(result.hasChanges).toBe(false);
@@ -328,7 +360,7 @@ describe('Commit/Push Integration Tests', () => {
 
     test('should handle invalid branch names', async () => {
       const result = await branchManager.getCommitStatus('invalid@branch#name');
-      
+
       expect(result).toBeDefined();
       if (!result.success) {
         expect(result.error).toBeDefined();

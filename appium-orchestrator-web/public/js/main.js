@@ -135,7 +135,7 @@ async function hideAuthElementsInDevMode() {
 
 async function createNewTestFile(featureName) {
   const folderPath = currentFolderPath;
-  
+
   if (!folderPath) {
     alert('No hay una carpeta seleccionada para crear el test.');
     return false;
@@ -144,18 +144,22 @@ async function createNewTestFile(featureName) {
   // Extract branch and client from folder path (format: branch/client/path/to/folder)
   const pathParts = folderPath.split('/');
   const branch = pathParts[0];
-  const client = pathParts[1];
-  
+
   // Extract the relative path from the folder path (remove branch/client/feature/modulos/)
   const relativePath = pathParts.slice(4).join('/'); // Skip branch, client, feature, modulos
-  
+
   // Construct the full feature path with .feature extension
-  const featurePath = relativePath ? `${relativePath}/${featureName}.feature` : `${featureName}.feature`;
-  
+  const featurePath = relativePath
+    ? `${relativePath}/${featureName}.feature`
+    : `${featureName}.feature`;
+
   const fileName = `${featureName}.feature`;
 
+  // Extract client for API call
+  const client = pathParts[1];
+
   // Basic test template
-  const testTemplate = `Feature: ${featureName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+  const testTemplate = `Feature: ${featureName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
 
   Como usuario
   Quiero realizar una acción
@@ -173,44 +177,52 @@ async function createNewTestFile(featureName) {
   try {
     console.log('🔧 Creating test file with params:', {
       branch,
-      client, 
+      client,
       featurePath,
-      contentLength: testTemplate.length
+      contentLength: testTemplate.length,
     });
-    
+
     // Use the existing saveFeatureContent API to create the file
-    const result = await saveFeatureContent(branch, client, featurePath, testTemplate);
-    
+    const result = await saveFeatureContent(
+      branch,
+      client,
+      featurePath,
+      testTemplate,
+    );
+
     console.log('✅ Test file created successfully:', result);
-    
+
     appState.setState({ isLoading: false });
     globalEvents.emit('test:created', { branch, client, featureName });
-    
+
     alert(`Test "${fileName}" creado exitosamente en la ubicación actual.`);
-    
+
     // Refresh git status to show the new file as untracked
     setTimeout(async () => {
       try {
         const status = await getWorkspaceStatus(branch);
         updateFeaturesWithGitStatus(
-    status.modified_features, 
-    status.untracked_features || 
-    status.untracked_files || 
-    status.new_files || 
-    status.untracked || 
-    []
-  );
+          status.modified_features,
+          status.untracked_features ||
+            status.untracked_files ||
+            status.new_files ||
+            status.untracked ||
+            [],
+        );
       } catch (error) {
-        console.error('Error refreshing git status after creating file:', error);
+        console.error(
+          'Error refreshing git status after creating file:',
+          error,
+        );
       }
     }, 500);
-    
+
     // Also refresh the features list
     const refreshBtn = document.getElementById('refresh-features-btn');
     if (refreshBtn) {
       refreshBtn.click();
     }
-    
+
     return true;
   } catch (error) {
     console.error('❌ Error creating test file:', error);
@@ -219,18 +231,20 @@ async function createNewTestFile(featureName) {
       stack: error.stack,
       branch,
       client,
-      featurePath
+      featurePath,
     });
-    
+
     appState.setState({ isLoading: false });
-    
+
     // Handle specific error cases
     if (error.message && error.message.includes('workspace')) {
-      alert('No existe un workspace local para esta branch. Por favor, prepara el workspace primero.');
+      alert(
+        'No existe un workspace local para esta branch. Por favor, prepara el workspace primero.',
+      );
     } else {
       alert(`Error al crear el test: ${error.message || 'Error desconocido'}`);
     }
-    
+
     return false;
   }
 }
@@ -282,6 +296,9 @@ async function handleSave() {
 
 async function handleIdeRun(socket) {
   const activeFeature = appState.getState().activeFeature;
+  const saveMapping = document.getElementById(
+      'record-mappings-checkbox',
+    ).checked;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para ejecutar.');
     return;
@@ -300,36 +317,47 @@ async function handleIdeRun(socket) {
   // Run the test
   const { branch, client, featureName } = activeFeature;
   globalEvents.emit('test:running', { branch, client, featureName });
-  runTest(socket, branch, client, featureName, false);
+  runTest(socket, branch, client, featureName, false, saveMapping);
 }
 
 function sanitizeFolderName(text) {
   // Remove emojis and special characters, keep only letters, numbers, underscores, hyphens and spaces
-  return text.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+  return text
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '_');
 }
 
 function getFolderPathFromElement(folderElement) {
   const branchSelect = document.getElementById('branch-select');
   const clientSelect = document.getElementById('client-select');
-  
+
   if (!branchSelect || !clientSelect) return null;
-  
+
   const branch = branchSelect.value;
   const client = clientSelect.value;
-  
-  if (!branch || !client || branch === 'Cargando...' || client === 'Cargando...') return null;
-  
+
+  if (
+    !branch ||
+    !client ||
+    branch === 'Cargando...' ||
+    client === 'Cargando...'
+  )
+    return null;
+
   // Get the folder name from the element and sanitize it
   const folderNameElement = folderElement.querySelector('.feature-item');
-  const rawFolderName = folderNameElement ? folderNameElement.textContent.trim() : '';
+  const rawFolderName = folderNameElement
+    ? folderNameElement.textContent.trim()
+    : '';
   const folderName = sanitizeFolderName(rawFolderName);
-  
+
   if (!folderName) return null;
-  
+
   // Build the path by traversing up the tree to get parent folders
   let pathParts = [];
   let currentElement = folderElement;
-  
+
   // Traverse up to collect all parent folder names
   while (currentElement && currentElement.classList.contains('folder')) {
     const itemElement = currentElement.querySelector('.feature-item');
@@ -340,17 +368,17 @@ function getFolderPathFromElement(folderElement) {
         pathParts.unshift(sanitizedName); // Add to beginning to build path from root
       }
     }
-    
+
     // Go to parent folder
     const parentFolder = currentElement.parentElement.closest('.folder');
     currentElement = parentFolder;
   }
-  
+
   // If we couldn't build a proper path, just use the folder name
   if (pathParts.length === 0) {
     return `${branch}/${client}/feature/modulos/${folderName}`;
   }
-  
+
   // Construct full path
   const relativePath = pathParts.join('/');
   return `${branch}/${client}/feature/modulos/${relativePath}`;
@@ -358,15 +386,15 @@ function getFolderPathFromElement(folderElement) {
 
 function updateNewTestButtonVisibility(folderPath = null) {
   const newTestBtn = document.getElementById('new-test-btn');
-  
+
   // Save current folder path globally
   currentFolderPath = folderPath;
-  
+
   if (newTestBtn) {
     // Show button if we have a folder path (from expanded folder)
     const shouldShow = folderPath;
     newTestBtn.style.display = shouldShow ? 'inline-block' : 'none';
-    
+
     // Update button title
     if (shouldShow) {
       newTestBtn.title = `Crear nuevo test en: ${folderPath}`;
@@ -375,7 +403,6 @@ function updateNewTestButtonVisibility(folderPath = null) {
 }
 
 function handleIdeNewTest() {
-    
   // Get current folder path from global variable
   if (!currentFolderPath) {
     alert('Debes desplegar una carpeta en el árbol para crear un nuevo test.');
@@ -394,7 +421,7 @@ function handleIdeNewTest() {
   if (modalLocationPath) {
     modalLocationPath.textContent = currentFolderPath;
   }
-  
+
   // Clear previous input
   const testNameInput = document.getElementById('test-name');
   if (testNameInput) {
@@ -422,7 +449,6 @@ function handleIdeCommit() {
 
   getWorkspaceChanges(branch)
     .then((workspaceStatus) => {
-
       if (!workspaceStatus.hasChanges) {
         alert('No hay archivos modificados para commitear.');
         return;
@@ -486,7 +512,7 @@ function initializeApp() {
 
   // Listen for commit completed event to update UI after successful commit
   globalEvents.on('commit:completed', async (data) => {
-    const { branch, client } = data;
+    const { branch } = data;
 
     try {
       // Update the commit status indicator
@@ -495,13 +521,13 @@ function initializeApp() {
       // Refresh git status to update the modified files display
       const status = await getWorkspaceStatus(branch);
       updateFeaturesWithGitStatus(
-    status.modified_features, 
-    status.untracked_features || 
-    status.untracked_files || 
-    status.new_files || 
-    status.untracked || 
-    []
-  );
+        status.modified_features,
+        status.untracked_features ||
+          status.untracked_files ||
+          status.new_files ||
+          status.untracked ||
+          [],
+      );
 
       // Update commit button state
       updateCommitButtonState();
@@ -546,7 +572,7 @@ async function initializeAppControls(socket) {
       const selectedBranch = document.getElementById('branch-select').value;
 
       // Switch to workers tab to see the logs
-      switchTab('workers-tab');
+      switchTab('workers');
 
       // Start workspace preparation
       prepareWorkspace(socket, selectedBranch);
@@ -557,20 +583,19 @@ async function initializeAppControls(socket) {
   if (refreshGitStatusBtn) {
     refreshGitStatusBtn.addEventListener('click', async () => {
       const selectedBranch = document.getElementById('branch-select').value;
-      const selectedClient = document.getElementById('client-select').value;
       if (!selectedBranch) {
         alert('Por favor, selecciona una branch.');
         return;
       }
       const status = await getWorkspaceStatus(selectedBranch);
       updateFeaturesWithGitStatus(
-    status.modified_features, 
-    status.untracked_features || 
-    status.untracked_files || 
-    status.new_files || 
-    status.untracked || 
-    []
-  );
+        status.modified_features,
+        status.untracked_features ||
+          status.untracked_files ||
+          status.new_files ||
+          status.untracked ||
+          [],
+      );
       // Also update commit status indicator
       await updateCommitStatusIndicator(selectedBranch);
     });
@@ -587,10 +612,8 @@ async function initializeAppControls(socket) {
         return;
       }
 
-      
       getWorkspaceChanges(selectedBranch)
         .then((workspaceStatus) => {
-
           if (!workspaceStatus.hasChanges) {
             alert('No hay archivos modificados para commitear.');
             return;
@@ -665,7 +688,6 @@ async function initializeAppControls(socket) {
       const client = document.getElementById('client-select').value;
       const activeFeature = appState.getState().activeFeature;
 
-      
       let files;
 
       // Check if this is a header commit (stored data in modal)
@@ -712,7 +734,9 @@ async function initializeAppControls(socket) {
 
       // Validate test name format
       if (!/^[a-zA-Z0-9_]+$/.test(testName)) {
-        alert('El nombre del test solo puede contener letras, números y guiones bajos (_).');
+        alert(
+          'El nombre del test solo puede contener letras, números y guiones bajos (_).',
+        );
         return;
       }
 
@@ -764,6 +788,9 @@ async function initializeAppControls(socket) {
         window.progressIndicatorManager.updateEditorStateForCurrentFile();
       }
 
+      // Update glosario button visibility based on workspace status
+      await updateGlosarioButtonVisibility(selectedBranch);
+
       // Clear IDE editor
       const editorPanel = document.getElementById('editor-panel');
       if (editorPanel) {
@@ -774,6 +801,8 @@ async function initializeAppControls(socket) {
         if (saveBtn) saveBtn.style.display = 'none';
         if (commitBtn) commitBtn.style.display = 'none';
         if (runBtn) runBtn.style.display = 'none';
+        const glosarioBtn = editorPanel.querySelector('#glosario-toggle-btn');
+        if (glosarioBtn) glosarioBtn.style.display = 'none';
 
         // Clear editor content
         const ideEditorContent = getIdeEditorContent();
@@ -815,13 +844,13 @@ async function initializeAppControls(socket) {
         if (selectedClient) {
           const status = await getWorkspaceStatus(selectedBranch);
           updateFeaturesWithGitStatus(
-    status.modified_features, 
-    status.untracked_features || 
-    status.untracked_files || 
-    status.new_files || 
-    status.untracked || 
-    []
-  );
+            status.modified_features,
+            status.untracked_features ||
+              status.untracked_files ||
+              status.new_files ||
+              status.untracked ||
+              [],
+          );
         }
       } else {
         // Hide indicator if persistent workspaces are not enabled
@@ -834,10 +863,17 @@ async function initializeAppControls(socket) {
     });
   }
 
-  // Initial commit status check after a short delay to ensure DOM is ready
+  // Initial UI setup after a short delay to ensure DOM is ready
   setTimeout(async () => {
     const initialBranch = document.getElementById('branch-select').value;
     const config = appState.getState().config;
+
+    // Update glosario button visibility
+    if (initialBranch) {
+      await updateGlosarioButtonVisibility(initialBranch);
+    }
+
+    // Update commit status indicator
     if (initialBranch && config && config.persistentWorkspacesEnabled) {
       await updateCommitStatusIndicator(initialBranch);
     }
@@ -1119,7 +1155,11 @@ function initializeUiEventListeners(socket) {
 
     const branch = document.getElementById('branch-select').value;
     const client = document.getElementById('client-select').value;
-    runTest(socket, branch, client, featureName, highPriority);
+    const saveMapping = document.getElementById(
+      'record-mappings-checkbox',
+    ).checked;
+
+    runTest(socket, branch, client, featureName, highPriority, saveMapping);
   }
 
   featuresList.addEventListener('click', async (e) => {
@@ -1130,10 +1170,11 @@ function initializeUiEventListeners(socket) {
     if (folderItem) {
       // Prevent toggling when a button inside is clicked
       if (e.target.closest('button, input')) return;
-      
-      const isExpanded = folderItem.parentElement.classList.contains('expanded');
+
+      const isExpanded =
+        folderItem.parentElement.classList.contains('expanded');
       folderItem.parentElement.classList.toggle('expanded');
-      
+
       // If folder is being expanded (not collapsed), get its path and show new test button
       if (!isExpanded) {
         const folderPath = getFolderPathFromElement(folderItem.parentElement);
@@ -1283,7 +1324,116 @@ function initializeToolbarCollapse() {
   });
 }
 
-// Initialize toolbar collapse when DOM is ready
+// Initialize glosario button when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initializeToolbarCollapse();
+  initializeGlosarioButton();
 });
+
+// Initialize glosario toggle button
+function initializeGlosarioButton() {
+  // The button is now dynamically created in ui.js, so we need to check periodically
+  // or use event delegation
+  document.addEventListener('click', (event) => {
+    if (event.target && event.target.id === 'glosario-toggle-btn') {
+      // Toggle glosario panel
+      if (
+        typeof window.serviceRegistry !== 'undefined' &&
+        window.serviceRegistry.has('glosarioUI')
+      ) {
+        window.serviceRegistry.get('glosarioUI').toggle();
+      } else if (window.glosarioUI) {
+        // Fallback para compatibilidad temporal
+        window.glosarioUI.toggle();
+      }
+    }
+  });
+
+  // Update glosario branch when branch changes
+  const branchSelect = document.getElementById('branch-select');
+  if (branchSelect) {
+    branchSelect.addEventListener('change', () => {
+      const selectedBranch = branchSelect.value;
+      if (typeof window.serviceRegistry !== 'undefined') {
+        if (window.serviceRegistry.has('glosarioUI') && selectedBranch) {
+          window.serviceRegistry.get('glosarioUI').setBranch(selectedBranch);
+        }
+        if (window.serviceRegistry.has('glosario') && selectedBranch) {
+          window.serviceRegistry.get('glosario').onBranchChange(selectedBranch);
+        }
+      } else {
+        // Fallback para compatibilidad temporal
+        if (window.glosarioUI && selectedBranch) {
+          window.glosarioUI.setBranch(selectedBranch);
+        }
+        if (window.glosarioService && selectedBranch) {
+          window.glosarioService.onBranchChange(selectedBranch);
+        }
+      }
+    });
+  }
+}
+
+/**
+ * Update glosario button visibility based on workspace status
+ */
+async function updateGlosarioButtonVisibility(branch) {
+  console.log(
+    '[MAIN] updateGlosarioButtonVisibility called for branch:',
+    branch,
+  );
+
+  const glosarioBtn = document.getElementById('glosario-toggle-btn');
+  if (!glosarioBtn) {
+    console.log('[MAIN] Glosario button not found');
+    return;
+  }
+
+  if (!branch) {
+    console.log('[MAIN] No branch provided, hiding glosario button');
+    glosarioBtn.style.display = 'none';
+    return;
+  }
+
+  try {
+    console.log('[MAIN] Checking workspace status for branch:', branch);
+    const response = await fetch(
+      `/api/steps/status?branch=${encodeURIComponent(branch)}`,
+    );
+    console.log('[MAIN] Workspace status response status:', response.status);
+
+    if (!response.ok) {
+      console.log('[MAIN] Error checking workspace status, hiding button');
+      glosarioBtn.style.display = 'none';
+      return;
+    }
+
+    const result = await response.json();
+    console.log('[MAIN] Workspace status result:', result);
+
+    if (result.success && result.data) {
+      const { workspaceExists, persistentWorkspacesEnabled } = result.data;
+      console.log(
+        '[MAIN] Workspace exists:',
+        workspaceExists,
+        'Persistent workspaces enabled:',
+        persistentWorkspacesEnabled,
+      );
+
+      // Only show button if persistent workspaces are enabled AND workspace exists
+      if (persistentWorkspacesEnabled && workspaceExists) {
+        console.log('[MAIN] Showing glosario button');
+        glosarioBtn.style.display = 'flex';
+      } else {
+        console.log('[MAIN] Hiding glosario button - workspace not ready');
+        glosarioBtn.style.display = 'none';
+      }
+    } else {
+      console.log('[MAIN] Invalid response, hiding glosario button');
+      glosarioBtn.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('[MAIN] Error checking workspace status:', error);
+    glosarioBtn.style.display = 'none';
+  }
+}
