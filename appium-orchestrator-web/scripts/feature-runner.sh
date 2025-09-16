@@ -72,9 +72,6 @@ config.logLevels = {
   '@wdio/config': 'warn'
 };
 
-// Usar reporters que muestren información en tiempo real
-config.reporters = ['spec'];
-
 // Modificar los formatos de cucumber para mostrar steps en tiempo real
 config.cucumberOpts = {
   require: ['./test/steps-definitions/*.js'],
@@ -154,10 +151,6 @@ export { config };
 EOM
 
 success "Configuración de WDIO generada para ${FEATURE_NAME}"
-
-debug "--- ENVIRONMENT VARIABLES ---"
-printenv
-debug "---------------------------"
 
 debug "🎬 Ejecutando test..."
 
