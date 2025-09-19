@@ -340,3 +340,36 @@ export async function fetchApkVersions() {
     apkSource = 'registry'; // Reset to default on error
   }
 }
+
+// Data-only versions for worker management
+export async function getBranchesData() {
+  try {
+    const response = await fetch('/api/branches');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching branches data:', error);
+    return [];
+  }
+}
+
+export async function getApkVersionsData(client) {
+  if (!client) {
+    console.warn('No client provided for APK versions');
+    return [];
+  }
+
+  try {
+    const repo = `apks/${client}/int`;
+    const response = await fetch(`/api/apk/versions?repo=${repo}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || `HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.versions || [];
+  } catch (error) {
+    console.error('Error fetching APK versions data:', error);
+    return [];
+  }
+}

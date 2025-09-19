@@ -34,8 +34,11 @@ class JsonReferenceScannerManager {
   }
 
   isCacheValid(cacheData) {
-    return cacheData && cacheData.timestamp &&
-           (Date.now() - cacheData.timestamp) < this.cacheExpiryTime;
+    return (
+      cacheData &&
+      cacheData.timestamp &&
+      Date.now() - cacheData.timestamp < this.cacheExpiryTime
+    );
   }
 
   getFromCache(branch) {
@@ -66,7 +69,7 @@ class JsonReferenceScannerManager {
   saveToCache(branch, data) {
     const cacheData = {
       timestamp: Date.now(),
-      data: data
+      data: data,
     };
 
     // Guardar en caché de memoria
@@ -90,7 +93,9 @@ class JsonReferenceScannerManager {
       if (!forceRefresh) {
         const cachedData = this.getFromCache(branch);
         if (cachedData) {
-          console.log(`[JSON-SCANNER] Using cached data for branch ${branch} (${cachedData.source})`);
+          console.log(
+            `[JSON-SCANNER] Using cached data for branch ${branch} (${cachedData.source})`,
+          );
           return {
             success: true,
             data: cachedData,

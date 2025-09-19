@@ -131,8 +131,15 @@ export function initializeSocketListeners(socket) {
   });
 
   socket.on('worker_pool_update', (slots) => {
+    console.log('[SOCKET] worker_pool_update received:', slots);
     renderWorkerPool(slots, socket);
     renderWorkerStatus(slots);
+
+    // Also refresh workers list to get detailed information
+    if (typeof window.refreshWorkersList === 'function') {
+      console.log('[SOCKET] Calling refreshWorkersList from worker_pool_update');
+      window.refreshWorkersList();
+    }
   });
 
   socket.on('queue_status_update', (status) => {

@@ -457,6 +457,22 @@ function parseScriptOutput(output) {
 }
 
 function setupWorkerEnvironment() {
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] Iniciando setupWorkerEnvironment...\n`,
+  });
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] DEVICE_SOURCE=${process.env.DEVICE_SOURCE}\n`,
+  });
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] workspaceDir=${workspaceDir}\n`,
+  });
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] deviceSerialForLocalWorker=${deviceSerialForLocalWorker}\n`,
+  });
   // La ruta del workspace ahora es definida por el servidor y recibida en INIT.
   sendToParent({
     type: 'LOG',
@@ -532,7 +548,15 @@ function setupWorkerEnvironment() {
 
 // Función refactorizada con los pasos finales de la configuración
 function finishSetup() {
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] Iniciando finishSetup()...\n`,
+  });
   const startAppiumScript = path.join(__dirname, 'scripts', 'start-appium.sh');
+  sendToParent({
+    type: 'LOG',
+    data: `[worker] Ejecutando script: ${startAppiumScript}\n`,
+  });
   runScript(startAppiumScript, [workspaceDir], null, (code, output) => {
     if (code !== 0) {
       sendToParent({
@@ -549,6 +573,12 @@ function finishSetup() {
       type: 'LOG',
       data: `[worker] ✅ Appium iniciado en puerto ${environment.appiumPort}.
 `,
+    });
+
+    // Notify parent about Appium port
+    sendToParent({
+      type: 'APPIUM_PORT_READY',
+      appiumPort: environment.appiumPort,
     });
 
     const installApkScript = path.join(__dirname, 'scripts', 'install-apk.sh');

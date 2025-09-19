@@ -34,7 +34,15 @@ class WorkerPoolManager {
   /**
    * Create a new worker
    */
-  createWorker(branch, client, apkIdentifier, apkSourceType, deviceSerial, quickTest = false) {
+  createWorker(
+    branch,
+    client,
+    apkIdentifier,
+    apkSourceType,
+    deviceSerial,
+    quickTest = false,
+    persistent = false,
+  ) {
     const workerId =
       this.workerPool.length > 0
         ? Math.max(...this.workerPool.map((w) => w.id)) + 1
@@ -72,6 +80,7 @@ class WorkerPoolManager {
       currentJob: null,
       terminating: false,
       quickTest: quickTest,
+      persistent: persistent,
     };
 
     this.workerPool.push(worker);
@@ -279,6 +288,13 @@ class WorkerPoolManager {
           this.io.emit('log_update', { slotId, logLine: message.data });
           break;
 
+        case 'APPIUM_PORT_READY':
+          // Store Appium port for inspector mode
+          worker.appiumPort = message.appiumPort;
+          worker.startTime = worker.startTime || new Date();
+          console.log(`[WORKER POOL] Worker ${worker.id} Appium port ready: ${message.appiumPort}`);
+          break;
+
         case 'PROGRESS_UPDATE':
           this.io.emit('progress_update', {
             slotId,
@@ -413,7 +429,8 @@ class WorkerPoolManager {
     const idleWorkers = this.workerPool.filter((w) => w.status === 'ready');
 
     idleWorkers.forEach((worker) => {
-      if (!worker.terminating) {
+      // Only terminate non-persistent workers
+      if (!worker.terminating && !worker.persistent) {
         worker.terminating = true;
         worker.process.send({ type: 'GENERATE_UNIFIED_REPORT' });
       }
@@ -436,6 +453,9 @@ class WorkerPoolManager {
       client: worker.client,
       apkIdentifier: worker.apkIdentifier,
       apkSourceType: worker.apkSourceType,
+      deviceSerial: worker.deviceSerial,
+      quickTest: worker.quickTest,
+      persistent: worker.persistent
     }));
     this.io.emit('worker_pool_update', slots);
   }
@@ -486,6 +506,117 @@ class WorkerPoolManager {
 
     await Promise.all(terminationPromises);
     this.workerPool = [];
+  }
+
+  /**
+   * Get Appium sessions from all active workers
+   */
+  getAppiumSessions() {
+    const sessions = [];
+
+    this.workerPool.forEach((worker) => {
+      // Include workers with active Appium sessions
+      if (worker.status === 'running' && worker.appiumSessionId) {
+        sessions.push({
+          sessionId: worker.appiumSessionId,
+          workerId: worker.id,
+          deviceSerial: worker.deviceSerial,
+          branch: worker.branch,
+          apkIdentifier: worker.apkIdentifier,
+          apkSourceType: worker.apkSourceType,
+          startTime: worker.startTime,
+          status: worker.status,
+          isQuickTest: worker.quickTest || false,
+          appiumPort: worker.appiumPort,
+          isPersistent: worker.persistent || false,
+        });
+      }
+      // Include persistent workers that are ready and have Appium running
+      else if (worker.persistent && worker.status === 'ready' && worker.appiumPort) {
+        const virtualSessionId = `persistent-${worker.id}-${worker.appiumPort}`;
+        sessions.push({
+          sessionId: virtualSessionId,
+          workerId: worker.id,
+          deviceSerial: worker.deviceSerial,
+          branch: worker.branch,
+          apkIdentifier: worker.apkIdentifier,
+          apkSourceType: worker.apkSourceType,
+          startTime: worker.startTime,
+          status: worker.status,
+          isQuickTest: worker.quickTest || false,
+          appiumPort: worker.appiumPort,
+          isPersistent: true,
+        });
+      }
+    });
+
+    return sessions;
+  }
+
+  /**
+   * Update worker Appium session information
+   */
+  updateWorkerSession(workerId, sessionId) {
+    const worker = this.workerPool.find((w) => w.id === workerId);
+    if (worker) {
+      worker.appiumSessionId = sessionId;
+      // Emit socket event for real-time updates
+      if (this.io) {
+        this.io.emit('worker_session_updated', {
+          workerId,
+          sessionId,
+          deviceSerial: worker.deviceSerial,
+          branch: worker.branch,
+        });
+      }
+    }
+  }
+
+  /**
+   * Clear worker Appium session information
+   */
+  clearWorkerSession(workerId) {
+    const worker = this.workerPool.find((w) => w.id === workerId);
+    if (worker) {
+      const sessionId = worker.appiumSessionId;
+      worker.appiumSessionId = null;
+
+      // Emit socket event for real-time updates
+      if (this.io) {
+        this.io.emit('worker_session_cleared', {
+          workerId,
+          sessionId,
+          deviceSerial: worker.deviceSerial,
+          branch: worker.branch,
+        });
+      }
+    }
+  }
+
+  /**
+   * Get worker by Appium session ID
+   */
+  getWorkerBySessionId(sessionId) {
+    return this.workerPool.find(
+      (worker) => worker.appiumSessionId === sessionId,
+    );
+  }
+
+  
+  /**
+   * Find worker by persistent session ID
+   */
+  findWorkerByPersistentSessionId(sessionId) {
+    if (sessionId.startsWith('persistent-')) {
+      const parts = sessionId.split('-');
+      if (parts.length >= 3) {
+        const workerId = parseInt(parts[1]);
+        if (!isNaN(workerId)) {
+          return this.getWorkerById(workerId);
+        }
+      }
+    }
+    return null;
   }
 }
 

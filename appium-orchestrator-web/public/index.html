@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/ide.css" />
     <link rel="stylesheet" href="css/autocomplete.css" />
+    <link rel="stylesheet" href="css/inspector.css" />
   </head>
   <body>
     <div id="auth-overlay">
@@ -85,7 +86,8 @@
             <span class="help-text">Ayuda</span>
           </button>
         </div>
-      </div>
+
+              </div>
     </div>
 
     <div class="container">
@@ -96,6 +98,7 @@
           <button class="tab-btn" data-tab="queue">Cola</button>
           <button class="tab-btn" data-tab="results">Resultados</button>
           <button class="tab-btn" data-tab="wiremock">Wiremock</button>
+          <button class="tab-btn" data-tab="inspector">Inspector</button>
         </div>
         <button id="stop-all-btn" class="danger-btn">Parar Todo 🛑</button>
       </div>
@@ -306,6 +309,57 @@
       <!-- Workers Tab -->
       <div id="workers-view" class="tab-content">
         <h2>Estado de Workers</h2>
+
+        <!-- Worker Creation Form -->
+        <div class="worker-creation-section" style="margin-bottom: 20px; padding: 15px; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200);">
+          <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--gray-700);">Crear Worker</h3>
+          <div class="worker-creation-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+
+            <div class="form-group">
+              <label for="worker-client" style="display: block; margin-bottom: 5px; font-weight: 500;">Cliente:</label>
+              <select id="worker-client" class="compact-select" style="width: 100%;">
+                <option value="nbch">nbch</option>
+                <option value="bpn">bpn</option>
+                <option value="bind">bind</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="worker-branch" style="display: block; margin-bottom: 5px; font-weight: 500;">Branch:</label>
+              <select id="worker-branch" class="compact-select" style="width: 100%;">
+                <option>Cargando...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="worker-apk" style="display: block; margin-bottom: 5px; font-weight: 500;">APK:</label>
+              <select id="worker-apk" class="compact-select" style="width: 100%;">
+                <option>N/A</option>
+              </select>
+            </div>
+
+            <div class="form-group hidden" id="worker-device-container">
+              <label for="worker-device" style="display: block; margin-bottom: 5px; font-weight: 500;">Device:</label>
+              <select id="worker-device" class="compact-select" style="width: 100%;">
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="worker-quick-mode" style="display: block; margin-bottom: 5px; font-weight: 500;">Modo Rápido:</label>
+              <input type="checkbox" id="worker-quick-mode" title="Omitir instalación de APK" />
+            </div>
+
+            <div class="form-group">
+              <button id="create-worker-btn" class="compact-btn execute-btn" style="background: var(--success-color); color: white;">
+                ➕ Crear Worker
+              </button>
+            </div>
+
+          </div>
+
+          <div id="worker-creation-status" style="margin-top: 10px; padding: 8px; border-radius: 4px; font-size: 14px; display: none;"></div>
+        </div>
+
         <div id="worker-status-container"></div>
         <div id="log-panels-container" class="panels-container">
           <div id="log-panel-system" class="log-panel">
@@ -497,6 +551,140 @@
           ></div>
         </div>
       </div>
+
+      <!-- Inspector Tab -->
+      <div id="inspector-view" class="tab-content">
+        <!-- Two Column Layout -->
+        <div class="inspector-two-column-layout">
+          <!-- Left Column (50%) - All non-screenshot content -->
+          <div class="inspector-left-column">
+            <!-- Worker Creation for Inspector (shown when no sessions are available) -->
+            <div class="inspector-section" id="inspector-worker-creation">
+              <h3>Crear Worker para Inspector</h3>
+              <p style="margin: -0.5rem 0 1rem 0; color: var(--gray-600); font-size: 0.9rem;">
+                No hay sesiones de inspector disponibles. Crea un worker persistente para usar el inspector.
+              </p>
+
+              <div class="inspector-worker-creation-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end;">
+
+                <div class="form-group">
+                  <label for="inspector-worker-client" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.85rem;">Cliente:</label>
+                  <select id="inspector-worker-client" class="compact-select" style="width: 100%; font-size: 0.85rem;">
+                    <option value="nbch">nbch</option>
+                    <option value="bpn">bpn</option>
+                    <option value="bind">bind</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="inspector-worker-branch" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.85rem;">Branch:</label>
+                  <select id="inspector-worker-branch" class="compact-select" style="width: 100%; font-size: 0.85rem;">
+                    <option>Cargando...</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="inspector-worker-apk" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.85rem;">APK:</label>
+                  <select id="inspector-worker-apk" class="compact-select" style="width: 100%; font-size: 0.85rem;">
+                    <option>N/A</option>
+                  </select>
+                </div>
+
+                <div class="form-group hidden" id="inspector-worker-device-container">
+                  <label for="inspector-worker-device" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.85rem;">Device:</label>
+                  <select id="inspector-worker-device" class="compact-select" style="width: 100%; font-size: 0.85rem;">
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="inspector-worker-quick-mode" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.85rem;">Modo Rápido:</label>
+                  <input type="checkbox" id="inspector-worker-quick-mode" title="Omitir instalación de APK" style="transform: scale(1.1);" />
+                </div>
+
+                <div class="form-group">
+                  <button id="inspector-create-worker-btn" class="compact-btn execute-btn" style="background: var(--success-color); color: white; font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                    🚀 Crear Worker
+                  </button>
+                </div>
+
+              </div>
+
+              <div id="inspector-worker-creation-status" style="margin-top: 10px; padding: 8px; border-radius: 4px; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <!-- Unified Session & Controls Panel -->
+            <div class="inspector-section" id="inspector-session-controls">
+              <div class="inspector-unified-row">
+                <!-- Session Selection (shown when no session is attached) -->
+                <div id="inspector-sessions-column" class="inspector-sessions-column">
+                  <h3>Sesiones Activas</h3>
+                  <div id="inspector-sessions-container" class="sessions-container">
+                    <div class="loading">Cargando sesiones...</div>
+                  </div>
+                </div>
+
+                <!-- Inspector Controls (shown when session is attached) -->
+                <div id="inspector-controls-column" class="inspector-controls-column">
+                  <div class="inspector-controls-compact">
+                    <h3>Controles del Inspector</h3>
+                    <div class="inspector-controls-group">
+                      <button id="inspector-refresh-btn" class="btn-secondary btn-compact" title="Actualizar elementos">🔄</button>
+                      <button id="inspector-screenshot-btn" class="btn-secondary btn-compact" title="Capturar pantalla">📸</button>
+                      <button id="inspector-overlay-btn" class="btn-secondary btn-compact" title="Mostrar/ocultar overlay de elementos">🖼️</button>
+                      <label class="checkbox-label checkbox-compact">
+                        <input type="checkbox" id="inspector-clickable-only">
+                        Solo clickables
+                      </label>
+                    </div>
+                    <div class="inspector-search-group">
+                      <input type="text" id="inspector-search" placeholder="Buscar..." class="search-compact">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Elements Panel (shown when session is attached) -->
+            <div class="inspector-main-view" id="inspector-main-view" style="display: none;">
+              <div class="inspector-elements-panel">
+                <h3>Elementos UI</h3>
+                <div id="inspector-elements-list" class="elements-list">
+                  <div class="loading">Conéctese a una sesión para ver elementos</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (50%) - Screenshot Panel -->
+          <div class="inspector-right-column">
+            <!-- Screenshot Panel (shown when session is attached) -->
+            <div class="inspector-main-view" id="inspector-main-view-screenshot" style="display: none;">
+              <div class="inspector-screenshot-panel">
+                <h3>Captura de Pantalla</h3>
+                <div class="screenshot-container">
+                  <img id="inspector-screenshot-img" src="" alt="Screenshot" style="display: none;">
+                  <div id="inspector-screenshot-loading" class="loading">No hay captura disponible</div>
+                  <canvas id="inspector-overlay-canvas" style="display: none; position: absolute; top: 0; left: 0; cursor: pointer;"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Placeholder when no session is attached -->
+            <div id="inspector-screenshot-placeholder" class="inspector-screenshot-placeholder">
+              <div class="screenshot-placeholder-content">
+                <div class="placeholder-icon">📱</div>
+                <h3>Inspector de Pantalla</h3>
+                <p>Conéctese a una sesión para ver la captura de pantalla y elementos UI</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="inspector-status" class="inspector-status">
+          <span id="inspector-status-text">Ready</span>
+        </div>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -525,6 +713,8 @@
     <script type="module" src="js/glosario-ui.js"></script>
     <!-- Help Modal Service -->
     <script type="module" src="js/help-modal-service.js"></script>
+    <!-- Appium Inspector -->
+    <script type="module" src="js/inspector.js"></script>
     <!-- Main Application -->
     <script type="module" src="js/main.js"></script>
 
@@ -792,5 +982,25 @@
         </div>
       </div>
     </div>
+
+    <!-- Element Selection Modal -->
+    <div id="element-selection-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Elementos encontrados</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="element-selection-list" class="element-selection-list">
+            <!-- Elements will be populated here -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="element-selection-cancel" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+
   </body>
 </html>

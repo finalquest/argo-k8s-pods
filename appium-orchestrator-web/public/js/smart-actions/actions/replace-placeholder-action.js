@@ -26,7 +26,7 @@ export class ReplacePlaceholderAction extends BaseAction {
       success: true,
       message: 'Placeholder action executed',
       placeholder: data.placeholderText,
-      position: data.placeholderPosition
+      position: data.placeholderPosition,
     };
   }
 

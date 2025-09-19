@@ -153,7 +153,7 @@ export class SmartActionsManager {
       // Estos datos se establecerán cuando se llame desde el editor
       placeholderText: '',
       placeholderPosition: null,
-      placeholderType: ''
+      placeholderType: '',
     };
   }
 
@@ -181,7 +181,8 @@ export class SmartActionsManager {
     const cursorPos = cursor.ch;
 
     // Patrones para detectar placeholders: {string}, {int}, {float}, etc.
-    const placeholderPattern = /\{(string|int|float|bool|boolean|number|text|date|time)\w*\}/g;
+    const placeholderPattern =
+      /\{(string|int|float|bool|boolean|number|text|date|time)\w*\}/g;
     let match;
 
     while ((match = placeholderPattern.exec(line)) !== null) {
@@ -196,7 +197,7 @@ export class SmartActionsManager {
           start: placeholderStart,
           end: placeholderEnd,
           line: cursor.line,
-          cursor: cursor
+          cursor: cursor,
         };
       }
     }
@@ -219,10 +220,13 @@ export class SmartActionsManager {
         'placeholder',
         {
           placeholderText: placeholder.text,
-          placeholderPosition: { line: placeholder.line, ch: placeholder.start },
+          placeholderPosition: {
+            line: placeholder.line,
+            ch: placeholder.start,
+          },
           placeholderEnd: { line: placeholder.line, ch: placeholder.end },
-          placeholderType: placeholder.type
-        }
+          placeholderType: placeholder.type,
+        },
       );
 
       // Obtener acciones disponibles para placeholders
@@ -243,7 +247,7 @@ export class SmartActionsManager {
     if (!this.jsonSearchWidget) {
       this.jsonSearchWidget = new JsonReferenceSearchWidget(
         this,
-        this.glosarioUI.getGlosarioService()
+        this.glosarioUI.getGlosarioService(),
       );
     }
 

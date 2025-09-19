@@ -19,6 +19,7 @@ const FeatureManager = require('./src/modules/core/feature-manager');
 const WorkspaceManager = require('./src/modules/core/workspace-manager');
 const StepScannerManager = require('./src/modules/core/step-scanner-manager');
 const JsonReferenceScannerManager = require('./src/modules/core/json-reference-scanner-manager');
+const InspectorManager = require('./src/modules/core/inspector-manager');
 
 // Import worker management modules
 const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
@@ -60,6 +61,13 @@ const workerPoolManager = new WorkerPoolManager(
   validationManager,
   processManager,
   jobQueueManager,
+);
+
+// Initialize inspector manager after workerPoolManager is available
+const inspectorManager = new InspectorManager(
+  configManager,
+  validationManager,
+  workerPoolManager,
 );
 
 // Set the workerPoolManager reference in jobQueueManager after both are created
@@ -680,7 +688,10 @@ app.get('/api/json-references/scan', async (req, res) => {
   }
   try {
     const forceRefreshBool = forceRefresh === 'true' || forceRefresh === '1';
-    const result = await jsonReferenceScannerManager.scanJsonReferences(branch, forceRefreshBool);
+    const result = await jsonReferenceScannerManager.scanJsonReferences(
+      branch,
+      forceRefreshBool,
+    );
     if (result.success) {
       res.json(result);
     } else {
@@ -743,6 +754,355 @@ app.post('/api/json-references/cache/clear', async (req, res) => {
 // All socket.io functionality has been extracted to src/modules/socketio/socketio-manager.js
 
 // Socket.io authentication and middleware is now handled by SocketIOManager module
+
+// ===== INSPECTOR API ENDPOINTS =====
+
+// Get inspector health and available sessions
+app.get('/api/inspector/health', (req, res) => {
+  try {
+    const health = inspectorManager.getHealth();
+    res.json(health);
+  } catch (error) {
+    console.error('[INSPECTOR] Health check failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all active Appium sessions
+app.get('/api/inspector/sessions', (req, res) => {
+  try {
+    const sessions = inspectorManager.getActiveSessions();
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('[INSPECTOR] Failed to get sessions:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Attach inspector to a session
+app.post('/api/inspector/:sessionId/attach', async (req, res) => {
+  try {
+    const result = await inspectorManager.attachToSession(req.params.sessionId);
+
+    if (result.success) {
+      // Emit socket event for real-time updates
+      io.emit('inspector_session_attached', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Attach failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Detach inspector from session
+app.post('/api/inspector/:sessionId/detach', async (req, res) => {
+  try {
+    const result = await inspectorManager.detachFromSession(
+      req.params.sessionId,
+    );
+
+    if (result.success) {
+      io.emit('inspector_session_detached', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Detach failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get UI elements from session
+app.get('/api/inspector/:sessionId/inspect', async (req, res) => {
+  try {
+    const options = {
+      q: req.query.q,
+      clickableOnly: req.query.clickableOnly === 'true',
+      maxElements: req.query.maxElements
+        ? parseInt(req.query.maxElements)
+        : null,
+    };
+
+    const result = await inspectorManager.getElements(
+      req.params.sessionId,
+      options,
+    );
+
+    if (result.success) {
+      io.emit('inspector_elements_updated', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Inspect failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get raw XML from session for debugging
+app.get('/api/inspector/:sessionId/xml', async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    console.log(`[INSPECTOR] XML capture requested for session ${sessionId}`);
+
+    // Find the session in activeSessions
+    const session = inspectorManager.activeSessions.get(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Get XML source from Appium
+    const source = await session.client.getPageSource();
+
+    // Log XML info for debugging
+    console.log(`[INSPECTOR] Captured XML for session ${sessionId}:`, {
+      length: source.length,
+      preview: source.substring(0, 200) + '...'
+    });
+
+    // Save XML to file for offline debugging
+    const fs = require('fs');
+    const path = require('path');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `debug-xml-${sessionId}-${timestamp}.xml`;
+    const filepath = path.join(__dirname, 'debug-xml', filename);
+
+    // Create debug-xml directory if it doesn't exist
+    if (!fs.existsSync(path.join(__dirname, 'debug-xml'))) {
+      fs.mkdirSync(path.join(__dirname, 'debug-xml'), { recursive: true });
+    }
+
+    // Save XML to file
+    fs.writeFileSync(filepath, source);
+    console.log(`[INSPECTOR] XML saved to ${filepath}`);
+
+    res.json({
+      success: true,
+      sessionId,
+      xmlLength: source.length,
+      filename,
+      filepath,
+      preview: source.substring(0, 1000) + '...',
+      xml: source // Return full XML as well
+    });
+  } catch (error) {
+    console.error('[INSPECTOR] XML capture failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get screenshot from session
+app.get('/api/inspector/:sessionId/screenshot', async (req, res) => {
+  try {
+    const result = await inspectorManager.getScreenshot(req.params.sessionId);
+
+    if (result.success) {
+      io.emit('inspector_screenshot_updated', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Screenshot failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Generate overlay with element boundaries
+app.get('/api/inspector/:sessionId/overlay', async (req, res) => {
+  try {
+    const elementIds = req.query.elements
+      ? req.query.elements.split(',')
+      : null;
+    const result = await inspectorManager.generateOverlay(
+      req.params.sessionId,
+      elementIds,
+    );
+
+    if (result.success) {
+      // Send as image response
+      res.set('Content-Type', 'image/png');
+      res.send(Buffer.from(result.overlay, 'base64'));
+    } else {
+      res.json(result);
+    }
+  } catch (error) {
+    console.error('[INSPECTOR] Overlay failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Tap on specific coordinates
+app.post('/api/inspector/:sessionId/tap', async (req, res) => {
+  try {
+    const { x, y } = req.body;
+
+    if (typeof x !== 'number' || typeof y !== 'number') {
+      return res
+        .status(400)
+        .json({ error: 'Coordinates x and y are required' });
+    }
+
+    const result = await inspectorManager.tapCoordinates(
+      req.params.sessionId,
+      x,
+      y,
+    );
+
+    if (result.success) {
+      io.emit('inspector_tap_executed', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Tap failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Worker Management Endpoints
+app.post('/api/workers', async (req, res) => {
+  try {
+    const {
+      branch,
+      client,
+      apkVersion,
+      apkSourceType = 'registry',
+      deviceSerial = null,
+      quickTest = false,
+      persistent = false
+    } = req.body;
+
+    // Validate required fields
+    if (!branch || !client || !apkVersion) {
+      return res.status(400).json({
+        error: 'Missing required fields: branch, client, apkVersion'
+      });
+    }
+
+    // Determine APK source type based on apkVersion format
+    let finalApkSourceType = apkSourceType;
+    let finalApkIdentifier = apkVersion;
+
+    // If apkVersion is a path, treat it as local APK
+    if (apkVersion.includes('/') || apkVersion.includes('\\')) {
+      finalApkSourceType = 'local';
+      finalApkIdentifier = apkVersion;
+    }
+
+    // Create worker without an associated job
+    const worker = workerPoolManager.createWorker(
+      branch,
+      client,
+      finalApkIdentifier,
+      finalApkSourceType,
+      deviceSerial,
+      quickTest,
+      persistent
+    );
+
+    // Return worker creation response
+    res.json({
+      success: true,
+      workerId: worker.id,
+      message: `Worker creado para ${client}/${branch} con APK ${finalApkIdentifier}`,
+      worker: {
+        id: worker.id,
+        slotId: worker.id,
+        branch: worker.branch,
+        client: worker.client,
+        apkIdentifier: worker.apkIdentifier,
+        apkSourceType: worker.apkSourceType,
+        deviceSerial: worker.deviceSerial,
+        status: worker.status,
+        quickTest: worker.quickTest,
+        persistent: worker.persistent
+      }
+    });
+
+    console.log(`[API] Worker ${worker.id} created for ${client}/${branch} - APK: ${finalApkIdentifier}`);
+  } catch (error) {
+    console.error('[API] Error creating worker:', error);
+    res.status(500).json({
+      error: error.message || 'Error creating worker'
+    });
+  }
+});
+
+app.get('/api/workers', (req, res) => {
+  try {
+    const workers = workerPoolManager.getWorkers().map(worker => ({
+      id: worker.id,
+      slotId: worker.id,
+      branch: worker.branch,
+      client: worker.client,
+      apkIdentifier: worker.apkIdentifier,
+      apkSourceType: worker.apkSourceType,
+      deviceSerial: worker.deviceSerial,
+      status: worker.status,
+      currentJob: worker.currentJob ? {
+        id: worker.currentJob.id,
+        feature: worker.currentJob.feature
+      } : null,
+      quickTest: worker.quickTest,
+      appiumSessionId: worker.appiumSessionId || null,
+      persistent: worker.persistent
+    }));
+
+    res.json({
+      success: true,
+      workers,
+      total: workers.length,
+      stats: workerPoolManager.getStatistics()
+    });
+  } catch (error) {
+    console.error('[API] Error getting workers:', error);
+    res.status(500).json({
+      error: error.message || 'Error getting workers'
+    });
+  }
+});
+
+app.delete('/api/workers/:workerId', (req, res) => {
+  try {
+    const { workerId } = req.params;
+    const worker = workerPoolManager.getWorkerById(parseInt(workerId));
+
+    if (!worker) {
+      return res.status(404).json({
+        error: `Worker ${workerId} not found`
+      });
+    }
+
+    workerPoolManager.terminateWorker(parseInt(workerId));
+
+    res.json({
+      success: true,
+      message: `Worker ${workerId} terminated`,
+      workerId: parseInt(workerId)
+    });
+
+    console.log(`[API] Worker ${workerId} terminated`);
+  } catch (error) {
+    console.error('[API] Error terminating worker:', error);
+    res.status(500).json({
+      error: error.message || 'Error terminating worker'
+    });
+  }
+});
+
+// Cleanup stale sessions (periodic maintenance)
+setInterval(
+  async () => {
+    try {
+      await inspectorManager.cleanupStaleSessions();
+    } catch (error) {
+      console.error('[INSPECTOR] Cleanup failed:', error.message);
+    }
+  },
+  5 * 60 * 1000,
+); // Every 5 minutes
 
 server.listen(PORT, () => {
   loggingUtilities.logStartup(PORT);

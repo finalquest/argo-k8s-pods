@@ -31,10 +31,17 @@ class JsonReferenceHintProvider {
     // Solo activar si estamos en un contexto JSON
     const isJsonContext = this.isJsonContext(lineText, context.ch);
     console.log('🔍 JSON PROVIDER DEBUG - Is JSON context:', isJsonContext);
-    console.log('🔍 JSON PROVIDER DEBUG - Line text:', `"${lineText}"`, 'Cursor:', context.ch);
+    console.log(
+      '🔍 JSON PROVIDER DEBUG - Line text:',
+      `"${lineText}"`,
+      'Cursor:',
+      context.ch,
+    );
 
     if (!isJsonContext) {
-      console.log('🔍 JSON PROVIDER DEBUG - Not in JSON context, returning empty list');
+      console.log(
+        '🔍 JSON PROVIDER DEBUG - Not in JSON context, returning empty list',
+      );
       return { list: [] };
     }
 
@@ -93,7 +100,10 @@ class JsonReferenceHintProvider {
     const sortedHints = hints.sort((a, b) => b.score - a.score);
     const limitedHints = sortedHints.slice(0, 15); // Limitar a 15 resultados
 
-    console.log('🔍 JSON PROVIDER DEBUG - Final hints to return:', limitedHints);
+    console.log(
+      '🔍 JSON PROVIDER DEBUG - Final hints to return:',
+      limitedHints,
+    );
 
     const fromPos = this.getHintPosition(context);
     const toPos = this.getHintEndPosition(context);
@@ -110,7 +120,10 @@ class JsonReferenceHintProvider {
   isJsonContext(lineText, cursorPos) {
     const textBeforeCursor = lineText.substring(0, cursorPos);
 
-    console.log('🔍 JSON CONTEXT DEBUG - Text before cursor:', `"${textBeforeCursor}"`);
+    console.log(
+      '🔍 JSON CONTEXT DEBUG - Text before cursor:',
+      `"${textBeforeCursor}"`,
+    );
 
     // Detectar diferentes contextos JSON:
     // 1. ${} para referencias JSON
@@ -121,7 +134,12 @@ class JsonReferenceHintProvider {
     const braceCount = (textBeforeCursor.match(/\{/g) || []).length;
     const closeBraceCount = (textBeforeCursor.match(/\}/g) || []).length;
 
-    console.log('🔍 JSON CONTEXT DEBUG - Brace count:', braceCount, 'Close brace count:', closeBraceCount);
+    console.log(
+      '🔍 JSON CONTEXT DEBUG - Brace count:',
+      braceCount,
+      'Close brace count:',
+      closeBraceCount,
+    );
 
     if (braceCount <= closeBraceCount) {
       console.log('🔍 JSON CONTEXT DEBUG - No open braces, returning false');
@@ -134,7 +152,10 @@ class JsonReferenceHintProvider {
     const partialPlaceholderMatch = textBeforeCursor.match(/\{(\w*)$/);
 
     console.log('🔍 JSON CONTEXT DEBUG - Placeholder match:', placeholderMatch);
-    console.log('🔍 JSON CONTEXT DEBUG - Partial placeholder match:', partialPlaceholderMatch);
+    console.log(
+      '🔍 JSON CONTEXT DEBUG - Partial placeholder match:',
+      partialPlaceholderMatch,
+    );
 
     if (placeholderMatch) {
       const placeholderType = placeholderMatch[1].toLowerCase();
@@ -152,7 +173,10 @@ class JsonReferenceHintProvider {
         'time',
       ];
       const isCommonPlaceholder = commonPlaceholders.includes(placeholderType);
-      console.log('🔍 JSON CONTEXT DEBUG - Is common placeholder:', isCommonPlaceholder);
+      console.log(
+        '🔍 JSON CONTEXT DEBUG - Is common placeholder:',
+        isCommonPlaceholder,
+      );
       if (isCommonPlaceholder) {
         return true;
       }
@@ -161,15 +185,31 @@ class JsonReferenceHintProvider {
     // También verificar si estamos dentro de un placeholder parcial
     if (partialPlaceholderMatch) {
       const partialText = partialPlaceholderMatch[1].toLowerCase();
-      console.log('🔍 JSON CONTEXT DEBUG - Partial placeholder text:', partialText);
-
-      // Verificar si el partial coincide con el inicio de algún placeholder común
-      const commonPlaceholders = ['string', 'int', 'float', 'bool', 'boolean', 'number', 'text', 'date', 'time'];
-      const matchesCommonPlaceholder = commonPlaceholders.some(placeholder =>
-        placeholder.startsWith(partialText)
+      console.log(
+        '🔍 JSON CONTEXT DEBUG - Partial placeholder text:',
+        partialText,
       );
 
-      console.log('🔍 JSON CONTEXT DEBUG - Matches common placeholder start:', matchesCommonPlaceholder);
+      // Verificar si el partial coincide con el inicio de algún placeholder común
+      const commonPlaceholders = [
+        'string',
+        'int',
+        'float',
+        'bool',
+        'boolean',
+        'number',
+        'text',
+        'date',
+        'time',
+      ];
+      const matchesCommonPlaceholder = commonPlaceholders.some((placeholder) =>
+        placeholder.startsWith(partialText),
+      );
+
+      console.log(
+        '🔍 JSON CONTEXT DEBUG - Matches common placeholder start:',
+        matchesCommonPlaceholder,
+      );
 
       if (matchesCommonPlaceholder) {
         return true;
@@ -178,7 +218,10 @@ class JsonReferenceHintProvider {
 
     // Verificar si hay un patrón ${ antes del cursor
     const dollarBracePattern = textBeforeCursor.match(/\$\{[^{}]*$/);
-    console.log('🔍 JSON CONTEXT DEBUG - Dollar brace pattern:', dollarBracePattern);
+    console.log(
+      '🔍 JSON CONTEXT DEBUG - Dollar brace pattern:',
+      dollarBracePattern,
+    );
 
     if (dollarBracePattern) {
       return true;

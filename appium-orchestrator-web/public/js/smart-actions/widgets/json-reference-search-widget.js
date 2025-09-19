@@ -88,7 +88,8 @@ export class JsonReferenceSearchWidget {
 
     // Configurar elementos del widget
     this.searchInput = this.widgetElement.querySelector('.search-input');
-    this.resultsContainer = this.widgetElement.querySelector('.results-container');
+    this.resultsContainer =
+      this.widgetElement.querySelector('.results-container');
 
     // Configurar event listeners
     this.setupEventListeners();
@@ -133,8 +134,13 @@ export class JsonReferenceSearchWidget {
     try {
       // Verificar si tenemos caché válida en el widget
       const now = Date.now();
-      if (this.widgetCache && (now - this.lastCacheUpdate) < this.cacheExpiryTime) {
-        console.log('[JSON-SEARCH-WIDGET] Using widget cache, skipping data loading');
+      if (
+        this.widgetCache &&
+        now - this.lastCacheUpdate < this.cacheExpiryTime
+      ) {
+        console.log(
+          '[JSON-SEARCH-WIDGET] Using widget cache, skipping data loading',
+        );
         this.currentResults = this.widgetCache;
         this.displayResults(this.widgetCache);
         const totalTime = performance.now() - startTime;
@@ -145,7 +151,9 @@ export class JsonReferenceSearchWidget {
       const cacheStartTime = performance.now();
       const cachedRefs = this.glosarioService.getCachedJsonReferences();
       const cacheEndTime = performance.now();
-      console.log(`[JSON-SEARCH-WIDGET] Cache retrieval took: ${cacheEndTime - cacheStartTime}ms`);
+      console.log(
+        `[JSON-SEARCH-WIDGET] Cache retrieval took: ${cacheEndTime - cacheStartTime}ms`,
+      );
 
       if (!cachedRefs || !cachedRefs.data) {
         console.log('[JSON-SEARCH-WIDGET] No cached references found');
@@ -156,14 +164,22 @@ export class JsonReferenceSearchWidget {
       console.log(`[JSON-SEARCH-WIDGET] Cached data structure:`, {
         hasReferences: !!cachedRefs.data.references,
         referencesCount: cachedRefs.data.references?.length || 0,
-        totalKeys: cachedRefs.data.references?.reduce((sum, ref) => sum + (ref.keys?.length || 0), 0) || 0
+        totalKeys:
+          cachedRefs.data.references?.reduce(
+            (sum, ref) => sum + (ref.keys?.length || 0),
+            0,
+          ) || 0,
       });
 
       const extractStartTime = performance.now();
       const references = this.extractJsonReferencesOptimized(cachedRefs.data);
       const extractEndTime = performance.now();
-      console.log(`[JSON-SEARCH-WIDGET] Optimized reference extraction took: ${extractEndTime - extractStartTime}ms`);
-      console.log(`[JSON-SEARCH-WIDGET] Extracted ${references.length} references`);
+      console.log(
+        `[JSON-SEARCH-WIDGET] Optimized reference extraction took: ${extractEndTime - extractStartTime}ms`,
+      );
+      console.log(
+        `[JSON-SEARCH-WIDGET] Extracted ${references.length} references`,
+      );
 
       // Actualizar caché del widget
       this.widgetCache = references;
@@ -175,11 +191,12 @@ export class JsonReferenceSearchWidget {
       const displayStartTime = performance.now();
       this.displayResults(references);
       const displayEndTime = performance.now();
-      console.log(`[JSON-SEARCH-WIDGET] Display rendering took: ${displayEndTime - displayStartTime}ms`);
+      console.log(
+        `[JSON-SEARCH-WIDGET] Display rendering took: ${displayEndTime - displayStartTime}ms`,
+      );
 
       const totalTime = performance.now() - startTime;
       console.log(`[JSON-SEARCH-WIDGET] Total load time: ${totalTime}ms`);
-
     } catch (error) {
       console.error('Error loading JSON references:', error);
       this.showNoResults('Error loading JSON references');
@@ -204,7 +221,7 @@ export class JsonReferenceSearchWidget {
               filename,
               key: keyData.key,
               displayText: `${filename}.${keyData.key}`,
-              value: keyData.value || ''
+              value: keyData.value || '',
             });
           }
         }
@@ -229,24 +246,26 @@ export class JsonReferenceSearchWidget {
     let totalKeys = 0;
 
     // Usar forEach en lugar de for...of para mejor rendimiento en arrays grandes
-    data.references.forEach(reference => {
+    data.references.forEach((reference) => {
       const filename = reference.filename;
 
       if (reference.keys && Array.isArray(reference.keys)) {
         totalKeys += reference.keys.length;
 
-        reference.keys.forEach(keyData => {
+        reference.keys.forEach((keyData) => {
           references.push({
             filename: filename || 'unknown',
             key: keyData.key || 'unknown',
             displayText: `${filename || 'unknown'}.${keyData.key || 'unknown'}`,
-            value: keyData.value || ''
+            value: keyData.value || '',
           });
         });
       }
     });
 
-    console.log(`[JSON-SEARCH-WIDGET] Processed ${data.references.length} files with ${totalKeys} total keys`);
+    console.log(
+      `[JSON-SEARCH-WIDGET] Processed ${data.references.length} files with ${totalKeys} total keys`,
+    );
     return references;
   }
 
@@ -260,9 +279,12 @@ export class JsonReferenceSearchWidget {
       return;
     }
 
-    const searchTerms = searchText.toLowerCase().split(' ').filter(term => term.trim());
+    const searchTerms = searchText
+      .toLowerCase()
+      .split(' ')
+      .filter((term) => term.trim());
 
-    const resultsWithScores = this.currentResults.map(ref => {
+    const resultsWithScores = this.currentResults.map((ref) => {
       const filenameLower = ref.filename.toLowerCase();
       const keyLower = ref.key.toLowerCase();
       const valueLower = (ref.value || '').toLowerCase();
@@ -309,16 +331,16 @@ export class JsonReferenceSearchWidget {
       return {
         ref,
         score,
-        matchesAllTerms
+        matchesAllTerms,
       };
     });
 
     // Filtrar solo los resultados que coinciden con todos los términos
     // Ordenar por puntuación (más relevante primero)
     const filtered = resultsWithScores
-      .filter(item => item.matchesAllTerms)
+      .filter((item) => item.matchesAllTerms)
       .sort((a, b) => b.score - a.score)
-      .map(item => item.ref);
+      .map((item) => item.ref);
 
     this.displayResults(filtered);
   }
@@ -333,7 +355,9 @@ export class JsonReferenceSearchWidget {
       return;
     }
 
-    const resultsHTML = results.map((ref, index) => `
+    const resultsHTML = results
+      .map(
+        (ref, index) => `
       <div class="result-item" data-index="${index}">
         <div class="result-icon">📄</div>
         <div class="result-content">
@@ -347,12 +371,14 @@ export class JsonReferenceSearchWidget {
           </div>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
 
     this.resultsContainer.innerHTML = resultsHTML;
 
     // Configurar listeners para los items
-    this.resultsContainer.querySelectorAll('.result-item').forEach(item => {
+    this.resultsContainer.querySelectorAll('.result-item').forEach((item) => {
       item.addEventListener('click', () => {
         const index = parseInt(item.dataset.index);
         this.selectReference(results[index]);
@@ -389,11 +415,13 @@ export class JsonReferenceSearchWidget {
     doc.replaceRange(
       replacement,
       { line: this.placeholderInfo.line, ch: this.placeholderInfo.start },
-      { line: this.placeholderInfo.line, ch: this.placeholderInfo.end }
+      { line: this.placeholderInfo.line, ch: this.placeholderInfo.end },
     );
 
     // Dar feedback al usuario
-    this.showFeedback(`Replaced "${this.placeholderInfo.text}" with "${reference.displayText}"`);
+    this.showFeedback(
+      `Replaced "${this.placeholderInfo.text}" with "${reference.displayText}"`,
+    );
 
     // Ocultar el widget
     this.hide();
@@ -407,7 +435,9 @@ export class JsonReferenceSearchWidget {
   truncateValue(value) {
     if (!value) return '';
     const maxLength = 30;
-    return value.length > maxLength ? value.substring(0, maxLength) + '...' : value;
+    return value.length > maxLength
+      ? value.substring(0, maxLength) + '...'
+      : value;
   }
 
   /**

@@ -156,7 +156,6 @@ class AutocompleteService {
     return patterns.some((pattern) => pattern.test(textBeforeCursor));
   }
 
-  
   isContextualTrigger(line, cursorPos) {
     const textBeforeCursor = line.substring(0, cursorPos);
 

@@ -12,6 +12,8 @@ import {
   loadHistoryBranches,
   loadHistory,
   fetchApkVersions,
+  getBranchesData,
+  getApkVersionsData,
 } from './api.js';
 import {
   initializeSocketListeners,
@@ -44,6 +46,7 @@ import {
 } from './ui.js';
 import { initializeWiremockTab } from './wiremock.js';
 import './progress-indicator-manager.js';
+import './inspector.js';
 import { StateManager } from './state/state-manager.js';
 import { globalEvents } from './state/event-manager.js';
 
@@ -297,8 +300,8 @@ async function handleSave() {
 async function handleIdeRun(socket) {
   const activeFeature = appState.getState().activeFeature;
   const saveMapping = document.getElementById(
-      'record-mappings-checkbox',
-    ).checked;
+    'record-mappings-checkbox',
+  ).checked;
   if (!activeFeature) {
     alert('No hay ningún archivo activo para ejecutar.');
     return;
@@ -483,6 +486,12 @@ function initializeApp() {
   initializeUiEventListeners(socket);
   initializeAppControls(socket);
   initializeWiremockTab();
+
+  // Initialize Appium Inspector
+  if (typeof window.initializeInspector === 'function') {
+    window.initializeInspector(socket);
+  }
+
   initializeEventListeners(); // Initialize event-based listeners
   initIdeView({
     onSave: handleSave,
@@ -551,6 +560,9 @@ function initializeApp() {
       console.error('Error updating commit status indicator:', error);
     }
   });
+
+  // Initialize worker management functionality
+  initializeWorkerManagement();
 }
 
 async function initializeAppControls(socket) {
@@ -1436,4 +1448,449 @@ async function updateGlosarioButtonVisibility(branch) {
     console.error('[MAIN] Error checking workspace status:', error);
     glosarioBtn.style.display = 'none';
   }
+}
+
+// Worker Management Functions
+function initializeWorkerManagement() {
+  console.log('[WORKERS] Initializing worker management...');
+
+  // Get DOM elements for main form
+  const createWorkerBtn = document.getElementById('create-worker-btn');
+  const workerClientSelect = document.getElementById('worker-client');
+  const workerBranchSelect = document.getElementById('worker-branch');
+  const workerApkSelect = document.getElementById('worker-apk');
+  const workerDeviceSelect = document.getElementById('worker-device');
+  const workerQuickMode = document.getElementById('worker-quick-mode');
+  const workerDeviceContainer = document.getElementById('worker-device-container');
+
+  // Get DOM elements for inspector form
+  const inspectorCreateBtn = document.getElementById('inspector-worker-create-btn');
+  const inspectorWorkerClientSelect = document.getElementById('inspector-worker-client');
+  const inspectorWorkerBranchSelect = document.getElementById('inspector-worker-branch');
+  const inspectorWorkerApkSelect = document.getElementById('inspector-worker-apk');
+  const inspectorWorkerDeviceSelect = document.getElementById('inspector-worker-device');
+  const inspectorWorkerQuickMode = document.getElementById('inspector-worker-quick-mode');
+  const inspectorWorkerDeviceContainer = document.getElementById('inspector-worker-device-container');
+  const statusDiv = document.getElementById('worker-creation-status');
+
+  if (!createWorkerBtn) {
+    console.log('[WORKERS] Worker creation form not found, skipping initialization');
+    return;
+  }
+
+  // Populate branch selector for main form
+  populateWorkerBranchSelect();
+
+  // Populate APK selector for main form
+  populateWorkerApkSelect();
+
+  // Setup device selector based on environment for main form
+  setupWorkerDeviceSelector();
+
+  // Add create worker button handler for main form
+  createWorkerBtn.addEventListener('click', () => handleCreateWorker('main'));
+
+  // Add change handlers for dynamic updates for main form
+  workerBranchSelect.addEventListener('change', updateWorkerApkOptions);
+  workerClientSelect.addEventListener('change', updateWorkerApkOptions);
+
+  // Initialize inspector form if it exists
+  if (inspectorCreateBtn) {
+    console.log('[WORKERS] Inspector worker form found, initialization will happen when tab is activated');
+
+    // Note: The button click handler is added in inspector.js bindEvents()
+    // Note: Form population will happen when inspector tab is activated
+  }
+}
+
+async function populateWorkerBranchSelect() {
+  const select = document.getElementById('worker-branch');
+  if (!select) return;
+
+  try {
+    const branches = await getBranchesData();
+    select.innerHTML = '';
+
+    if (branches.length === 0) {
+      select.innerHTML = '<option>No branches available</option>';
+      return;
+    }
+
+    branches.forEach(branch => {
+      const option = document.createElement('option');
+      option.value = branch;
+      option.textContent = branch;
+      select.appendChild(option);
+    });
+
+    console.log('[WORKERS] Branch selector populated with:', branches);
+  } catch (error) {
+    console.error('[WORKERS] Error populating branches:', error);
+    select.innerHTML = '<option>Error loading branches</option>';
+  }
+}
+
+
+async function populateWorkerApkSelect() {
+  const select = document.getElementById('worker-apk');
+  const clientSelect = document.getElementById('worker-client');
+
+  if (!select || !clientSelect) return;
+
+  const selectedClient = clientSelect.value;
+  if (!selectedClient) {
+    select.innerHTML = '<option>Selecciona un cliente primero</option>';
+    return;
+  }
+
+  try {
+    const apkVersions = await getApkVersionsData(selectedClient);
+    select.innerHTML = '';
+
+    if (apkVersions.length === 0) {
+      select.innerHTML = '<option>No APK versions available</option>';
+      return;
+    }
+
+    apkVersions.forEach((version, index) => {
+      console.log(`[WORKERS] APK version ${index}:`, typeof version, version);
+      const option = document.createElement('option');
+
+      // Handle different data formats
+      let displayValue, actualValue;
+      if (typeof version === 'string') {
+        displayValue = version;
+        actualValue = version;
+      } else if (version && typeof version === 'object') {
+        displayValue = version.version || version.name || version.tag || JSON.stringify(version);
+        actualValue = version.version || version.name || version.tag || JSON.stringify(version);
+      } else {
+        displayValue = String(version);
+        actualValue = String(version);
+      }
+
+      option.value = actualValue;
+      option.textContent = displayValue;
+      select.appendChild(option);
+    });
+
+    console.log('[WORKERS] APK selector populated with:', apkVersions);
+  } catch (error) {
+    console.error('[WORKERS] Error populating APK versions:', error);
+    select.innerHTML = '<option>Error loading APK versions</option>';
+  }
+}
+
+
+async function setupWorkerDeviceSelector() {
+  const container = document.getElementById('worker-device-container');
+  const select = document.getElementById('worker-device');
+
+  if (!container || !select) return;
+
+  try {
+    const config = await fetchConfig();
+    if (config.deviceSource === 'local') {
+      container.classList.remove('hidden');
+      await populateWorkerDeviceSelect();
+    } else {
+      container.classList.add('hidden');
+    }
+  } catch (error) {
+    console.error('[WORKERS] Error setting up device selector:', error);
+  }
+}
+
+async function populateWorkerDeviceSelect() {
+  const select = document.getElementById('worker-device');
+  if (!select) return;
+
+  try {
+    const devices = await getLocalDevices();
+    select.innerHTML = '';
+
+    devices.forEach((device, index) => {
+      console.log(`[WORKERS] Device ${index}:`, typeof device, device);
+      const option = document.createElement('option');
+
+      // Handle different device data formats
+      let displayValue, actualValue;
+      if (device && device.serial) {
+        // Format: "Model (Serial)"
+        displayValue = `${device.model || device.name || 'Unknown Device'} (${device.serial})`;
+        actualValue = device.serial;
+      } else if (typeof device === 'string') {
+        displayValue = device;
+        actualValue = device;
+      } else if (device && typeof device === 'object') {
+        displayValue = device.model || device.name || device.id || JSON.stringify(device);
+        actualValue = device.serial || device.id || JSON.stringify(device);
+      } else {
+        displayValue = String(device);
+        actualValue = String(device);
+      }
+
+      option.value = actualValue;
+      option.textContent = displayValue;
+      select.appendChild(option);
+    });
+
+    console.log('[WORKERS] Device selector populated');
+  } catch (error) {
+    console.error('[WORKERS] Error populating devices:', error);
+    select.innerHTML = '<option>Error loading devices</option>';
+  }
+}
+
+
+async function updateWorkerApkOptions() {
+  // Re-populate APK selector when client changes
+  await populateWorkerApkSelect();
+}
+
+
+async function handleCreateWorker(source = 'main') {
+  // Determine which form and elements to use based on source
+  const isInspectorForm = source === 'inspector';
+  const btnId = isInspectorForm ? 'inspector-create-worker-btn' : 'create-worker-btn';
+  const statusId = isInspectorForm ? 'inspector-worker-creation-status' : 'worker-creation-status';
+
+  const btn = document.getElementById(btnId);
+  const statusDiv = document.getElementById(statusId);
+
+  // Get form values based on source
+  const client = document.getElementById(isInspectorForm ? 'inspector-worker-client' : 'worker-client').value;
+  const branch = document.getElementById(isInspectorForm ? 'inspector-worker-branch' : 'worker-branch').value;
+  const apkVersion = document.getElementById(isInspectorForm ? 'inspector-worker-apk' : 'worker-apk').value;
+  const deviceSerial = document.getElementById(isInspectorForm ? 'inspector-worker-device' : 'worker-device').value;
+  const quickTest = document.getElementById(isInspectorForm ? 'inspector-worker-quick-mode' : 'worker-quick-mode').checked;
+
+  // Validate required fields
+  if (!client || !branch || !apkVersion) {
+    showWorkerStatus('Por favor completa todos los campos requeridos', 'error', source);
+    return;
+  }
+
+  // Disable button and show loading state
+  btn.disabled = true;
+  btn.textContent = 'Creando...';
+  showWorkerStatus('Creando worker...', 'info', source);
+
+  try {
+    const workerData = {
+      branch,
+      client,
+      apkVersion,
+      deviceSerial: deviceSerial || null,
+      quickTest,
+      persistent: true, // Workers created manually should be persistent
+      source: isInspectorForm ? 'inspector' : 'main' // Track creation source
+    };
+
+    const response = await fetch('/api/workers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(workerData)
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      showWorkerStatus(`✅ Worker creado exitosamente (ID: ${result.workerId})`, 'success', source);
+
+      // Add visual feedback for successful creation
+      if (isInspectorForm) {
+        // Reset form
+        document.getElementById('inspector-worker-quick-mode').checked = false;
+
+        // Highlight the worker creation section briefly
+        const workerSection = document.getElementById('inspector-worker-creation');
+        if (workerSection) {
+          workerSection.style.backgroundColor = '#d4edda';
+          workerSection.style.border = '1px solid #c3e6cb';
+          setTimeout(() => {
+            workerSection.style.backgroundColor = '';
+            workerSection.style.border = '';
+          }, 2000);
+        }
+
+        // Show additional status message in inspector
+        if (typeof appiumInspector !== 'undefined') {
+          appiumInspector.setStatus(`Worker creado (ID: ${result.workerId}). Esperando inicio de Appium...`, 'info');
+        }
+      } else {
+        // Reset form
+        document.getElementById('worker-quick-mode').checked = false;
+      }
+
+      // Refresh workers list after a short delay
+      setTimeout(() => {
+        refreshWorkersList();
+
+        // If created from inspector, refresh sessions and auto-attach after another delay
+        if (isInspectorForm && typeof appiumInspector !== 'undefined') {
+          setTimeout(() => {
+            appiumInspector.loadSessions().then(() => {
+              // Auto-attach to the first persistent session if available
+              const sessions = appiumInspector.sessions;
+              if (sessions && sessions.length > 0) {
+                // Find a persistent session that matches our newly created worker
+                const persistentSession = sessions.find(session => session.isPersistent);
+                if (persistentSession) {
+                  console.log(`[WORKERS] Auto-attaching to persistent session: ${persistentSession.sessionId}`);
+                  appiumInspector.setStatus(`Conectando automáticamente al worker (ID: ${result.workerId})...`, 'info');
+                  appiumInspector.attachToSession(persistentSession.sessionId);
+                } else {
+                  appiumInspector.setStatus('Worker creado, pero no se encontraron sesiones persistentes', 'warning');
+                }
+              } else {
+                appiumInspector.setStatus('Worker creado, esperando que Appium inicie...', 'info');
+              }
+            }).catch(error => {
+              console.error('[WORKERS] Error refreshing sessions for auto-attach:', error);
+              if (typeof appiumInspector !== 'undefined') {
+                appiumInspector.setStatus('Error al buscar sesiones para auto-conexión', 'error');
+              }
+            });
+          }, 3000);
+        }
+      }, 1000);
+
+    } else {
+      showWorkerStatus(`❌ Error: ${result.error || 'Error desconocido'}`, 'error', source);
+    }
+  } catch (error) {
+    console.error('[WORKERS] Error creating worker:', error);
+    showWorkerStatus(`❌ Error de conexión: ${error.message}`, 'error', source);
+  } finally {
+    // Re-enable button
+    btn.disabled = false;
+    btn.textContent = isInspectorForm ? '🚀 Crear Worker' : '➕ Crear Worker';
+  }
+}
+
+// Export functions globally for inspector tab
+window.handleCreateWorker = handleCreateWorker;
+window.refreshWorkersList = refreshWorkersList;
+
+function showWorkerStatus(message, type = 'info', source = 'main') {
+  const statusId = source === 'inspector' ? 'inspector-worker-creation-status' : 'worker-creation-status';
+  const statusDiv = document.getElementById(statusId);
+  if (!statusDiv) return;
+
+  statusDiv.textContent = message;
+  statusDiv.style.display = 'block';
+
+  // Reset classes
+  statusDiv.className = '';
+
+  // Apply type-specific styling
+  switch (type) {
+    case 'success':
+      statusDiv.style.backgroundColor = '#d4edda';
+      statusDiv.style.color = '#155724';
+      statusDiv.style.border = '1px solid #c3e6cb';
+      break;
+    case 'error':
+      statusDiv.style.backgroundColor = '#f8d7da';
+      statusDiv.style.color = '#721c24';
+      statusDiv.style.border = '1px solid #f5c6cb';
+      break;
+    case 'info':
+    default:
+      statusDiv.style.backgroundColor = '#d1ecf1';
+      statusDiv.style.color = '#0c5460';
+      statusDiv.style.border = '1px solid #bee5eb';
+      break;
+  }
+
+  // Auto-hide after 5 seconds for success/info messages
+  if (type !== 'error') {
+    setTimeout(() => {
+      statusDiv.style.display = 'none';
+    }, 5000);
+  }
+}
+
+async function refreshWorkersList() {
+  try {
+    const response = await fetch('/api/workers');
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      console.log(`[WORKERS] Refreshed workers list: ${result.workers.length} workers`);
+      console.log(`[WORKERS] Workers details:`, result.workers);
+
+      // Count workers by status
+      const readyWorkers = result.workers.filter(w => w.status === 'ready');
+      const busyWorkers = result.workers.filter(w => w.status === 'busy');
+      const initializingWorkers = result.workers.filter(w => w.status === 'initializing');
+
+      console.log(`[WORKERS] Status breakdown - Ready: ${readyWorkers.length}, Busy: ${busyWorkers.length}, Initializing: ${initializingWorkers.length}`);
+
+      // Log each worker
+      result.workers.forEach((worker, index) => {
+        console.log(`[WORKERS] Worker ${index}: ID=${worker.id}, Status=${worker.status}, Branch=${worker.branch}, Client=${worker.client}`);
+      });
+
+      // Update UI if we have a workers display
+      updateWorkersDisplay(result.workers);
+    } else {
+      console.error('[WORKERS] Error refreshing workers:', result.error);
+    }
+  } catch (error) {
+    console.error('[WORKERS] Error refreshing workers list:', error);
+  }
+}
+
+function updateWorkersDisplay(workers) {
+  // This function can be expanded to update the workers tab display
+  // For now, just log the workers status
+  const readyWorkers = workers.filter(w => w.status === 'ready');
+  const busyWorkers = workers.filter(w => w.status === 'busy');
+
+  console.log(`[WORKERS] Display update - Ready: ${readyWorkers.length}, Busy: ${busyWorkers.length}`);
+
+  // Disable create worker buttons if there are ready workers
+  const mainCreateBtn = document.getElementById('create-worker-btn');
+  const inspectorCreateBtn = document.getElementById('inspector-create-worker-btn');
+
+  if (readyWorkers.length > 0) {
+    console.log(`[WORKERS] Disabling create buttons because ${readyWorkers.length} workers are ready`);
+    if (mainCreateBtn) {
+      mainCreateBtn.disabled = true;
+      mainCreateBtn.textContent = '➕ Worker Activo';
+      mainCreateBtn.title = 'Ya hay un worker activo';
+    }
+    if (inspectorCreateBtn) {
+      inspectorCreateBtn.disabled = true;
+      inspectorCreateBtn.textContent = '🚀 Worker Activo';
+      inspectorCreateBtn.title = 'Ya hay un worker activo';
+    }
+
+    // Refresh inspector sessions when workers become ready
+    console.log(`[WORKERS] Refreshing inspector sessions because ${readyWorkers.length} workers are ready`);
+    if (typeof appiumInspector !== 'undefined') {
+      appiumInspector.loadSessions();
+    } else {
+      console.log('[WORKERS] appiumInspector not available yet');
+    }
+  } else {
+    console.log(`[WORKERS] Enabling create buttons - no ready workers`);
+    if (mainCreateBtn) {
+      mainCreateBtn.disabled = false;
+      mainCreateBtn.textContent = '➕ Crear Worker';
+      mainCreateBtn.title = '';
+    }
+    if (inspectorCreateBtn) {
+      inspectorCreateBtn.disabled = false;
+      inspectorCreateBtn.textContent = '🚀 Crear Worker';
+      inspectorCreateBtn.title = '';
+    }
+  }
+
+  // Emit custom event that other components can listen to
+  window.dispatchEvent(new CustomEvent('workersUpdated', { detail: { workers } }));
 }
