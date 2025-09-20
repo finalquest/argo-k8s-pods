@@ -603,3 +603,6 @@ describe('AuthenticationManager', () => {
 - [ARCHITECTURE.md](../../ARCHITECTURE.md) - Documentación general de arquitectura
 - [01-arquitectura-general.md](../01-arquitectura-general.md) - Arquitectura general del sistema
 - [02-backend/01-server-architecture.md](./01-server-architecture.md) - Arquitectura del servidor
+- `InspectorManager` recibe el `WorkerPoolManager` para consultar y registrar sesiones activas (incluyendo identificadores virtuales para workers persistentes).
+- Las capacidades usadas al adjuntarse a un worker establecen `newCommandTimeout = 0`, evitando que Appium cierre la sesión durante inspecciones manuales prolongadas.
+- Cada inspección solicita hasta 200 nodos del árbol para cubrir overlays y popups; el límite puede ajustarse vía `INSPECT_MAX_ELEMENTS`.

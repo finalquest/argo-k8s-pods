@@ -26,8 +26,8 @@ La función de asignación de trabajos (`assignJobToWorker`) no contempla un mec
 
 La solución consiste en hacer que la lógica de asignación sea más inteligente:
 
-1.  Modificar la función `assignJobToWorker` en `server.js`.
-2.  Añadir una nueva lógica que se active cuando el pool de workers esté lleno.
+1.  Modificar la función `assignJobToWorker` dentro de `src/modules/worker-management/job-queue-manager.js`.
+2.  Añadir una nueva lógica que se active cuando el pool de workers (gestionado por `WorkerPoolManager`) esté lleno.
 3.  Esta lógica deberá detectar si hay workers inactivos que no son compatibles con ninguno de los trabajos que quedan en la cola.
 4.  Si se encuentra un worker "inútil" o "stale", el sistema deberá iniciar su ciclo de terminación (`GENERATE_UNIFIED_REPORT` y luego `TERMINATE`) para liberar un espacio en el pool.
 5.  El trabajo que no pudo ser asignado se devolverá a la cola y será procesado correctamente en el siguiente ciclo, una vez que el espacio quede libre y se pueda crear un nuevo worker compatible.

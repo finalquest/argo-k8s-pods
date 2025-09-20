@@ -9,133 +9,124 @@ El sistema de comunicación en tiempo real de Appium Orchestrator Web está impl
 ### 1. Configuración del Servidor Socket.IO
 
 ```javascript
-// server.js - Configuración principal de Socket.IO
-const { Server } = require('socket.io');
-const http = require('http');
+// server.js - Inicialización del gestor Socket.IO
+const socketIOManager = new SocketIOManager(
+  authManager,
+  workerPoolManager,
+  jobQueueManager,
+  configManager,
+  validationManager,
+);
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.NODE_ENV === 'production' ? false : '*',
-    methods: ['GET', 'POST'],
-  },
-  transports: ['websocket', 'polling'],
-});
+socketIOManager.initialize(
+  server,
+  authManager.getSessionMiddleware(),
+  authManager.getPassport(),
+);
 
-// Integración con Express
-app.set('io', io);
+const io = socketIOManager.getIO();
 ```
+
+El `SocketIOManager` centraliza la configuración de CORS, la reutilización de sesiones Express y la verificación de autenticación. Cuando `AuthenticationManager` se ejecuta en modo desarrollo, el manager adjunta automáticamente un usuario de ejemplo, permitiendo probar la UI sin OAuth.
 
 ### 2. Middleware de Autenticación para Socket.IO
 
 ```javascript
-// server.js - Integración de sesiones y autenticación
-io.use((socket, next) => {
-  sessionMiddleware(socket.request, {}, next);
-});
+// src/modules/socketio/socketio-manager.js - Autenticación condicional
+if (this.authenticationManager.isAuthenticationEnabled()) {
+  this.io.use(wrap(passport.initialize()));
+  this.io.use(wrap(passport.session()));
 
-io.use((socket, next) => {
-  passport.initialize()(socket.request, {}, next);
-});
-
-io.use((socket, next) => {
-  passport.session()(socket.request, {}, next);
-
-  if (socket.request.user) {
-    socket.userId = socket.request.user.id;
-    socket.userName = socket.request.user.displayName;
-    socket.userEmail = socket.request.user.email;
+  this.io.use((socket, next) => {
+    if (socket.request.user) {
+      next();
+    } else {
+      next(new Error('unauthorized'));
+    }
+  });
+} else {
+  // Modo desarrollo: adjunta usuario de sandbox
+  this.io.use((socket, next) => {
+    socket.request.user = this.configManager.getDevelopmentUser();
     next();
-  } else {
-    next(new Error('No autorizado'));
-  }
-});
+  });
+}
 ```
 
 ## 📡 Eventos Principales
 
-### 1. Eventos de Control de Ejecución
+### 1. Eventos de Control de Ejecución y Inspector
 
 #### Inicio de Test Individual
 
 ```javascript
-// server.js - Manejo de run_test
-socket.on('run_test', (data) => {
-  const job = {
-    id: generateJobId(),
-    type: 'single',
-    branch: data.branch,
-    client: data.client,
-    feature: data.feature,
-    highPriority: data.highPriority || false,
-    deviceSerial: data.deviceSerial,
-    localApk: data.localApk,
-    apkVersion: data.apkVersion,
-    record: data.record || false,
-    usePreexistingMapping: data.usePreexistingMapping || false,
-    persistentWorkspace: data.persistentWorkspace || false,
-    userId: socket.userId,
-    timestamp: Date.now(),
-  };
+// src/modules/socketio/socketio-manager.js - Evento run_test
+handleRunTest(socket) {
+  socket.on('run_test', (data) => {
+    console.log('--- DEBUG: Datos recibidos en run_test ---', data);
 
-  console.log(`[${socket.userName}] Iniciando test: ${job.feature}`);
+    if (data.record) {
+      this.handleRecordAndVerify(socket, data, data.persistentWorkspace);
+    } else {
+      const job = {
+        ...data,
+        persistentWorkspace: data.persistentWorkspace,
+      };
 
-  // Asignar job a worker o agregar a cola
-  if (!assignJob(job)) {
-    jobQueue.push(job);
-    io.emit('queue_status_update', getQueueStatus());
-  }
-
-  // Notificar inicio del job
-  io.emit('job_started', {
-    jobId: job.id,
-    slotId: getWorkerSlotForJob(job.id),
-    featureName: job.feature,
-    userId: job.userId,
-    userName: socket.userName,
-    timestamp: job.timestamp,
+      this.jobQueueManager.addJob(job);
+      this.emitLogUpdate({
+        logLine: `--- 📋 Petición de ejecución para '${data.feature}' encolada. ---\n`,
+      });
+    }
   });
-});
+}
 ```
+
+El manager añade los trabajos a la cola mediante `JobQueueManager.addJob`, que se encarga de generar el identificador incremental, persistir el estado `queued` y disparar `processQueue()` para intentar ejecutar el trabajo inmediatamente.
 
 #### Ejecución de Tests por Lotes
 
 ```javascript
-// server.js - Manejo de run_batch
-socket.on('run_batch', (data) => {
-  const jobs = data.jobs.map((job) => ({
-    ...job,
-    id: generateJobId(),
-    type: 'batch',
-    record: data.record || false,
-    usePreexistingMapping: data.usePreexistingMapping || false,
-    persistentWorkspace: data.persistentWorkspace || false,
-    userId: socket.userId,
-    timestamp: Date.now(),
-  }));
+// src/modules/socketio/socketio-manager.js - Evento run_batch
+handleRunBatch(socket) {
+  socket.on('run_batch', (data) => {
+    const { features, ...commonJobProps } = data;
+    let count = 0;
 
-  console.log(`[${socket.userName}] Iniciando batch de ${jobs.length} tests`);
+    features.forEach((feature) => {
+      this.jobQueueManager.addJob({
+        ...commonJobProps,
+        feature,
+        persistentWorkspace: data.persistentWorkspace,
+      });
+      count++;
+    });
 
-  // Procesar cada job individualmente
-  jobs.forEach((job) => {
-    if (!assignJob(job)) {
-      jobQueue.push(job);
-    }
+    this.emitLogUpdate({
+      logLine: `--- 📦 ${count} Tests agregados a la cola para ejecución batch. ---\n`,
+    });
+    this.broadcastQueueStatus();
   });
-
-  // Actualizar estado de cola
-  io.emit('queue_status_update', getQueueStatus());
-
-  // Notificar inicio del batch
-  io.emit('batch_started', {
-    batchId: generateBatchId(),
-    totalJobs: jobs.length,
-    jobs: jobs.map((j) => ({ id: j.id, feature: j.feature })),
-    userId: socket.userId,
-    userName: socket.userName,
-  });
-});
+}
 ```
+
+Los eventos de control adicionales (`stop_all_execution`, `cancel_job`, `prepare_workspace`, etc.) se encapsulan en métodos similares, lo que mantiene la superficie del servidor limpia y permite reutilizar la lógica de logging y métricas en un sólo lugar.
+
+#### Gestión de sesiones Appium
+
+El `SocketIOManager` y el `WorkerPoolManager` cooperan para exponer el estado de las sesiones Appium al inspector. Durante la ejecución:
+
+- Los workers emiten `APPIUM_PORT_READY` cuando el servidor Appium local está disponible. Si el worker es persistente y todavía no tiene una sesión real, se registra una sesión virtual (`persistent-<id>-<port>`) para que pueda adjuntarse desde el inspector tras un refresh.
+- Cuando WebdriverIO crea o adjunta una sesión (`APPIUM_SESSION_STARTED`), `WorkerPoolManager.updateWorkerSession()` actualiza `appiumSessionId` y emite `worker_session_updated`. El inspector consume este evento para refrescar la lista sin recrear el worker.
+- Al terminar o al recibir `APPIUM_SESSION_ENDED`, `clearWorkerSession()` limpia el estado y emite `worker_session_cleared`.
+
+El listado disponible en `/api/inspector/sessions` utiliza `getAppiumSessions()`, que ahora:
+
+- Acepta estados `busy`, `ready` (y legado `running`) para contemplar workers activos o en espera.
+- Amplía el límite de elementos a 200 nodos al inspeccionar (`/inspect`), cubriendo overlays y popups complejos.
+- Mantiene la sesión Appium viva con `newCommandTimeout = 0` al adjuntarse a workers persistentes, evitando cierres prematuros por inactividad.
+- Expone el endpoint `POST /api/inspector/:sessionId/type` para enviar texto a campos `EditText`. Al completarse, se emite `inspector_text_entered` para mantener la UI sincronizada.
+- La interacción sobre `EditText` se realiza de forma nativa (tap + clear + set/add value), por lo que no depende de `executeScript` y funciona en contextos sin WebView.
 
 #### Detención de Ejecución
 

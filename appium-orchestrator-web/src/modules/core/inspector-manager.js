@@ -71,6 +71,7 @@ class InspectorManager {
           'appium:udid': worker.deviceSerial,
           'appium:autoLaunch': false, // Don't launch any app automatically
           'appium:noReset': true, // Don't reset app state
+          'appium:newCommandTimeout': 0, // Keep session alive for manual inspection
         };
 
         client = await remote({
@@ -121,6 +122,141 @@ class InspectorManager {
     } catch (error) {
       console.error(
         `[INSPECTOR] Failed to attach to session ${sessionId}:`,
+        error.message,
+      );
+      return { success: false, message: error.message, sessionId };
+    }
+  }
+
+  /**
+   * Type text into a specific element using locator strategy
+   */
+  async typeText(sessionId, locators = [], locatorType, locatorValue, text) {
+    try {
+      const session = this.activeSessions.get(sessionId);
+      if (!session) {
+        throw new Error('Session not attached');
+      }
+
+      const locatorCandidates = [];
+
+      if (locatorType && locatorValue) {
+        locatorCandidates.push({ type: locatorType, value: locatorValue });
+      }
+
+      if (Array.isArray(locators)) {
+        locators.forEach((locator) => {
+          if (locator && locator.type && locator.value) {
+            locatorCandidates.push(locator);
+          }
+        });
+      }
+
+      if (locatorCandidates.length === 0) {
+        throw new Error('Missing locator information');
+      }
+
+      let lastError = null;
+
+      for (const candidate of locatorCandidates) {
+        const selector = this.buildSelector(candidate.type, candidate.value);
+        if (!selector) {
+          continue;
+        }
+
+        try {
+          const element = await session.client.$(selector);
+          await session.client.pause(500);
+
+          if (!(await element.isExisting())) {
+            console.warn('[INSPECTOR][TEXT] Element not found after initial lookup:', selector);
+            continue;
+          }
+
+          let tapSucceeded = false;
+
+          try {
+            // Native tap before typing to ensure focus
+            await session.client.performActions([
+              {
+                type: 'pointer',
+                id: 'finger1',
+                parameters: { pointerType: 'touch' },
+                actions: [
+                  { type: 'pointerMove', duration: 0, origin: element, x: 0, y: 0 },
+                  { type: 'pointerDown', button: 0 },
+                  { type: 'pause', duration: 100 },
+                  { type: 'pointerUp', button: 0 },
+                ],
+              },
+            ]);
+            await session.client.releaseActions();
+            tapSucceeded = true;
+          } catch (tapError) {
+            console.warn('[INSPECTOR][TEXT] Unable to perform native tap:', tapError.message);
+          }
+
+          if (!tapSucceeded) {
+            try {
+              await element.click();
+            } catch (clickError) {
+              console.warn('[INSPECTOR][TEXT] Unable to click element before typing:', clickError.message);
+            }
+          }
+
+          try {
+            await element.clearValue();
+          } catch (clearError) {
+            console.warn('[INSPECTOR][TEXT] Unable to clear element before typing:', clearError.message);
+          }
+
+          let typed = false;
+
+          try {
+            await element.setValue(text);
+            typed = true;
+          } catch (setValueError) {
+            console.warn('[INSPECTOR][TEXT] setValue failed:', setValueError.message);
+          }
+
+          if (!typed) {
+            try {
+              await element.addValue(text);
+              typed = true;
+            } catch (addValueError) {
+              lastError = addValueError;
+              console.warn('[INSPECTOR][TEXT] addValue also failed:', addValueError.message);
+              continue;
+            }
+          }
+
+          session.lastActivity = new Date();
+
+          return {
+            success: true,
+            sessionId,
+            text,
+            locatorType: candidate.type,
+            locatorValue: candidate.value,
+            timestamp: new Date().toISOString(),
+          };
+        } catch (error) {
+          lastError = error;
+          console.warn(
+            `[INSPECTOR] Locator ${candidate.type}=${candidate.value} failed:`,
+            error.message,
+          );
+        }
+      }
+
+      if (lastError) {
+        throw lastError;
+      }
+
+      throw new Error('Unable to locate element to type');
+    } catch (error) {
+      console.error(
+        `[INSPECTOR] Failed to type text for session ${sessionId}:`,
         error.message,
       );
       return { success: false, message: error.message, sessionId };
@@ -343,6 +479,24 @@ class InspectorManager {
   }
 
   // Private helper methods
+
+  buildSelector(locatorType, locatorValue) {
+    if (!locatorType || !locatorValue) {
+      return null;
+    }
+
+    switch (locatorType) {
+      case 'id':
+        return `id=${locatorValue}`;
+      case 'accessibility id':
+      case 'content-desc':
+        return `~${locatorValue}`;
+      case 'xpath':
+        return locatorValue;
+      default:
+        return null;
+    }
+  }
 
   findWorkerBySessionId(sessionId) {
     if (!this.workerPoolManager) {
@@ -658,8 +812,9 @@ class InspectorManager {
     // 1. Content-desc format (highest priority)
     if (node.$?.['content-desc']) {
       locators.push({
-        type: 'content-desc',
-        value: `@content-desc='${node.$['content-desc']}'`,
+        type: 'accessibility id',
+        value: node.$['content-desc'],
+        display: `content-desc='${node.$['content-desc']}'`,
         priority: 1,
       });
     }
@@ -669,7 +824,19 @@ class InspectorManager {
       locators.push({
         type: 'id',
         value: node.$['resource-id'],
+        display: node.$['resource-id'],
         priority: 2,
+      });
+    }
+
+    // 3. XPath fallback
+    const xpath = this.generateXPath(node);
+    if (xpath) {
+      locators.push({
+        type: 'xpath',
+        value: xpath,
+        display: xpath,
+        priority: 3,
       });
     }
 
@@ -690,22 +857,30 @@ class InspectorManager {
     const attrs = [];
 
     if (node.$?.class) {
-      attrs.push(`@class='${node.$.class}'`);
+      attrs.push(`class='${node.$.class}'`);
     }
 
     if (node.$?.['resource-id']) {
-      attrs.push(`@resource-id='${node.$['resource-id']}'`);
+      attrs.push(`resource-id='${node.$['resource-id']}'`);
     }
 
     if (node.$?.['content-desc']) {
-      attrs.push(`@content-desc='${node.$['content-desc']}'`);
+      attrs.push(`content-desc='${node.$['content-desc']}'`);
     }
 
     if (node.$?.text && this.isStableText(node.$.text)) {
-      attrs.push(`@text='${node.$.text}'`);
+      attrs.push(`text='${node.$.text}'`);
     }
 
-    return attrs.length > 0 ? `//*[@${attrs.join(' and ')}]` : null;
+    if (attrs.length === 0) {
+      return null;
+    }
+
+    const normalized = attrs.map((attr) => {
+      return attr.startsWith('@') ? attr.substring(1) : attr;
+    });
+
+    return `//*[@${normalized.join(' and @')}]`;
   }
 
   elementMatchesSearch(element, query) {

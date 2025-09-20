@@ -88,6 +88,7 @@ El sistema incluye un modo de ejecución rápida que permite saltar la instalaci
 - [Histórico y Reportes](docs/04-features/08-history-and-reports.md) - Allure y archivado
 - [Gestión de Archivos](docs/04-features/09-file-management-and-configuration.md) - Configuración
 - [Despliegue y Operaciones](docs/04-features/10-deployment-and-operations.md) - Docker y mantenimiento
+- [Inspector Appium](docs/05-inspector/overview.md) - Análisis de UI en vivo, reconexión tras reload y tap directo
 
 ### 🚀 Despliegue
 

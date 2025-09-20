@@ -293,6 +293,30 @@ class WorkerPoolManager {
           worker.appiumPort = message.appiumPort;
           worker.startTime = worker.startTime || new Date();
           console.log(`[WORKER POOL] Worker ${worker.id} Appium port ready: ${message.appiumPort}`);
+
+          if (worker.persistent && !worker.appiumSessionId) {
+            const virtualSessionId = `persistent-${worker.id}-${message.appiumPort}`;
+            console.log(
+              `[WORKER POOL] Registering virtual session ${virtualSessionId} for persistent worker ${worker.id}`,
+            );
+            this.updateWorkerSession(worker.id, virtualSessionId);
+          }
+          break;
+
+        case 'APPIUM_SESSION_STARTED':
+          if (message.sessionId) {
+            console.log(
+              `[WORKER POOL] Worker ${worker.id} Appium session started: ${message.sessionId}`,
+            );
+            this.updateWorkerSession(worker.id, message.sessionId);
+          }
+          break;
+
+        case 'APPIUM_SESSION_ENDED':
+          console.log(
+            `[WORKER POOL] Worker ${worker.id} Appium session ended. Clearing reference.`,
+          );
+          this.clearWorkerSession(worker.id);
           break;
 
         case 'PROGRESS_UPDATE':
@@ -515,8 +539,11 @@ class WorkerPoolManager {
     const sessions = [];
 
     this.workerPool.forEach((worker) => {
-      // Include workers with active Appium sessions
-      if (worker.status === 'running' && worker.appiumSessionId) {
+      const hasSession = !!worker.appiumSessionId;
+      const isActiveState = ['busy', 'running', 'ready'].includes(worker.status);
+
+      // Include workers with active Appium sessions tracked in memory
+      if (hasSession && isActiveState) {
         sessions.push({
           sessionId: worker.appiumSessionId,
           workerId: worker.id,
@@ -532,7 +559,11 @@ class WorkerPoolManager {
         });
       }
       // Include persistent workers that are ready and have Appium running
-      else if (worker.persistent && worker.status === 'ready' && worker.appiumPort) {
+      else if (
+        worker.persistent &&
+        worker.appiumPort &&
+        ['ready', 'busy'].includes(worker.status)
+      ) {
         const virtualSessionId = `persistent-${worker.id}-${worker.appiumPort}`;
         sessions.push({
           sessionId: virtualSessionId,

@@ -628,9 +628,12 @@
                   <div class="inspector-controls-compact">
                     <h3>Controles del Inspector</h3>
                     <div class="inspector-controls-group">
-                      <button id="inspector-refresh-btn" class="btn-secondary btn-compact" title="Actualizar elementos">🔄</button>
-                      <button id="inspector-screenshot-btn" class="btn-secondary btn-compact" title="Capturar pantalla">📸</button>
+                      <button id="inspector-refresh-all-btn" class="btn-secondary btn-compact" title="Actualizar elementos y captura">🔄</button>
                       <button id="inspector-overlay-btn" class="btn-secondary btn-compact" title="Mostrar/ocultar overlay de elementos">🖼️</button>
+                      <label class="checkbox-label checkbox-compact">
+                        <input type="checkbox" id="inspector-auto-detect-toggle">
+                        Auto-detect
+                      </label>
                       <label class="checkbox-label checkbox-compact">
                         <input type="checkbox" id="inspector-clickable-only">
                         Solo clickables
@@ -678,6 +681,11 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Auto-detection Indicator -->
+        <div id="inspector-auto-detect-indicator" class="inspector-status" style="display: none;">
+          <span>Auto-detect OFF</span>
         </div>
 
         <!-- Status Messages -->

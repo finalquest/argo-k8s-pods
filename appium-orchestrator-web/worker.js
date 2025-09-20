@@ -28,6 +28,24 @@ class LogProgressParser {
     // Limpiar timestamp y prefijos comunes
     const cleanLine = this.cleanLogLine(logLine);
 
+    // Detect Appium session lifecycle markers
+    const sessionStartMatch = cleanLine.match(/^\[APPIUM_SESSION_START\]\s+(.+)$/);
+    if (sessionStartMatch) {
+      const sessionId = sessionStartMatch[1].trim();
+      if (sessionId) {
+        sendToParent({
+          type: 'APPIUM_SESSION_STARTED',
+          sessionId,
+        });
+      }
+      return null;
+    }
+
+    if (cleanLine.startsWith('[APPIUM_SESSION_END]')) {
+      sendToParent({ type: 'APPIUM_SESSION_ENDED' });
+      return null;
+    }
+
     // Intentar diferentes patrones en orden de prioridad
     const patterns = [
       this.tryStepPattern.bind(this),

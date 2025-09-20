@@ -67,8 +67,7 @@ class AppiumInspector {
     });
 
     // Control elements
-    this.refreshBtn = document.getElementById('inspector-refresh-btn');
-    this.screenshotBtn = document.getElementById('inspector-screenshot-btn');
+    this.refreshAllBtn = document.getElementById('inspector-refresh-all-btn');
     this.overlayBtn = document.getElementById('inspector-overlay-btn');
     this.clickableOnlyCheckbox = document.getElementById(
       'inspector-clickable-only',
@@ -88,6 +87,14 @@ class AppiumInspector {
     
     // Status
     this.statusText = document.getElementById('inspector-status-text');
+
+    // Auto-detection properties
+    this.autoDetectEnabled = false;
+    this.lastXMLHash = '';
+    this.pollingInterval = null;
+    this.autoDetectToggle = document.getElementById('inspector-auto-detect-toggle');
+    this.autoDetectIndicator = document.getElementById('inspector-auto-detect-indicator');
+    this.updateCount = 0;
   }
 
   bindEvents() {
@@ -103,10 +110,7 @@ class AppiumInspector {
     }
 
     // Control buttons
-    this.refreshBtn.addEventListener('click', () => this.refreshElements());
-    this.screenshotBtn.addEventListener('click', () =>
-      this.captureScreenshot(),
-    );
+    this.refreshAllBtn.addEventListener('click', () => this.refreshInspector());
     this.overlayBtn.addEventListener('click', () => this.toggleOverlay());
 
     // Screenshot click handler for navigation
@@ -120,6 +124,13 @@ class AppiumInspector {
       'input',
       this.debounce(() => this.refreshElements(), 300),
     );
+
+    // Auto-detection toggle
+    if (this.autoDetectToggle) {
+      this.autoDetectToggle.addEventListener('change', () =>
+        this.toggleAutoDetection(),
+      );
+    }
 
     // Worker creation form in inspector
     const inspectorCreateBtn = document.getElementById(
@@ -211,6 +222,12 @@ class AppiumInspector {
   }
 
   initializeSocketListeners() {
+    this.socket.on('connect', () => {
+      this.loadSessions().catch((error) => {
+        console.warn('[INSPECTOR] Failed to load sessions on connect:', error);
+      });
+    });
+
     // Session updates
     this.socket.on('worker_session_updated', (data) => {
       console.log('Worker session updated:', data);
@@ -265,6 +282,16 @@ class AppiumInspector {
       );
       setTimeout(() => this.refreshElements(), 500);
     });
+
+    this.socket.on('inspector_text_entered', (data) => {
+      console.log('Text entered:', data);
+      const safeText = typeof data.text === 'string' ? data.text : '';
+      this.setStatus(
+        safeText ? `Texto enviado: "${this.truncate(safeText, 30)}"` : 'Texto enviado al dispositivo.',
+        'success',
+      );
+      setTimeout(() => this.refreshElements(), 500);
+    });
   }
 
   // activateTab method replaces show() for tab functionality
@@ -293,6 +320,8 @@ class AppiumInspector {
 
       this.isInitialized = true;
       this.setStatus('Inspector inicializado', 'success');
+
+      await this.loadSessions();
     } catch (error) {
       console.error('Failed to initialize inspector:', error);
       this.setStatus('Error al inicializar inspector', 'error');
@@ -554,6 +583,9 @@ class AppiumInspector {
           No hay sesiones Appium activas
         </div>
       `;
+      this.updateCreateWorkerButton(true);
+      this.currentSession = null;
+      this.hideInspectorView();
       return;
     }
 
@@ -610,6 +642,45 @@ class AppiumInspector {
         }
       });
     });
+
+    const hasActiveSession = sessions.some((session) =>
+      session.isAttached || session.isPersistent || session.status === 'ready',
+    );
+    this.updateCreateWorkerButton(!hasActiveSession);
+
+    const attachedSession = sessions.find((session) => session.isAttached);
+    if (attachedSession) {
+      const previousSession = this.currentSession;
+      this.currentSession = attachedSession.sessionId;
+      this.showInspectorView();
+      this.updateSessionCard(attachedSession.sessionId, true);
+      this.setStatus('Sesión adjunta detectada', 'success');
+      if (previousSession !== attachedSession.sessionId) {
+        this.refreshInspector().catch((error) => {
+          console.warn('[INSPECTOR] Failed to refresh after reconnect:', error);
+        });
+      }
+    }
+  }
+
+  updateCreateWorkerButton(enable) {
+    const inspectorCreateBtn = document.getElementById(
+      'inspector-create-worker-btn',
+    );
+    if (!inspectorCreateBtn) {
+      return;
+    }
+
+    if (enable) {
+      inspectorCreateBtn.disabled = false;
+      inspectorCreateBtn.textContent = '🚀 Crear Worker';
+      inspectorCreateBtn.title = '';
+    } else {
+      inspectorCreateBtn.disabled = true;
+      inspectorCreateBtn.textContent = '🚀 Worker Activo';
+      inspectorCreateBtn.title =
+        'Ya hay un worker disponible para el inspector';
+    }
   }
 
   async attachToSession(sessionId) {
@@ -623,6 +694,16 @@ class AppiumInspector {
 
       if (response.success) {
         this.currentSession = sessionId;
+
+        // Reset auto-detection state for new session
+        this.updateCount = 0;
+        this.lastXMLHash = '';
+        if (this.autoDetectEnabled) {
+          // Auto-detection was enabled, restart it for new session
+          this.stopScreenChangeDetection();
+          this.startScreenChangeDetection();
+        }
+
         this.setStatus('Conectado exitosamente', 'success');
 
         // Update UI
@@ -630,7 +711,7 @@ class AppiumInspector {
         this.showInspectorView();
 
         // Load initial data - DISABLED TO PREVENT INFINITE LOOP
-        // await Promise.all([this.refreshElements(), this.captureScreenshot()]);
+        // await this.refreshInspector();
 
         // DISABLED AUTO REFRESH TO PREVENT INFINITE LOOP
         // this.startAutoRefresh();
@@ -655,6 +736,11 @@ class AppiumInspector {
       this.currentSession = null;
       this.elements = [];
 
+      // Stop auto-detection when detaching from session
+      this.stopScreenChangeDetection();
+      this.updateCount = 0;
+      this.lastXMLHash = '';
+
       this.updateSessionCard(this.currentSession, false);
       this.hideInspectorView();
 
@@ -672,7 +758,7 @@ class AppiumInspector {
       const options = {
         q: this.searchInput.value,
         clickableOnly: this.clickableOnlyCheckbox.checked,
-        maxElements: 50,
+        maxElements: 200,
       };
 
       const response = await this.apiRequest(
@@ -699,6 +785,56 @@ class AppiumInspector {
     }
   }
 
+  async refreshInspector() {
+    if (!this.currentSession) return;
+
+    try {
+      this.setStatus('Actualizando elementos y captura...', 'warning');
+
+      // Execute both operations in parallel for better performance
+      const [elementsResponse, screenshotResponse] = await Promise.all([
+        this.apiRequest(
+          `/api/inspector/${this.currentSession}/inspect?${new URLSearchParams({
+            q: this.searchInput.value,
+            clickableOnly: this.clickableOnlyCheckbox.checked,
+            maxElements: 200,
+          })}`
+        ),
+        this.apiRequest(`/api/inspector/${this.currentSession}/screenshot`, 'GET')
+      ]);
+
+      // Process elements response
+      if (elementsResponse.success) {
+        this.elements = elementsResponse.elements;
+        this.renderElements();
+
+        // Show filtered element count in status
+        const filteredCount = this.elements.filter(
+          (element) => !this.isLayoutElement(element),
+        ).length;
+
+        this.setStatus(
+          `${filteredCount} elementos interactivos encontrados`,
+          'success',
+        );
+      } else {
+        throw new Error(elementsResponse.message || 'Failed to get elements');
+      }
+
+      // Process screenshot response
+      if (screenshotResponse.success) {
+        this.showScreenshot(screenshotResponse.screenshot);
+      } else {
+        console.warn('Screenshot refresh failed:', screenshotResponse.message);
+        // Don't throw error for screenshot failure, just log it
+      }
+
+    } catch (error) {
+      console.error('Failed to refresh inspector:', error);
+      this.setStatus(`Error al actualizar: ${error.message}`, 'error');
+    }
+  }
+
   renderElements() {
     // Filter out layout elements before rendering
     const filteredElements = this.elements.filter(
@@ -716,16 +852,8 @@ class AppiumInspector {
 
     this.elementsList.innerHTML = filteredElements
       .map((element, index) => {
-        // Find the original index in the unfiltered array for consistent ID generation
-        const originalIndex = this.elements.findIndex(el =>
-          el === element || (el.bounds && element.bounds &&
-            el.bounds.left === element.bounds.left &&
-            el.bounds.top === element.bounds.top &&
-            el.bounds.right === element.bounds.right &&
-            el.bounds.bottom === element.bounds.bottom &&
-            el.class === element.class)
-        );
-        const uniqueId = this.createElementUniqueId(element, originalIndex >= 0 ? originalIndex : index);
+        // Use filtered index for unique ID generation to avoid conflicts with similar bounds
+        const uniqueId = this.createElementUniqueId(element, index);
         return `
       <div class="element-item ${element.clickable ? 'clickable' : ''}"
            data-element-id="${uniqueId}">
@@ -742,7 +870,7 @@ class AppiumInspector {
           ${element.text ? `<div class="element-prop"><strong>Text:</strong> ${this.truncate(element.text, 40)}</div>` : ''}
           <div class="element-prop"><strong>Bounds:</strong> ${this.formatBounds(element.bounds)}</div>
         </div>
-        ${
+       ${
           element.locators && element.locators.length > 0
             ? `
           <div class="element-locators">
@@ -751,8 +879,8 @@ class AppiumInspector {
               .map(
                 (locator) => `
               <div class="element-locator priority-${locator.priority}">
-                ${locator.type}: ${this.truncate(locator.value, 60)}
-                <button class="copy-btn" onclick="inspector.copyLocator('${locator.value.replace(/'/g, "\\'")}')">
+                ${locator.type}: ${this.truncate(locator.display || locator.value, 60)}
+                <button class="copy-btn" onclick="inspector.copyLocator('${(locator.value || '').replace(/'/g, "\\'")}')">
                   Copy
                 </button>
               </div>
@@ -799,6 +927,26 @@ class AppiumInspector {
     });
   }
 
+  toBase64Safe(value) {
+    try {
+      if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+        if (typeof TextEncoder !== 'undefined') {
+          const bytes = new TextEncoder().encode(value);
+          let binary = '';
+          for (let i = 0; i < bytes.length; i += 1) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          return window.btoa(binary);
+        }
+        return window.btoa(unescape(encodeURIComponent(value)));
+      }
+    } catch (error) {
+      console.warn('[INSPECTOR] Failed to encode base64 for value:', error);
+    }
+
+    return `uid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
   createElementUniqueId(element, index) {
     // Create a unique identifier using bounds + other properties
     const bounds = element.bounds || {};
@@ -811,8 +959,8 @@ class AppiumInspector {
     // Combine bounds with other properties to create unique ID
     const uniqueStr = `${boundsStr}-${resourceId}-${text}-${index}`;
 
-    // Convert to a simple hash/identifier
-    return btoa(uniqueStr).substring(0, 16) + '-' + index;
+    // Convert to a base64 identifier that tolerates Unicode
+    return `${this.toBase64Safe(uniqueStr).substring(0, 16)}-${index}`;
   }
 
   
@@ -1294,6 +1442,25 @@ class AppiumInspector {
     );
   }
 
+  isTextInputElement(element) {
+    if (!element || !element.class) {
+      return false;
+    }
+    const cls = element.class.toLowerCase();
+    return (
+      cls.includes('edittext') ||
+      cls.includes('textfield') ||
+      cls.includes('textinput')
+    );
+  }
+
+  escapeAttribute(value) {
+    if (value == null) {
+      return '';
+    }
+    return String(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   // Find elements at specific coordinates
   findElementsAtCoordinates(x, y) {
     if (!this.elements || this.elements.length === 0) {
@@ -1353,7 +1520,7 @@ class AppiumInspector {
     list.innerHTML = '';
 
     if (elements.length === 0) {
-      // Show message when no elements found
+      // Show message when no elements found but offer direct tap
       list.innerHTML = `
         <div class="no-elements-found">
           <div class="no-elements-icon">🔍</div>
@@ -1363,6 +1530,9 @@ class AppiumInspector {
             No hay elementos UI detectables en esta posición.
             Esto puede ocurrir en áreas vacías de la pantalla.
           </p>
+          <button id="inspector-direct-tap" class="element-selection-btn element-selection-btn-primary">
+            Tap directo en (${deviceX}, ${deviceY})
+          </button>
         </div>
       `;
     } else {
@@ -1386,6 +1556,43 @@ class AppiumInspector {
 
     // Store click coordinates for potential direct tap
     this.pendingClickCoords = { clickX, clickY, deviceX, deviceY };
+
+    const directTapBtn = document.getElementById('inspector-direct-tap');
+    if (directTapBtn) {
+      directTapBtn.addEventListener('click', async () => {
+        await this.tapOnDevice(deviceX, deviceY);
+        this.closeElementSelectionDialog();
+      });
+    }
+
+    list.querySelectorAll('.element-send-text').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const wrapper = btn.closest('.element-text-input-wrapper');
+        const input = wrapper ? wrapper.querySelector('.element-text-input') : null;
+        const text = input ? input.value : '';
+        if (!text) {
+          this.setStatus('Ingresa un texto antes de enviarlo.', 'warning');
+          return;
+        }
+
+        let locators = [];
+        if (btn.dataset.locators) {
+          try {
+            locators = JSON.parse(btn.dataset.locators);
+          } catch (error) {
+            console.warn('[INSPECTOR] Failed to parse locators:', error);
+          }
+        }
+
+        const success = await this.typeOnDevice(locators, text);
+        if (success) {
+          if (input) {
+            input.value = '';
+          }
+          this.closeElementSelectionDialog();
+        }
+      });
+    });
   }
 
   createElementSelectionItem(element, index, deviceX, deviceY) {
@@ -1398,6 +1605,8 @@ class AppiumInspector {
       element.resourceId ||
       `Element ${index + 1}`;
     const type = element.class || 'Unknown';
+    const locator = element.locators && element.locators.length > 0 ? element.locators[0] : null;
+    const isTextInput = this.isTextInputElement(element);
 
     item.innerHTML = `
       <div class="element-selection-item-header">
@@ -1414,14 +1623,38 @@ class AppiumInspector {
         Bounds: ${element.rect ? `${Math.round(element.rect.x)},${Math.round(element.rect.y)} ${Math.round(element.rect.width)}×${Math.round(element.rect.height)}` : 'N/A'}
       </div>
       <div class="element-selection-actions">
-        <button class="element-selection-btn element-selection-btn-primary" onclick="inspector.selectElementFromDialog('${element.id}')">
-          Ver Detalles
-        </button>
-        <button class="element-selection-btn element-selection-btn-secondary" onclick="inspector.tapElementFromDialog('${element.id}', ${deviceX}, ${deviceY})">
+        <button class="element-selection-btn element-selection-btn-primary" onclick="inspector.tapElementFromDialog('${element.id}', ${deviceX}, ${deviceY})">
           Hacer Tap
         </button>
+        ${
+          isTextInput && locator
+            ? `
+          <div class="element-text-input-wrapper">
+            <input type="text" class="element-text-input" placeholder="Ingresar texto" />
+            <button class="element-selection-btn element-selection-btn-secondary element-send-text"
+              data-locator-type="${this.escapeAttribute(locator.type)}"
+              data-locator-value="${this.escapeAttribute(locator.value)}">
+              Enviar texto
+            </button>
+          </div>
+        `
+            : ''
+        }
       </div>
     `;
+
+    const sendTextBtn = item.querySelector('.element-send-text');
+    if (sendTextBtn) {
+      try {
+        const minimalLocators = (element.locators || []).map((locator) => ({
+          type: locator.type,
+          value: locator.value,
+        }));
+        sendTextBtn.dataset.locators = JSON.stringify(minimalLocators);
+      } catch (error) {
+        console.warn('[INSPECTOR] Failed to serialize locators:', error);
+      }
+    }
 
     return item;
   }
@@ -1455,29 +1688,18 @@ class AppiumInspector {
     this.pendingClickCoords = null;
   }
 
-  async selectElementFromDialog(elementId) {
-    this.closeElementSelectionDialog();
-    // Element details panel removed - just show status message
-    this.setStatus(`Elemento seleccionado: ${elementId}`, 'success');
-  }
-
+  
   async tapElementFromDialog(elementId, deviceX, deviceY) {
-    this.closeElementSelectionDialog();
+    console.log('[TAP] Using original click coordinates:', { deviceX, deviceY });
 
-    // Try to tap on element center if possible
-    const element = this.elements.find((el) => el.id === elementId);
-    if (element && element.rect) {
-      const centerX = Math.round(element.rect.x + element.rect.width / 2);
-      const centerY = Math.round(element.rect.y + element.rect.height / 2);
-      await this.tapOnDevice(centerX, centerY);
+    // Use the original click coordinates directly
+    const success = await this.tapOnDevice(deviceX, deviceY);
+    if (success) {
+      this.closeElementSelectionDialog();
       this.setStatus(
-        `Tap ejecutado en el centro del elemento: ${elementId}`,
+        `Tap ejecutado en las coordenadas del clic: (${deviceX}, ${deviceY})`,
         'success',
       );
-    } else {
-      // Fallback to original click coordinates
-      await this.tapOnDevice(deviceX, deviceY);
-      this.setStatus(`Tap ejecutado en coordenadas originales`, 'success');
     }
   }
 
@@ -1591,14 +1813,60 @@ class AppiumInspector {
       if (response.success) {
         this.setStatus(`Tap ejecutado en (${x}, ${y})`, 'success');
 
-        // Auto-refresh elements after a short delay to see the result
-        setTimeout(() => this.refreshElements(), 1000);
+        // Auto-refresh inspector after 200ms to see the result
+        setTimeout(() => this.refreshInspector(), 200);
+        return true;
       } else {
         throw new Error(response.message || 'Failed to execute tap');
       }
     } catch (error) {
       console.error('Failed to tap on device:', error);
       this.setStatus(`Error al ejecutar tap: ${error.message}`, 'error');
+      return false;
+    }
+  }
+
+  async typeOnDevice(locators, text) {
+    if (!this.currentSession) {
+      this.setStatus('No hay sesión activa para escribir texto.', 'error');
+      return false;
+    }
+
+    const locatorArray = Array.isArray(locators) ? locators : [];
+    const primaryLocator = locatorArray.find(
+      (locator) => locator && locator.type && locator.value,
+    );
+
+    if (!primaryLocator) {
+      this.setStatus('No se encontró un locator válido para el elemento.', 'error');
+      return false;
+    }
+
+    try {
+      this.setStatus('Enviando texto al dispositivo...', 'warning');
+
+      const response = await this.apiRequest(
+        `/api/inspector/${this.currentSession}/type`,
+        'POST',
+        {
+          locators: locatorArray,
+          locatorType: primaryLocator.type,
+          locatorValue: primaryLocator.value,
+          text,
+        },
+      );
+
+      if (response.success) {
+        this.setStatus('Texto enviado correctamente.', 'success');
+        setTimeout(() => this.refreshInspector(), 200);
+        return true;
+      }
+
+      throw new Error(response.message || 'No se pudo enviar el texto');
+    } catch (error) {
+      console.error('Failed to type on device:', error);
+      this.setStatus(`Error al escribir: ${error.message}`, 'error');
+      return false;
     }
   }
 
@@ -1627,6 +1895,121 @@ class AppiumInspector {
     return text.length > maxLength
       ? text.substring(0, maxLength) + '...'
       : text;
+  }
+
+  // Generate hash from XML string for change detection
+  async generateXMLHash(xmlString) {
+    if (!xmlString) return '';
+
+    try {
+      // Use a simple hash algorithm for change detection
+      let hash = 0;
+      for (let i = 0; i < xmlString.length; i++) {
+        const char = xmlString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return hash.toString(36); // Convert to base36 for shorter string
+    } catch (error) {
+      console.warn('Error generating XML hash:', error);
+      return '';
+    }
+  }
+
+  // Start automatic screen change detection
+  startScreenChangeDetection() {
+    if (this.pollingInterval) {
+      this.stopScreenChangeDetection();
+    }
+
+    this.autoDetectEnabled = true;
+    this.updateAutoDetectUI();
+
+    // Start polling every 1 second
+    this.pollingInterval = setInterval(async () => {
+      await this.checkForScreenChanges();
+    }, 1000);
+
+    console.log('Screen change detection started');
+    this.setStatus('Detección automática activada', 'success');
+  }
+
+  // Stop automatic screen change detection
+  stopScreenChangeDetection() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+
+    this.autoDetectEnabled = false;
+    this.updateAutoDetectUI();
+
+    console.log('Screen change detection stopped');
+    this.setStatus('Detección automática desactivada', 'info');
+  }
+
+  // Check for screen changes by comparing XML hashes
+  async checkForScreenChanges() {
+    if (!this.currentSession || !this.autoDetectEnabled) {
+      return;
+    }
+
+    try {
+      // Get current page source
+      const response = await this.apiRequest(
+        `/api/inspector/${this.currentSession}/xml`,
+        'GET'
+      );
+
+      if (response.success && response.source) {
+        const currentHash = await this.generateXMLHash(response.source);
+
+        if (currentHash && currentHash !== this.lastXMLHash) {
+          console.log('Screen change detected - refreshing inspector');
+          this.lastXMLHash = currentHash;
+          this.updateCount++;
+
+          // Update indicator
+          this.updateAutoDetectIndicator();
+
+          // Refresh inspector
+          await this.refreshInspector();
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking for screen changes:', error);
+      // Don't show error to user to avoid spam, just log it
+    }
+  }
+
+  // Update auto-detection UI elements
+  updateAutoDetectUI() {
+    if (this.autoDetectToggle) {
+      this.autoDetectToggle.checked = this.autoDetectEnabled;
+    }
+    this.updateAutoDetectIndicator();
+  }
+
+  // Update auto-detection indicator
+  updateAutoDetectIndicator() {
+    if (!this.autoDetectIndicator) return;
+
+    if (this.autoDetectEnabled) {
+      this.autoDetectIndicator.className = 'inspector-status success';
+      this.autoDetectIndicator.textContent = `Auto-detect ON (${this.updateCount})`;
+      this.autoDetectIndicator.style.display = 'block';
+    } else {
+      this.autoDetectIndicator.style.display = 'none';
+    }
+  }
+
+  // Toggle auto-detection on/off
+  toggleAutoDetection() {
+    if (this.autoDetectEnabled) {
+      this.stopScreenChangeDetection();
+    } else {
+      this.startScreenChangeDetection();
+    }
   }
 
   debounce(func, wait) {
@@ -1658,6 +2041,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
     inspector = new AppiumInspector(socket);
     window.appiumInspector = inspector; // Variable global para prueba
+    window.inspector = inspector; // Make inspector globally available for onclick handlers
     console.log(
       '[DEBUG] appiumInspector global variable set:',
       window.appiumInspector,

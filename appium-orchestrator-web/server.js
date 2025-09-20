@@ -863,20 +863,20 @@ app.get('/api/inspector/:sessionId/xml', async (req, res) => {
     });
 
     // Save XML to file for offline debugging
-    const fs = require('fs');
+    // const fs = require('fs');
     const path = require('path');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `debug-xml-${sessionId}-${timestamp}.xml`;
     const filepath = path.join(__dirname, 'debug-xml', filename);
 
     // Create debug-xml directory if it doesn't exist
-    if (!fs.existsSync(path.join(__dirname, 'debug-xml'))) {
-      fs.mkdirSync(path.join(__dirname, 'debug-xml'), { recursive: true });
-    }
+    // if (!fs.existsSync(path.join(__dirname, 'debug-xml'))) {
+    //   fs.mkdirSync(path.join(__dirname, 'debug-xml'), { recursive: true });
+    // }
 
     // Save XML to file
-    fs.writeFileSync(filepath, source);
-    console.log(`[INSPECTOR] XML saved to ${filepath}`);
+    // fs.writeFileSync(filepath, source);
+    // console.log(`[INSPECTOR] XML saved to ${filepath}`);
 
     res.json({
       success: true,
@@ -957,6 +957,38 @@ app.post('/api/inspector/:sessionId/tap', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('[INSPECTOR] Tap failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Type text in specific element
+app.post('/api/inspector/:sessionId/type', async (req, res) => {
+  try {
+    const { locators = [], locatorType, locatorValue, text } = req.body || {};
+
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'Text payload is required',
+        code: 'MISSING_TEXT',
+      });
+    }
+
+    const result = await inspectorManager.typeText(
+      req.params.sessionId,
+      locators,
+      locatorType,
+      locatorValue,
+      text,
+    );
+
+    if (result.success) {
+      io.emit('inspector_text_entered', result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[INSPECTOR] Type text failed:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

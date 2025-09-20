@@ -9,42 +9,91 @@ El sistema de workers de Appium Orchestrator Web es un componente fundamental qu
 ### 1. Estructura General
 
 ```javascript
-// server.js - Sistema de workers
-const workerPool = new Map();
-const jobQueue = [];
-const maxWorkers = process.env.MAX_WORKERS || 5;
+// server.js - Inicialización modular del sistema de workers
+const processManager = new ProcessManager(configManager, validationManager);
+const resourceManager = new ResourceManager(configManager, validationManager);
+const jobQueueManager = new JobQueueManager();
+const workerPoolManager = new WorkerPoolManager(
+  configManager,
+  validationManager,
+  processManager,
+  jobQueueManager,
+);
 
-// Estados de los workers
-const WORKER_STATES = {
-  IDLE: 'idle',
-  BUSY: 'busy',
-  STARTING: 'starting',
-  CLEANING: 'cleaning',
-};
+// Wiring cruzado después de instanciar ambos gestores
+jobQueueManager.workerPoolManager = workerPoolManager;
+
+processManager.initialize(io);
+resourceManager.initialize();
+jobQueueManager.initialize(io);
+workerPoolManager.initialize(io, workspaceManager);
 ```
+
+`WorkerPoolManager` controla la creación, reutilización y terminación de procesos hijo (`worker.js`), mientras que `JobQueueManager` mantiene la cola de trabajos y decide cuándo ejecutar o reencolar. Esta separación reemplaza el antiguo `workerPool` basado en `Map` y evita tener lógica dispersa en `server.js`.
 
 ### 2. Ciclo de Vida de un Worker
 
 ```javascript
-// server.js - Gestión del ciclo de vida
-function createWorker(slotId) {
-  const worker = fork('./worker.js', [slotId]);
+// src/modules/worker-management/worker-pool-manager.js - Creación de workers
+createWorker(
+  branch,
+  client,
+  apkIdentifier,
+  apkSourceType,
+  deviceSerial,
+  quickTest = false,
+  persistent = false,
+) {
+  const workerProcess = fork(
+    path.join(__dirname, '..', '..', '..', 'worker.js'),
+    [],
+    forkOptions,
+  );
 
-  worker.on('message', (msg) => {
-    handleWorkerMessage(worker, slotId, msg);
-  });
+  const worker = {
+    id: workerId,
+    process: workerProcess,
+    branch,
+    client,
+    apkIdentifier,
+    apkSourceType,
+    deviceSerial,
+    status: 'initializing',
+    quickTest,
+    persistent,
+  };
 
-  worker.on('exit', (code) => {
-    handleWorkerExit(slotId, code);
-  });
+  this.workerPool.push(worker);
+  // ... selección de workspace (persistente vs temporal) y mensaje INIT
+  const initMessage = {
+    type: 'INIT',
+    branch,
+    client,
+    workerWorkspacePath,
+    isPersistent,
+    quickTest,
+  };
 
-  worker.on('error', (err) => {
-    handleWorkerError(slotId, err);
-  });
+  if (apkSourceType === 'local') {
+    initMessage.localApkPath = path.join(
+      process.env.LOCAL_APK_DIRECTORY,
+      apkIdentifier,
+    );
+  } else {
+    initMessage.apkVersion = apkIdentifier;
+  }
 
+  if (process.env.DEVICE_SOURCE === 'local') {
+    initMessage.deviceSerial = deviceSerial;
+  }
+
+  worker.process.send(initMessage);
+  this.setupWorkerEventHandlers(worker);
   return worker;
 }
 ```
+
+El manager decide si reutiliza un workspace persistente (`PERSISTENT_WORKSPACES_ROOT`) o crea uno temporal. También marca el flag `quickTest` para que `worker.js` omita la reinstalación del APK cuando procede.
 
 ## 🔧 Componentes del Worker
 

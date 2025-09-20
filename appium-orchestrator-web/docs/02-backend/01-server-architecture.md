@@ -360,95 +360,59 @@ io.on('connection', (socket) => {
 
 ```javascript
 // server.js - Sistema de workers modularizado
-const WorkerPoolManager = require('./src/modules/worker-management/worker-pool-manager');
-const JobQueueManager = require('./src/modules/worker-management/job-queue-manager');
-const ProcessManager = require('./src/modules/worker-management/process-manager');
-const ResourceManager = require('./src/modules/worker-management/resource-manager');
-
-// Inicializar gestores de workers
+const processManager = new ProcessManager(configManager, validationManager);
+const resourceManager = new ResourceManager(configManager, validationManager);
+const jobQueueManager = new JobQueueManager();
 const workerPoolManager = new WorkerPoolManager(
   configManager,
   validationManager,
   processManager,
   jobQueueManager,
 );
-const jobQueueManager = new JobQueueManager(configManager, validationManager);
-const processManager = new ProcessManager(configManager, validationManager);
-const resourceManager = new ResourceManager(configManager, validationManager);
 
-// El WorkerPoolManager gestiona automáticamente:
-// - Creación y destrucción de workers
-// - Asignación de jobs a workers disponibles
-// - Monitoreo de recursos y memoria
-// - Limpieza de procesos zombies
+jobQueueManager.workerPoolManager = workerPoolManager;
 
-// Función simplificada para asignar jobs
-async function assignJob(job) {
-  const success = await workerPoolManager.assignJob(job);
-  if (!success) {
-    await jobQueueManager.addToQueue(job);
-    return false;
-  }
-  return true;
-}
+processManager.initialize(io);
+resourceManager.initialize();
+jobQueueManager.initialize(io);
+workerPoolManager.initialize(io, workspaceManager);
 ```
+
+`JobQueueManager.addJob()` genera el ID, marca el estado `queued` y dispara `processQueue()`. Cuando hay capacidad disponible, `assignJobToWorker` delega en `WorkerPoolManager` para crear un nuevo proceso o reutilizar uno en estado `ready`.
 
 ### 6. Manejo de Jobs
 
 #### Recepción y Procesamiento de Jobs
 
 ```javascript
-// server.js - Manejo de jobs de ejecución
-socket.on('run_test', (data) => {
-  const job = {
-    id: generateJobId(),
-    type: 'single',
-    branch: data.branch,
-    client: data.client,
-    feature: data.feature,
-    highPriority: data.highPriority || false,
-    deviceSerial: data.deviceSerial,
-    userId: socket.userId,
-    timestamp: Date.now(),
-  };
-
-  // Agregar a la cola o ejecutar directamente
-  if (!assignJob(job)) {
-    jobQueue.push(job);
-    io.emit('queue_status_update', getQueueStatus());
-  }
-
-  // Notificar inicio del job
-  io.emit('job_started', {
-    jobId: job.id,
-    slotId: getWorkerSlotForJob(job.id),
-    featureName: job.feature,
-    userId: job.userId,
+// src/modules/socketio/socketio-manager.js - Encolado de trabajos
+handleRunTest(socket) {
+  socket.on('run_test', (data) => {
+    this.jobQueueManager.addJob({
+      ...data,
+      persistentWorkspace: data.persistentWorkspace,
+    });
+    this.emitLogUpdate({
+      logLine: `--- 📋 Petición de ejecución para '${data.feature}' encolada. ---\n`,
+    });
   });
-});
+}
 
-socket.on('run_selected_tests', (data) => {
-  const jobs = data.features.map((feature) => ({
-    id: generateJobId(),
-    type: 'batch',
-    branch: data.branch,
-    client: data.client,
-    feature: feature,
-    highPriority: data.highPriority || false,
-    deviceSerial: data.deviceSerial,
-    userId: socket.userId,
-    timestamp: Date.now(),
-  }));
+handleRunBatch(socket) {
+  socket.on('run_batch', (data) => {
+    const { features, ...commonJobProps } = data;
 
-  // Procesar cada job
-  jobs.forEach((job) => {
-    if (!assignJob(job)) {
-      jobQueue.push(job);
-    }
+    features.forEach((feature) => {
+      this.jobQueueManager.addJob({
+        ...commonJobProps,
+        feature,
+        persistentWorkspace: data.persistentWorkspace,
+      });
+    });
+
+    this.broadcastQueueStatus();
   });
-
-  io.emit('queue_status_update', getQueueStatus());
-});
+}
 ```
 
 ### 7. Sistema de Logging (Modular)

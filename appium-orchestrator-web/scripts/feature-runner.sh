@@ -121,6 +121,20 @@ config.afterStep = async function (step, scenario, result) {
   }
 };
 
+config.before = async function () {
+  try {
+    if (typeof browser !== 'undefined' && browser && browser.sessionId) {
+      console.log('[APPIUM_SESSION_START] ' + browser.sessionId);
+    }
+  } catch (error) {
+    console.error('[APPIUM_SESSION_START_ERROR]', error && error.message ? error.message : error);
+  }
+};
+
+config.afterSession = async function () {
+  console.log('[APPIUM_SESSION_END]');
+};
+
 config.capabilities = [{
     "appium:waitForIdleTimeout": 300,
     "appium:allowDelayAdb": true,
