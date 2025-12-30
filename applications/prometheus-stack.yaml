@@ -18,14 +18,6 @@ spec:
             type: NodePort
             nodePort: 32000
 
-        prometheus:
-          service:
-            type: ClusterIP
-
-        alertmanager:
-          service:
-            type: ClusterIP
-
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
