@@ -2,21 +2,26 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: tailscale-operator
-  namespace: argocd   # namespace donde corre ArgoCD
+  namespace: argocd
 spec:
   project: default
-  destination:
-    namespace: tailscale    # namespace donde se va a instalar el operator
-    server: https://kubernetes.default.svc
+
   source:
     repoURL: https://pkgs.tailscale.com/helmcharts
     chart: tailscale-operator
-    targetRevision: 1.72.0   # ajustá a la última versión disponible
+    targetRevision: 1.72.0
     helm:
       values: |
         oauth:
           useEnvFromSecret: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
