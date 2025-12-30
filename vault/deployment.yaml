@@ -23,7 +23,7 @@ spec:
           ports:
             - containerPort: 80
               name: http
-            - containerPort: 9090
+            - containerPort: 8000
               name: metrics
 
           env:
@@ -58,6 +58,9 @@ spec:
               value: "9090"
             - name: ENABLE_PROMETHEUS
               value: "true"
+            - name: PROMETHEUS_PORT
+              value: "8000"
+
 
           volumeMounts:
             - name: data
