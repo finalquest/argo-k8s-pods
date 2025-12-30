@@ -15,6 +15,6 @@ spec:
       app: vaultwarden
 
   endpoints:
-    - port: http
-      interval: 30s
-      path: /health
+    - interval: 30s
+      path: /metrics
+      port: http

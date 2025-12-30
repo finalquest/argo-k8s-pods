@@ -56,6 +56,8 @@ spec:
 
             - name: METRICS_PORT
               value: "9090"
+            - name: ENABLE_PROMETHEUS
+              value: "true"
 
           volumeMounts:
             - name: data
