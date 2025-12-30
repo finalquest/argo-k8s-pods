@@ -23,6 +23,8 @@ spec:
           ports:
             - containerPort: 80
               name: http
+            - containerPort: 9090
+              name: metrics
 
           env:
             - name: DOMAIN
@@ -48,6 +50,12 @@ spec:
 
             - name: WEBSOCKET_ENABLED
               value: "true"
+
+            - name: ENABLE_METRICS
+              value: "true"
+
+            - name: METRICS_PORT
+              value: "9090"
 
           volumeMounts:
             - name: data

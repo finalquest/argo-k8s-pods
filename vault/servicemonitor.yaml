@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vaultwarden-uptime
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - vaultwarden
+
+  selector:
+    matchLabels:
+      app: vaultwarden
+
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /health
