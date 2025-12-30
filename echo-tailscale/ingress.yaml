@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: echo-ts
   namespace: default
-  annotations:
-    tailscale.com/tags: '["tag:k8s"]'
 spec:
   ingressClassName: tailscale
   defaultBackend:
