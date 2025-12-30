@@ -2,4 +2,4 @@ resources:
   - namespace.yaml
   - service.yaml
   - deployment.yaml
-  - ingress-tailscale.yaml
+  - ingress.yaml
