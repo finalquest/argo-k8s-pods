@@ -3,5 +3,3 @@ resources:
   - pvc.yaml
   - deployment.yaml
   - service.yaml
-  - service-metrics.yaml
-  - servicemonitor.yaml

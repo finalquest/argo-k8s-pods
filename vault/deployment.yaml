@@ -23,8 +23,6 @@ spec:
           ports:
             - containerPort: 80
               name: http
-            - containerPort: 8000
-              name: metrics
 
           env:
             - name: DOMAIN
@@ -50,17 +48,6 @@ spec:
 
             - name: WEBSOCKET_ENABLED
               value: "true"
-
-            - name: ENABLE_METRICS
-              value: "true"
-
-            - name: METRICS_PORT
-              value: "9090"
-            - name: ENABLE_PROMETHEUS
-              value: "true"
-            - name: PROMETHEUS_PORT
-              value: "8000"
-
 
           volumeMounts:
             - name: data
