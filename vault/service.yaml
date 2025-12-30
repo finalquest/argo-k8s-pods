@@ -3,14 +3,12 @@ kind: Service
 metadata:
   name: vaultwarden
   namespace: vaultwarden
-  labels:
-    app: vaultwarden
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: vaultwarden
   ports:
     - name: http
-      port: 80
-      targetPort: 80
-      protocol: TCP
+      port: 80          # puerto del service
+      targetPort: 80    # puerto del contenedor
+      nodePort: 30080   # puerto expuesto en los nodos
