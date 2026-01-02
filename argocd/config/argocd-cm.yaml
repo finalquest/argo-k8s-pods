@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  admin.enabled: "false"
+  oidc.config: |
+    name: Keycloak
+    issuer: https://auth.finalq.xyz/realms/homelab
+    clientID: argocd
+    clientSecret: $oidc.keycloak.clientSecret
+    requestedScopes: ["openid", "profile", "email"]
+  url: https://argo.finalq.xyz
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"oidc.config":"name: Keycloak\nissuer: https://auth.finalq.xyz/realms/homelab\nclientID: argocd\nclientSecret: $oidc.keycloak.clientSecret\nrequestedScopes: [\"openid\", \"profile\", \"email\"]\n","url":"https://argo.finalq.xyz"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"argocd-cm","app.kubernetes.io/part-of":"argocd"},"name":"argocd-cm","namespace":"argocd"}}
+  creationTimestamp: "2025-12-30T14:54:00Z"
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+  namespace: argocd
+  resourceVersion: "188514"
+  uid: 7bb5a2e4-a4ca-4172-8963-24362e6ef0dc

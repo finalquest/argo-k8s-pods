@@ -131,6 +131,22 @@ kubectl -n keycloak create secret generic keycloak-google \
 
 Estos comandos se pueden ejecutar desde tu terminal o automatizar en un script local; nunca se suben los valores a Git.
 
+### 5.2 Configuración de Argo CD versionada
+
+Para reinstalar Argo CD o replicar el entorno:
+
+1. Aplicar los ConfigMaps versionados en `argocd/config/`:
+   ```bash
+   kubectl apply -f argocd/config/argocd-cm.yaml
+   kubectl apply -f argocd/config/argocd-rbac-cm.yaml
+   ```
+2. Recrear el secret `argocd-secret` con el client secret real (`oidc.keycloak.clientSecret`) y cualquier otro dato sensible requerido.
+3. Reiniciar el deployment `argocd-server` para que tome los cambios:
+   ```bash
+   kubectl -n argocd rollout restart deploy argocd-server
+   ```
+4. Aplicar `root-application.yaml` para que Argo vuelva a sincronizar todas las apps declaradas, incluyendo `keycloak/`.
+
 ---
 
 ## 6. Configuración inicial de Keycloak
@@ -223,7 +239,9 @@ g, user:guillermo.finalq@gmail.com, role:admin
 * Exportar métricas:
   * Habilitar `ServiceMonitor` para Keycloak (cuando se integre a Prometheus).
 * Backups:
-  * Script cron con `kubectl exec pg_dump` + upload a almacenamiento persistente (ej. NFS/Proxmox).
+  * `scripts/backup-keycloak-db.sh`: usa `pg_dump` vía `kubectl` y genera `backups/keycloak-db-*.sql`.
+  * `scripts/export-keycloak-realm.sh`: usa `kcadm.sh` para exportar el realm `homelab` en `backups/keycloak-realm-*.json`.
+  * Guardar ambos archivos fuera del repo (storage cifrado, backup de Proxmox) y limpiar `./backups` antes de comitear.
 
 ---
 
