@@ -1,253 +1,266 @@
 # Implementación de un Identity Provider (IdP) con Keycloak en Homelab
 
-## 1. Objetivo del documento
+## 1. Objetivo y alcance
 
-Este documento describe **cómo implementar un IdP real usando Keycloak** en un homelab basado en:
+Implementar un **IdP centralizado** con Keycloak que cubra:
 
-* Proxmox
-* k3s
-* Argo CD
-* Nginx Proxy Manager
-* Autenticación federada con Google
+* Cluster k3s desplegado en Proxmox, gestionado vía Argo CD (GitOps).
+* Reverse proxy y TLS a cargo de **Nginx Proxy Manager** que corre como VM en Proxmox.
+* Federar Google como IdP externo para evitar manejar passwords locales.
+* Integrar inicialmente Argo CD y Grafana (en k3s) y dejar preparado el onboarding de otras apps locales (Vaultwarden, Pi-hole, Home Assistant).
 
-El objetivo **no es solo que funcione**, sino **entender el modelo de identidad moderno (OIDC/OAuth2)** y poder aplicarlo luego en otros entornos.
-
----
-
-## 2. Arquitectura general
-
-### Componentes
-
-* **Keycloak**: Identity Provider (IdP)
-* **Google OAuth**: proveedor externo de identidad
-* **Argo CD / Grafana**: Service Providers (SP)
-* **Nginx Proxy Manager**: reverse proxy TLS
-
-### Flujo de autenticación (OIDC)
-
-1. Usuario accede a Argo / Grafana
-2. La app redirige al IdP (Keycloak)
-3. Keycloak redirige a Google
-4. Google autentica al usuario
-5. Google devuelve un token a Keycloak
-6. Keycloak emite un ID Token OIDC
-7. La app valida el token y crea sesión
-
-Resultado: **la aplicación sabe quién es el usuario y qué permisos tiene**.
+El objetivo es tener un setup reproducible, versionado y entendible, listo para iterar con buenas prácticas OIDC.
 
 ---
 
-## 3. Conceptos clave (mínimos)
+## 2. Decisiones de diseño
 
-| Concepto | Descripción                                       |
-| -------- | ------------------------------------------------- |
-| Realm    | Dominio lógico de identidad (ej: `homelab`)       |
-| Client   | Aplicación que confía en Keycloak (Argo, Grafana) |
-| IdP      | Sistema que autentica usuarios                    |
-| OIDC     | Protocolo de identidad basado en OAuth2           |
-| ID Token | Token firmado que representa al usuario           |
-| Claims   | Datos del usuario (email, grupos, roles)          |
+| Tema | Decisión | Motivo |
+| --- | --- | --- |
+| Ubicación Keycloak | StatefulSet en k3s | Permite GitOps con Argo, recicla monitoreo existente y evita mantener otra VM. |
+| Base de datos | PostgreSQL single-replica en k3s | Simplifica el MVP. Se usará `local-path` StorageClass con PVC dedicado. Documentar backup/restore por ser almacenamiento local. |
+| Exposición | Service `NodePort` + Proxy desde Nginx Proxy Manager | Ya existe NPM con TLS; evita mantener Ingress Controller adicional y reutiliza certificados válidos. |
+| Secrets | `Secret` estándar en namespace `keycloak` (KEYCLOAK_ADMIN, DB) sincronizado vía Argo | Homologa con el resto del cluster mientras no haya un gestor dedicado. Ningún valor sensible se versiona en Git; solo plantillas/ejemplos respaldadas con comandos `kubectl create secret`. |
+| Federación | Google OAuth Web Client (`auth.finalq.xyz`) | Requisito para no administrar passwords. |
+| HA | No en esta fase | MVP, replica única. Se documentan mejoras futuras. |
+
+Riesgo aceptado: el storage `local-path` ata PostgreSQL y Keycloak al nodo donde se agende. Se anotan backups y recuperación como tareas de seguimiento.
 
 ---
 
-## 4. Deploy de Keycloak en k3s
+## 3. Arquitectura
 
-### 4.1 Namespace
+Componentes principales:
 
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: keycloak
+* **Proxmox**: hostea la VM de k3s y las VMs auxiliares (Pi-hole, NPM, Home Assistant).
+* **k3s cluster**:
+  * Namespace `keycloak`: StatefulSets de PostgreSQL y Keycloak, Services y Secrets.
+  * Namespace `argocd` / `monitoring`: Argo CD y Grafana que actuarán como Service Providers.
+* **Nginx Proxy Manager**: Termina TLS para `auth.finalq.xyz` y `argo.finalq.xyz`, y enruta hacia los NodePorts internos.
+* **Google Cloud**: proyecto con OAuth consent screen y OAuth client ID/secret.
+
+### Flujo OIDC resumido
+
+1. Usuario accede a `https://argo.finalq.xyz`.
+2. Argo detecta sesión inexistente y redirige a `https://auth.finalq.xyz/realms/homelab/protocol/openid-connect/auth`.
+3. Keycloak fuerza login con Google (`/broker/google`).
+4. Google autentica, devuelve `code` a Keycloak.
+5. Keycloak intercambia `code` por tokens con Google, crea/actualiza el usuario federado.
+6. Keycloak emite ID/Access token firmados para Argo.
+7. Argo valida los tokens, aplica RBAC y abre sesión.
+
+---
+
+## 4. Despliegue en k3s
+
+### 4.1 Namespaces y labels
+
+* `keycloak`: recursos propios del IdP.
+* Considerar agregar label `purpose=identity` para ayudar con políticas futuras.
+
+### 4.2 Storage
+
+* `StorageClass`: `local-path (rancher.io/local-path)`.
+* PVCs planificados:
+  * `pgdata-keycloak` (PostgreSQL) – 10 Gi de inicio.
+  * `keycloak-data` (opcional, para providers que demanden persistencia adicional).
+* Documentar que la restauración requiere capturar snapshots en Proxmox o backups lógicos (`pg_dump`/`pg_basebackup`).
+
+### 4.3 PostgreSQL
+
+* StatefulSet con:
+  * Imagen `postgres:15`.
+  * Recursos moderados (1 CPU / 1.5 Gi).
+  * PVC `pgdata-keycloak`.
+  * ConfigMap para `postgresql.conf` mínimo (fsync, max connections).
+* Service `ClusterIP` (`keycloak-postgres.keycloak.svc`).
+* Secret `keycloak-db` con `username`, `password`, `database`.
+
+### 4.4 Keycloak
+
+* Desplegado via Helm chart (Bitnami o chart propio en repo).
+* Configuración clave:
+  * `KC_HOSTNAME=auth.finalq.xyz`.
+  * `KC_PROXY=edge` (porque está detrás de NPM).
+  * Variables de DB apuntando al Service anterior.
+  * `KEYCLOAK_ADMIN`/`KEYCLOAK_ADMIN_PASSWORD` desde `Secret`.
+  * Recursos iniciales: 1 CPU / 2 Gi.
+* StatefulSet en modo `start` (modo Quarkus).
+
+### 4.5 Servicios y accesos
+
+* Service HTTP `ClusterIP` + `NodePort` fijo (ej. 32080) para exponerlo a NPM.
+* Health checks (`/realms/master`). 
+* NPM configurado para:
+  * `auth.finalq.xyz` → `https://<nodo-k3s>:32080`
+  * Certificados ya emitidos (Let's Encrypt) y “Force SSL”.
+
+---
+
+## 5. GitOps con Argo CD
+
+1. Crear carpeta `keycloak/` en este repo con:
+   * Chart/HelmRelease o Kustomize que encapsule PostgreSQL + Keycloak.
+   * `values.yaml` con overrides (hostnames, NodePort, PVC sizes).
+   * Templates para `Secrets` (considerar `argocd-vault-plugin` en el futuro). **Recordatorio**: ningún secret real se sube a Git; los valores se cargan vía `kubectl create secret` o mecanismos externos.
+2. Añadir `applications/keycloak.yaml` que apunte a `path: keycloak` y namespace `keycloak`.
+3. Ajustar `root-application.yaml` si es necesario para incluir el nuevo Application.
+4. Definir `Secret` `argocd/argocd-secret` con la sección `oidc.config` (ver sección 7) bajo control de Git.
+
+### 5.1 Creación de secrets fuera de Git
+
+Los manifests contienen solo plantillas (`Secret` con claves vacías). Los valores reales se cargan manualmente o vía automatización segura usando `kubectl`:
+
+```bash
+# Credenciales admin de Keycloak
+kubectl -n keycloak create secret generic keycloak-admin \
+  --from-literal=KEYCLOAK_ADMIN=admin \
+  --from-literal=KEYCLOAK_ADMIN_PASSWORD='<password>'
+
+# Credenciales de PostgreSQL
+kubectl -n keycloak create secret generic keycloak-db \
+  --from-literal=POSTGRES_DB=keycloak \
+  --from-literal=POSTGRES_USER=keycloak \
+  --from-literal=POSTGRES_PASSWORD='<password>'
+
+# OAuth client de Google (IdP federado)
+kubectl -n keycloak create secret generic keycloak-google \
+  --from-literal=GOOGLE_CLIENT_ID='<client-id>' \
+  --from-literal=GOOGLE_CLIENT_SECRET='<client-secret>'
 ```
 
----
-
-### 4.2 Base de datos (PostgreSQL mínima)
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: keycloak-postgres
-  namespace: keycloak
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: keycloak-postgres
-  template:
-    metadata:
-      labels:
-        app: keycloak-postgres
-    spec:
-      containers:
-      - name: postgres
-        image: postgres:15
-        env:
-        - name: POSTGRES_DB
-          value: keycloak
-        - name: POSTGRES_USER
-          value: keycloak
-        - name: POSTGRES_PASSWORD
-          value: keycloak
-        ports:
-        - containerPort: 5432
-```
-
----
-
-### 4.3 Keycloak
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: keycloak
-  namespace: keycloak
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: keycloak
-  template:
-    metadata:
-      labels:
-        app: keycloak
-    spec:
-      containers:
-      - name: keycloak
-        image: quay.io/keycloak/keycloak:24.0
-        args:
-          - start
-        env:
-          - name: KC_DB
-            value: postgres
-          - name: KC_DB_URL
-            value: jdbc:postgresql://keycloak-postgres:5432/keycloak
-          - name: KC_DB_USERNAME
-            value: keycloak
-          - name: KC_DB_PASSWORD
-            value: keycloak
-          - name: KEYCLOAK_ADMIN
-            value: admin
-          - name: KEYCLOAK_ADMIN_PASSWORD
-            value: admin
-        ports:
-          - containerPort: 8080
-```
-
----
-
-## 5. Exposición vía Nginx Proxy Manager
-
-* Dominio: `keycloak.homelab.tu-dominio`
-* Proxy a: `keycloak.keycloak.svc.cluster.local:8080`
-* TLS activo
-
-⚠️ Keycloak **debe tener URL pública estable** para OIDC.
+Estos comandos se pueden ejecutar desde tu terminal o automatizar en un script local; nunca se suben los valores a Git.
 
 ---
 
 ## 6. Configuración inicial de Keycloak
 
-### 6.1 Crear Realm
+### 6.1 Realm base
 
-* Nombre: `homelab`
-* Habilitar login por email
+* Nombre: `homelab`.
+* Habilitar login por email.
+* Theme: default (ajustar más adelante).
 
----
+### 6.2 Usuario local de emergencia
 
-### 6.2 Crear usuario local (prueba)
-
-* Email
-* Password
-* Email verified = true
-
----
-
-## 7. Integrar Google como Identity Provider
-
-### 7.1 Crear OAuth Client en Google Cloud
-
-* Tipo: Web
-* Redirect URI:
-
-```
-https://keycloak.homelab.tu-dominio/realms/homelab/broker/google/endpoint
-```
+* Crear usuario `admin@homelab`.
+* Forzar password inicial y marcar email como verificado.
+* Ubicarlo en grupo `admins` para tener fallback si falla Google.
 
 ---
 
-### 7.2 Configurar IdP en Keycloak
+## 7. Federar Google como Identity Provider
 
-* Identity Providers → Google
-* Client ID / Secret
-* Scope: `openid email profile`
+### 7.1 Preparación en Google Cloud
 
-Resultado: Google → Keycloak
+1. Crear proyecto (ej. `homelab-auth`).
+2. Configurar OAuth consent screen (Internal → dominio verificado `finalq.xyz`).
+3. Crear OAuth Client Type “Web application”:
+   * Authorized redirect URIs:
+     * `https://auth.finalq.xyz/realms/homelab/broker/google/endpoint`.
+     * `https://auth.finalq.xyz/realms/master/broker/google/endpoint` (opcional para admins).
+4. Descargar `client_id` y `client_secret`.
 
----
+### 7.2 Configurar en Keycloak
 
-## 8. Configurar Argo CD con OIDC
-
-### 8.1 Client en Keycloak
-
-* Client ID: `argocd`
-* Access Type: confidential
-* Redirect URI:
-
-```
-https://argo.homelab.tu-dominio/auth/callback
-```
+* Identity Providers → Google → agregar provider.
+* Completar client ID/secret y scopes `openid email profile`.
+* Activar “Trust Email” para auto-verificar.
+* Crear mapper `groups` si se quieren mapear Google Workspace groups (futuro).
 
 ---
 
-### 8.2 Configuración en Argo CD
+## 8. Service Providers (SP) iniciales
+
+### 8.1 Argo CD (`argo.finalq.xyz`)
+
+* Client en Keycloak:
+  * Client ID: `argocd`.
+  * Access Type: confidential.
+  * Valid redirect URIs: `https://argo.finalq.xyz/auth/callback`.
+  * Web origins: `https://argo.finalq.xyz`.
+* Configuración en `argocd-cm`:
 
 ```yaml
 oidc.config: |
   name: Keycloak
-  issuer: https://keycloak.homelab.tu-dominio/realms/homelab
+  issuer: https://auth.finalq.xyz/realms/homelab
   clientID: argocd
-  clientSecret: <secret>
+  clientSecret: $keycloak-argocd-client-secret
   requestedScopes: ["openid", "profile", "email"]
 ```
 
----
-
-## 9. RBAC básico en Argo
+* RBAC (`argocd-rbac-cm`):
 
 ```yaml
 p, role:admin, applications, *, */*, allow
-g, tuusuario@gmail.com, role:admin
+g, user:guillermo.finalq@gmail.com, role:admin
 ```
 
----
+*(Formatear el `subject` según claim `email`.)*
 
-## 10. Validaciones finales
+### 8.2 Grafana
 
-* Login Google → Keycloak
-* Keycloak → Argo
-* Sesión persistente
-* Logout correcto
+* Client ID: `grafana`.
+* Redirect URI: `https://grafana.finalq.xyz/login/generic_oauth`.
+* Activar `email` como principal claim en la configuración de Grafana (`auth.generic_oauth`).
 
----
+### 8.3 Backlog de integraciones
 
-## 11. Qué aprendés con este setup
-
-* Flujo OIDC real
-* Separación IdP / SP
-* Federar identidad externa
-* RBAC basado en claims
-
-Este modelo es **idéntico al usado en cloud y entornos enterprise**.
+* **Vaultwarden** (ya en k3s): evaluar OIDC o seguir con auth propia.
+* **Pi-hole / Home Assistant** (VMs): considerar `oauth2-proxy` frente a cada servicio o migrar a Keycloak Gatekeeper.
+* **Servicios futuros**: Android orchestrators, etc.
 
 ---
 
-## 12. Próximos pasos sugeridos
+## 9. Validación y observabilidad
 
-* Integrar Grafana
-* Centralizar logs de auth
-* Rotar secretos
-* Hardening (HTTPS-only, PKCE)
+* Tests de login:
+  * Usuario local → Keycloak.
+  * Usuario Google → Keycloak.
+  * Login contra Argo/Grafana.
+* Revisar logs en `keycloak` y `keycloak-postgres`.
+* Exportar métricas:
+  * Habilitar `ServiceMonitor` para Keycloak (cuando se integre a Prometheus).
+* Backups:
+  * Script cron con `kubectl exec pg_dump` + upload a almacenamiento persistente (ej. NFS/Proxmox).
+
+---
+
+## 10. Hardening futuro
+
+1. Doble réplica de Keycloak y Postgres (requiere storage replicado).
+2. TLS interno (mTLS o cert-manager) dentro del cluster.
+3. Rotación automática de secretos (Vault, SOPS).
+4. Implementar PKCE + `offline_access` para apps móviles.
+5. Politicas de contraseñas y flujos de recuperación.
+
+---
+
+## 11. Plan de implementación
+
+1. **Preparación Google Cloud**
+   * Crear proyecto, consent screen y OAuth client.
+   * Guardar client ID/secret en `Secret` `keycloak-google`.
+2. **Infraestructura en repo**
+   * Crear carpeta `keycloak/` con chart (Subchart Bitnami recomendado) + templates para Secrets, StatefulSets y Services.
+   * Añadir manifiesto `applications/keycloak.yaml`.
+3. **Secrets y valores**
+   * Definir `keycloak/values.yaml` con hostnames, NodePort, recursos, PVC sizes.
+   * Incluir `Secret` YAML **solo como plantilla** (sin datos reales) para `keycloak-admin`, `keycloak-db` y `keycloak-google`.
+   * Ejecutar los comandos `kubectl create secret` de la sección 5.1 para cargar los valores reales fuera de Git.
+4. **Deploy GitOps**
+   * Aplicar `root-application.yaml` (si no lo está) y esperar sync de Argo.
+   * Verificar pods y NodePort accesible.
+5. **Config Keycloak**
+   * Ingresar a consola admin (usuario local).
+   * Crear realm `homelab`, configurar Google IdP y clientes (Argo, Grafana).
+6. **Integrar Argo y Grafana**
+   * Actualizar ConfigMaps/Secrets correspondientes y sincronizar via Argo.
+   * Validar login end-to-end.
+7. **Documentar/automatizar backups**
+   * Script o job para `pg_dump`.
+8. **Planificar onboarding de servicios externos**
+   * Definir si usar `oauth2-proxy` o integración directa para Pi-hole y Home Assistant.
+
+Cada paso se versiona en este repo y se despliega automáticamente mediante Argo CD, manteniendo el IdP alineado con el resto del homelab.

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-postgres-config
+  namespace: keycloak
+data:
+  init-tuning.sql: |
+    ALTER SYSTEM SET shared_buffers TO '128MB';
+    ALTER SYSTEM SET max_connections TO '50';
+    ALTER SYSTEM SET log_statement TO 'ddl';
