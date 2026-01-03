@@ -36,7 +36,7 @@ spec:
             - name: TZ
               value: America/Argentina/Buenos_Aires
             - name: GROCY_BASE_URL
-              value: https://grocy.lab.local
+              value: https://grocy.finalq.xyz
             - name: GROCY_CULTURE
               value: es-AR
           resources:
