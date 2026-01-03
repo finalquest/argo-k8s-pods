@@ -29,3 +29,6 @@ config:
   redis:
     host: "redis"
     port: 6379
+
+nodeSelector:
+  role: worker

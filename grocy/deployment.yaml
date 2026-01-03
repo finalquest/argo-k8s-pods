@@ -17,6 +17,8 @@ spec:
       labels:
         app: grocy
     spec:
+      nodeSelector:
+        role: worker
       securityContext:
         fsGroup: 1000
       containers:

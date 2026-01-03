@@ -13,6 +13,8 @@ spec:
       labels:
         app: redis
     spec:
+      nodeSelector:
+        role: worker
       containers:
         - name: redis
           image: redis:7

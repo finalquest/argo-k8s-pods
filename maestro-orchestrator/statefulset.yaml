@@ -16,6 +16,8 @@ spec:
       labels:
         app: maestro-orchestrator
     spec:
+      nodeSelector:
+        role: worker
       containers:
         - name: orchestrator
           image: harbor:8080/tools/maestro-orchestrator:slim-v1
@@ -24,4 +26,3 @@ spec:
           stdin: true
           tty: true
       restartPolicy: Always
-
