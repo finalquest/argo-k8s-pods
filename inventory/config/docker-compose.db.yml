@@ -1,0 +1,15 @@
+services:
+  inventory-postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+    ports:
+      - "5544:5432"
+    volumes:
+      - inventory-pgdata:/var/lib/postgresql/data
+
+volumes:
+  inventory-pgdata:

@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  admin.enabled: "false"
+  admin.enabled: "true"
   oidc.config: |
     name: Keycloak
     issuer: https://auth.finalq.xyz/realms/homelab
