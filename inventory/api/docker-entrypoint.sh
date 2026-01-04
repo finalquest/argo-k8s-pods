@@ -8,4 +8,4 @@ echo "Seeding database..."
 npx prisma db seed
 
 echo "Starting API..."
-exec node dist/src/main
+exec node dist/main
