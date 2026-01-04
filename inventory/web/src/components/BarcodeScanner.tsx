@@ -11,15 +11,30 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [error, setError] = useState<string>('');
+  const errorTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
     const start = async () => {
       try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setError('Este navegador no permite usar la cámara');
+          return;
+        }
+
+        // Solicitar permisos explícitamente antes de listar dispositivos
+        const permissionStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+        });
+        permissionStream.getTracks().forEach((track) => track.stop());
+
         const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        const deviceId = devices[0]?.deviceId;
+        const preferredDevice =
+          devices.find((device) => device.label.toLowerCase().includes('back')) ??
+          devices[0];
+        const deviceId = preferredDevice?.deviceId;
         if (!deviceId) {
-          setError('No se encontró cámara usable');
+          setError('No se encontró cámara usable. Verificá permisos en el navegador.');
           return;
         }
 
@@ -30,13 +45,29 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             if (result) {
               onDetected(result.getText());
             }
-            if (err && err.name !== 'NotFoundException') {
+            if (err) {
+              if (err.name === 'NotFoundException') {
+                if (!errorTimeout.current) {
+                  setError('No encontramos el código, acercalo un poco más…');
+                  errorTimeout.current = setTimeout(() => {
+                    setError('');
+                    errorTimeout.current = null;
+                  }, 2000);
+                }
+                return;
+              }
               setError(err.message);
             }
           },
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo iniciar la cámara');
+        const message =
+          err instanceof DOMException && err.name === 'NotAllowedError'
+            ? 'No tenemos permiso para usar la cámara. Permitilo y volvé a intentarlo.'
+            : err instanceof Error
+              ? err.message
+              : 'No se pudo iniciar la cámara';
+        setError(message);
       }
     };
 
@@ -44,6 +75,9 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
 
     return () => {
       controlsRef.current?.stop();
+      if (errorTimeout.current) {
+        clearTimeout(errorTimeout.current);
+      }
     };
   }, [onDetected]);
 
