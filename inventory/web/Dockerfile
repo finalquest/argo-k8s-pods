@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1
 ARG NODE_VERSION=20
-ARG VITE_API_BASE_URL=http://inventory-api.inventory.svc.cluster.local:3000
+ARG VITE_API_BASE_URL=/api
 
 FROM node:${NODE_VERSION}-alpine AS build
+ARG VITE_API_BASE_URL
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
