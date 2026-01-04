@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: harbor.finalq.xyz/tools/inventory-api:sha-bf8f697-api4
+          image: harbor.finalq.xyz/tools/inventory-api:sha-bf8f697-api5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

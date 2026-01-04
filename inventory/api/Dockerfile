@@ -3,7 +3,7 @@ WORKDIR /app
 
 FROM base AS deps
 RUN apt-get update && \
-    apt-get install -y python3 make g++ && \
+    apt-get install -y python3 make g++ openssl && \
     rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 COPY tsconfig*.json nest-cli.json ./
