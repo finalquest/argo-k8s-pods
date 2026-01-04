@@ -1,3 +1,5 @@
 .DS_Store
 backups/
 dist/
+inventory/web/playwright-report/
+inventory/web/test-results/

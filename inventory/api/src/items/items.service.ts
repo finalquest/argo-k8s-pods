@@ -55,7 +55,7 @@ export class ItemsService {
     const [items, totals] = await Promise.all([
       this.prisma.item.findMany({
         include: { category: true },
-        orderBy: { name: 'asc' },
+        orderBy: { updatedAt: 'desc' },
       }),
       this.prisma.stockMovement.groupBy({
         by: ['itemId'],
