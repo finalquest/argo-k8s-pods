@@ -6,7 +6,8 @@ FROM node:${NODE_VERSION}-alpine AS build
 ARG VITE_API_BASE_URL
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+ENV npm_config_legacy_peer_deps=true
+RUN npm ci
 COPY . .
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
