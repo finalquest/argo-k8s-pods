@@ -4,5 +4,8 @@ set -e
 echo "Running Prisma migrations..."
 npx prisma migrate deploy
 
+echo "Seeding database..."
+npx prisma db seed || echo "Seed skipped or failed"
+
 echo "Starting API..."
 exec node dist/src/main
