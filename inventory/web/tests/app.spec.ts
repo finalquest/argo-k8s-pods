@@ -154,6 +154,42 @@ test('sorting and batch selection', async ({ page, request }) => {
   await expect(filteredTable.locator('tbody tr', { hasText: barcodeC })).toHaveCount(0);
 });
 
+test('quick extract tab removes stock', async ({ page, request }) => {
+  const api = await authedApi(request);
+  const categoryId = await ensureCategory(api, `Sacar ${Date.now()}`);
+  const barcode = `extract-${Date.now()}`;
+  await api.post('/items', {
+    name: 'Para extraer',
+    barcode,
+    initialQuantity: 2,
+    categoryId,
+  });
+
+  await login(page);
+  await page.getByRole('button', { name: 'Sacar' }).click();
+  const extractSection = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Sacar del stock' }) });
+  await extractSection.getByPlaceholder('Código de barras').fill(barcode);
+  await extractSection.getByRole('button', { name: 'Buscar' }).click();
+  await expect(extractSection.getByRole('button', { name: 'Sacar 1 unidad' })).toBeVisible();
+  await extractSection.getByRole('button', { name: 'Sacar 1 unidad' }).click();
+  await expect(page.getByText('Se extrajo una unidad')).toBeVisible();
+  await page.getByRole('button', { name: 'Stocks' }).click();
+  const filterSelect = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Stock actual' }) })
+    .locator('select')
+    .first();
+  await filterSelect.selectOption(categoryId);
+  const row = page
+    .locator('table.inventory-table')
+    .first()
+    .locator('tbody tr', { hasText: barcode })
+    .first();
+  await expect(row).toContainText('1');
+});
+
 test('mobile layout labels', async ({ page, request }) => {
   const api = await authedApi(request);
   const mobileCategoryName = `Mobile Test ${Date.now()}`;

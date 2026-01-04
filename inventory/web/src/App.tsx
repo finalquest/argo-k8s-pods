@@ -75,23 +75,28 @@ export default function App() {
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   const [barcode, setBarcode] = useState('');
+  const [extractBarcode, setExtractBarcode] = useState('');
   const [lookup, setLookup] = useState<Item | null>(null);
+  const [extractLookup, setExtractLookup] = useState<Item | null>(null);
   const [externalLookup, setExternalLookup] = useState<ExternalProduct | null>(null);
   const [pendingIncrementItem, setPendingIncrementItem] = useState<Item | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<Item[]>([]);
-  const [tab, setTab] = useState<'capture' | 'inventory'>('capture');
+  const [tab, setTab] = useState<'capture' | 'extract' | 'inventory'>('capture');
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerContext, setScannerContext] = useState<'capture' | 'extract'>('capture');
 
   const [status, setStatus] = useState<StatusBanner | null>(null);
   const statusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [loginLoading, setLoginLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [extractLookupLoading, setExtractLookupLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [extractConfirmLoading, setExtractConfirmLoading] = useState(false);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [rowActionId, setRowActionId] = useState<string | null>(null);
@@ -234,6 +239,24 @@ export default function App() {
     }
   };
 
+  const lookupExtractBarcode = async (value?: string) => {
+    const target = value ?? extractBarcode;
+    if (!target) return;
+    setExtractLookup(null);
+    setExtractLookupLoading(true);
+    try {
+      const res = await authedFetch(`/items/barcode/${encodeURIComponent(target)}`);
+      const found = await handleResponse<Item>(res);
+      setExtractLookup(found);
+      setExtractBarcode('');
+      showStatus('info', 'Producto listo para extraer 1 unidad');
+    } catch (err) {
+      showStatus('error', err instanceof Error ? err.message : 'No encontramos ese código');
+    } finally {
+      setExtractLookupLoading(false);
+    }
+  };
+
   const confirmIncrement = async () => {
     if (!pendingIncrementItem) return;
     setConfirmLoading(true);
@@ -250,6 +273,21 @@ export default function App() {
       showStatus('error', err instanceof Error ? err.message : 'Error al ajustar stock');
     } finally {
       setConfirmLoading(false);
+    }
+  };
+
+  const confirmExtractQuick = async () => {
+    if (!extractLookup) return;
+    setExtractConfirmLoading(true);
+    try {
+      await authedFetch(`/items/${extractLookup.id}/extract`, { method: 'POST' });
+      showStatus('success', 'Se extrajo una unidad');
+      setExtractLookup(null);
+      await fetchInventory();
+    } catch (err) {
+      showStatus('error', err instanceof Error ? err.message : 'No se pudo extraer');
+    } finally {
+      setExtractConfirmLoading(false);
     }
   };
 
@@ -323,10 +361,20 @@ export default function App() {
     }
   };
 
+  const openScanner = (context: 'capture' | 'extract') => {
+    setScannerContext(context);
+    setScannerOpen(true);
+  };
+
   const handleScanned = async (code: string) => {
-    setBarcode(code);
     setScannerOpen(false);
-    await lookupBarcode(code);
+    if (scannerContext === 'capture') {
+      setBarcode(code);
+      await lookupBarcode(code);
+    } else {
+      setExtractBarcode(code);
+      await lookupExtractBarcode(code);
+    }
   };
 
   const submitNewItem = async (evt: FormEvent) => {
@@ -496,7 +544,7 @@ export default function App() {
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => setScannerOpen(true)}
+            onClick={() => openScanner('capture')}
           >
             Usar cámara
           </button>
@@ -643,6 +691,71 @@ export default function App() {
             </button>
           </div>
         </form>
+      </section>
+    </div>
+  );
+
+  const renderExtractTab = () => (
+    <div className="space-y-4">
+      <section className="card space-y-4 p-4 md:p-6">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--text-strong)]">Sacar del stock</h2>
+            <p className="text-sm text-[var(--muted)]">
+              Escaneá un producto existente y confirmá para restar una unidad.
+            </p>
+          </div>
+          <button type="button" className="btn-secondary" onClick={() => openScanner('extract')}>
+            Usar cámara
+          </button>
+        </div>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <input
+            className="input flex-1"
+            placeholder="Código de barras"
+            value={extractBarcode}
+            onChange={(e) => setExtractBarcode(e.target.value)}
+          />
+          <button
+            className="btn-primary"
+            onClick={() => lookupExtractBarcode()}
+            disabled={extractLookupLoading}
+          >
+            {extractLookupLoading ? (
+              <>
+                <Spinner /> <span className="ml-2">Buscando</span>
+              </>
+            ) : (
+              'Buscar'
+            )}
+          </button>
+        </div>
+        {extractLookup && (
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-4 shadow-sm">
+            <p className="text-sm text-[var(--muted)]">Producto</p>
+            <p className="text-lg font-semibold text-[var(--text-strong)]">{extractLookup.name}</p>
+            <p className="text-sm text-[var(--muted)]">Stock actual: {extractLookup.quantity}</p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                className="btn-small-danger w-full rounded-full px-4 py-3 text-base font-semibold"
+                onClick={confirmExtractQuick}
+                disabled={extractConfirmLoading}
+              >
+                {extractConfirmLoading ? (
+                  <>
+                    <Spinner /> <span className="ml-2">Sacando…</span>
+                  </>
+                ) : (
+                  'Sacar 1 unidad'
+                )}
+              </button>
+              <button type="button" className="btn-muted w-full" onClick={() => setExtractLookup(null)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
@@ -922,6 +1035,14 @@ export default function App() {
             </button>
             <button
               className={`flex-1 rounded-full px-4 py-2 ${
+                tab === 'extract' ? 'bg-[var(--pill-active)] text-[var(--text-strong)]' : ''
+              }`}
+              onClick={() => setTab('extract')}
+            >
+              Sacar
+            </button>
+            <button
+              className={`flex-1 rounded-full px-4 py-2 ${
                 tab === 'inventory' ? 'bg-[var(--pill-active)] text-[var(--text-strong)]' : ''
               }`}
               onClick={() => setTab('inventory')}
@@ -930,7 +1051,11 @@ export default function App() {
             </button>
           </div>
 
-          {tab === 'capture' ? renderCaptureTab() : renderInventoryTab()}
+          {tab === 'capture'
+            ? renderCaptureTab()
+            : tab === 'extract'
+              ? renderExtractTab()
+              : renderInventoryTab()}
 
           {status && (
             <div
