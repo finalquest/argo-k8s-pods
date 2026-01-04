@@ -40,8 +40,12 @@ export class CreateItemDto {
   photoPath?: string;
 
   @IsString()
-  @IsNotEmpty()
-  categoryId: string;
+  @IsOptional()
+  categoryId?: string;
+
+  @IsString()
+  @IsOptional()
+  externalCategoryName?: string;
 
   @IsInt()
   @IsOptional()

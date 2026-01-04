@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { load } from 'cheerio';
+import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
@@ -11,13 +13,23 @@ import { AdjustStockDto } from './dto/adjust-stock.dto';
 @Injectable()
 export class ItemsService {
   constructor(private readonly prisma: PrismaService) {}
+  private encEndpoint =
+    process.env.ENC_SEARCH_URL ?? 'https://enc.finalq.xyz/search?q=';
 
   async create(dto: CreateItemDto) {
-    const { initialQuantity, ...data } = dto;
+    const { initialQuantity, externalCategoryName, ...data } = dto;
+    let categoryId = data.categoryId;
+    if (!categoryId) {
+      if (!externalCategoryName) {
+        throw new ConflictException('Category is required');
+      }
+      categoryId = await this.resolveCategoryId(externalCategoryName);
+    }
     try {
       const item = await this.prisma.item.create({
         data: {
           ...data,
+          categoryId: categoryId!,
           unit: data.unit ?? 'unit',
         },
       });
@@ -142,5 +154,107 @@ export class ItemsService {
     if (!exists) {
       throw new NotFoundException(`Item ${id} not found`);
     }
+  }
+
+  async lookupExternal(barcode: string) {
+    const encProduct = await this.fetchEncProduct(barcode);
+    if (encProduct) {
+      return { source: 'enc', ...encProduct };
+    }
+    const offProduct = await this.fetchOpenFoodProduct(barcode);
+    if (offProduct) {
+      return { source: 'openfoodfacts', ...offProduct };
+    }
+    throw new NotFoundException(`No external data for barcode ${barcode}`);
+  }
+
+  private async fetchEncProduct(barcode: string) {
+    if (!globalThis.fetch) return null;
+    try {
+      const res = await fetch(`${this.encEndpoint}${encodeURIComponent(barcode)}`);
+      if (!res.ok) return null;
+      const html = await res.text();
+      const $ = load(html);
+      const name = $('.product-name').first().text().trim();
+      if (!name) return null;
+      const info: Record<string, string> = {};
+      $('table.table tr').each((_, el) => {
+        const cells = $(el).find('td');
+        if (cells.length < 2) return;
+        const label = cells.eq(0).text().trim().toLowerCase();
+        const value = cells.eq(1).text().trim();
+        if (!label || !value) return;
+        info[label] = value;
+      });
+      const image =
+        $('.product-image img').first().attr('src') ??
+        $('.product-image img').first().attr('data-src');
+      return {
+        name,
+        brand: info['brand'],
+        category: info['category'],
+        quantity: info['quantity'],
+        image,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async fetchOpenFoodProduct(barcode: string) {
+    if (!globalThis.fetch) return null;
+    try {
+      const res = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.status !== 1) return null;
+      const product = data.product ?? {};
+      return {
+        name: product.product_name ?? barcode,
+        brand: product.brands,
+        quantity: product.quantity,
+        image: product.image_front_small_url ?? product.image_url,
+        category: product.categories,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async resolveCategoryId(name: string) {
+    const normalized = name.trim();
+    const existing = await this.prisma.category.findFirst({
+      where: {
+        name: { equals: normalized, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      return existing.id;
+    }
+    const slug = slugify(normalized, { lower: true, strict: true });
+    const created = await this.prisma.category.create({
+      data: {
+        name: normalized,
+        description: `Auto creada desde lookup externo (${slug})`,
+      },
+    });
+    return created.id;
+  }
+
+  async extractOne(id: string) {
+    const item = await this.findOne(id);
+    if (item.quantity <= 0) {
+      return item;
+    }
+    await this.prisma.stockMovement.create({
+      data: {
+        itemId: id,
+        delta: -1,
+        reason: 'Extraction',
+      },
+    });
+    return this.findOne(id);
   }
 }

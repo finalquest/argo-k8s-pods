@@ -39,6 +39,11 @@ export class ItemsController {
     return this.itemsService.findByBarcode(barcode);
   }
 
+  @Get('barcode/:barcode/external')
+  findExternal(@Param('barcode') barcode: string) {
+    return this.itemsService.lookupExternal(barcode);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateItemDto) {
     return this.itemsService.update(id, dto);
@@ -47,6 +52,11 @@ export class ItemsController {
   @Post(':id/adjust')
   adjust(@Param('id') id: string, @Body() dto: AdjustStockDto) {
     return this.itemsService.adjustStock(id, dto);
+  }
+
+  @Post(':id/extract')
+  extract(@Param('id') id: string) {
+    return this.itemsService.extractOne(id);
   }
 
   @Delete(':id')
