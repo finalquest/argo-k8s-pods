@@ -22,24 +22,22 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
           return;
         }
 
-        // Solicitar permisos explícitamente antes de listar dispositivos
+        // Solicitar permisos con la cámara trasera ideal
         const permissionStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
         });
         permissionStream.getTracks().forEach((track) => track.stop());
 
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        const preferredDevice =
-          devices.find((device) => device.label.toLowerCase().includes('back')) ??
-          devices[0];
-        const deviceId = preferredDevice?.deviceId;
-        if (!deviceId) {
-          setError('No se encontró cámara usable. Verificá permisos en el navegador.');
-          return;
-        }
+        const constraints = {
+          video: {
+            facingMode: { ideal: 'environment' as const },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        };
 
-        controlsRef.current = await reader.decodeFromVideoDevice(
-          deviceId,
+        controlsRef.current = await reader.decodeFromConstraints(
+          constraints,
           videoRef.current!,
           (result, err) => {
             if (result) {
