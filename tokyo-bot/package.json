@@ -1,0 +1,22 @@
+{
+  "name": "tokyo-telegram-codex-bot",
+  "version": "0.1.0",
+  "description": "Telegram bot that proxies conversations to Codex CLI for the tokyo2026 repo.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "codex",
+    "bot",
+    "tokyo2026"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.67.0",
+    "pino": "^10.1.0"
+  }
+}

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tokyo-bot-config
+  namespace: tokyo-bot
+data:
+  TOKYO_REPO_URL: https://github.com/finalquest/tokyo2026
+  TOKYO_REPO_NAME: tokyo2026
+  GIT_USER_NAME: Codex Telegram Bot
+  GIT_USER_EMAIL: bot@finalq.xyz
+  CODEX_CMD: codex
+  CODEX_ARGS: chat
+  RESPONSE_IDLE_MS: "2000"
+  LOG_LEVEL: info

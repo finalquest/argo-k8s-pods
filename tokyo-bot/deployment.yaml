@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokyo-bot
+  namespace: tokyo-bot
+  labels:
+    app: tokyo-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tokyo-bot
+  template:
+    metadata:
+      labels:
+        app: tokyo-bot
+    spec:
+      nodeSelector:
+        role: worker
+      containers:
+        - name: tokyo-bot
+          image: ghcr.io/finalquest/tokyo-bot:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: tokyo-bot-config
+            - secretRef:
+                name: tokyo-bot-secrets
+          env:
+            - name: TOKYO_REPO_DIR
+              value: /data/repos
+          volumeMounts:
+            - name: repo-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2
+              memory: 2Gi
+      volumes:
+        - name: repo-data
+          persistentVolumeClaim:
+            claimName: tokyo-bot-data
