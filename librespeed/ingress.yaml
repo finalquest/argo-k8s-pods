@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: librespeed
+  namespace: speedtest
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: speed.finalq.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: librespeed
+                port:
+                  number: 80
