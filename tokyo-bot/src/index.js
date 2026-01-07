@@ -13,6 +13,7 @@ const {
   TOKYO_REPO_DIR = '/data/repos',
   TOKYO_REPO_NAME = 'tokyo2026',
   GIT_AUTH_TOKEN = '',
+  GIT_AUTH_USERNAME = '',
   GIT_USER_NAME = 'Codex Telegram Bot',
   GIT_USER_EMAIL = 'bot@example.com',
   CODEX_CMD = 'codex',
@@ -53,7 +54,9 @@ const buildAuthUrl = (url) => {
   }
   try {
     const authUrl = new URL(url);
-    authUrl.username = GIT_AUTH_TOKEN;
+    const user = GIT_AUTH_USERNAME || 'x-access-token';
+    authUrl.username = user;
+    authUrl.password = GIT_AUTH_TOKEN;
     return authUrl.toString();
   } catch (err) {
     logger.warn({ url }, 'Failed to inject auth token into repo URL');

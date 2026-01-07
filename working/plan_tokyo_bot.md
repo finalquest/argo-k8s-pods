@@ -3,7 +3,6 @@
 ## Objetivo
 Levantar un pod en k3s que funcione como intermediario entre Telegram y Codex para trabajar remotamente sobre el repo `tokyo2026`: conversar con Codex, ejecutar scripts (render mapas, etc.) y finalmente hacer commit/push, todo desde un chat.
 
-## Arquitectura general
 - **Pod único** desplegado vía Argo CD (directorio `tokyo-bot/` en este repo).
 - Contenedor Node.js (bot implementado con `node-telegram-bot-api` + `pino`) que:
   - Mantiene una conexión long-polling con Telegram.
@@ -46,7 +45,7 @@ Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar
    - Decidir si coexiste en `monitoring-lite` o crear `tokyo-bot` (sugerido namespace propio). Para claridad, usaremos `tokyo-bot` y agregaremos `CreateNamespace=true` en la Application de Argo CD.
 
 2. **Deployment**
-   - Imagen personalizada definida en `tokyo-bot/Dockerfile` (pensada para publicarse como `ghcr.io/finalquest/tokyo-bot:latest`).
+   - Imagen personalizada definida en `tokyo-bot/Dockerfile` (se publicará en `harbor.finalq.xyz/...` usando `docker buildx` para generar una imagen linux/amd64 desde la Mac ARM).
    - `nodeSelector: role=worker`.
    - Mount de volumen (PVC) para almacenar clones del repo `tokyo2026` y mantenerlo entre reinicios.
    - Env vars/Secrets:
@@ -55,7 +54,7 @@ Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar
      - `CODEX_API_KEY` o credenciales necesarias para el CLI (dependiendo cómo se autentique).
      - `TOKYO_REPO_URL` (default `https://github.com/finalquest/tokyo2026` pero configurable).
      - `GIT_USER_NAME`, `GIT_USER_EMAIL`.
-     - `GIT_AUTH_TOKEN` o clave SSH montada.
+     - `GIT_AUTH_TOKEN` y opcionalmente `GIT_AUTH_USERNAME` (user para la URL HTTPS) o clave SSH montada.
    - ConfigMap para scripts de arranque (por ejemplo, `entrypoint.sh` que inicia el bot, sincroniza repo, y lanza Codex según sea necesario).
    - Recursos aproximados: requests 500m CPU / 512Mi, limits 1-2 CPU / 2Gi (ajustable según peso de Codex + npm scripts).
 
@@ -109,6 +108,6 @@ Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar
 6. Failover: reiniciar el pod y confirmar que el repo persiste y el bot se reconecta.
 
 ## Next steps
-- Construir la imagen (`docker build -t ghcr.io/finalquest/tokyo-bot:TAG tokyo-bot/`), publicarla y actualizar `deployment.yaml` con el tag publicado.
+- Construir la imagen multi-arch (linux/amd64) usando `docker buildx build --platform linux/amd64 -t harbor.finalq.xyz/<project>/tokyo-bot:TAG tokyo-bot/` y publicarla en `harbor.finalq.xyz` (docker ya autenticado). Actualizar `deployment.yaml` con el tag publicado.
 - Cargar/actualizar Secrets en el cluster (token Telegram, user IDs, token Git, Codex key).
 - Deploy via Argo CD (`applications/tokyo-bot.yaml`) y verificar funcionamiento según el checklist.
