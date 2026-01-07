@@ -52,7 +52,7 @@ Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar
      - `TELEGRAM_BOT_TOKEN`
      - Lista de `ALLOWED_USER_IDS` (CSV) para filtrar chats.
      - `CODEX_API_KEY` o credenciales necesarias para el CLI (dependiendo cómo se autentique).
-     - `TOKYO_REPO_URL` (default `https://github.com/finalquest/tokyo2026` pero configurable).
+     - `TOKYO_REPO_URL` (default `https://github.com/finalquest/tokyo2026` pero configurable) y `TOKYO_REPO_DEPTH` (por defecto `1` para shallow clone).
      - `GIT_USER_NAME`, `GIT_USER_EMAIL`.
      - `GIT_AUTH_TOKEN` y opcionalmente `GIT_AUTH_USERNAME` (user para la URL HTTPS) o clave SSH montada.
    - ConfigMap para scripts de arranque (por ejemplo, `entrypoint.sh` que inicia el bot, sincroniza repo, y lanza Codex según sea necesario).

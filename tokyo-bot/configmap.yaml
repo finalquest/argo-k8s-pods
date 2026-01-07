@@ -6,6 +6,7 @@ metadata:
 data:
   TOKYO_REPO_URL: https://github.com/finalquest/tokyo2026
   TOKYO_REPO_NAME: tokyo2026
+  TOKYO_REPO_DEPTH: "1"
   GIT_USER_NAME: Codex Telegram Bot
   GIT_USER_EMAIL: bot@finalq.xyz
   GIT_AUTH_USERNAME: finalquest

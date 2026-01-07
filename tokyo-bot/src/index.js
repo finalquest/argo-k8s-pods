@@ -12,6 +12,7 @@ const {
   TOKYO_REPO_URL = 'https://github.com/finalquest/tokyo2026',
   TOKYO_REPO_DIR = '/data/repos',
   TOKYO_REPO_NAME = 'tokyo2026',
+  TOKYO_REPO_DEPTH = '1',
   GIT_AUTH_TOKEN = '',
   GIT_AUTH_USERNAME = '',
   GIT_USER_NAME = 'Codex Telegram Bot',
@@ -69,10 +70,21 @@ async function ensureRepo() {
   const authUrl = buildAuthUrl(TOKYO_REPO_URL);
   if (!existsSync(repoPath)) {
     logger.info({ repoPath }, 'Cloning tokyo2026 repo');
-    await runCommand('git', ['clone', authUrl, repoPath]);
+    const cloneArgs = ['clone'];
+    const depth = Number(TOKYO_REPO_DEPTH);
+    if (!Number.isNaN(depth) && depth > 0) {
+      cloneArgs.push(`--depth=${depth}`);
+    }
+    cloneArgs.push(authUrl, repoPath);
+    await runCommand('git', cloneArgs);
   } else {
     logger.info('Repo already exists, pulling latest changes');
-    await runCommand('git', ['-C', repoPath, 'fetch', '--all']);
+    const depth = Number(TOKYO_REPO_DEPTH);
+    const fetchArgs = ['-C', repoPath, 'fetch', '--all', '--prune'];
+    if (!Number.isNaN(depth) && depth > 0) {
+      fetchArgs.push(`--depth=${depth}`);
+    }
+    await runCommand('git', fetchArgs);
     await runCommand('git', ['-C', repoPath, 'pull', '--ff-only']);
   }
   await runCommand('git', ['-C', repoPath, 'remote', 'set-url', 'origin', authUrl]);
