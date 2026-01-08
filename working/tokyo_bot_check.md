@@ -5,7 +5,7 @@
 - [ ] Lista de `chat_id` o `user_id` autorizados identificada (via `getUpdates` u otro método).
 - [ ] Credenciales Git preparadas (token o SSH) con permisos sobre `tokyo2026`.
 - [ ] API key/credenciales de Codex listas para el CLI.
-- [ ] Secrets creados en el cluster (`tokyo-bot-secrets` con token Telegram, user IDs, Codex key, Git token/SSH).
+- [ ] Secrets creados en el cluster (`tokyo-bot-secrets` con token Telegram, user IDs, Codex key, Git token/SSH y `GOOGLE_MAPS_API_KEY`).
 
 ## Implementación
 - [x] `namespace.yaml` creado (ej. `tokyo-bot`) y referenciado por kustomize/Argo.

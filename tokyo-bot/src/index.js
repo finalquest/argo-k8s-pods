@@ -1,8 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
 import pino from 'pino';
 import { spawn } from 'child_process';
-import { mkdirSync, existsSync } from 'fs';
+import { mkdirSync, existsSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
+import { randomUUID } from 'crypto';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -20,7 +22,8 @@ const {
   CODEX_CMD = 'codex',
   CODEX_ARGS = '',
   CODEX_API_KEY,
-  RESPONSE_IDLE_MS = '1500'
+  CODEX_HISTORY_LIMIT = '6',
+  CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN) {
@@ -35,6 +38,53 @@ const allowedUsers = new Set(
 );
 
 const repoPath = join(TOKYO_REPO_DIR, TOKYO_REPO_NAME);
+const parsedHistoryLimit = Number(CODEX_HISTORY_LIMIT);
+const historyLimit = Number.isNaN(parsedHistoryLimit) || parsedHistoryLimit < 0 ? 6 : Math.floor(parsedHistoryLimit);
+
+const ANSI_REGEX = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
+const OSC_REGEX = /\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\|$)/g;
+const SINGLE_ESCAPE_REGEX = /\u001b[\(\)][0-9A-Za-z]/g;
+const RESIDUAL_CSI_REGEX = /\[[><\?][0-9;]*[A-Za-z]/g;
+
+const stripAnsi = (text) =>
+  text
+    .replace(/\r/g, '')
+    .replace(OSC_REGEX, '')
+    .replace(ANSI_REGEX, '')
+    .replace(SINGLE_ESCAPE_REGEX, '')
+    .replace(/\u001bM/g, '')
+    .replace(/\u001b=/g, '')
+    .replace(/\u001b>/g, '')
+    .replace(/\u001b[><]/g, '')
+    .replace(RESIDUAL_CSI_REGEX, '');
+
+const UI_BOX_REGEX = /╭[\s\S]*?╯/g;
+const WORKING_LINE_REGEX = /•\s*(Working|Exploring|Checking|Considering|Requesting|Preparing)[^\n]*/gi;
+const PROGRESS_LINE_REGEX = /─ Worked for .*?─/g;
+
+const stripUiNoise = (text, lastPrompt = '') => {
+  let result = text;
+  result = result.replace(UI_BOX_REGEX, '');
+  result = result.replace(/›Contexto:sosCodex[^\n]*/gi, '');
+  result = result.replace(/100%\s*context\s*left/gi, '');
+  result = result.replace(WORKING_LINE_REGEX, '');
+  result = result.replace(PROGRESS_LINE_REGEX, '');
+  result = result.replace(/^›/gm, '');
+  result = result.replace(/^•\s*/gm, '');
+  if (lastPrompt) {
+    const escapedPrompt = lastPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(escapedPrompt, 'gi'), '');
+  }
+  return result;
+};
+
+const buildCodexArgs = (outputFile) => [
+  'exec',
+  '--dangerously-bypass-approvals-and-sandbox',
+  '--output-last-message',
+  outputFile,
+  '-'
+];
 
 const runCommand = (cmd, args, options = {}) =>
   new Promise((resolve, reject) => {
@@ -92,103 +142,136 @@ async function ensureRepo() {
   await runCommand('git', ['-C', repoPath, 'config', 'user.email', GIT_USER_EMAIL]);
 }
 
-class CodexSession {
-  constructor(chatId, onExit) {
-    this.chatId = chatId;
-    this.buffer = '';
-    this.pending = null;
-    this.timer = null;
-    const args = CODEX_ARGS ? CODEX_ARGS.split(' ').filter(Boolean) : ['chat'];
-    logger.info({ chatId, args }, 'Starting Codex session');
-    this.proc = spawn(CODEX_CMD, args, {
+const runCodexPrompt = (prompt, chatId) =>
+  new Promise((resolve, reject) => {
+    const outputFile = join(tmpdir(), `tokyo-bot-codex-${randomUUID()}.txt`);
+    const args = buildCodexArgs(outputFile);
+    logger.debug({ chatId, args }, 'Ejecutando codex exec');
+    const codexEnv = {
+      ...process.env,
+      CODEX_API_KEY
+    };
+    delete codexEnv.CODEX_SANDBOX;
+    delete codexEnv.CODEX_SANDBOX_NETWORK_DISABLED;
+    codexEnv.CODEX_SANDBOX = 'danger-full-access';
+    codexEnv.CODEX_SANDBOX_NETWORK_DISABLED = '0';
+    const child = spawn(CODEX_CMD, args, {
       cwd: repoPath,
-      env: {
-        ...process.env,
-        CODEX_API_KEY
-      }
+      env: codexEnv,
+      stdio: ['pipe', 'pipe', 'pipe']
     });
-    this.proc.stdout.on('data', (chunk) => this.handleData(chunk));
-    this.proc.stderr.on('data', (chunk) => this.handleData(chunk, true));
-    this.proc.on('exit', (code, signal) => {
-      logger.info({ chatId, code, signal }, 'Codex session ended');
-      if (this.pending) {
-        this.pending.reject(new Error('Codex session ended'));
-        this.pending = null;
-      }
-      onExit?.();
-    });
-  }
+    let stdout = '';
+    let stderr = '';
 
-  handleData(chunk, isError = false) {
-    if (!this.pending) {
-      if (isError) {
-        logger.warn({ chatId: this.chatId, chunk: chunk.toString() }, 'Codex stderr (no pending)');
-      }
-      return;
-    }
-    this.buffer += chunk.toString();
-    this.scheduleFlush();
-  }
-
-  scheduleFlush() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-    this.timer = setTimeout(() => this.flush(), Number(RESPONSE_IDLE_MS));
-  }
-
-  flush() {
-    if (!this.pending) {
-      return;
-    }
-    const text = this.buffer.trim() || '(sin salida)';
-    this.pending.resolve(text);
-    this.pending = null;
-    this.buffer = '';
-  }
-
-  async send(message) {
-    if (this.pending) {
-      throw new Error('Codex está procesando otro mensaje');
-    }
-    return new Promise((resolve, reject) => {
-      this.pending = { resolve, reject };
+    const cleanup = () => {
       try {
-        this.proc.stdin.write(`${message}\n`);
+        rmSync(outputFile, { force: true });
       } catch (err) {
-        this.pending = null;
-        reject(err);
+        logger.debug({ chatId, err }, 'No pude borrar el archivo temporal');
+      }
+    };
+
+    child.stdout.on('data', (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      logger.debug({ chatId, chunk: text }, 'codex exec stdout');
+    });
+    child.stderr.on('data', (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      logger.debug({ chatId, chunk: text }, 'codex exec stderr');
+    });
+    child.on('error', (err) => {
+      cleanup();
+      reject(err);
+    });
+    child.on('close', (code) => {
+      let output = '';
+      if (code === 0) {
+        try {
+          output = readFileSync(outputFile, 'utf8');
+        } catch (err) {
+          logger.warn({ chatId, err }, 'No pude leer el resultado final de Codex');
+          output = stdout;
+        }
+        const cleaned = stripUiNoise(stripAnsi(output));
+        cleanup();
+        resolve(cleaned.trim());
         return;
       }
-      this.scheduleFlush();
+      const combined = `${stderr}\n${stdout}`.trim();
+      cleanup();
+      const errorText = stripUiNoise(stripAnsi(combined));
+      reject(new Error(errorText || `Codex salió con código ${code}`));
     });
+    child.stdin.end(`${prompt}\n`);
+  });
+
+class CodexExecManager {
+  constructor(limit) {
+    this.limit = Number.isInteger(limit) && limit > 0 ? limit : 0;
+    this.history = new Map();
+    this.active = new Set();
   }
 
-  close() {
-    if (this.timer) {
-      clearTimeout(this.timer);
+  isBusy(chatId) {
+    return this.active.has(chatId);
+  }
+
+  hasHistory(chatId) {
+    return (this.history.get(chatId)?.length || 0) > 0;
+  }
+
+  reset(chatId) {
+    this.history.delete(chatId);
+  }
+
+  async send(chatId, message) {
+    if (this.isBusy(chatId)) {
+      throw new Error('Codex está procesando otro mensaje');
     }
-    this.proc.kill('SIGTERM');
+    this.active.add(chatId);
+    try {
+      const prompt = this.buildPrompt(chatId, message);
+      const response = await runCodexPrompt(prompt, chatId);
+      this.recordHistory(chatId, message, response);
+      return response.trim() ? response.trim() : '(sin salida)';
+    } finally {
+      this.active.delete(chatId);
+    }
+  }
+
+  buildPrompt(chatId, message) {
+    const segments = [];
+    if (CODEX_SESSION_PROMPT) {
+      segments.push(CODEX_SESSION_PROMPT.trim());
+    }
+    const history = this.history.get(chatId) || [];
+    if (history.length) {
+      const formattedHistory = history
+        .map((entry) => `${entry.role === 'assistant' ? 'Codex' : 'Usuario'}:\n${entry.content}`)
+        .join('\n\n');
+      segments.push(`Historial reciente de la conversación:\n${formattedHistory}`);
+    }
+    segments.push(`Nuevo mensaje desde Telegram:\n${message}`);
+    return segments.join('\n\n').trim();
+  }
+
+  recordHistory(chatId, userMessage, assistantMessage) {
+    if (this.limit === 0) {
+      return;
+    }
+    const history = this.history.get(chatId) || [];
+    history.push({ role: 'user', content: userMessage });
+    history.push({ role: 'assistant', content: assistantMessage || '(sin salida)' });
+    if (history.length > this.limit) {
+      history.splice(0, history.length - this.limit);
+    }
+    this.history.set(chatId, history);
   }
 }
 
-const sessions = new Map();
-
-function getSession(chatId) {
-  if (!sessions.has(chatId)) {
-    const session = new CodexSession(chatId, () => sessions.delete(chatId));
-    sessions.set(chatId, session);
-  }
-  return sessions.get(chatId);
-}
-
-function closeSession(chatId) {
-  const session = sessions.get(chatId);
-  if (session) {
-    session.close();
-    sessions.delete(chatId);
-  }
-}
+const codexManager = new CodexExecManager(historyLimit);
 
 function chunkMessage(message) {
   const chunks = [];
@@ -200,10 +283,85 @@ function chunkMessage(message) {
   return chunks;
 }
 
+function startTypingIndicator(bot, chatId) {
+  let active = true;
+  let timer = null;
+  const sendAction = () => {
+    if (!active) {
+      return;
+    }
+    bot.sendChatAction(chatId, 'typing').catch((err) => {
+      logger.debug({ chatId, err }, 'Failed to send typing indicator');
+    });
+    timer = setTimeout(sendAction, 4000);
+  };
+  sendAction();
+  return () => {
+    active = false;
+    if (timer) {
+      clearTimeout(timer);
+    }
+  };
+}
+
+function setupPollingRecovery(bot) {
+  let restarting = false;
+  let restartTimer = null;
+
+  const restartPolling = async () => {
+    if (restarting) {
+      return;
+    }
+    restarting = true;
+    logger.warn('Reiniciando polling de Telegram tras error fatal...');
+    try {
+      try {
+        await bot.stopPolling();
+      } catch (stopErr) {
+        logger.warn({ stopErr }, 'Falló stopPolling (continuo con restart)');
+      }
+      await bot.startPolling();
+      logger.info('Polling de Telegram reiniciado.');
+    } catch (err) {
+      logger.error({ err }, 'No pude reiniciar el polling, reintento en 5s');
+      restartTimer = setTimeout(() => {
+        restartTimer = null;
+        restarting = false;
+        restartPolling();
+      }, 5000);
+      return;
+    }
+    restarting = false;
+  };
+
+  bot.on('polling_error', (err) => {
+    if (!err) {
+      return;
+    }
+    const fatal = err.code === 'EFATAL' || /EFATAL/i.test(err.message || '');
+    const level = fatal ? 'error' : 'warn';
+    logger[level]({ err }, 'Polling error de Telegram');
+    if (fatal) {
+      if (restartTimer) {
+        return;
+      }
+      restartTimer = setTimeout(() => {
+        restartTimer = null;
+        restartPolling();
+      }, 2000);
+    }
+  });
+
+  bot.on('webhook_error', (err) => {
+    logger.warn({ err }, 'Webhook error de Telegram');
+  });
+}
+
 async function startBot() {
   await ensureRepo();
   const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
   logger.info('Bot connected to Telegram');
+  setupPollingRecovery(bot);
 
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
@@ -220,19 +378,28 @@ async function startBot() {
     }
 
     if (text === '/close') {
-      closeSession(chatId);
-      bot.sendMessage(chatId, 'Sesión Codex cerrada.');
+      codexManager.reset(chatId);
+      bot.sendMessage(chatId, 'Historial de Codex borrado.');
       return;
     }
 
     if (text === '/status') {
-      bot.sendMessage(chatId, sessions.has(chatId) ? 'Sesión activa.' : 'No hay sesión abierta.');
+      if (codexManager.isBusy(chatId)) {
+        bot.sendMessage(chatId, 'Codex está procesando un mensaje.');
+        return;
+      }
+      bot.sendMessage(
+        chatId,
+        codexManager.hasHistory(chatId)
+          ? 'Codex libre, con historial vigente.'
+          : 'Codex libre. No hay historial guardado.'
+      );
       return;
     }
 
     if (text === '/reset') {
-      closeSession(chatId);
-      bot.sendMessage(chatId, 'Sesión reiniciada.');
+      codexManager.reset(chatId);
+      bot.sendMessage(chatId, 'Historial reiniciado.');
       return;
     }
 
@@ -244,21 +411,25 @@ async function startBot() {
       return;
     }
 
-    if (!sessions.has(chatId)) {
-      await bot.sendMessage(chatId, 'Creando sesión nueva con Codex...');
+    if (codexManager.isBusy(chatId)) {
+      bot.sendMessage(chatId, 'Codex sigue procesando el mensaje anterior, esperá un momento.');
+      return;
     }
-
-    const session = getSession(chatId);
+    const stopTyping = startTypingIndicator(bot, chatId);
     try {
-      const response = await session.send(text);
+      logger.info({ chatId, text }, 'Forwarding message to Codex');
+      const response = await codexManager.send(chatId, text);
+      logger.info({ chatId }, 'Codex response ready');
       const chunks = chunkMessage(response);
       for (const chunk of chunks) {
         await bot.sendMessage(chatId, chunk);
       }
     } catch (err) {
-      logger.error({ err }, 'Error interacting with Codex');
-      closeSession(chatId);
+      logger.error({ chatId, err }, 'Error interacting with Codex');
+      codexManager.reset(chatId);
       bot.sendMessage(chatId, `Error: ${err.message}`);
+    } finally {
+      stopTyping();
     }
   });
 }

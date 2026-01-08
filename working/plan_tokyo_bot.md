@@ -36,7 +36,8 @@ kubectl create secret generic tokyo-bot-secrets \\
   --from-literal=TELEGRAM_BOT_TOKEN=xxx \\
   --from-literal=ALLOWED_USER_IDS=\"123456789,987654321\" \\
   --from-literal=CODEX_API_KEY=yyy \\
-  --from-literal=GIT_AUTH_TOKEN=zzz
+  --from-literal=GIT_AUTH_TOKEN=zzz \\
+  --from-literal=GOOGLE_MAPS_API_KEY=ggg
 ```
 Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar el contenedor para usarla.
 
@@ -65,11 +66,12 @@ Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar
    - `tokyo-bot-data` (10 Gi, `local-path`, ReadWriteOnce) almacena el repo y resultados para que sobrevivan reinicios.
 
 5. **Secrets**
-   - `tokyo-bot-secrets`:
-     - `TELEGRAM_BOT_TOKEN`
-     - `ALLOWED_USER_IDS`
-     - `CODEX_API_KEY`
-     - `GIT_AUTH_TOKEN` (o `SSH_PRIVATE_KEY`).
+- `tokyo-bot-secrets`:
+  - `TELEGRAM_BOT_TOKEN`
+  - `ALLOWED_USER_IDS`
+  - `CODEX_API_KEY`
+  - `GIT_AUTH_TOKEN` (o `SSH_PRIVATE_KEY`).
+  - `GOOGLE_MAPS_API_KEY` (para los scripts `npm run fetch:*` / `routes:*` que consulta la API de Google Maps).
    - `tokyo-bot-config` (ConfigMap): `TOKYO_REPO_URL`, `GIT_USER_NAME`, `GIT_USER_EMAIL`, otros parámetros.
 
 6. **Argo CD Application**

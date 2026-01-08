@@ -11,6 +11,7 @@ data:
   GIT_USER_EMAIL: bot@finalq.xyz
   GIT_AUTH_USERNAME: finalquest
   CODEX_CMD: codex
-  CODEX_ARGS: chat
-  RESPONSE_IDLE_MS: "2000"
+  CODEX_HISTORY_LIMIT: "6"
+  CODEX_SESSION_PROMPT: |
+    Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.
   LOG_LEVEL: info

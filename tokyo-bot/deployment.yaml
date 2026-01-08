@@ -19,7 +19,7 @@ spec:
         role: worker
       containers:
         - name: tokyo-bot
-          image: ghcr.io/finalquest/tokyo-bot:latest
+          image: harbor.finalq.xyz/tools/tokyo-bot:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
