@@ -41,6 +41,15 @@ kubectl create secret generic tokyo-bot-secrets \\
 ```
 Si se usa SSH, montar la clave como archivo (`--from-file=id_rsa=...`) y ajustar el contenedor para usarla.
 
+Además, copiar el estado de autenticación del CLI de Codex (desde tu máquina con `codex login`) en otro Secret:
+```bash
+kubectl create secret generic tokyo-bot-codex-auth \\
+  --namespace tokyo-bot \\
+  --from-file=auth.json=$HOME/.codex/auth.json \\
+  --from-file=config.toml=$HOME/.codex/config.toml
+```
+Este secret se monta en `/home/bot/.codex` dentro del pod para que `codex exec` ya tenga la sesión lista.
+
 ## Recursos Kubernetes
 1. **Namespace / integración**
    - Decidir si coexiste en `monitoring-lite` o crear `tokyo-bot` (sugerido namespace propio). Para claridad, usaremos `tokyo-bot` y agregaremos `CreateNamespace=true` en la Application de Argo CD.

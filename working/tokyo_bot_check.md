@@ -6,6 +6,7 @@
 - [ ] Credenciales Git preparadas (token o SSH) con permisos sobre `tokyo2026`.
 - [ ] API key/credenciales de Codex listas para el CLI.
 - [ ] Secrets creados en el cluster (`tokyo-bot-secrets` con token Telegram, user IDs, Codex key, Git token/SSH y `GOOGLE_MAPS_API_KEY`).
+- [ ] Secret `tokyo-bot-codex-auth` creado a partir de `~/.codex/auth.json` y `config.toml`.
 
 ## Implementación
 - [x] `namespace.yaml` creado (ej. `tokyo-bot`) y referenciado por kustomize/Argo.

@@ -14,8 +14,8 @@ RUN npm install --omit=dev
 COPY . .
 
 RUN useradd --create-home --shell /bin/bash bot \
-  && mkdir -p /data/repos \
-  && chown -R bot:bot /app /data
+  && mkdir -p /data/repos /home/bot/.codex \
+  && chown -R bot:bot /app /data /home/bot/.codex
 
 USER bot
 ENV TOKYO_REPO_DIR=/data/repos \
