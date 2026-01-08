@@ -19,8 +19,8 @@ spec:
         role: worker
       containers:
         - name: tokyo-bot
-          image: harbor.finalq.xyz/tools/tokyo-bot:latest
-          imagePullPolicy: IfNotPresent
+          image: harbor.finalq.xyz/tools/tokyo-bot:2026-01-08-1
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: tokyo-bot-config
