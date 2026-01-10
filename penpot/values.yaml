@@ -22,7 +22,7 @@ bundle:
 
   mcp:
     enabled: true
-    image: "harbor.finalq.xyz/tools/penpot-mcp:0.1.8"
+    image: "harbor.finalq.xyz/tools/penpot-mcp:0.1.9"
     imagePullPolicy: "IfNotPresent"
     pluginHost: "penpot-plugin.finalq.xyz"
     mcpHost: "penpot-mcp.finalq.xyz"

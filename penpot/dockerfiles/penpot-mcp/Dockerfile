@@ -41,6 +41,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Variables de entorno para el plugin (necesarias en runtime para vite preview)
+# Se pasan como ARG desde el build stage y luego como ENV para runtime
+ARG VITE_MCP_WS_URL=wss://penpot-mcp.finalq.xyz/ws
+ARG VITE_ALLOWED_HOSTS=penpot-plugin.finalq.xyz,localhost,0.0.0.0
+
 # Copiar todo lo necesario (monorepo con múltiples paquetes)
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package*.json ./
@@ -51,6 +56,9 @@ COPY --from=build /app/penpot-plugin ./penpot-plugin
 ENV NODE_ENV=production
 ENV PLUGIN_PORT=4400
 ENV MCP_PORT=4401
+# Variables de entorno para el plugin (necesarias en runtime para vite preview)
+ENV VITE_MCP_WS_URL=${VITE_MCP_WS_URL}
+ENV VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
