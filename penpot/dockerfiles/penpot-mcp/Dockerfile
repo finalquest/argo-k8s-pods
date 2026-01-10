@@ -23,9 +23,12 @@ ARG VITE_ALLOWED_HOSTS=penpot-plugin.finalq.xyz,localhost,0.0.0.0
 ENV VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}
 
 # Crear script wrapper para el plugin que use --host 0.0.0.0
-RUN echo '#!/bin/sh\nset -e\ncd /app/penpot-plugin\n# Build inicial con las variables de entorno\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build\n# Ejecutar watch en background y preview en foreground\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
-    chmod +x penpot-plugin/start-dev.sh && \
-    npm pkg set scripts.dev=/app/penpot-plugin/start-dev.sh
+RUN echo '#!/bin/sh\nset -e\n# Build inicial con las variables de entorno\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build\n# Ejecutar watch en background y preview en foreground\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
+    chmod +x penpot-plugin/start-dev.sh
+
+# Modificar package.json para usar el script
+RUN cd penpot-plugin && \
+    node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json')); pkg.scripts.dev = 'sh start-dev.sh'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
 
 # Instalar y build de todos los subproyectos (sin start)
 RUN npm run install:all && VITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} npm run build:all
