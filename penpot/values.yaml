@@ -19,3 +19,17 @@ bundle:
     enabled: true
     className: "nginx"
     host: "penpot.finalq.xyz"
+
+  mcp:
+    enabled: true
+    image: "harbor.finalq.xyz/tools/penpot-mcp:0.1.0"
+    imagePullPolicy: "IfNotPresent"
+    pluginHost: "penpot-plugin.finalq.xyz"
+    mcpHost: "penpot-mcp.finalq.xyz"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

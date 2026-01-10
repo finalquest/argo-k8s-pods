@@ -1,0 +1,65 @@
+{{- if .Values.bundle.mcp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: penpot-mcp
+  namespace: penpot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: penpot-mcp
+  template:
+    metadata:
+      labels:
+        app: penpot-mcp
+    spec:
+      containers:
+        - name: penpot-mcp
+          image: {{ .Values.bundle.mcp.image | quote }}
+          imagePullPolicy: {{ .Values.bundle.mcp.imagePullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: plugin
+              containerPort: 4400
+            - name: mcp
+              containerPort: 4401
+          env:
+            - name: PLUGIN_PORT
+              value: "4400"
+            - name: MCP_PORT
+              value: "4401"
+          resources:
+            {{- toYaml .Values.bundle.mcp.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /manifest.json
+              port: 4400
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /manifest.json
+              port: 4400
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: penpot-mcp
+  namespace: penpot
+spec:
+  selector:
+    app: penpot-mcp
+  ports:
+    - name: plugin
+      port: 4400
+      targetPort: 4400
+    - name: mcp
+      port: 4401
+      targetPort: 4401
+{{- end }}
