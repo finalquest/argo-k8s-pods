@@ -23,6 +23,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /v
 # Agregar allowedHosts a la configuración de Vite (archivo TypeScript)
 RUN sed -i '/preview: {/a\        allowedHosts: ["penpot-plugin.finalq.xyz", "localhost", "0.0.0.0"],' penpot-plugin/vite.config.ts
 
+# Modificar main.ts para que use el host correcto del MCP Server en lugar de localhost
+# El plugin se carga desde penpot-plugin.finalq.xyz, así que el MCP está en penpot-mcp.finalq.xyz
+# El WebSocket se expone a través del ingress en /ws, así que usamos el mismo dominio
+RUN sed -i 's|new WebSocket("ws://localhost:4402")|new WebSocket((window.location.protocol === "https:" ? "wss://" : "ws://") + "penpot-mcp.finalq.xyz/ws")|g' penpot-plugin/src/main.ts
+
+# Modificar main.ts para que use el host correcto del MCP Server en lugar de localhost
+# El plugin se carga desde penpot-plugin.finalq.xyz, así que el MCP está en penpot-mcp.finalq.xyz
+RUN sed -i 's|ws://localhost:4402|wss://penpot-mcp.finalq.xyz:4402|g' penpot-plugin/src/main.ts || \
+    sed -i 's|new WebSocket("ws://localhost:4402")|new WebSocket("wss://penpot-mcp.finalq.xyz:4402")|g' penpot-plugin/src/main.ts
+
 # Crear un script wrapper que ejecute build inicial y luego preview con watch
 # El problema es que vite build --watch nunca termina, así que necesitamos ejecutarlos en paralelo
 RUN echo '#!/bin/sh\nset -e\ncd /app/penpot-plugin\n# Build inicial\nvite build\n# Ejecutar watch en background y preview en foreground\nvite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \

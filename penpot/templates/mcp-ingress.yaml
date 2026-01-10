@@ -4,6 +4,10 @@ kind: Ingress
 metadata:
   name: penpot-mcp
   namespace: penpot
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "penpot-mcp:4402"
 spec:
   ingressClassName: {{ .Values.bundle.ingress.className | quote }}
   rules:
@@ -27,4 +31,11 @@ spec:
                 name: penpot-mcp
                 port:
                   name: mcp
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: penpot-mcp
+                port:
+                  number: 4402
 {{- end }}
