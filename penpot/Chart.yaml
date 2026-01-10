@@ -1,0 +1,9 @@
+apiVersion: v2
+name: penpot-bundle
+version: 0.1.0
+type: application
+
+dependencies:
+  - name: penpot
+    version: "*"
+    repository: "https://helm.penpot.app/"

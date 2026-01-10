@@ -1,0 +1,21 @@
+# Penpot upstream chart values
+global:
+  postgresqlEnabled: true
+  valkeyEnabled: true
+
+penpot:
+  config:
+    publicUri: "http://penpot.finalq.xyz"
+
+  persistence:
+    assets:
+      enabled: true
+      size: 10Gi
+      storageClass: "local-path"
+
+# Bundle templates (este repo)
+bundle:
+  ingress:
+    enabled: true
+    className: "nginx"
+    host: "penpot.finalq.xyz"

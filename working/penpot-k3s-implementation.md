@@ -84,6 +84,7 @@ Definimos:
 - Tenés `ingress-nginx` (simple) en el cluster y tu NPM apunta al nodo padre (NodePort o lo que uses).
 - StorageClass `local-path` disponible (k3s default).
 - Argo CD ya está operando con sync manual.
+- **Secrets creados** (ver sección 1.9 - debe ejecutarse antes del deploy).
 
 ### 1.3 Crear el “umbrella chart” del servicio
 En `penpot/Chart.yaml`:
@@ -96,8 +97,11 @@ type: application
 
 dependencies:
   - name: penpot
-    version: "*"        # en producción: fijar versión
+    version: "1.0.0"    # ⚠️ Verificar versión actual: helm search repo penpot/penpot
     repository: "https://helm.penpot.app/"
+    # Nota: En producción, fijar versión específica. Verificar con:
+    # helm repo add penpot https://helm.penpot.app/ && helm repo update
+    # helm search repo penpot/penpot --versions
 ```
 
 Repo oficial de charts: `https://helm.penpot.app/`. citeturn0search15
@@ -137,6 +141,26 @@ penpot:
       enabled: true
       size: 10Gi
       storageClass: "local-path"
+
+  # Recursos recomendados (ajustar según necesidades)
+  resources:
+    frontend:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 2
+        memory: 2Gi
+    backend:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 2
+        memory: 2Gi
+
+  # Health checks (si el chart los soporta)
+  # Verificar con: helm show values penpot/penpot | grep -i health
 
 # ====== Bundled templates (este repo) ======
 bundle:
@@ -190,14 +214,34 @@ spec:
 Antes del primer deploy, corré:
 
 ```bash
+helm repo add penpot https://helm.penpot.app/
+helm repo update
 helm show values penpot/penpot > /tmp/penpot-upstream-values.yaml
 ```
 
 Buscá las keys reales de:
-- habilitar `postgres`/`redis` como subcharts
-- naming del service
-- config `publicUri`
-- persistence de assets
+- habilitar `postgres`/`redis` como subcharts (puede ser `postgresql.enabled`, `redis.enabled`, o `global.postgresqlEnabled`)
+- naming del service (puede ser `penpot`, `penpot-frontend`, o similar)
+- config `publicUri` (puede estar en `config.publicUri` o `penpot.config.publicUri`)
+- persistence de assets (puede ser `persistence.assets` o `storage.assets`)
+- recursos (puede ser `resources` o `frontend.resources` / `backend.resources`)
+- health checks (puede ser `livenessProbe` / `readinessProbe` o similar)
+
+**Ejemplo de valores comunes encontrados:**
+```yaml
+# Si el chart usa estructura plana:
+postgresql:
+  enabled: true
+redis:
+  enabled: true
+
+# O si usa estructura anidada:
+penpot:
+  config:
+    publicUri: "http://penpot.finalq.xyz"
+  persistence:
+    enabled: true
+```
 
 ### 1.7 Namespace + Argo CD Application
 #### Namespace
@@ -238,19 +282,62 @@ spec:
 
 > Sync manual: vos hacés commit/push y luego “Sync” en Argo.
 
-### 1.8 Deploy (fase 1)
+### 1.8 Verificación de Secrets (antes del deploy)
+⚠️ **IMPORTANTE**: Los Secrets deben estar creados antes del primer sync.
+
+Verificá que existan:
+```bash
+kubectl -n penpot get secrets
+```
+
+Deberías ver:
+- `penpot-postgres` (o el nombre que espera el chart)
+- `penpot-redis` (si Redis requiere auth)
+- `penpot-smtp` (opcional)
+
+Si faltan, ver sección 1.9 para crearlos.
+
+### 1.9 Deploy (fase 1)
 1) Commit + push del servicio y Application.
 2) En Argo CD: Sync `penpot`.
 
 Validación:
 ```bash
+# Verificar que los pods estén Running
 kubectl -n penpot get pods
+kubectl -n penpot get pods -w  # watch mode para ver el progreso
+
+# Verificar servicios
 kubectl -n penpot get svc
+
+# Verificar ingress
 kubectl -n penpot get ingress
+
+# Verificar logs si hay problemas
+kubectl -n penpot logs -l app=penpot --tail=50
 ```
 
 Desde tu LAN:
 - Abrí `http://penpot.finalq.xyz`
+- Creá una cuenta de prueba
+- Verificá que puedas crear un archivo nuevo
+
+### 1.10 Backups (consideraciones)
+PostgreSQL requiere backups periódicos. Opciones:
+
+1. **Backup manual** (usando kubectl exec):
+```bash
+kubectl -n penpot exec -it <postgres-pod> -- pg_dump -U penpot penpot > backup-$(date +%Y%m%d).sql
+```
+
+2. **Backup automatizado** (recomendado):
+   - Usar un CronJob de K8s que ejecute `pg_dump` periódicamente
+   - Guardar backups en un PVC compartido o subirlos a un storage externo
+   - Considerar usar herramientas como `k8up` o `velero` para backups completos del namespace
+
+3. **Assets** (archivos subidos):
+   - Los assets están en el PVC de `local-path`
+   - Considerar backup del PVC completo o rsync periódico
 
 ---
 
@@ -281,22 +368,53 @@ Creamos un directorio (si querés mantener el código del MCP como submodule, ta
 ```dockerfile
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-RUN git clone --depth 1 https://github.com/penpot/penpot-mcp.git .
-RUN npm run bootstrap
+
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clonar repo con tag específico (recomendado) o usar commit SHA
+# Opción 1: Tag específico (recomendado para producción)
+ARG MCP_VERSION=v1.0.0
+RUN git clone --depth 1 --branch ${MCP_VERSION} https://github.com/penpot/penpot-mcp.git . || \
+    git clone --depth 1 https://github.com/penpot/penpot-mcp.git .
+
+# Opción 2: Commit SHA específico (más control)
+# ARG MCP_COMMIT=abc123def456...
+# RUN git clone https://github.com/penpot/penpot-mcp.git . && \
+#     git checkout ${MCP_COMMIT}
+
+# Build e instalar dependencias
+RUN npm run bootstrap || (npm install && npm run build)
 
 FROM node:20-bookworm-slim
 WORKDIR /app
-COPY --from=build /app /app
+
+# Copiar solo lo necesario (mejor para cacheo)
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/src ./src
 
 ENV NODE_ENV=production
 ENV PLUGIN_PORT=4400
 ENV MCP_PORT=4401
 
+# Health check (si el repo lo soporta)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:4400/manifest.json || exit 1
+
 EXPOSE 4400 4401
 CMD ["npm","run","start:all"]
 ```
+
+**Notas del Dockerfile:**
+- Usar tag específico (`MCP_VERSION`) en lugar de `--depth 1` sin tag para mejor reproducibilidad
+- Alternativamente, usar commit SHA para control total
+- Health check agregado para verificar que el servicio responde
+- Mejor estructura de layers para cacheo de Docker
 
 - El repo oficial usa `npm run bootstrap` para instalar/build/arrancar. citeturn0search2
 
@@ -339,6 +457,7 @@ spec:
       containers:
         - name: penpot-mcp
           image: {{ .Values.bundle.mcp.image | quote }}
+          imagePullPolicy: Always
           ports:
             - name: plugin
               containerPort: 4400
@@ -349,6 +468,29 @@ spec:
               value: "4400"
             - name: MCP_PORT
               value: "4401"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /manifest.json
+              port: 4400
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /manifest.json
+              port: 4400
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service
@@ -449,6 +591,12 @@ La comunidad referencia este patrón (manifest bajo `/manifest.json` del plugin 
 > Nota de compatibilidad: si usás Chromium moderno y tenés bloqueos de red privada (PNA) al conectar a “otro origen”, preferí usar **mismo dominio base** (`*.finalq.xyz`) como hicimos. El repo de MCP advierte sobre PNA cuando se intenta conectar a `localhost` desde otro origen. citeturn0search2
 
 ### 2.6 Conectar Codex (local) al Penpot MCP
+
+**Importante**: Codex corre en tu Mac local, pero el MCP está en la red interna del cluster. Tenés dos opciones:
+
+#### Opción 1: Acceso directo (si tu Mac está en la misma red)
+Si tu Mac puede resolver `penpot-mcp.finalq.xyz` (DNS interno o `/etc/hosts`):
+
 En tu Mac, editá `~/.codex/config.toml` y agregá:
 
 ```toml
@@ -456,15 +604,34 @@ En tu Mac, editá `~/.codex/config.toml` y agregá:
 url = "http://penpot-mcp.finalq.xyz/mcp"
 ```
 
+#### Opción 2: Port-forward (si no tenés acceso directo a la red interna)
+Si tu Mac no puede acceder directamente a `penpot-mcp.finalq.xyz`:
+
+1. **Port-forward del servicio MCP:**
+```bash
+kubectl -n penpot port-forward svc/penpot-mcp 4401:4401
+```
+
+2. **Configurar Codex para usar localhost:**
+En `~/.codex/config.toml`:
+```toml
+[mcp_servers.penpot]
+url = "http://localhost:4401/mcp"
+```
+
+3. **Mantener el port-forward activo** mientras usás Codex (o usar un script/tool para mantenerlo corriendo).
+
+#### Verificación
 Luego, en Codex:
-- Verificá que el server aparezca como conectado (en el TUI suele haber comando `/mcp`).
+- Verificá que el server aparezca como conectado (en el TUI suele haber comando `/mcp` o `/mcp list`).
+- Probá hacer una query que use el MCP de Penpot para confirmar conectividad.
 
 ---
 
 
 ---
 
-## 1.9 Creación de Secrets (OBLIGATORIO – fuera de Git)
+## 1.11 Creación de Secrets (OBLIGATORIO – fuera de Git)
 
 ⚠️ **Regla del repo**  
 Los **Secrets NUNCA se versionan**. Siempre se crean **a mano con `kubectl`**.  
@@ -480,7 +647,7 @@ Penpot necesita credenciales para:
 
 ---
 
-### 1.9.1 PostgreSQL
+### 1.11.1 PostgreSQL
 
 Namespace:
 ```bash
@@ -498,7 +665,7 @@ kubectl -n penpot create secret generic penpot-postgres   --from-literal=POSTGRE
 
 ---
 
-### 1.9.2 Redis / Valkey
+### 1.11.2 Redis / Valkey
 
 Si Redis requiere auth:
 
@@ -510,7 +677,7 @@ Si Redis **no** usa password, este secret puede omitirse (según values del char
 
 ---
 
-### 1.9.3 SMTP (opcional, recomendado a futuro)
+### 1.11.3 SMTP (opcional, recomendado a futuro)
 
 Si más adelante querés habilitar emails (invitaciones, reset password):
 
@@ -520,7 +687,7 @@ kubectl -n penpot create secret generic penpot-smtp   --from-literal=SMTP_HOST=s
 
 ---
 
-### 1.9.4 Verificación
+### 1.11.4 Verificación
 
 Antes de sincronizar en Argo:
 
@@ -537,7 +704,7 @@ penpot-smtp   # opcional
 
 ---
 
-### 1.9.5 Documentación operativa (working/)
+### 1.11.5 Documentación operativa (working/)
 
 En `working/penpot.md` (versionado) documentar **solo**:
 - Qué secrets existen
@@ -561,32 +728,214 @@ Esto mantiene el contrato GitOps limpio y reproducible.
 ## 3) Checklist de tracking (para tu PR / issue)
 
 ### Fase 1 — Penpot
+- [ ] Verificar versión del chart upstream: `helm search repo penpot/penpot --versions`
 - [ ] Crear carpeta `penpot/` (umbrella chart).
-- [ ] `Chart.yaml` con dependencia al chart upstream.
-- [ ] `values.yaml` con `publicUri` + persistence (assets) + deps internas.
+- [ ] `Chart.yaml` con dependencia al chart upstream (versión fijada).
+- [ ] `helm dependency build` para generar `Chart.lock`.
+- [ ] `helm show values penpot/penpot` para verificar estructura de values.
+- [ ] `values.yaml` con `publicUri` + persistence (assets) + deps internas + recursos.
+- [ ] `templates/namespace.yaml` (opcional si Argo CD puede crearlo).
 - [ ] `templates/ingress-penpot.yaml` (host `penpot.finalq.xyz`).
+- [ ] Crear Secrets (PostgreSQL, Redis) - ver sección 1.11.
 - [ ] `applications/penpot.yaml` (Argo Application, sync manual).
 - [ ] Commit + push.
 - [ ] Sync en Argo CD.
 - [ ] Validar `kubectl -n penpot get pods/svc/ingress`.
+- [ ] Verificar logs de pods si hay problemas.
 - [ ] Abrir UI: `http://penpot.finalq.xyz`.
+- [ ] Crear cuenta de prueba y verificar funcionalidad básica.
+- [ ] Configurar backup de PostgreSQL (opcional pero recomendado).
 
 ### Fase 2 — Penpot MCP
-- [ ] Crear `penpot-mcp-image/Dockerfile` (Node 20, bootstrap).
-- [ ] Build + push con buildx a `harbor.finalq.xyz/tools/penpot-mcp:0.1.0`.
-- [ ] Agregar templates `mcp-deploy.yaml` + `mcp-ingress.yaml`.
+- [ ] Verificar versión/tag del repo `penpot/penpot-mcp` (usar tag específico en Dockerfile).
+- [ ] Crear `penpot-mcp-image/Dockerfile` (Node 20, bootstrap, health checks).
+- [ ] Build + push con buildx a `harbor.finalq.xyz/tools/penpot-mcp:0.1.0` (o versión específica).
+- [ ] Agregar templates `mcp-deploy.yaml` (con recursos y health checks) + `mcp-ingress.yaml`.
 - [ ] Activar `bundle.mcp.enabled=true` en `penpot/values.yaml`.
+- [ ] Configurar hosts en `values.yaml`: `pluginHost` y `mcpHost`.
 - [ ] Commit + push.
 - [ ] Sync en Argo CD.
+- [ ] Verificar pod MCP: `kubectl -n penpot get pods | grep penpot-mcp`.
+- [ ] Verificar logs: `kubectl -n penpot logs -l app=penpot-mcp`.
 - [ ] `curl http://penpot-plugin.finalq.xyz/manifest.json` responde 200/30x.
 - [ ] `curl http://penpot-mcp.finalq.xyz/mcp` responde (200/4xx según handshake, pero reachable).
-- [ ] Cargar plugin desde Penpot apuntando al manifest.
+- [ ] Cargar plugin desde Penpot apuntando al manifest (`http://penpot-plugin.finalq.xyz/manifest.json`).
+- [ ] Verificar que el plugin aparece en Penpot Plugin Manager.
+- [ ] Configurar acceso de Codex al MCP (directo o port-forward) - ver sección 2.6.
 - [ ] Configurar `~/.codex/config.toml` con MCP.
-- [ ] Validar que Codex vea el server MCP.
+- [ ] Validar que Codex vea el server MCP (`/mcp list` o similar).
+- [ ] Probar funcionalidad end-to-end: usar Codex para crear algo en Penpot vía MCP.
 
 ---
 
-## 4) Notas rápidas (operativas)
+## 4) Diagrama de arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Red Interna (*.finalq.xyz)                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+   ┌────▼────┐          ┌────▼────┐          ┌─────▼─────┐
+   │  NPM    │          │ Ingress │          │  Codex   │
+   │ (Proxy) │─────────▶│  Nginx  │          │  (Local)  │
+   └─────────┘          └────┬────┘          └─────┬─────┘
+                              │                     │
+        ┌─────────────────────┼─────────────────────┘
+        │                     │
+   ┌────▼─────────────────────▼─────┐
+   │      Namespace: penpot          │
+   │  ┌──────────────────────────┐  │
+   │  │  Penpot (Helm Chart)      │  │
+   │  │  - Frontend (port 80)    │  │
+   │  │  - Backend (port 6060)   │  │
+   │  │  - PostgreSQL (subchart) │  │
+   │  │  - Redis/Valkey (subchart)│  │
+   │  └──────────────────────────┘  │
+   │  ┌──────────────────────────┐  │
+   │  │  Penpot MCP (Fase 2)     │  │
+   │  │  - Plugin Server (4400)  │  │
+   │  │  - MCP Server (4401)     │  │
+   │  └──────────────────────────┘  │
+   │  ┌──────────────────────────┐  │
+   │  │  PVC (local-path)        │  │
+   │  │  - Assets (10Gi)         │  │
+   │  │  - PostgreSQL data       │  │
+   │  └──────────────────────────┘  │
+   └─────────────────────────────────┘
+```
+
+**Flujos:**
+1. **Usuario → Penpot UI**: `penpot.finalq.xyz` → NPM → Ingress → Penpot Frontend
+2. **Plugin → MCP**: Plugin en Penpot → `penpot-plugin.finalq.xyz` → Plugin Server (4400)
+3. **Codex → MCP**: Codex local → `penpot-mcp.finalq.xyz` (o port-forward) → MCP Server (4401)
+
+## 5) Troubleshooting detallado
+
+### 5.1 Problemas de conectividad
+
+#### NPM no puede alcanzar el cluster
+- Si tu NPM (reverse proxy) apunta al "nodo padre" y el ingress-nginx está por NodePort:
+  - NPM debe forwardear a `NODE_IP:30080` (http) y/o `NODE_IP:30443` (https), según tu instalación de ingress-nginx.
+- Verificar que el ingress-nginx esté exponiendo correctamente:
+```bash
+kubectl -n ingress-nginx get svc
+```
+
+#### Penpot UI no carga o da errores
+- Verificar que los pods estén Running:
+```bash
+kubectl -n penpot get pods
+```
+- Ver logs del frontend:
+```bash
+kubectl -n penpot logs -l app=penpot-frontend --tail=50
+```
+- Ver logs del backend:
+```bash
+kubectl -n penpot logs -l app=penpot-backend --tail=50
+```
+
+### 5.2 Errores "Bad Request" al crear archivos
+- Revisá que `config.publicUri` y el host real coincidan exactamente:
+  - Debe ser `http://penpot.finalq.xyz` (sin trailing slash)
+  - Verificar en `values.yaml` que coincida con el ingress
+- El proxy debe preservar headers:
+  - `Host`: debe llegar como `penpot.finalq.xyz`
+  - `X-Forwarded-Proto`: debe ser `http` o `https` según corresponda
+  - `X-Forwarded-For`: IP del cliente
+- Verificar headers en el backend:
+```bash
+kubectl -n penpot logs -l app=penpot-backend | grep -i "bad request"
+```
+
+### 5.3 Problemas con PostgreSQL
+- Pod no inicia:
+```bash
+kubectl -n penpot describe pod <postgres-pod>
+kubectl -n penpot logs <postgres-pod>
+```
+- Verificar que el secret existe:
+```bash
+kubectl -n penpot get secret penpot-postgres
+```
+- Verificar conexión desde otro pod:
+```bash
+kubectl -n penpot exec -it <penpot-backend-pod> -- psql -h <postgres-service> -U penpot -d penpot
+```
+
+### 5.4 Problemas con Redis/Valkey
+- Pod no inicia:
+```bash
+kubectl -n penpot describe pod <redis-pod>
+```
+- Si requiere password, verificar secret:
+```bash
+kubectl -n penpot get secret penpot-redis
+```
+
+### 5.5 Problemas con el plugin MCP (Fase 2)
+- El plugin no carga en Penpot:
+  - Confirmá que el navegador puede llegar a `penpot-plugin.finalq.xyz`:
+```bash
+curl -I http://penpot-plugin.finalq.xyz/manifest.json
+```
+  - Verificar que el pod MCP esté Running:
+```bash
+kubectl -n penpot get pods | grep penpot-mcp
+```
+  - Ver logs del MCP:
+```bash
+kubectl -n penpot logs -l app=penpot-mcp --tail=50
+```
+  - Evitá `localhost` por los bloqueos de PNA mencionados por el repo MCP citeturn0search2
+
+- Codex no puede conectar al MCP:
+  - Si usás acceso directo: verificar DNS o `/etc/hosts`:
+```bash
+# En tu Mac
+ping penpot-mcp.finalq.xyz
+curl http://penpot-mcp.finalq.xyz/mcp
+```
+  - Si usás port-forward: verificar que esté activo:
+```bash
+kubectl -n penpot get pods | grep penpot-mcp
+kubectl -n penpot port-forward svc/penpot-mcp 4401:4401
+# En otra terminal:
+curl http://localhost:4401/mcp
+```
+
+### 5.6 Problemas de almacenamiento
+- PVC no se crea:
+```bash
+kubectl -n penpot get pvc
+kubectl -n penpot describe pvc <pvc-name>
+```
+- Verificar que `local-path` StorageClass existe:
+```bash
+kubectl get storageclass
+```
+
+### 5.7 Problemas de recursos
+- Pods en estado `Pending` o `CrashLoopBackOff`:
+```bash
+kubectl -n penpot describe pod <pod-name>
+# Buscar eventos relacionados con recursos (CPU/memoria)
+```
+- Ajustar recursos en `values.yaml` si es necesario
+
+### 5.8 Problemas de Argo CD sync
+- Application no sincroniza:
+  - Verificar en Argo CD UI el estado del Application
+  - Ver logs de Argo CD:
+```bash
+kubectl -n argocd logs -l app.kubernetes.io/name=argocd-application-controller --tail=50
+```
+- Verificar que el namespace existe:
+```bash
+kubectl get namespace penpot
+```
 - Si tu NPM (reverse proxy) apunta al “nodo padre” y el ingress-nginx está por NodePort:
   - NPM debe forwardear a `NODE_IP:30080` (http) y/o `NODE_IP:30443` (https), según tu instalación de ingress-nginx.
 - Si ves errores “Bad Request” al crear archivos, revisá que:
