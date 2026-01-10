@@ -5,6 +5,8 @@ import { mkdirSync, existsSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
+import { getTransitDirections } from './scripts/transit/transit_directions.js';
+import { resolveItineraryDestination } from './scripts/itinerary/itinerary_resolve.js';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -23,7 +25,8 @@ const {
   CODEX_ARGS = '',
   CODEX_API_KEY,
   CODEX_HISTORY_LIMIT = '6',
-  CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`
+  CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`,
+  TRANSIT_ENABLED = 'false'
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN) {
@@ -273,6 +276,153 @@ class CodexExecManager {
 
 const codexManager = new CodexExecManager(historyLimit);
 
+// Transit query detection and parsing
+const TRANSIT_KEYWORDS = [
+  'cómo llegar', 'direcciones', 'trenes', 'horarios', 'timing', 'salidas',
+  'estación', 'reservar', 'limited express', 'seat', '特急', '電車', '駅',
+  'tren', 'transporte', 'llegar', 'ir a', 'viajar'
+];
+
+const ITINERARY_KEYWORDS = [
+  'chichibu', 'nikko', 'hakone', 'tokyo', 'kyoto', 'osaka', 'itinerario'
+];
+
+/**
+ * Detecta si un mensaje es una consulta de transporte público
+ * @param {string} text - Texto del mensaje
+ * @returns {boolean}
+ */
+function detectTransitQuery(text) {
+  if (TRANSIT_ENABLED !== 'true') {
+    return false;
+  }
+
+  const lowerText = text.toLowerCase();
+  
+  // Debe contener al menos una keyword de transporte
+  const hasTransitKeyword = TRANSIT_KEYWORDS.some(keyword => 
+    lowerText.includes(keyword.toLowerCase())
+  );
+
+  if (!hasTransitKeyword) {
+    return false;
+  }
+
+  // Y debe mencionar un lugar/itinerario o tener estructura de pregunta de direcciones
+  const hasLocation = ITINERARY_KEYWORDS.some(keyword => 
+    lowerText.includes(keyword.toLowerCase())
+  ) || lowerText.match(/\b(desde|hacia|a|hasta|en)\s+[A-Za-z]+/i);
+
+  return hasLocation || lowerText.includes('estoy en') || lowerText.includes('quiero ir');
+}
+
+/**
+ * Parsea un mensaje para extraer origen, destino y fecha
+ * @param {string} text - Texto del mensaje
+ * @returns {Object|null} { origin, destination, departure } o null si no se puede parsear
+ */
+function parseTransitQuery(text) {
+  const lowerText = text.toLowerCase();
+  
+  // Extraer origen (después de "estoy en" o "desde")
+  let origin = null;
+  const originMatch = text.match(/(?:estoy en|desde)\s+([A-Za-z0-9\-\s]+?)(?:\s+y|\s+quiero|$|,)/i);
+  if (originMatch) {
+    origin = { label: originMatch[1].trim() };
+  } else {
+    // Fallback: usar "Itabashi" como ejemplo o pedir al usuario
+    origin = { label: 'Itabashi' };
+  }
+
+  // Extraer destino (después de "itinerario de", "a", "hacia", o nombre de lugar)
+  let destination = null;
+  const destMatch = text.match(/(?:itinerario de|a|hacia|hasta)\s+([A-Za-z0-9\-\s]+?)(?:\s+mañana|\s+el|\s+¿|$|,)/i);
+  if (destMatch) {
+    destination = { label: destMatch[1].trim() };
+  } else {
+    // Buscar nombres de lugares conocidos
+    for (const keyword of ITINERARY_KEYWORDS) {
+      if (lowerText.includes(keyword)) {
+        destination = { label: keyword.charAt(0).toUpperCase() + keyword.slice(1) };
+        break;
+      }
+    }
+  }
+
+  if (!destination) {
+    return null; // No se pudo determinar el destino
+  }
+
+  // Extraer fecha/hora
+  let departure = new Date();
+  const tomorrowMatch = text.match(/mañana/i);
+  if (tomorrowMatch) {
+    departure.setDate(departure.getDate() + 1);
+  }
+  
+  // Hora por defecto: 7:30 AM JST
+  departure.setHours(7, 30, 0, 0);
+  
+  // Buscar hora específica
+  const timeMatch = text.match(/(\d{1,2}):(\d{2})/);
+  if (timeMatch) {
+    departure.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]), 0, 0);
+  }
+
+  // Convertir a ISO con timezone JST
+  const jstOffset = 9 * 60; // JST es UTC+9
+  const jstDate = new Date(departure.getTime() + (jstOffset - departure.getTimezoneOffset()) * 60000);
+  const isoString = jstDate.toISOString().replace('Z', '+09:00');
+
+  return {
+    origin,
+    destination,
+    departure: {
+      iso: isoString,
+      tz: 'Asia/Tokyo'
+    },
+    preferences: {
+      alternatives: true,
+      max_transfers: parseInt(process.env.TRANSIT_MAX_TRANSFERS || '2'),
+      max_walk_minutes: parseInt(process.env.TRANSIT_MAX_WALK_MINUTES || '15')
+    }
+  };
+}
+
+/**
+ * Construye el prompt para Codex con el resultado de transit
+ * @param {Object} transitPlan - TransitPlan normalizado
+ * @param {string} originalMessage - Mensaje original del usuario
+ * @returns {string}
+ */
+function buildTransitPrompt(transitPlan, originalMessage) {
+  const prompt = `El usuario preguntó sobre direcciones de trenes/transporte público.
+
+Mensaje original: "${originalMessage}"
+
+Tenés acceso a los resultados de Google Directions API (modo transit) que ya fueron consultados y normalizados. Usá este JSON como fuente de verdad - NO inventes horarios ni estaciones.
+
+Resultado de la consulta:
+\`\`\`json
+${JSON.stringify(transitPlan, null, 2)}
+\`\`\`
+
+Tu tarea:
+1. Explicá las opciones de transporte en español, formato Markdown para Telegram
+2. Incluí:
+   - Título: 🚆 Origen → Destino
+   - Bloque "Salida recomendada" con la mejor opción (best)
+   - Bloque "Alternativas" si hay (alternatives)
+   - Bloque "Reserva" marcando que es heurístico (reservation.required)
+   - Bloque "Notas" con información adicional (transfers, caminata, etc.)
+3. Si hay warnings, mencionálos pero no te preocupes demasiado
+4. Si best es null, explicá que no se encontraron rutas y sugerí alternativas
+
+Recordá: NO inventes horarios. Usá solo los datos del JSON.`;
+
+  return prompt;
+}
+
 function chunkMessage(message) {
   const chunks = [];
   let remaining = message;
@@ -415,6 +565,82 @@ async function startBot() {
       bot.sendMessage(chatId, 'Codex sigue procesando el mensaje anterior, esperá un momento.');
       return;
     }
+
+    // Interceptar queries de transporte antes de pasar a Codex
+    if (detectTransitQuery(text)) {
+      const stopTyping = startTypingIndicator(bot, chatId);
+      try {
+        logger.info({ chatId, text }, 'Detected transit query');
+        
+        // Parsear la query
+        const queryParams = parseTransitQuery(text);
+        if (!queryParams) {
+          bot.sendMessage(chatId, 'No pude entender el origen o destino. Intentá con: "Estoy en [lugar] y quiero ir a [destino]"');
+          stopTyping();
+          return;
+        }
+
+        // Resolver destino si es un itinerario
+        let destination = queryParams.destination;
+        const itineraryMatch = text.match(/itinerario\s+(?:de\s+)?([a-z0-9\-]+)/i);
+        if (itineraryMatch) {
+          const itineraryId = itineraryMatch[1];
+          logger.info({ chatId, itineraryId }, 'Resolving itinerary destination');
+          try {
+            const resolved = await resolveItineraryDestination({
+              itinerary_id: itineraryId,
+              repo_path: repoPath,
+              date: queryParams.departure.iso.split('T')[0]
+            });
+            destination = resolved.destination;
+            logger.info({ chatId, destination: destination.label }, 'Itinerary destination resolved');
+          } catch (err) {
+            logger.warn({ chatId, err }, 'Failed to resolve itinerary, using original destination');
+          }
+        }
+
+        // Construir query final
+        const transitQuery = {
+          ...queryParams,
+          destination
+        };
+
+        // Llamar a Google Directions API
+        logger.info({ chatId, origin: transitQuery.origin.label, destination: destination.label }, 'Calling Google Directions API');
+        const transitPlan = await getTransitDirections(transitQuery);
+
+        // Construir prompt para Codex
+        const transitPrompt = buildTransitPrompt(transitPlan, text);
+
+        // Enviar a Codex para explicación
+        logger.info({ chatId }, 'Sending transit results to Codex for explanation');
+        const response = await codexManager.send(chatId, transitPrompt);
+        logger.info({ chatId }, 'Codex transit response ready');
+        
+        const chunks = chunkMessage(response);
+        for (const chunk of chunks) {
+          await bot.sendMessage(chatId, chunk);
+        }
+      } catch (err) {
+        logger.error({ chatId, err }, 'Error processing transit query');
+        let errorMessage = `Error al consultar direcciones: ${err.message}`;
+        
+        if (err.message.includes('OVER_QUERY_LIMIT')) {
+          errorMessage = 'Llegué al límite de consultas de Google Maps. Probá de nuevo en unos minutos.';
+        } else if (err.message.includes('ZERO_RESULTS')) {
+          errorMessage = 'No encontré rutas de transporte público para ese horario. Probá ampliar el rango (ej. 06:00–10:00).';
+        } else if (err.message.includes('Network error')) {
+          errorMessage = 'Error de conexión con Google Maps. Probá de nuevo en un momento.';
+        }
+        
+        bot.sendMessage(chatId, errorMessage);
+      } finally {
+        stopTyping();
+      }
+      return;
+    }
+
+    // Flujo normal: pasar a Codex
     const stopTyping = startTypingIndicator(bot, chatId);
     try {
       logger.info({ chatId, text }, 'Forwarding message to Codex');

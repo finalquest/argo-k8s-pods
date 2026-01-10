@@ -99,12 +99,14 @@ Cuando la consulta entra en TRANSIT_QUERY, la respuesta debe incluir:
 
 ## 4) Diseño del script principal: `transit_directions`
 
-### 4.1 Ubicación sugerida
+### 4.1 Ubicación y estructura
 Dentro del repo del bot (tokyo-bot):
-- `scripts/transit/transit_directions.ts` (o `.js`)
-- `scripts/transit/normalize.ts`
-- `scripts/transit/types.ts`
-- `scripts/transit/cache.ts` (opcional)
+- `src/scripts/transit/transit_directions.js` (módulo ES6 exportable)
+- `src/scripts/transit/normalize.js` (funciones de normalización)
+- `src/scripts/transit/types.js` (definiciones de tipos como JSDoc o comentarios)
+- `src/scripts/transit/cache.js` (opcional, cache en memoria)
+
+**Nota:** Los scripts son módulos ES6 que se importan en `src/index.js` usando `import`. No son comandos ejecutables, sino funciones exportadas.
 
 ### 4.2 Entradas (Input JSON)
 ```json
@@ -148,7 +150,7 @@ Params mínimos:
 - `alternatives=true`
 - `region=jp`
 - `language=en` (o `ja` si preferís nombres en japonés)
-- `key=$GOOGLE_API_KEY`
+- `key=$GOOGLE_MAPS_API_KEY` (variable de entorno del secret `tokyo-bot-secrets`)
 
 **Nota:** `departure_time` debe ser epoch en segundos. Para JST, convertir desde ISO con TZ.
 
@@ -292,16 +294,17 @@ El prompt debe decirle a Codex:
 
 ## 7) Variables de entorno / Secrets
 
-### 7.1 Requeridas
-- `GOOGLE_API_KEY` (Directions API habilitada)
-- `TZ=Asia/Tokyo` (ideal para consistencia)
+### 7.1 Requeridas (ya disponibles)
+- `GOOGLE_MAPS_API_KEY` (Directions API habilitada) - **Ya existe en secret `tokyo-bot-secrets`**
+- `TZ=Asia/Tokyo` (ideal para consistencia) - Puede agregarse al ConfigMap si no está
 
-### 7.2 Opcionales
-- `TRANSIT_LANGUAGE=en|ja`
-- `TRANSIT_REGION=jp`
-- `TRANSIT_CACHE_TTL_SECONDS=1800`
-- `TRANSIT_MAX_TRANSFERS=2`
-- `TRANSIT_MAX_WALK_MINUTES=15`
+### 7.2 Opcionales (agregar al ConfigMap)
+- `TRANSIT_ENABLED=true` (feature flag)
+- `TRANSIT_LANGUAGE=en|ja` (default: `en`)
+- `TRANSIT_REGION=jp` (default: `jp`)
+- `TRANSIT_CACHE_TTL_SECONDS=1800` (default: 30 min)
+- `TRANSIT_MAX_TRANSFERS=2` (default: 2)
+- `TRANSIT_MAX_WALK_MINUTES=15` (default: 15)
 
 ---
 
@@ -367,11 +370,42 @@ Métricas útiles:
 
 ## 12) Checklist de implementación (tareas)
 
-- [ ] Crear `scripts/transit/transit_directions.(ts|js)`
-- [ ] Crear `scripts/transit/normalize.(ts|js)` y `types`
-- [ ] (Opcional) Crear `scripts/transit/cache`
-- [ ] Crear `scripts/itinerary/itinerary_resolve.(ts|js)`
-- [ ] Implementar `TRANSIT_QUERY` router en el bot
-- [ ] Actualizar prompt de Codex (branch transit)
-- [ ] Añadir `TRANSIT_ENABLED` feature flag
-- [ ] Añadir docs en README del bot (secrets + env vars)
+### Fase 1: Estructura y scripts
+- [ ] Crear `src/scripts/transit/transit_directions.js`
+- [ ] Crear `src/scripts/transit/normalize.js` y `types.js`
+- [ ] (Opcional) Crear `src/scripts/transit/cache.js`
+- [ ] Crear `src/scripts/itinerary/itinerary_resolve.js`
+- [ ] Agregar dependencia HTTP (axios o node-fetch) a `package.json`
+
+### Fase 2: Integración con bot
+- [ ] Implementar `detectTransitQuery(text)` en `src/index.js`
+- [ ] Implementar `parseTransitQuery(text)` para extraer origen/destino/fecha
+- [ ] Agregar lógica de interceptación antes de `codexManager.send()`
+- [ ] Implementar `buildTransitPrompt(TransitPlan, originalMessage)`
+
+### Fase 3: Configuración
+- [ ] Agregar variables opcionales al `configmap.yaml`
+- [ ] Verificar que `GOOGLE_MAPS_API_KEY` esté en el secret
+- [ ] Documentar uso en README (si existe) o crear uno
+
+### Fase 4: Testing y rollout
+- [ ] Probar con queries de ejemplo (Itabashi → Chichibu)
+- [ ] Verificar manejo de errores (ZERO_RESULTS, etc.)
+- [ ] Activar con `TRANSIT_ENABLED=true` en ConfigMap
+- [ ] Monitorear logs y costos
+
+---
+
+## 13) Notas de implementación
+
+### 13.1 Ajustes aplicados al plan original
+- ✅ Variable de entorno: `GOOGLE_API_KEY` → `GOOGLE_MAPS_API_KEY` (ya existe en secret `tokyo-bot-secrets`)
+- ✅ Estructura de scripts: módulos ES6 en `src/scripts/transit/` (no comandos ejecutables)
+- ✅ Flujo: interceptar antes de Codex en `src/index.js`, ejecutar scripts directamente
+- ✅ Dependencias: agregar librería HTTP (axios o node-fetch) a `package.json`
+
+### 13.2 Detección de intención (pendiente de especificar)
+La función `detectTransitQuery()` debe implementarse con:
+- Regex o búsqueda de keywords case-insensitive
+- Combinación de keywords de transporte + nombres de lugares/itinerarios
+- Ubicación: antes de `codexManager.send()` en el handler de mensajes
