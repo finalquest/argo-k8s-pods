@@ -17,6 +17,17 @@ RUN git clone --depth 1 --branch ${MCP_VERSION} https://github.com/penpot/penpot
 # Instalar dependencias del package.json raíz primero (necesario para concurrently)
 RUN npm install
 
+# Modificar el script dev del plugin para que escuche en 0.0.0.0
+# Esto permite que el healthcheck de Kubernetes funcione correctamente
+# Instalar jq si no está disponible
+RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /var/lib/apt/lists/* || true
+# Crear un script wrapper que ejecute build inicial y luego preview con watch
+# El problema es que vite build --watch nunca termina, así que necesitamos ejecutarlos en paralelo
+RUN echo '#!/bin/sh\nset -e\ncd /app/penpot-plugin\n# Build inicial\nvite build\n# Ejecutar watch en background y preview en foreground\nvite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
+    chmod +x penpot-plugin/start-dev.sh && \
+    jq '.scripts.dev = "/app/penpot-plugin/start-dev.sh"' penpot-plugin/package.json > /tmp/plugin-pkg.json && \
+    mv /tmp/plugin-pkg.json penpot-plugin/package.json
+
 # Instalar y build de todos los subproyectos (sin start)
 # bootstrap ejecuta install:all + build:all + start:all, pero solo queremos install y build
 RUN npm run install:all && npm run build:all

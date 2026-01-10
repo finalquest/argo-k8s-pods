@@ -34,7 +34,7 @@ spec:
             httpGet:
               path: /manifest.json
               port: 4400
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
@@ -42,7 +42,7 @@ spec:
             httpGet:
               path: /manifest.json
               port: 4400
-            initialDelaySeconds: 10
+            initialDelaySeconds: 45
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
