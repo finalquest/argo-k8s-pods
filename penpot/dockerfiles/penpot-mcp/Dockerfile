@@ -23,7 +23,7 @@ ARG VITE_ALLOWED_HOSTS=penpot-plugin.finalq.xyz,localhost,0.0.0.0
 ENV VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}
 
 # Crear script wrapper para el plugin que use --host 0.0.0.0
-RUN echo '#!/bin/sh\nset -e\n# Build inicial con las variables de entorno\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build\n# Ejecutar watch en background y preview en foreground\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0 con las variables de entorno\nVITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} vite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
+RUN echo '#!/bin/sh\nset -e\n# Exportar variables de entorno para que estén disponibles en el proceso\nexport VITE_MCP_WS_URL=${VITE_MCP_WS_URL}\nexport VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}\n# Build inicial con las variables de entorno\nvite build\n# Ejecutar watch en background y preview en foreground\nvite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0 con las variables de entorno exportadas\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
     chmod +x penpot-plugin/start-dev.sh
 
 # Modificar package.json para usar el script
