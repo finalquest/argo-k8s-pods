@@ -17,7 +17,7 @@ spec:
       containers:
         - name: penpot-mcp
           image: {{ .Values.bundle.mcp.image | quote }}
-          imagePullPolicy: {{ .Values.bundle.mcp.imagePullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: Always
           ports:
             - name: plugin
               containerPort: 4400
