@@ -23,15 +23,12 @@ ARG VITE_ALLOWED_HOSTS=penpot-plugin.finalq.xyz,localhost,0.0.0.0
 ENV VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}
 
 # Crear script wrapper para el plugin que use --host 0.0.0.0
-RUN echo '#!/bin/sh\nset -e\n# Exportar variables de entorno para que estén disponibles en el proceso\nexport VITE_MCP_WS_URL=${VITE_MCP_WS_URL}\nexport VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}\n# Build inicial con las variables de entorno\nvite build\n# Ejecutar watch en background y preview en foreground\nvite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0 con las variables de entorno exportadas\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
-    chmod +x penpot-plugin/start-dev.sh
-
-# Modificar package.json para usar el script
-RUN cd penpot-plugin && \
-    node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json')); pkg.scripts.dev = 'sh start-dev.sh'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+RUN echo '#!/bin/sh\nset -e\nexport VITE_MCP_WS_URL=${VITE_MCP_WS_URL}\nexport VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS}\ncd /app/penpot-plugin\n# Build inicial\nvite build\n# Ejecutar watch en background y preview en foreground\nvite build --watch &\nBUILD_PID=$!\nsleep 3\n# Iniciar preview server que escucha en 0.0.0.0 con las variables de entorno exportadas\nvite preview --host 0.0.0.0 --port 4400 &\nPREVIEW_PID=$!\n# Esperar a que ambos procesos terminen\nwait $BUILD_PID $PREVIEW_PID' > penpot-plugin/start-dev.sh && \
+    chmod +x penpot-plugin/start-dev.sh && \
+    npm pkg set scripts.dev=/app/penpot-plugin/start-dev.sh
 
 # Instalar y build de todos los subproyectos (sin start)
-RUN npm run install:all && VITE_MCP_WS_URL=${VITE_MCP_WS_URL} VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS} npm run build:all
+RUN npm run install:all && npm run build:all
 
 FROM node:20-bookworm-slim
 WORKDIR /app
@@ -42,7 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Variables de entorno para el plugin (necesarias en runtime para vite preview)
-# Se pasan como ARG desde el build stage y luego como ENV para runtime
 ARG VITE_MCP_WS_URL=wss://penpot-mcp.finalq.xyz/ws
 ARG VITE_ALLOWED_HOSTS=penpot-plugin.finalq.xyz,localhost,0.0.0.0
 
