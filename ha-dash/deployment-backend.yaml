@@ -23,7 +23,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: ha-dash-backend
-          image: harbor.finalq.xyz/tools/ha-dash:2026-01-11-221130
+          image: harbor.finalq.xyz/tools/ha-dash:2026-01-11-222805
           imagePullPolicy: Always
           command: ["/entrypoint-backend.sh"]
           ports:

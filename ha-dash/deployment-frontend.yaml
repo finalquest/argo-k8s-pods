@@ -23,7 +23,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: ha-dash-frontend
-          image: harbor.finalq.xyz/tools/ha-dash:2026-01-11-221130
+          image: harbor.finalq.xyz/tools/ha-dash:2026-01-11-222805
           imagePullPolicy: Always
           command: ["/entrypoint-frontend.sh"]
           ports:
@@ -42,6 +42,8 @@ spec:
               value: "0.0.0.0"
             - name: VITE_PORT
               value: "5173"
+            - name: VITE_ALLOWED_HOSTS
+              value: "ha-dash.finalq.xyz"
             # GIT_PAT se inyecta desde el secret si está disponible
             - name: GIT_PAT
               valueFrom:

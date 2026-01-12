@@ -52,8 +52,29 @@ cd "$PROJECT_DIR/frontend"
 echo "Instalando dependencias del frontend..."
 npm install
 
-echo "Configurando VITE_BACKEND_URL: ${VITE_BACKEND_URL}"
+echo "Configurando variables de entorno de Vite..."
 export VITE_BACKEND_URL
+export VITE_ALLOWED_HOSTS
+
+# Modificar vite.config.ts para que lea VITE_ALLOWED_HOSTS desde env
+if [ -f "vite.config.ts" ] && ! grep -q "allowedHosts.*process.env.VITE_ALLOWED_HOSTS" vite.config.ts; then
+    # Agregar allowedHosts que lea de la variable de entorno
+    node << 'EOF'
+const fs = require('fs');
+const content = fs.readFileSync('vite.config.ts', 'utf8');
+
+if (!content.includes('allowedHosts')) {
+    // Agregar allowedHosts después de host: devHost, que lea de env
+    const newContent = content.replace(
+        /host: devHost,/,
+        `host: devHost,
+    allowedHosts: process.env.VITE_ALLOWED_HOSTS ? [process.env.VITE_ALLOWED_HOSTS] : undefined,`
+    );
+    fs.writeFileSync('vite.config.ts', newContent);
+    console.log('✅ allowedHosts configurado para leer de VITE_ALLOWED_HOSTS');
+}
+EOF
+fi
 
 echo "Iniciando frontend en modo dev..."
 exec npm run dev
