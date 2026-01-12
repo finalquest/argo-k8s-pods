@@ -1,0 +1,21 @@
+# Este archivo es solo un template/ejemplo
+# El ConfigMap real debe crearse externamente con kubectl
+#
+# Para crear el ConfigMap fuera del repo:
+# kubectl create configmap ha-dash-config \
+#   --from-literal=HA_BASE_URL='http://homeassistant.local:8123' \
+#   --from-literal=PORT='4000' \
+#   -n ha-dash \
+#   --dry-run=client -o yaml | kubectl apply -f -
+#
+# O editar uno existente:
+# kubectl edit configmap ha-dash-config -n ha-dash
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ha-dash-config
+  namespace: ha-dash
+data:
+  HA_BASE_URL: "http://homeassistant.local:8123"
+  PORT: "4000"

@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ha-dash
+  namespace: ha-dash
+  labels:
+    app: ha-dash
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ha-dash
+  template:
+    metadata:
+      labels:
+        app: ha-dash
+    spec:
+      nodeSelector:
+        role: worker
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: ha-dash
+          image: harbor.finalq.xyz/tools/ha-dash:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: ha-dash-config
+            - secretRef:
+                name: ha-dash-secrets
+          env:
+            - name: GIT_REPO_URL
+              value: "https://github.com/finalquest/ha_dash.git"
+            - name: GIT_BRANCH
+              value: "main"
+            - name: PROJECT_DIR
+              value: "/app/project"
+            - name: DATABASE_URL
+              value: "sqlite:///data/app.db"
+            # GIT_PAT se inyecta desde el secret si está disponible
+            - name: GIT_PAT
+              valueFrom:
+                secretKeyRef:
+                  name: ha-dash-secrets
+                  key: GIT_PAT
+                  optional: true
+          volumeMounts:
+            - name: project-data
+              mountPath: /app/project
+            - name: app-data
+              mountPath: /data
+            # Montar SSH key si está disponible (opcional)
+            - name: git-ssh-key
+              mountPath: /etc/git-ssh
+              readOnly: true
+              optional: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: project-data
+          emptyDir: {}
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: ha-dash-data
+        # SSH key para autenticación Git (opcional, alternativa a PAT)
+        - name: git-ssh-key
+          secret:
+            secretName: ha-dash-git-ssh
+            optional: true
