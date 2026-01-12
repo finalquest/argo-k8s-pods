@@ -63,17 +63,15 @@ spec:
               cpu: 1000m
               memory: 2Gi
           readinessProbe:
-            httpGet:
-              path: /api/health
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /api/health
-              port: http
-            initialDelaySeconds: 60
-            periodSeconds: 30
       volumes:
         - name: project-data
           emptyDir: {}

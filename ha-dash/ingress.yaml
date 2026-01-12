@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ha-dash-frontend
+  namespace: ha-dash
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ha-dash.finalq.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ha-dash-frontend
+                port:
+                  number: 80
