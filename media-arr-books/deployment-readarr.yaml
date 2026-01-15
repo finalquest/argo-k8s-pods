@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: readarr
+  namespace: media
+  labels:
+    app: readarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: readarr
+  template:
+    metadata:
+      labels:
+        app: readarr
+    spec:
+      nodeSelector:
+        media-node: "true"
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: readarr
+          image: lscr.io/linuxserver/readarr:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Argentina/Buenos_Aires"
+          ports:
+            - name: http
+              containerPort: 8787
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: books
+              mountPath: /books
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: readarr-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: downloads-data
+        - name: books
+          persistentVolumeClaim:
+            claimName: readarr-books

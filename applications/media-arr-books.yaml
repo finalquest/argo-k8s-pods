@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media-arr-books
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/finalquest/argo-k8s-pods
+    targetRevision: main
+    path: media-arr-books
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
