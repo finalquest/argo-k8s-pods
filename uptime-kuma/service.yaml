@@ -3,10 +3,6 @@ kind: Service
 metadata:
   name: uptime-kuma
   namespace: monitoring-lite
-  annotations:
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: Uptime Kuma
-    gethomepage.dev/group: Monitoring
 spec:
   type: ClusterIP
   selector:

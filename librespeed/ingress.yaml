@@ -3,10 +3,6 @@ kind: Ingress
 metadata:
   name: librespeed
   namespace: speedtest
-  annotations:
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: LibreSpeed
-    gethomepage.dev/group: Utilities
 spec:
   ingressClassName: nginx
   rules:

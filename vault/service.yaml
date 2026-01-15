@@ -3,10 +3,6 @@ kind: Service
 metadata:
   name: vaultwarden
   namespace: vaultwarden
-  annotations:
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: Vaultwarden
-    gethomepage.dev/group: Security
 spec:
   type: NodePort
   selector:

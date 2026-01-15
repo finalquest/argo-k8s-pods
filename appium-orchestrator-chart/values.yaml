@@ -58,19 +58,12 @@ service:
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 80
-  annotations:
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: Appium Orchestrator
-    gethomepage.dev/group: Automation
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: true
   className: "nginx"
-  annotations:
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: Appium Orchestrator
-    gethomepage.dev/group: Automation
+  annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
