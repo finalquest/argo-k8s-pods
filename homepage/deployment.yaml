@@ -18,26 +18,13 @@ spec:
       serviceAccountName: homepage
       nodeSelector:
         role: worker
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-      initContainers:
-        - name: config-init
-          image: ghcr.io/gethomepage/homepage:latest
-          command:
-            - sh
-            - -c
-            - mkdir -p /app/config && chown -R 1000:1000 /app/config && cp -R /app/src/skeleton/* /app/config/ || true; cp -R /config-src/* /app/config/ || true
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
-            - name: config-src
-              mountPath: /config-src
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           ports:
             - containerPort: 3000
               name: http
@@ -83,6 +70,3 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: homepage-config
-        - name: config-src
-          configMap:
-            name: homepage-config
