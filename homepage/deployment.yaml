@@ -47,18 +47,14 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 20
+            initialDelaySeconds: 10
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 6
       volumes:
         - name: config
           configMap:
