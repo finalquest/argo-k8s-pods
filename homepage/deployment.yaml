@@ -18,13 +18,17 @@ spec:
       serviceAccountName: homepage
       nodeSelector:
         role: worker
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       initContainers:
         - name: config-init
           image: ghcr.io/gethomepage/homepage:latest
           command:
             - sh
             - -c
-            - cp -R /app/src/skeleton/* /app/config/ || true; cp -R /config-src/* /app/config/ || true
+            - mkdir -p /app/config && chown -R 1000:1000 /app/config && cp -R /app/src/skeleton/* /app/config/ || true; cp -R /config-src/* /app/config/ || true
           volumeMounts:
             - name: config
               mountPath: /app/config
