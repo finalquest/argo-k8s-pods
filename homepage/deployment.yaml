@@ -18,6 +18,18 @@ spec:
       serviceAccountName: homepage
       nodeSelector:
         role: worker
+      initContainers:
+        - name: config-init
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - cp -R /config-src/* /app/config/ || true
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: config-src
+              mountPath: /config-src
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -40,9 +52,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /app/config
-              readOnly: true
-            - name: logs
-              mountPath: /app/config/logs
           readinessProbe:
             httpGet:
               path: /
@@ -68,7 +77,7 @@ spec:
             failureThreshold: 6
       volumes:
         - name: config
+          emptyDir: {}
+        - name: config-src
           configMap:
             name: homepage-config
-        - name: logs
-          emptyDir: {}
