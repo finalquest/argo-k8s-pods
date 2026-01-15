@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Screen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #191923;
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .inventario-screen {
+            width: 100%;
+            max-width: 100%;
+            min-height: 100vh;
+            background-color: #191923;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0;
+        }
+
+        /* Header Section */
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sub-header {
+            width: 100%;
+            background-color: #2D2E3B;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .header-text-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        .secondary-button {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #FFFFFF;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .secondary-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tab Selector */
+        .tab-selector {
+            width: 100%;
+            background-color: #2E3042;
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 20px;
+            height: 48px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .tab.active {
+            background-color: #242634;
+            color: #FFFFFF;
+        }
+
+        .tab.inactive {
+            color: #7A7D8F;
+        }
+
+        /* Buscar Card */
+        .buscar-card {
+            width: 100%;
+            background-color: #2C2C39;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .header-section {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .text-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        .card-description {
+            font-size: 14px;
+            font-weight: 400;
+            color: #7A7D8F;
+            line-height: 1.4;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-field-board {
+            flex: 1;
+            background-color: #1E1F2E;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-text {
+            width: 100%;
+            font-size: 14px;
+            font-weight: 400;
+            color: #7A7D8F;
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        .input-text::placeholder {
+            color: #7A7D8F;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+            border: none;
+            border-radius: 8px;
+            color: #FFFFFF;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            min-width: 80px;
+            height: 48px;
+            transition: opacity 0.2s;
+        }
+
+        .primary-button:hover {
+            opacity: 0.9;
+        }
+
+        /* Responsive - Desktop */
+        @media (min-width: 768px) {
+            .inventario-screen {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .sub-header {
+                padding: 24px;
+            }
+
+            .buscar-card {
+                padding: 24px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .inventario-screen {
+                max-width: 800px;
+            }
+        }
+
+        /* Responsive - Mobile */
+        @media (max-width: 767px) {
+            .inventario-screen {
+                padding: 16px;
+            }
+
+            .sub-header {
+                padding: 16px;
+            }
+
+            .header-title {
+                font-size: 24px;
+            }
+
+            .buscar-card {
+                padding: 16px;
+            }
+
+            .input-section {
+                flex-wrap: wrap;
+            }
+
+            .primary-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .secondary-button {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+
+            .tab {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .card-title {
+                font-size: 18px;
+            }
+
+            .card-description {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="inventario-screen">
+        <!-- Header -->
+        <div class="header">
+            <div class="sub-header">
+                <div class="header-text-block">
+                    <h1 class="header-title">Inventario</h1>
+                </div>
+                <button class="secondary-button">Modo claro</button>
+            </div>
+        </div>
+
+        <!-- Tab Selector -->
+        <div class="tab-selector">
+            <div class="tab active">Buscar / Agregar</div>
+            <div class="tab inactive">Sacar</div>
+            <div class="tab inactive">Stocks</div>
+        </div>
+
+        <!-- Buscar Card -->
+        <div class="buscar-card">
+            <div class="header-section">
+                <div class="text-block">
+                    <h2 class="card-title">Buscar / Escanear</h2>
+                    <p class="card-description">Escaneá con la cámara o tipeá el código para registrarlo al instante.</p>
+                </div>
+                <button class="secondary-button">Usar cámara</button>
+            </div>
+
+            <div class="input-section">
+                <div class="input-field-board">
+                    <input type="text" class="input-text" placeholder="Código de barras">
+                </div>
+                <button class="primary-button">Buscar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab selector functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.classList.add('inactive');
+                });
+                this.classList.add('active');
+                this.classList.remove('inactive');
+            });
+        });
+    </script>
+</body>
+</html>

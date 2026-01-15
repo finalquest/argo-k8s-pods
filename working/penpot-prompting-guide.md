@@ -212,6 +212,13 @@ mainInstance.y = nextY; // Usar posición calculada, no mainInstanceY
 **Inputs**: Usar `InputField`, `InputBarcode`, `BarcodeInputField` (contener "Input" o "Field")
 **Botones**: Usar `ButtonPrimary`, `ButtonCamera`, `SubmitButton` (contener "Button" o "Btn")
 
+**Comentarios y Notas**: Para agregar comentarios sobre funcionalidad, usar el `name` del elemento con formato descriptivo:
+- `"InputFieldBoard - Validar solo números"`
+- `"TabSelector - Cambiar tab al hacer click"`
+- `"BuscarButton - Validar código antes de buscar"`
+
+Esto permite documentar la funcionalidad esperada directamente en el nombre del elemento.
+
 ### 5.1. Textos y Tipografía
 
 **FontWeight por defecto**: Usar `fontWeight: 400` (normal) por defecto. Solo aumentar a 500, 600, 700 si el diseño lo requiere específicamente.
