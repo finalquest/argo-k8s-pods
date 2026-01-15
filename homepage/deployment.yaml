@@ -51,13 +51,6 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
-          startupProbe:
-            httpGet:
-              path: /
-              port: http
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /
