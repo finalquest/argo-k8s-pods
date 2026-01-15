@@ -20,11 +20,11 @@ spec:
         role: worker
       initContainers:
         - name: config-init
-          image: busybox:latest
+          image: ghcr.io/gethomepage/homepage:latest
           command:
             - sh
             - -c
-            - cp -R /config-src/* /app/config/ || true
+            - cp -R /app/src/skeleton/* /app/config/ || true; cp -R /config-src/* /app/config/ || true
           volumeMounts:
             - name: config
               mountPath: /app/config
