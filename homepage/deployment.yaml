@@ -28,6 +28,8 @@ spec:
           env:
             - name: TZ
               value: America/Argentina/Buenos_Aires
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: homepage.finalq.xyz
           resources:
             requests:
               cpu: 100m
