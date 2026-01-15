@@ -4,6 +4,10 @@ kind: Ingress
 metadata:
   name: penpot
   namespace: penpot
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Penpot
+    gethomepage.dev/group: Design
 spec:
   ingressClassName: {{ .Values.bundle.ingress.className | quote }}
   rules:

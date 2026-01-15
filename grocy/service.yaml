@@ -6,6 +6,10 @@ metadata:
   labels:
     app: grocy
     exposed: npm
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Grocy
+    gethomepage.dev/group: Home
 spec:
   type: NodePort
   selector:

@@ -5,6 +5,10 @@ metadata:
   namespace: android-emulators
   labels:
     app: xorg-gpu
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Xorg VNC
+    gethomepage.dev/group: Android
 spec:
   type: ClusterIP
   selector:

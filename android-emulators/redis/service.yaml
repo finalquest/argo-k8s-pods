@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: redis
   namespace: android-emulators
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Android Redis
+    gethomepage.dev/group: Android
 spec:
   selector:
     app: redis

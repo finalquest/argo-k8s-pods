@@ -3,6 +3,10 @@ kind: Ingress
 metadata:
   name: ha-dash-frontend
   namespace: ha-dash
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: HA Dash
+    gethomepage.dev/group: Dashboards
 spec:
   ingressClassName: nginx
   rules:

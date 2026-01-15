@@ -22,9 +22,6 @@ spec:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
           imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
           ports:
             - containerPort: 3000
               name: http
@@ -43,6 +40,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /app/config
+            - name: logs
+              mountPath: /app/config/logs
           readinessProbe:
             httpGet:
               path: /
@@ -68,5 +67,7 @@ spec:
             failureThreshold: 6
       volumes:
         - name: config
-          persistentVolumeClaim:
-            claimName: homepage-config
+          configMap:
+            name: homepage-config
+        - name: logs
+          emptyDir: {}

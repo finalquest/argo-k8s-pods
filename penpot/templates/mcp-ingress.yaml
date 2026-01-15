@@ -8,6 +8,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/websocket-services: "penpot-mcp:4402"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Penpot MCP
+    gethomepage.dev/group: Design
 spec:
   ingressClassName: {{ .Values.bundle.ingress.className | quote }}
   rules:
