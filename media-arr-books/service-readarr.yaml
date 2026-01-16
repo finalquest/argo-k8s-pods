@@ -4,11 +4,9 @@ metadata:
   name: readarr
   namespace: media
 spec:
-  type: NodePort
   selector:
     app: readarr
   ports:
     - name: http
       port: 8787
       targetPort: 8787
-      nodePort: 30787

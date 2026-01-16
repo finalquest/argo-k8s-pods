@@ -4,11 +4,9 @@ metadata:
   name: qbittorrent
   namespace: media
 spec:
-  type: NodePort
   selector:
     app: qbittorrent
   ports:
     - name: webui
       port: 8080
       targetPort: 8080
-      nodePort: 30180
