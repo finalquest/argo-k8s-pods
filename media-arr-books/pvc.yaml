@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: readarr-books
+  name: books-data
   namespace: media
 spec:
   accessModes:
@@ -53,7 +53,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: readarr-config
+  name: lazylibrarian-config
   namespace: media
 spec:
   accessModes:

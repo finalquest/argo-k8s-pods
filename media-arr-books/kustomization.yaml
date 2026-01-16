@@ -6,8 +6,8 @@ resources:
   - pvc.yaml
   - deployment-qbittorrent.yaml
   - deployment-prowlarr.yaml
-  - deployment-readarr.yaml
+  - deployment-lazylibrarian.yaml
   - service-qbittorrent.yaml
   - service-prowlarr.yaml
-  - service-readarr.yaml
+  - service-lazylibrarian.yaml
   - ingress.yaml

@@ -13,9 +13,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: readarr
+                name: lazylibrarian
                 port:
-                  number: 8787
+                  number: 5299
     - host: prowlarr.finalq.xyz
       http:
         paths:
