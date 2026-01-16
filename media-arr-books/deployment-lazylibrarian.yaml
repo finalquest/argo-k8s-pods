@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: lazylibrarian
-          image: ghcr.io/linuxserver/lazylibrarian:version-68b1819c
+          image: ghcr.io/linuxserver/lazylibrarian:version-71b85d73
           env:
             - name: PUID
               value: "1000"
