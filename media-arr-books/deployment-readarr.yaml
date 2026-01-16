@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: readarr
-          image: lscr.io/linuxserver/readarr:latest
+          image: ghcr.io/linuxserver/readarr:latest
           env:
             - name: PUID
               value: "1000"
