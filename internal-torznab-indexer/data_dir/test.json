@@ -1,0 +1,816 @@
+{
+  "id": "md5:8715ffe96acb3f397fa56adff49c91fd",
+  "file_unified_data": {
+    "cover_url_best": "https://libgen.li/fictioncovers/416000/8715ffe96acb3f397fa56adff49c91fd.jpg",
+    "cover_url_additional": [],
+    "extension_best": "epub",
+    "extension_additional": [],
+    "filesize_best": 505707,
+    "filesize_additional": [],
+    "title_best": "The Return of the King",
+    "title_additional": [],
+    "author_best": "Tolkien, John Ronald Reuel",
+    "author_additional": [],
+    "publisher_best": "Unknown",
+    "publisher_additional": [],
+    "edition_varia_best": "The Lord of The Rings 3, 2010",
+    "edition_varia_additional": [],
+    "year_best": "2010",
+    "year_additional": [],
+    "comments_multiple": [
+      "lg_fict_id_416211"
+    ],
+    "stripped_description_best": "",
+    "stripped_description_additional": [],
+    "language_codes": [
+      "en"
+    ],
+    "added_date_unified": {
+      "date_zlib_source": "2019-04-08",
+      "date_lgli_source": "2021-06-18",
+      "date_lgrsfic_source": "2011-11-04"
+    },
+    "problems": [],
+    "content_type_best": "book_fiction",
+    "ipfs_infos": [
+      {
+        "ipfs_cid": "bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm",
+        "from": "lgrsfic"
+      },
+      {
+        "ipfs_cid": "QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "ipfs_cid": "bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm",
+        "from": "zlib_ipfs_cid_blake2b"
+      }
+    ],
+    "identifiers_unified": {
+      "aarecord_id": [
+        "md5:8715ffe96acb3f397fa56adff49c91fd"
+      ],
+      "ipfs_cid": [
+        "QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX",
+        "bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm"
+      ],
+      "filepath": [
+        "zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub",
+        "lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+        "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub"
+      ],
+      "lgrsfic": [
+        "416211"
+      ],
+      "md5": [
+        "8715ffe96acb3f397fa56adff49c91fd"
+      ],
+      "sha1": [
+        "l64oejbegucdolhdosuckzzbqxes7mr6"
+      ],
+      "sha256": [
+        "bc91e75d919a50d080072270b4d02649953dbe91a62acd9e10c32bf4362c637a"
+      ],
+      "crc32": [
+        "13d8505d"
+      ],
+      "lgli": [
+        "4463707"
+      ],
+      "lgli_fiction_id": [
+        "416211"
+      ],
+      "zlib": [
+        "1641290"
+      ],
+      "aacid": [
+        "aacid__zlib3_records__20240809T185338Z__1641290__Csq7vF6w5pGAF4U5F6noVH"
+      ],
+      "server_path": [
+        "g3/libgenrs_fiction/libgenrs_fiction/416000/8715ffe96acb3f397fa56adff49c91fd.epub"
+      ]
+    },
+    "classifications_unified": {
+      "filesize_bytes": [
+        "505707"
+      ],
+      "year": [
+        "2010"
+      ],
+      "lang": [
+        "en"
+      ],
+      "date_zlib_source": [
+        "2019-04-08"
+      ],
+      "date_lgli_source": [
+        "2021-06-18"
+      ],
+      "date_lgrsfic_source": [
+        "2011-11-04"
+      ],
+      "content_type": [
+        "book_fiction"
+      ],
+      "torrent": [
+        "external/libgen_rs_fic/f_416000.torrent"
+      ],
+      "collection": [
+        "lgli",
+        "lgrs",
+        "zlib"
+      ]
+    },
+    "most_likely_language_codes": [
+      "en"
+    ],
+    "language_codes_detected": [],
+    "added_date_best": "2011-11-04",
+    "original_filename_best": "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+    "has_aa_downloads": 1,
+    "has_aa_exclusive_downloads": 0,
+    "has_torrent_paths": 1,
+    "has_scidb": 0,
+    "has_meaningful_problems": 0,
+    "ol_is_primary_linked": false
+  },
+  "source_records": [
+    {
+      "source_type": "lgrsfic_book",
+      "source_record": {
+        "requested_func": "get_lgrsfic_book_dicts",
+        "requested_key": "md5",
+        "requested_value": "8715FFE96ACB3F397FA56ADFF49C91FD",
+        "id": 416211,
+        "md5": "8715FFE96ACB3F397FA56ADFF49C91FD"
+      },
+      "source_why": "lgrsfic_book_dicts"
+    },
+    {
+      "source_type": "lgli_file",
+      "source_record": {
+        "requested_func": "get_lgli_file_dicts",
+        "requested_key": "publisher_title",
+        "requested_value": "8715ffe96acb3f397fa56adff49c91fd",
+        "f_id": 4463707,
+        "md5": "8715ffe96acb3f397fa56adff49c91fd",
+        "libgen_topic": "f",
+        "libgen_id": 0,
+        "fiction_id": 416211,
+        "fiction_rus_id": 0,
+        "comics_id": 0,
+        "scimag_id": 0,
+        "standarts_id": 0,
+        "magz_id": 0,
+        "scimag_archive_path": ""
+      },
+      "source_why": "lgli_file_dicts"
+    },
+    {
+      "source_type": "zlib_book",
+      "source_record": {
+        "requested_func": "get_zlib_book_dicts",
+        "requested_key": "md5_reported",
+        "requested_value": "8715ffe96acb3f397fa56adff49c91fd",
+        "zlibrary_id": 1641290,
+        "md5": null,
+        "md5_reported": "8715ffe96acb3f397fa56adff49c91fd",
+        "filesize": null,
+        "filesize_reported": 505707,
+        "in_libgen": 1,
+        "pilimi_torrent": null
+      },
+      "source_why": "zlib_book_dicts1"
+    },
+    {
+      "source_type": "aac_zlib3_book",
+      "source_record": {
+        "requested_func": "get_aac_zlib3_book_dicts",
+        "requested_key": "md5_reported",
+        "requested_value": "8715ffe96acb3f397fa56adff49c91fd",
+        "zlibrary_id": 1641290,
+        "md5": null,
+        "md5_reported": "8715ffe96acb3f397fa56adff49c91fd",
+        "filesize_reported": 505707,
+        "file_data_folder": null,
+        "record_aacid": "aacid__zlib3_records__20240809T185338Z__1641290__Csq7vF6w5pGAF4U5F6noVH",
+        "file_aacid": null,
+        "cover_path": "/covers299/collections/foreignfiction/0a615ece646932595b8f3882763968494d9b09c413d7981ec66e701ae17a9226.jpg",
+        "storage": "foreignfiction"
+      },
+      "source_why": "aac_zlib3_book_dicts1"
+    }
+  ],
+  "indexes": [
+    "aarecords"
+  ],
+  
+  "search_only_fields": {
+    "search_filesize": 505707,
+    "search_year": "2010",
+    "search_extension": "epub",
+    "search_content_type": "book_fiction",
+    "search_most_likely_language_code": [
+      "en"
+    ],
+    "search_isbn13": [],
+    "search_doi": [],
+    "search_title": "The Return of the King",
+    "search_author": "Tolkien, John Ronald Reuel",
+    "search_publisher": "Unknown",
+    "search_edition_varia": "The Lord of The Rings 3, 2010",
+    "search_original_filename": "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+    "search_added_date": "2011-11-04",
+    "search_description_comments": "\nlg_fict_id_416211",
+    "search_text": "The Return of the King\nTolkien, John Ronald Reuel\nThe Lord of The Rings 3, 2010\nUnknown\nmd5:8715ffe96acb3f397fa56adff49c91fd\nepub\naacid:aacid__zlib3_records__20240809T185338Z__1641290__Csq7vF6w5pGAF4U5F6noVH aacid aacid__zlib3_records__20240809T185338Z__1641290__Csq7vF6w5pGAF4U5F6noVH\naarecord_id:md5:8715ffe96acb3f397fa56adff49c91fd aarecord_id md5:8715ffe96acb3f397fa56adff49c91fd\ncrc32:13d8505d\nfilepath:lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub filepath lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub\nfilepath:lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub filepath lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub\nfilepath:zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub filepath zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub\nipfs_cid:QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX ipfs_cid QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX\nipfs_cid:bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm ipfs_cid bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm\nlgli:4463707\nlgli_fiction_id:416211 lgli_fiction_id 416211\nlgrsfic:416211\nmd5:8715ffe96acb3f397fa56adff49c91fd\nserver_path:g3/libgenrs_fiction/libgenrs_fiction/416000/8715ffe96acb3f397fa56adff49c91fd.epub server_path g3/libgenrs_fiction/libgenrs_fiction/416000/8715ffe96acb3f397fa56adff49c91fd.epub\nsha1:l64oejbegucdolhdosuckzzbqxes7mr6\nsha256:bc91e75d919a50d080072270b4d02649953dbe91a62acd9e10c32bf4362c637a\nzlib:1641290\ncollection:lgli\ncollection:lgrs\ncollection:zlib\ncontent_type:book_fiction content_type book_fiction\ndate_lgli_source:2021-06-18 date_lgli_source 2021-06-18\ndate_lgrsfic_source:2011-11-04 date_lgrsfic_source 2011-11-04\ndate_zlib_source:2019-04-08 date_zlib_source 2019-04-08\nfilesize_bytes:505707 filesize_bytes 505707\nlang:en\ntorrent:external/libgen_rs_fic/f_416000.torrent torrent external/libgen_rs_fic/f_416000.torrent\nyear:2010\n\nmd5 8715ffe96acb3f397fa56adff49c91fd zlib3 records 20240809T185338Z 1641290 Csq7vF6w5pGAF4U5F6noVH zlib3 records 20240809T185338Z 1641290 Csq7vF6w5pGAF4U5F6noVH aarecord id md5 8715ffe96acb3f397fa56adff49c91fd aarecord id md5 8715ffe96acb3f397fa56adff49c91fd crc32 13d8505d lgli L bib J R R Tolkien Vol 53846 Vol J R R Tolkien lgli L bib J R R Tolkien Vol 53846 Vol J R R Tolkien lgrsfic L bib J R R Tolkien Vol 53846 Vol J R R Tolkien lgrsfic L bib J R R Tolkien Vol 53846 Vol J R R Tolkien zlib no category 1641290 zlib no category 1641290 ipfs cid ipfs cid ipfs cid ipfs cid lgli 4463707 lgli fiction id lgli fiction id lgrsfic md5 8715ffe96acb3f397fa56adff49c91fd server path g3 libgenrs fiction libgenrs fiction 416000 8715ffe96acb3f397fa56adff49c91fd server path g3 libgenrs fiction libgenrs fiction 416000 8715ffe96acb3f397fa56adff49c91fd sha1 l64oejbegucdolhdosuckzzbqxes7mr6 sha256 bc91e75d919a50d080072270b4d02649953dbe91a62acd9e10c32bf4362c637a zlib 1641290 collection lgli collection lgrs collection zlib content type book fiction content type book fiction date lgli source 2021 06 18 date lgli source 2021 06 18 date lgrsfic source 2011 11 04 date lgrsfic source 2011 11 04 date zlib source 2019 04 08 date zlib source 2019 04 08 filesize bytes filesize bytes lang en external libgen rs fic f 416000 external libgen rs fic f 416000 year",
+    "search_access_types": [
+      "external_download",
+      "aa_download",
+      "torrents_available"
+    ],
+    "search_record_sources": [
+      "lgli",
+      "lgrs",
+      "zlib"
+    ],
+    "search_record_primary_source": "lgrs",
+    "search_bulk_torrents": "has_bulk_torrents",
+    "search_score_base_rank": 11052.0
+  },
+  "_score": 0.0,
+  
+  "additional": {
+    "path": "/md5/8715ffe96acb3f397fa56adff49c91fd",
+    "most_likely_language_names": [
+      "English [en]"
+    ],
+    "codes": [
+      {
+        "key": "aacid",
+        "value": "aacid__zlib3_records__20240809T185338Z__1641290__Csq7vF6w5pGAF4U5F6noVH"
+      },
+      {
+        "key": "aarecord_id",
+        "value": "md5:8715ffe96acb3f397fa56adff49c91fd"
+      },
+      {
+        "key": "collection",
+        "value": "lgli"
+      },
+      {
+        "key": "collection",
+        "value": "lgrs"
+      },
+      {
+        "key": "collection",
+        "value": "zlib"
+      },
+      {
+        "key": "content_type",
+        "value": "book_fiction"
+      },
+      {
+        "key": "crc32",
+        "value": "13d8505d"
+      },
+      {
+        "key": "date_lgli_source",
+        "value": "2021-06-18"
+      },
+      {
+        "key": "date_lgrsfic_source",
+        "value": "2011-11-04"
+      },
+      {
+        "key": "date_zlib_source",
+        "value": "2019-04-08"
+      },
+      {
+        "key": "filepath",
+        "value": "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub"
+      },
+      {
+        "key": "filepath",
+        "value": "lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub"
+      },
+      {
+        "key": "filepath",
+        "value": "zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub"
+      },
+      {
+        "key": "filesize_bytes",
+        "value": "505707"
+      },
+      {
+        "key": "ipfs_cid",
+        "value": "QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX"
+      },
+      {
+        "key": "ipfs_cid",
+        "value": "bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm"
+      },
+      {
+        "key": "lang",
+        "value": "en"
+      },
+      {
+        "key": "lgli",
+        "value": "4463707"
+      },
+      {
+        "key": "lgli_fiction_id",
+        "value": "416211"
+      },
+      {
+        "key": "lgrsfic",
+        "value": "416211"
+      },
+      {
+        "key": "md5",
+        "value": "8715ffe96acb3f397fa56adff49c91fd"
+      },
+      {
+        "key": "server_path",
+        "value": "g3/libgenrs_fiction/libgenrs_fiction/416000/8715ffe96acb3f397fa56adff49c91fd.epub"
+      },
+      {
+        "key": "sha1",
+        "value": "l64oejbegucdolhdosuckzzbqxes7mr6"
+      },
+      {
+        "key": "sha256",
+        "value": "bc91e75d919a50d080072270b4d02649953dbe91a62acd9e10c32bf4362c637a"
+      },
+      {
+        "key": "torrent",
+        "value": "external/libgen_rs_fic/f_416000.torrent"
+      },
+      {
+        "key": "year",
+        "value": "2010"
+      },
+      {
+        "key": "zlib",
+        "value": "1641290"
+      }
+    ],
+    "original_filename_best": "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+    "original_filename_additional": [
+      "lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+      "zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub"
+    ],
+    "original_filename_best_name_only": "The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+    "filename_without_annas_archive": "The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+    "filename": "The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd%20--%20Anna%E2%80%99s%20Archive.epub",
+    "filename_short": "annas-arch-8715ffe96acb.epub",
+    "download_urls": [
+      [
+        "Libgen.rs Fiction",
+        "https://libgen.is/fiction/8715FFE96ACB3F397FA56ADFF49C91FD",
+        ""
+      ],
+      [
+        "Libgen.li",
+        "https://libgen.li/ads.php?md5=8715ffe96acb3f397fa56adff49c91fd",
+        "(click “GET” at the top) <div style=\"margin-left: 24px\" class=\"text-sm text-gray-500\">their ads are known to contain malicious software, so use an ad blocker or don’t click ads</div>"
+      ],
+      [
+        "IPFS",
+        "/ipfs_downloads/md5:8715ffe96acb3f397fa56adff49c91fd",
+        ""
+      ],
+      [
+        "Z-Library",
+        "https://z-lib.gd/md5/8715ffe96acb3f397fa56adff49c91fd",
+        ""
+      ],
+      [
+        "Z-Library on Tor",
+        "http://bookszlibb74ugqojhzhg2a63w5i2atv5bqarulgczawnbmsb6s6qead.onion/md5/8715ffe96acb3f397fa56adff49c91fd",
+        "(requires the Tor Browser)"
+      ],
+      [
+        "Z-Library",
+        "https://z-lib.gd/md5/8715ffe96acb3f397fa56adff49c91fd",
+        ""
+      ],
+      [
+        "Z-Library on Tor",
+        "http://bookszlibb74ugqojhzhg2a63w5i2atv5bqarulgczawnbmsb6s6qead.onion/md5/8715ffe96acb3f397fa56adff49c91fd",
+        "(requires the Tor Browser)"
+      ],
+      [
+        "Bulk torrent downloads",
+        "/torrents#libgen_rs_fic",
+        "(experts only) <div style=\"margin-left: 24px\" class=\"text-sm text-gray-500\">collection <a href=\"/torrents#libgen_rs_fic\">“libgen_rs_fic”</a> → torrent <a href=\"/dyn/small_file/torrents/external/libgen_rs_fic/f_416000.torrent\">“f_416000.torrent”</a> →&nbsp;file&nbsp;“8715ffe96acb3f397fa56adff49c91fd.epub”</em></div>"
+      ]
+    ],
+    "partner_url_paths": [
+      {
+        "path": "g3/libgenrs_fiction/libgenrs_fiction/416000/8715ffe96acb3f397fa56adff49c91fd.epub",
+        "targeted_seconds": 60
+      }
+    ],
+    "has_aa_downloads": 1,
+    "has_aa_exclusive_downloads": 0,
+    "torrent_paths": [
+      {
+        "collection": "libgen_rs_fic",
+        "torrent_path": "external/libgen_rs_fic/f_416000.torrent",
+        "file_level1": "8715ffe96acb3f397fa56adff49c91fd.epub",
+        "file_level2": ""
+      }
+    ],
+    "ipfs_urls": [
+      {
+        "name": "w3s.link",
+        "url": "https://w3s.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "cf-ipfs.com",
+        "url": "https://cf-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ipfs.eth.aragon.network",
+        "url": "https://ipfs.eth.aragon.network/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "zerolend.myfilebase.com",
+        "url": "https://zerolend.myfilebase.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ccgateway.infura-ipfs.io",
+        "url": "https://ccgateway.infura-ipfs.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "knownorigin.mypinata.cloud",
+        "url": "https://knownorigin.mypinata.cloud/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "storry.tv",
+        "url": "https://storry.tv/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ipfs-stg.fleek.co",
+        "url": "https://ipfs-stg.fleek.co/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "cloudflare-ipfs.com",
+        "url": "https://cloudflare-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ipfs.io",
+        "url": "https://ipfs.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "snapshot.4everland.link",
+        "url": "https://snapshot.4everland.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "gateway.pinata.cloud",
+        "url": "https://gateway.pinata.cloud/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "dweb.link",
+        "url": "https://dweb.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "gw3.io",
+        "url": "https://gw3.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "public.w3ipfs.aioz.network",
+        "url": "https://public.w3ipfs.aioz.network/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ipfsgw.com",
+        "url": "https://ipfsgw.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "magic.decentralized-content.com",
+        "url": "https://magic.decentralized-content.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "ipfs.raribleuserdata.com",
+        "url": "https://ipfs.raribleuserdata.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "www.gstop-content.com",
+        "url": "https://www.gstop-content.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "atomichub-ipfs.com",
+        "url": "https://atomichub-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "lgrsfic"
+      },
+      {
+        "name": "w3s.link",
+        "url": "https://w3s.link/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "cf-ipfs.com",
+        "url": "https://cf-ipfs.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ipfs.eth.aragon.network",
+        "url": "https://ipfs.eth.aragon.network/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "zerolend.myfilebase.com",
+        "url": "https://zerolend.myfilebase.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ccgateway.infura-ipfs.io",
+        "url": "https://ccgateway.infura-ipfs.io/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "knownorigin.mypinata.cloud",
+        "url": "https://knownorigin.mypinata.cloud/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "storry.tv",
+        "url": "https://storry.tv/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ipfs-stg.fleek.co",
+        "url": "https://ipfs-stg.fleek.co/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "cloudflare-ipfs.com",
+        "url": "https://cloudflare-ipfs.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ipfs.io",
+        "url": "https://ipfs.io/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "snapshot.4everland.link",
+        "url": "https://snapshot.4everland.link/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "gateway.pinata.cloud",
+        "url": "https://gateway.pinata.cloud/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "dweb.link",
+        "url": "https://dweb.link/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "gw3.io",
+        "url": "https://gw3.io/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "public.w3ipfs.aioz.network",
+        "url": "https://public.w3ipfs.aioz.network/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ipfsgw.com",
+        "url": "https://ipfsgw.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "magic.decentralized-content.com",
+        "url": "https://magic.decentralized-content.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "ipfs.raribleuserdata.com",
+        "url": "https://ipfs.raribleuserdata.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "www.gstop-content.com",
+        "url": "https://www.gstop-content.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "atomichub-ipfs.com",
+        "url": "https://atomichub-ipfs.com/ipfs/QmZAhDw7dBgkW7kdk7epj1H8vzodx58NtzD9eEeKobszhX?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid"
+      },
+      {
+        "name": "w3s.link",
+        "url": "https://w3s.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "cf-ipfs.com",
+        "url": "https://cf-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ipfs.eth.aragon.network",
+        "url": "https://ipfs.eth.aragon.network/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "zerolend.myfilebase.com",
+        "url": "https://zerolend.myfilebase.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ccgateway.infura-ipfs.io",
+        "url": "https://ccgateway.infura-ipfs.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "knownorigin.mypinata.cloud",
+        "url": "https://knownorigin.mypinata.cloud/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "storry.tv",
+        "url": "https://storry.tv/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ipfs-stg.fleek.co",
+        "url": "https://ipfs-stg.fleek.co/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "cloudflare-ipfs.com",
+        "url": "https://cloudflare-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ipfs.io",
+        "url": "https://ipfs.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "snapshot.4everland.link",
+        "url": "https://snapshot.4everland.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "gateway.pinata.cloud",
+        "url": "https://gateway.pinata.cloud/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "dweb.link",
+        "url": "https://dweb.link/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "gw3.io",
+        "url": "https://gw3.io/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "public.w3ipfs.aioz.network",
+        "url": "https://public.w3ipfs.aioz.network/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ipfsgw.com",
+        "url": "https://ipfsgw.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "magic.decentralized-content.com",
+        "url": "https://magic.decentralized-content.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "ipfs.raribleuserdata.com",
+        "url": "https://ipfs.raribleuserdata.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "www.gstop-content.com",
+        "url": "https://www.gstop-content.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      },
+      {
+        "name": "atomichub-ipfs.com",
+        "url": "https://atomichub-ipfs.com/ipfs/bafykbzacecwvmehy3vv5hvhs6wq6qrczuqwhtqm5ngfth6ewlj4rws6zzoedm?filename=The%20Return%20of%20the%20King%20--%20Tolkien%2C%20John%20Ronald%20Reuel%20--%20The%20Lord%20of%20The%20Rings%203%2C%202010%20--%20Unknown%20--%208715ffe96acb3f397fa56adff49c91fd.epub",
+        "from": "zlib_ipfs_cid_blake2b"
+      }
+    ],
+    "has_scidb": 0,
+    "scidb_info": null,
+    "ol_primary_linked_source_records": [],
+    "ol_is_primary_linked": false,
+    "table_row": {
+      "title": "The Return of the King",
+      "author": "Tolkien, John Ronald Reuel",
+      "publisher_and_edition": "Unknown, The Lord of The Rings 3, 2010",
+      "year": "2010",
+      "languages": "en",
+      "extension": "epub",
+      "sources": "🚀/lgli/lgrs/zlib",
+      "filesize": "0.5MB",
+      "content_type": "📕 Book (fiction)",
+      "id_name": "",
+      "filename": "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+      "original_filename_additional": [
+        "lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+        "zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub"
+      ],
+      "title_additional": [],
+      "author_additional": [],
+      "publisher_additional": [],
+      "edition_varia_additional": [],
+      "extension_additional": [],
+      "year_additional": []
+    },
+    "is_metadata": false,
+    "top_box": {
+      "meta_information": [
+        "The Return of the King",
+        "Tolkien, John Ronald Reuel",
+        "Unknown",
+        "The Lord of The Rings 3, 2010",
+        "lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub"
+      ],
+      "cover_missing_hue_deg": 165,
+      "cover_missing_pastel_color": "hsl(255, 60%, 90%)",
+      "cover_url": "https://s3proxy.cdn-zlib.sk//covers299/collections/foreignfiction/0a615ece646932595b8f3882763968494d9b09c413d7981ec66e701ae17a9226.jpg",
+      "top_row": "English [en], .epub, 🚀/lgli/lgrs/zlib, 0.5MB, 📕 Book (fiction), lgli/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+      "new_bottom_row": "English [en] · EPUB · 0.5MB · 2010 · 📕 Book (fiction) · 🚀/lgli/lgrs/zlib",
+      "title": "The Return of the King",
+      "publisher_and_edition": "Unknown, The Lord of The Rings 3, 2010",
+      "author": "Tolkien, John Ronald Reuel",
+      "freeform_fields": [
+        [
+          "Alternative filename",
+          "lgrsfic/L:\\bib\\J.R.R. Tolkien\\The Lord of the Rings, Vol. 3 - The Retu (53846)\\The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub"
+        ],
+        [
+          "Alternative filename",
+          "zlib/no-category/Tolkien, John Ronald Reuel/The Return of the King_1641290.epub"
+        ],
+        [
+          "metadata comments",
+          "lg_fict_id_416211"
+        ],
+        [
+          "date open sourced",
+          "2011-11-04"
+        ]
+      ],
+      "filepath_from_codes_parts": [
+        [
+          "lgli/",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS8="
+        ],
+        [
+          "L:\\",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS9MOlw="
+        ],
+        [
+          "bib\\",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS9MOlxiaWJc"
+        ],
+        [
+          "J.R.R. Tolkien\\",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS9MOlxiaWJcSi5SLlIuIFRvbGtpZW5c"
+        ],
+        [
+          "The Lord of the Rings, Vol. 3 - The Retu (53846)\\",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS9MOlxiaWJcSi5SLlIuIFRvbGtpZW5cVGhlIExvcmQgb2YgdGhlIFJpbmdzLCBWb2wuIDMgLSBUaGUgUmV0dSAoNTM4NDYpXA=="
+        ],
+        [
+          "The Lord of the Rings, Vol. 3 - The Retu - J.R.R. Tolkien.epub",
+          "/member_codes?prefix_b64=ZmlsZXBhdGg6bGdsaS9MOlxiaWJcSi5SLlIuIFRvbGtpZW5cVGhlIExvcmQgb2YgdGhlIFJpbmdzLCBWb2wuIDMgLSBUaGUgUmV0dSAoNTM4NDYpXFRoZSBMb3JkIG9mIHRoZSBSaW5ncywgVm9sLiAzIC0gVGhlIFJldHUgLSBKLlIuUi4gVG9sa2llbi5lcHVi"
+        ]
+      ]
+    }
+  }
+}

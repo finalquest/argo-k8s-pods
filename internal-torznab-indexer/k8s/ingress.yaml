@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: internal-torznab-indexer
+  namespace: media
+  labels:
+    app: internal-torznab-indexer
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: indexer.finalq.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: internal-torznab-indexer
+                port:
+                  number: 80

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: internal-torznab-indexer
+  namespace: media
+  labels:
+    app: internal-torznab-indexer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: internal-torznab-indexer
+  template:
+    metadata:
+      labels:
+        app: internal-torznab-indexer
+    spec:
+      containers:
+        - name: internal-torznab-indexer
+          image: harbor.finalq.xyz/tools/internal-torznab-indexer:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DATA_DIR
+              value: /app/data_dir
+            - name: BASE_URL
+              value: https://indexer.finalq.xyz
