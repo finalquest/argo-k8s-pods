@@ -3,10 +3,21 @@ const url = require("url");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const cheerio = require("cheerio");
+const { execFile } = require("child_process");
 
 const PORT = Number(process.env.PORT) || 8080;
 const DATA_DIR = process.env.DATA_DIR || "/data/records";
 const BASE_URL = process.env.BASE_URL || "";
+const REMOTE_AA_ENABLED = process.env.REMOTE_AA_ENABLED === "true";
+const REMOTE_AA_BASE = process.env.REMOTE_AA_BASE || "https://annas-archive.li";
+const REMOTE_AA_LANGS = process.env.REMOTE_AA_LANGS || "en,es";
+const REMOTE_AA_EXT = process.env.REMOTE_AA_EXT || "epub";
+const REMOTE_AA_LIMIT = Number(process.env.REMOTE_AA_LIMIT) || 25;
+const REMOTE_AA_COOKIE = process.env.REMOTE_AA_COOKIE || "";
+const REMOTE_AA_ACCOUNT_ID2 = process.env.REMOTE_AA_ACCOUNT_ID2 || "";
+const REMOTE_AA_USE_CURL = process.env.REMOTE_AA_USE_CURL === "true";
+const REMOTE_AA_DEBUG_MD5 = process.env.REMOTE_AA_DEBUG_MD5 || "";
 
 const CATEGORY_ID = "7000";
 const CATEGORY_NAME = "Books";
@@ -45,6 +56,17 @@ function normalizeIsbn(value) {
     return "";
   }
   return String(value).toLowerCase().replace(/[^0-9x]/g, "");
+}
+
+function decodeHtmlEntities(value) {
+  return String(value)
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
 function sha1Hex(value) {
@@ -119,6 +141,185 @@ function loadRecords(dataDir) {
 
 const records = loadRecords(DATA_DIR);
 
+function buildSearchUrl(query) {
+  const urlObj = new URL(`${REMOTE_AA_BASE}/search`);
+  urlObj.searchParams.set("q", query);
+  const langs = String(REMOTE_AA_LANGS)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  for (const lang of langs) {
+    urlObj.searchParams.append("lang", lang);
+  }
+  if (REMOTE_AA_EXT) {
+    urlObj.searchParams.set("ext", REMOTE_AA_EXT);
+  }
+  return urlObj.toString();
+}
+
+function fetchTextWithCurl(urlString, headers) {
+  return new Promise((resolve, reject) => {
+    const args = ["-s", urlString];
+    for (const [key, value] of Object.entries(headers)) {
+      if (!value) {
+        continue;
+      }
+      if (key.toLowerCase() === "cookie") {
+        args.push("-b", value);
+      } else {
+        args.push("-H", `${key}: ${value}`);
+      }
+    }
+    execFile("curl", args, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve({ status: 200, text: stdout });
+    });
+  });
+}
+
+async function fetchText(urlString) {
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "en-US,en;q=0.9,es;q=0.8,gl;q=0.7,ja;q=0.6,da;q=0.5",
+    Referer: "https://annas-archive.li/",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+    "Sec-CH-UA":
+      '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+    "Sec-CH-UA-Mobile": "?0",
+    "Sec-CH-UA-Platform": '"macOS"',
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    Priority: "u=0, i",
+  };
+  const cookieParts = [];
+  if (REMOTE_AA_ACCOUNT_ID2) {
+    cookieParts.push(`aa_account_id2=${REMOTE_AA_ACCOUNT_ID2}`);
+  }
+  if (REMOTE_AA_COOKIE) {
+    cookieParts.push(REMOTE_AA_COOKIE);
+  }
+  if (cookieParts.length > 0) {
+    headers.Cookie = cookieParts.join("; ");
+  }
+  if (REMOTE_AA_USE_CURL) {
+    return fetchTextWithCurl(urlString, headers);
+  }
+  const response = await fetch(urlString, {
+    headers: {
+      ...headers,
+    },
+  });
+  const text = await response.text();
+  return { status: response.status, text };
+}
+
+function parseSearchResults(html) {
+  const cleaned = html.replace(/(<!--|-->)/g, "");
+  const $ = cheerio.load(cleaned);
+  const rows = $(".js-aarecord-list-outer .flex.pt-3.pb-3");
+  const results = [];
+  const seen = new Set();
+
+  rows.each((_, el) => {
+    const row = $(el);
+    const md5Link = row.find('a[href^="/md5/"]').first();
+    const href = md5Link.attr("href") || "";
+    if (!href.startsWith("/md5/")) {
+      return;
+    }
+    const md5 = href.replace("/md5/", "");
+    if (!md5 || seen.has(md5)) {
+      return;
+    }
+    seen.add(md5);
+
+    const title = row.find("a.js-vim-focus").first().text().trim();
+    const authorLink = row
+      .find('a[href^="/search?q="]')
+      .filter((_, a) => $(a).find('span[class*="mdi--user-edit"]').length > 0)
+      .first();
+    const authors = authorLink.text().trim();
+    const coverUrl = row.find("img").first().attr("src") || "";
+    results.push({ md5, title, authors, coverUrl });
+  });
+
+  return results;
+}
+
+function extractJsonFromHtml(text) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    return trimmed;
+  }
+  const preMatch = trimmed.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+  if (preMatch) {
+    return decodeHtmlEntities(preMatch[1]);
+  }
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return decodeHtmlEntities(trimmed.slice(firstBrace, lastBrace + 1));
+  }
+  return null;
+}
+
+async function fetchRecordByMd5(md5) {
+  const urlString = `${REMOTE_AA_BASE}/db/aarecord_elasticsearch/md5:${md5}.json`;
+  console.log(`[indexer] remote md5 url=${urlString}`);
+  const { status, text } = await fetchText(urlString);
+  if (status >= 400) {
+    console.warn(`[indexer] remote md5 ${md5} status=${status}`);
+    return null;
+  }
+  console.log(`[indexer] remote md5 raw=${text}`);
+  const jsonText = extractJsonFromHtml(text);
+  if (!jsonText) {
+    console.warn(`[indexer] remote md5 ${md5} json not found`);
+    return null;
+  }
+  try {
+    return JSON.parse(jsonText);
+  } catch (error) {
+    console.warn(`[indexer] remote md5 ${md5} json parse failed: ${error.message}`);
+    return null;
+  }
+}
+
+function recordsToMatches(recordsList) {
+  const matches = [];
+  for (const entry of recordsList) {
+    if (!entry) {
+      continue;
+    }
+    const record = entry.record || entry;
+    const source = entry.source || "";
+    const recordId = entry.recordId || getRecordId(record, source);
+    if (!hasTorrents(record)) {
+      continue;
+    }
+    for (const torrentEntry of record.additional.torrent_paths) {
+      matches.push({
+        record,
+        recordId,
+        torrentEntry,
+        score: 1,
+        size: safeNumber(record?.file_unified_data?.filesize_best),
+      });
+    }
+  }
+  return matches;
+}
+
 function buildCapsXml() {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -166,9 +367,12 @@ function buildMagnet(recordId, torrentEntry, displayName) {
   ]
     .filter(Boolean)
     .join("#");
-  const btih = sha1Hex(hashSource).slice(0, 40);
+  const btih = sha1Hex(hashSource).slice(0, 40).toUpperCase();
   const dn = encodeURIComponent(displayName);
-  return `magnet:?xt=urn:btih:${btih}&dn=${dn}`;
+  return {
+    magnet: `magnet:?xt=urn:btih:${btih}&dn=${dn}`,
+    btih,
+  };
 }
 
 function buildGuid(recordId, torrentEntry) {
@@ -247,22 +451,29 @@ function buildItems(matches) {
       const title = getTitle(record);
       const size = safeNumber(record?.file_unified_data?.filesize_best);
       const guid = buildGuid(recordId, torrentEntry);
-      const magnet = buildMagnet(recordId, torrentEntry, title);
+      const { magnet, btih } = buildMagnet(recordId, torrentEntry, title);
       return [
         "    <item>",
         `      <title>${escapeXml(title)}</title>`,
         `      <guid isPermaLink="false">${escapeXml(guid)}</guid>`,
         `      <pubDate>${escapeXml(now)}</pubDate>`,
+        `      <link>${escapeXml(magnet)}</link>`,
+        `      <description>${escapeXml(title)}</description>`,
         `      <size>${size}</size>`,
         `      <category>${CATEGORY_ID}</category>`,
         `      <category>${SUBCATEGORY_ID}</category>`,
         `      <enclosure url="${escapeXml(magnet)}" length="${size}" type="application/x-bittorrent" />`,
         `      <newznab:attr name="category" value="${CATEGORY_ID}" />`,
         `      <newznab:attr name="category" value="${SUBCATEGORY_ID}" />`,
-        `      <torznab:attr name="seeders" value="0" />`,
-        `      <torznab:attr name="peers" value="0" />`,
-        `      <newznab:attr name="seeders" value="0" />`,
-        `      <newznab:attr name="peers" value="0" />`,
+        `      <torznab:attr name="category" value="${CATEGORY_ID}" />`,
+        `      <torznab:attr name="category" value="${SUBCATEGORY_ID}" />`,
+        `      <torznab:attr name="seeders" value="1" />`,
+        `      <torznab:attr name="peers" value="1" />`,
+        `      <newznab:attr name="seeders" value="1" />`,
+        `      <newznab:attr name="peers" value="1" />`,
+        `      <torznab:attr name="infohash" value="${btih}" />`,
+        `      <torznab:attr name="downloadvolumefactor" value="0" />`,
+        `      <torznab:attr name="uploadvolumefactor" value="1" />`,
         "    </item>",
       ].join("\n");
     })
@@ -286,7 +497,7 @@ function buildRssXml(baseUrl, matches) {
   ].join("\n");
 }
 
-function findMatches(query, isbnQuery) {
+function findMatchesLocal(query, isbnQuery) {
   const matches = [];
   const queryTokens = tokenize(query);
   const isbnMatches = Boolean(isbnQuery && normalizeIsbn(isbnQuery));
@@ -346,6 +557,28 @@ function findMatches(query, isbnQuery) {
   });
 }
 
+async function findMatchesRemote(query) {
+  const searchUrl = buildSearchUrl(query);
+  const { status, text } = await fetchText(searchUrl);
+  console.log(`[indexer] remote search status=${status} url=${searchUrl}`);
+  if (status >= 400) {
+    return [];
+  }
+  const results = parseSearchResults(text).slice(0, REMOTE_AA_LIMIT);
+  console.log(`[indexer] remote search results=${results.length}`);
+
+  const recordsList = [];
+  for (const item of results) {
+    const record = await fetchRecordByMd5(item.md5);
+    if (!record) {
+      continue;
+    }
+    recordsList.push({ record, recordId: item.md5, source: item.md5 });
+  }
+
+  return recordsToMatches(recordsList);
+}
+
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname || "";
@@ -372,11 +605,23 @@ const server = http.createServer((req, res) => {
   if (t === "search" || t === "book") {
     const query = typeof q === "string" ? q : "";
     const isbnQuery = typeof isbn === "string" ? isbn : "";
-    const matches = findMatches(query, isbnQuery);
-    console.log(`[indexer] ${t} q="${query}" isbn="${isbnQuery}" -> ${matches.length} item(s)`);
-    const xml = buildRssXml(baseUrl, matches);
-    res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
-    res.end(xml);
+    const handle = async () => {
+      let matches = [];
+      if (REMOTE_AA_ENABLED && query) {
+        matches = await findMatchesRemote(query);
+      } else {
+        matches = findMatchesLocal(query, isbnQuery);
+      }
+      console.log(`[indexer] ${t} q="${query}" isbn="${isbnQuery}" -> ${matches.length} item(s)`);
+      const xml = buildRssXml(baseUrl, matches);
+      res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8" });
+      res.end(xml);
+    };
+    handle().catch((error) => {
+      console.error(`[indexer] search failed: ${error.message}`);
+      res.writeHead(500, { "Content-Type": "text/plain" });
+      res.end("Search failed");
+    });
     return;
   }
 

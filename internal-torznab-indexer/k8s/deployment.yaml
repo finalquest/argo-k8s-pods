@@ -28,3 +28,18 @@ spec:
               value: /app/data_dir
             - name: BASE_URL
               value: https://indexer.finalq.xyz
+            - name: REMOTE_AA_ENABLED
+              value: "true"
+            - name: REMOTE_AA_BASE
+              value: https://annas-archive.li
+            - name: REMOTE_AA_LANGS
+              value: en,es
+            - name: REMOTE_AA_EXT
+              value: epub
+            - name: REMOTE_AA_LIMIT
+              value: "25"
+            - name: REMOTE_AA_ACCOUNT_ID2
+              valueFrom:
+                secretKeyRef:
+                  name: internal-torznab-indexer-secrets
+                  key: REMOTE_AA_ACCOUNT_ID2
