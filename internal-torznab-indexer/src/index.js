@@ -255,9 +255,14 @@ function buildItems(matches) {
         `      <pubDate>${escapeXml(now)}</pubDate>`,
         `      <size>${size}</size>`,
         `      <category>${CATEGORY_ID}</category>`,
+        `      <category>${SUBCATEGORY_ID}</category>`,
         `      <enclosure url="${escapeXml(magnet)}" length="${size}" type="application/x-bittorrent" />`,
+        `      <newznab:attr name="category" value="${CATEGORY_ID}" />`,
+        `      <newznab:attr name="category" value="${SUBCATEGORY_ID}" />`,
         `      <torznab:attr name="seeders" value="0" />`,
         `      <torznab:attr name="peers" value="0" />`,
+        `      <newznab:attr name="seeders" value="0" />`,
+        `      <newznab:attr name="peers" value="0" />`,
         "    </item>",
       ].join("\n");
     })
