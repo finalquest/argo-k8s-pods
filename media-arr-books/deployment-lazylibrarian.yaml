@@ -21,7 +21,8 @@ spec:
         fsGroup: 1000
       containers:
         - name: lazylibrarian
-          image: ghcr.io/linuxserver/lazylibrarian:version-71b85d73
+          image: harbor.finalq.xyz/tools/lazylibrarian:latest
+          imagePullPolicy: Always
           env:
             - name: PUID
               value: "1000"
