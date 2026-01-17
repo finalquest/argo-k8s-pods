@@ -38,6 +38,8 @@ spec:
               value: epub
             - name: REMOTE_AA_LIMIT
               value: "25"
+            - name: REMOTE_AA_USE_CURL
+              value: "true"
             - name: REMOTE_AA_ACCOUNT_ID2
               valueFrom:
                 secretKeyRef:
