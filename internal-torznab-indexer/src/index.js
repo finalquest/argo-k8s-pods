@@ -315,6 +315,24 @@ function findMatches(query, isbnQuery) {
     }
   }
 
+  if (matches.length === 0 && !isbnMatches && queryTokens.length === 0) {
+    for (const entry of records) {
+      const { record, recordId } = entry;
+      if (!hasTorrents(record)) {
+        continue;
+      }
+      const torrentEntry = record.additional.torrent_paths[0];
+      matches.push({
+        record,
+        recordId,
+        torrentEntry,
+        score: 0,
+        size: safeNumber(record?.file_unified_data?.filesize_best),
+      });
+      break;
+    }
+  }
+
   return matches.sort((a, b) => {
     if (b.score !== a.score) {
       return b.score - a.score;
@@ -326,6 +344,9 @@ function findMatches(query, isbnQuery) {
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname || "";
+  const queryParams = parsedUrl.query || {};
+  const logParams = JSON.stringify(queryParams);
+  console.log(`[indexer] request ${req.method} ${pathname} params=${logParams}`);
 
   if (pathname !== "/api") {
     res.writeHead(404, { "Content-Type": "text/plain" });
@@ -333,7 +354,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const { t, q, isbn } = parsedUrl.query;
+  const { t, q, isbn } = queryParams;
   const baseUrl = BASE_URL || (req.headers.host ? `http://${req.headers.host}` : `http://localhost:${PORT}`);
 
   if (t === "caps") {
