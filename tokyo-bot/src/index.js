@@ -19,6 +19,7 @@ const {
   GIT_AUTH_USERNAME = '',
   GIT_USER_NAME = 'Codex Telegram Bot',
   GIT_USER_EMAIL = 'bot@example.com',
+  TOKYO_REPO_BRANCH = '',
   CODEX_CMD = 'codex',
   CODEX_ARGS = '',
   CODEX_API_KEY,
@@ -99,6 +100,55 @@ const runCommand = (cmd, args, options = {}) =>
     });
   });
 
+const runCommandOutput = (cmd, args, options = {}) =>
+  new Promise((resolve, reject) => {
+    logger.debug({ cmd, args }, 'exec-output');
+    const child = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], ...options });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+      } else {
+        reject(new Error(stderr.trim() || `${cmd} exited with code ${code}`));
+      }
+    });
+  });
+
+const getDefaultBranch = async () => {
+  try {
+    const ref = await runCommandOutput('git', [
+      '-C',
+      repoPath,
+      'symbolic-ref',
+      '--short',
+      'refs/remotes/origin/HEAD'
+    ]);
+    const parts = ref.split('/');
+    return parts[parts.length - 1] || 'master';
+  } catch (err) {
+    logger.warn({ err }, 'No pude leer origin/HEAD, uso master');
+    return 'master';
+  }
+};
+
+const checkoutDefaultBranch = async () => {
+  const targetBranch = await getDefaultBranch();
+  try {
+    await runCommand('git', ['-C', repoPath, 'checkout', '-B', targetBranch, `origin/${targetBranch}`]);
+  } catch (err) {
+    logger.warn({ targetBranch, err }, 'No pude hacer checkout desde origin, creo branch local');
+    await runCommand('git', ['-C', repoPath, 'checkout', '-B', targetBranch]);
+  }
+  await runCommand('git', ['-C', repoPath, 'pull', '--ff-only', 'origin', targetBranch]);
+};
+
 const buildAuthUrl = (url) => {
   if (!GIT_AUTH_TOKEN || !url.startsWith('http')) {
     return url;
@@ -135,7 +185,7 @@ async function ensureRepo() {
       fetchArgs.push(`--depth=${depth}`);
     }
     await runCommand('git', fetchArgs);
-    await runCommand('git', ['-C', repoPath, 'pull', '--ff-only']);
+    await checkoutDefaultBranch();
   }
   await runCommand('git', ['-C', repoPath, 'remote', 'set-url', 'origin', authUrl]);
   await runCommand('git', ['-C', repoPath, 'config', 'user.name', GIT_USER_NAME]);

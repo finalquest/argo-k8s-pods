@@ -34,7 +34,7 @@ spec:
               mountPath: /codex-dst
       containers:
         - name: tokyo-bot
-          image: harbor.finalq.xyz/tools/tokyo-bot:2026-01-08-2
+          image: harbor.finalq.xyz/tools/tokyo-bot:latest
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
