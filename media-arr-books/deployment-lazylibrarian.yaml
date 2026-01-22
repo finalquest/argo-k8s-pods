@@ -46,7 +46,7 @@ spec:
             claimName: lazylibrarian-config
         - name: downloads
           persistentVolumeClaim:
-            claimName: downloads-data
+            claimName: downloads-nfs
         - name: books
           persistentVolumeClaim:
             claimName: books-data

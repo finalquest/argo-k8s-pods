@@ -57,4 +57,4 @@ spec:
             claimName: qbittorrent-config
         - name: downloads
           persistentVolumeClaim:
-            claimName: downloads-data
+            claimName: downloads-nfs
