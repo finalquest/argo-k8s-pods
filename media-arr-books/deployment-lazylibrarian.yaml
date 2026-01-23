@@ -49,4 +49,4 @@ spec:
             claimName: downloads-nfs
         - name: books
           persistentVolumeClaim:
-            claimName: books-data
+            claimName: books-nfs

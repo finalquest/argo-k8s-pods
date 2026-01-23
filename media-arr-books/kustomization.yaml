@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - pv-pvc-downloads-nfs.yaml
+  - pv-pvc-books-nfs
   - deployment-qbittorrent.yaml
   - deployment-prowlarr.yaml
   - deployment-lazylibrarian.yaml
