@@ -3,3 +3,5 @@ backups/
 dist/
 inventory/web/playwright-report/
 inventory/web/test-results/
+secret*.yaml
+

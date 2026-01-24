@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: books-bot
+  namespace: media
+  labels:
+    app: books-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: books-bot
+  template:
+    metadata:
+      labels:
+        app: books-bot
+    spec:
+      nodeSelector:
+        media-node: "true"
+      containers:
+        - name: books-bot
+          image: node:20-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-lc"]
+          args:
+            - |
+              set -e
+
+              apk add --no-cache git
+
+              npm install -g pnpm
+              mkdir -p /app
+              cd /app
+
+              cat > package.json <<'JSON'
+              {
+                "name": "books-bot",
+                "type": "module",
+                "dependencies": {
+                  "node-telegram-bot-api": "^0.67.0",
+                  "meilisearch": "^0.44.0",
+                  "pino": "^10.1.0",
+                  "node-fetch": "^3.3.2"
+                }
+              }
+              JSON
+
+              pnpm install --silent
+              cp /app-code-src/index.js .
+              node index.js
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: books-bot-config
+            - secretRef:
+                name: books-bot-secrets
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+          volumeMounts:
+            - name: bot-code
+              mountPath: /app-code-src
+              readOnly: true
+      volumes:
+        - name: bot-code
+          configMap:
+            name: books-bot-code
+            items:
+              - key: index.js
+                path: index.js

@@ -1,0 +1,132 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: biblioteca-indexer
+  namespace: media
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      nodeSelector:
+        media-node: "true"
+      restartPolicy: Never
+      containers:
+        - name: indexer
+          image: node:20-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MEILI_HOST
+              value: "http://meilisearch:7700"
+            - name: MEILI_INDEX
+              value: "biblioteca"
+            - name: JSON_PATH
+              value: "/data/indice.json"
+            - name: BATCH_SIZE
+              value: "200"
+            - name: MEILI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: meili-secret
+                  key: MASTER_KEY
+          command: ["sh", "-lc"]
+          args:
+            - |
+              set -e
+
+              npm i -g pnpm >/dev/null 2>&1 || true
+              mkdir -p /app
+              cd /app
+
+              cat > package.json <<'JSON'
+              {
+                "name": "biblioteca-indexer",
+                "type": "module",
+                "dependencies": {
+                  "meilisearch": "^0.44.0"
+                }
+              }
+              JSON
+
+              pnpm install --silent
+
+              cat > indexer.mjs <<'JS'
+              import fs from "node:fs";
+              import { MeiliSearch } from "meilisearch";
+
+              const MEILI_HOST = process.env.MEILI_HOST;
+              const MEILI_INDEX = process.env.MEILI_INDEX || "biblioteca";
+              const JSON_PATH = process.env.JSON_PATH;
+              const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || "1000", 10);
+
+              const MEILI_API_KEY = process.env.MEILI_API_KEY;
+
+              if (!MEILI_HOST) throw new Error("MEILI_HOST missing");
+              if (!JSON_PATH) throw new Error("JSON_PATH missing");
+
+              const client = new MeiliSearch({
+                host: MEILI_HOST,
+                apiKey: MEILI_API_KEY,
+              });
+
+              console.log(`[indexer] reading ${JSON_PATH}...`);
+              const raw = fs.readFileSync(JSON_PATH, "utf-8");
+              const arr = JSON.parse(raw);
+
+              console.log(`[indexer] items=${arr.length}`);
+
+              // Create index with primaryKey
+              console.log("[indexer] creating index...");
+              const createdIndex = await client.createIndex(MEILI_INDEX, {
+                primaryKey: "libid",
+              });
+              const index = client.index(MEILI_INDEX);
+
+              // Upload documents
+              const docs = arr.map((x) => ({
+                libid: x.libid,
+                title: x.title,
+                authors: x.authors ?? [],
+                description: x.description ?? "",
+                labels: x.labels ?? [],
+                published: x.published ?? null,
+                pagecount: x.pagecount ?? null,
+                sha256sum: x.sha256sum ?? null,
+                size: x.size ?? null,
+                filename: x.filename,
+              }));
+
+              console.log(`[indexer] uploading ${docs.length} documents in batches of ${BATCH_SIZE}...`);
+
+              for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+                const batch = docs.slice(i, i + BATCH_SIZE);
+                try {
+                  const task = await index.addDocuments(batch);
+                  console.log(`[indexer] batch ${i}..${i + batch.length - 1} taskUid=${task.taskUid}`);
+                } catch (err) {
+                  console.error(`[indexer] ERROR in batch ${i}..${i + batch.length - 1}:`, err.message);
+                  throw err;
+                }
+                // Delay between batches to avoid overwhelming Meilisearch
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+
+              // Update settings after documents are indexed
+              console.log("[indexer] updating settings...");
+              await index.updateSettings({
+                searchableAttributes: ["title", "authors", "labels", "description"],
+                filterableAttributes: ["labels", "published"],
+                sortableAttributes: ["published", "pagecount", "size"],
+              });
+
+              console.log("[indexer] done");
+              JS
+
+              node indexer.mjs
+          volumeMounts:
+            - name: biblioteca-data
+              mountPath: /data
+              readOnly: true
+      volumes:
+        - name: biblioteca-data
+          persistentVolumeClaim:
+            claimName: biblioteca-secreta-nfs

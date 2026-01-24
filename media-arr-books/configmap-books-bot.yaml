@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: books-bot-config
+  namespace: media
+data:
+  MEILI_HOST: http://meilisearch:7700
+  MEILI_INDEX: biblioteca
+  BIBLIOTECA_BASE_URL: https://biblioteca.finalq.xyz
+  LOG_LEVEL: info
