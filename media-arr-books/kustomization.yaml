@@ -16,15 +16,12 @@ resources:
   - service-prowlarr.yaml
   - service-lazylibrarian.yaml
   - service-biblioteca-secreta-web.yaml
-   - ingress.yaml
-   # Meilisearch
-   - pvc-meili.yaml
+  - ingress.yaml
+  - pvc-meili.yaml
   - deployment-meili.yaml
   - service-meili.yaml
-  # Job Indexer
   - job-biblioteca-indexer.yaml
-   # Books Bot
-   - configmap-books-bot.yaml
-   - configmap-books-bot-code.yaml
-   - deployment-books-bot.yaml
-   - service-books-bot.yaml
+  - configmap-books-bot.yaml
+  - configmap-books-bot-code.yaml
+  - deployment-books-bot.yaml
+  - service-books-bot.yaml
