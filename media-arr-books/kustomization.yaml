@@ -6,10 +6,14 @@ resources:
   - pvc.yaml
   - pv-pvc-downloads-nfs.yaml
   - pv-pvc-books-nfs.yaml
+  - pv-pvc-biblioteca-secreta-nfs.yaml
+  - configmap-nginx-biblioteca.yaml
   - deployment-qbittorrent.yaml
   - deployment-prowlarr.yaml
   - deployment-lazylibrarian.yaml
+  - deployment-biblioteca-secreta-web.yaml
   - service-qbittorrent.yaml
   - service-prowlarr.yaml
   - service-lazylibrarian.yaml
+  - service-biblioteca-secreta-web.yaml
   - ingress.yaml

@@ -16,6 +16,7 @@ spec:
                 name: lazylibrarian
                 port:
                   number: 5299
+
     - host: prowlarr.finalq.xyz
       http:
         paths:
@@ -26,6 +27,7 @@ spec:
                 name: prowlarr
                 port:
                   number: 9696
+
     - host: qbittorrent.finalq.xyz
       http:
         paths:
@@ -34,5 +36,16 @@ spec:
             backend:
               service:
                 name: qbittorrent
+                port:
+                  number: 8080
+
+    - host: biblioteca.finalq.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: biblioteca-secreta-web
                 port:
                   number: 8080

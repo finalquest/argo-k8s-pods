@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-biblioteca-secreta-conf
+  namespace: media
+data:
+  default.conf: |
+    server {
+      listen 8080;
+      server_name _;
+
+      # Web del índice
+      location / {
+        root /data/indice-web;
+        try_files $uri $uri/ /index.html;
+      }
+
+      # Acceso directo a los epubs (para links del índice)
+      location /biblioteca/ {
+        alias /data/biblioteca/;
+        autoindex off;
+        add_header Content-Disposition "inline";
+      }
+    }
