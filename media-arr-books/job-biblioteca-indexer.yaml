@@ -114,7 +114,7 @@ spec:
               console.log("[indexer] updating settings...");
               await index.updateSettings({
                 searchableAttributes: ["title", "authors", "labels", "description"],
-                filterableAttributes: ["labels", "published"],
+                filterableAttributes: ["labels", "published", "authors"],
                 sortableAttributes: ["published", "pagecount", "size"],
               });
 
