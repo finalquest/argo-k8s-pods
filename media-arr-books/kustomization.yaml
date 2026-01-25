@@ -22,6 +22,5 @@ resources:
   - service-meili.yaml
   - job-biblioteca-indexer.yaml
   - configmap-books-bot.yaml
-  - configmap-books-bot-code.yaml
   - deployment-books-bot.yaml
   - service-books-bot.yaml
