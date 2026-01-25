@@ -269,7 +269,7 @@ async function startBot() {
 
     if (text.startsWith('/')) {
       if (text === '/start') {
-        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/addMail <email> - Asocia un email para recibir libros por correo\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
+        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
       } else if (text === '/help') {
         let helpMessage = '📚 Biblioteca Secreta Bot\n\n';
         helpMessage += '• Envía un texto para buscar libros\n';
@@ -280,6 +280,7 @@ async function startBot() {
         helpMessage += '/start - Inicia el bot\n';
         helpMessage += '/help - Muestra este mensaje de ayuda\n';
         helpMessage += '/addMail <email> - Asocia un email a tu cuenta\n';
+        helpMessage += '/changeMail <email> - Actualiza tu email configurado\n';
         helpMessage += '/myId - Muestra tu ID de Telegram\n';
 
         if (isAdmin(userId, whitelistConfig)) {
@@ -370,6 +371,31 @@ async function startBot() {
         saveEmails(emails);
 
         bot.sendMessage(chatId, `✅ Email asociado correctamente:\n\n📧 ${email}\n\nAhora puedes usar el botón 📧 Email en los resultados para recibir libros en este correo.`);
+      } else if (text.startsWith('/changeMail')) {
+        const newEmail = text.replace('/changeMail', '').trim();
+
+        if (!newEmail) {
+          bot.sendMessage(chatId, '❌ Por favor, incluye el nuevo email.\n\nUso: /changeMail nuevo@email.com');
+          return;
+        }
+
+        if (!isValidEmail(newEmail)) {
+          bot.sendMessage(chatId, '❌ El email no tiene un formato válido.\n\nUso: /changeMail nuevo@email.com');
+          return;
+        }
+
+        const emails = loadEmails();
+
+        if (!emails[userId]) {
+          bot.sendMessage(chatId, '❌ No tienes un email configurado.\n\nUsa el comando:\n/addMail tu@email.com\n\npara asociar un email a tu cuenta primero.');
+          return;
+        }
+
+        const oldEmail = emails[userId];
+        emails[userId] = newEmail;
+        saveEmails(emails);
+
+        bot.sendMessage(chatId, `✅ Email actualizado correctamente:\n\n📧 Anterior: ${oldEmail}\n📧 Nuevo: ${newEmail}`);
       } else {
         bot.sendMessage(chatId, 'Comando no reconocido. Envía un texto para buscar libros.');
       }
