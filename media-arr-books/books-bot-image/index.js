@@ -38,6 +38,8 @@ const allowedUsers = new Set(
     .filter(Boolean)
 );
 
+const conversationStates = new Map();
+
 const WHITELIST_FILE = '/data/bot-whitelist.json';
 
 const loadWhitelist = () => {
@@ -115,6 +117,67 @@ const isValidEmail = (email) => {
   return emailRegex.test(email);
 };
 
+const normalizeAuthor = (authors) => {
+  if (!authors) return '';
+  let authorStr = '';
+  
+  if (Array.isArray(authors)) {
+    authorStr = authors[0];
+  } else {
+    authorStr = authors;
+  }
+  
+  return authorStr.toLowerCase().trim();
+};
+
+const detectAuthorSearch = (results, originalQuery) => {
+  if (results.length < 3) return null;
+  
+  const authors = results.map(r => normalizeAuthor(r.authors));
+  const authorCount = {};
+  
+  authors.forEach(author => {
+    authorCount[author] = (authorCount[author] || 0) + 1;
+  });
+  
+  const sortedAuthors = Object.entries(authorCount)
+    .sort((a, b) => b[1] - a[1]);
+  
+  const [dominantAuthor, count] = sortedAuthors[0];
+  const percentage = (count / results.length) * 100;
+  
+  if (percentage >= 80) {
+    return {
+      isAuthorSearch: true,
+      author: dominantAuthor,
+      originalQuery
+    };
+  }
+  
+  return null;
+};
+
+const clearConversationState = (chatId) => {
+  if (conversationStates.has(chatId)) {
+    conversationStates.delete(chatId);
+    logger.info({ chatId }, 'Conversation state cleared');
+  }
+};
+
+const cleanOldStates = () => {
+  const now = Date.now();
+  const TIMEOUT_MS = 5 * 60 * 1000;
+  
+  for (const [chatId, state] of conversationStates.entries()) {
+    if (now - state.timestamp > TIMEOUT_MS) {
+      conversationStates.delete(chatId);
+      logger.info({ chatId }, 'Conversation state expired');
+    }
+  }
+};
+
+setInterval(cleanOldStates, 30000);
+
 const sanitizeFilename = (text) => {
   return text.replace(/[<>:"/\\|?*]/g, '');
 };
@@ -173,17 +236,23 @@ const buildInlineKeyboard = (results, userId) => {
   return { inline_keyboard: keyboard };
 };
 
-const searchMeilisearch = async (query, limit = 5) => {
+const searchMeilisearch = async (query, limit = 5, filters = null) => {
   try {
     const index = meiliClient.index(MEILI_INDEX);
-    const search = await index.search(query, {
+    const searchParams = {
       limit,
       attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
-    });
+    };
+    
+    if (filters && filters.author) {
+      searchParams.filter = `authors = "${filters.author}"`;
+    }
+    
+    const search = await index.search(query, searchParams);
 
     return search.hits;
   } catch (err) {
-    logger.error({ err, query }, 'Error searching Meilisearch');
+    logger.error({ err, query, filters }, 'Error searching Meilisearch');
     throw err;
   }
 };
@@ -269,7 +338,7 @@ async function startBot() {
 
     if (text.startsWith('/')) {
       if (text === '/start') {
-        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
+        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/restartSearch - Cancela búsqueda activa y reinicia\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
       } else if (text === '/help') {
         let helpMessage = '📚 Biblioteca Secreta Bot\n\n';
         helpMessage += '• Envía un texto para buscar libros\n';
@@ -279,6 +348,7 @@ async function startBot() {
         helpMessage += 'Comandos disponibles:\n';
         helpMessage += '/start - Inicia el bot\n';
         helpMessage += '/help - Muestra este mensaje de ayuda\n';
+        helpMessage += '/restartSearch - Cancela búsqueda activa y reinicia\n';
         helpMessage += '/addMail <email> - Asocia un email a tu cuenta\n';
         helpMessage += '/changeMail <email> - Actualiza tu email configurado\n';
         helpMessage += '/myId - Muestra tu ID de Telegram\n';
@@ -293,6 +363,13 @@ async function startBot() {
         bot.sendMessage(chatId, helpMessage);
       } else if (text === '/myId') {
         bot.sendMessage(chatId, `👤 Tu ID de Telegram: ${userId}`);
+      } else if (text === '/restartSearch') {
+        if (conversationStates.has(chatId)) {
+          conversationStates.delete(chatId);
+          bot.sendMessage(chatId, '🔄 Búsqueda reiniciada.\n\nEnvía un nuevo texto para buscar libros.');
+        } else {
+          bot.sendMessage(chatId, 'ℹ️ No hay ninguna búsqueda activa.\n\nEnvía un texto para buscar libros.');
+        }
       } else if (text.startsWith('/addUser')) {
         if (!isAdmin(userId, whitelistConfig)) {
           bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
@@ -408,6 +485,34 @@ async function startBot() {
 
       if (results.length === 0) {
         bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}".\n\nIntenta con otro término de búsqueda.`);
+        clearConversationState(chatId);
+        return;
+      }
+
+      const authorDetection = detectAuthorSearch(results, text);
+
+      if (authorDetection) {
+        conversationStates.set(chatId, {
+          state: 'WAITING_FOR_BOOK_FILTER',
+          author: authorDetection.author,
+          originalQuery: text,
+          timestamp: Date.now()
+        });
+        
+        const originalAuthorName = results[0].authors;
+        const authorName = Array.isArray(originalAuthorName) 
+          ? originalAuthorName[0] 
+          : originalAuthorName;
+        
+        bot.sendMessage(chatId, 
+          `📚 Encontré varios libros de ${authorName}.\n\n` +
+          `¿Qué libro específico buscas?\n\n` +
+          `Envía un título parcial o descripción para filtrar.\n` +
+          `Mostraremos hasta 5 resultados que coincidan mejor.\n\n` +
+          `O usa /restartSearch para cancelar.`
+        );
+        
+        logger.info({ chatId, author: authorName, query: text }, 'Author search detected, waiting for filter');
         return;
       }
 
@@ -516,10 +621,62 @@ async function startBot() {
         if (!userEmail) {
           bot.answerCallbackQuery(query.id, { text: '❌ No tienes email configurado' });
           bot.sendMessage(chatId, '❌ No tienes un email configurado.\n\nUsa el comando:\n/addMail tu@email.com\n\npara asociar un email a tu cuenta.');
+      return;
+    }
+
+    if (conversationStates.has(chatId)) {
+      const state = conversationStates.get(chatId);
+      
+      if (state.state === 'WAITING_FOR_BOOK_FILTER') {
+        logger.info({ chatId, author: state.author, filter: text }, 'Filtering by author');
+        
+        const filteredResults = await searchMeilisearch(text, 10, { author: state.author });
+        
+        if (filteredResults.length === 0) {
+          const authorName = Array.isArray(state.originalQuery.split(',').map(s => s.trim())[0])
+            ? state.originalQuery.split(',')[0].trim()
+            : state.originalQuery;
+          
+          bot.sendMessage(chatId, 
+            `🔍 No encontré libros de ${authorName} que coincidan con "${text}".\n\n` +
+            `Intenta con otro filtro o usa /restartSearch para cancelar.`
+          );
           return;
         }
+        
+        if (filteredResults.length > 5) {
+          const originalAuthorName = filteredResults[0].authors;
+          const authorName = Array.isArray(originalAuthorName) 
+            ? originalAuthorName[0] 
+            : originalAuthorName;
+          
+          bot.sendMessage(chatId,
+            `🔍 Encontré ${filteredResults.length} libros de ${authorName} que coinciden con "${text}".\n\n` +
+            `Por favor refina tu búsqueda con un título más específico.\n\n` +
+            `Ejemplos de cómo refinar:\n` +
+            `• "${text} primera"\n` +
+            `• "${text} trilogía"\n` +
+            `• "${text} ciencia ficción"\n\n` +
+            `O usa /restartSearch para cancelar.`
+          );
+          return;
+        }
+        
+        conversationStates.delete(chatId);
+        
+        const messageText = `📚 Libros de ${filteredResults[0].authors} que coinciden con "${text}":\n\n` +
+          filteredResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
+        
+        await bot.sendMessage(chatId, messageText, {
+          disable_web_page_preview: true,
+          reply_markup: buildInlineKeyboard(filteredResults, userId)
+        });
+        
+        return;
+      }
+    }
 
-        try {
+    try {
           bot.answerCallbackQuery(query.id, { text: '📧 Preparando envío por email...' });
 
           const downloadUrl = `${BIBLIOTECA_BASE_URL}/biblioteca/${book.filename}`;
