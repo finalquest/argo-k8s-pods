@@ -201,13 +201,13 @@ const getTotalResults = async (query) => {
 const getTotalBooksByAuthor = async (authorName) => {
   try {
     const index = meiliClient.index(MEILI_INDEX);
-    const search = await index.search('', {
+     const search = await index.search('', {
       limit: 0,
       filter: `authors = "${authorName}"`,
       attributesToRetrieve: [],
     });
 
-    return search.totalHits || 0;
+    return search.totalHits || search.estimatedTotalHits || 0;
   } catch (err) {
     logger.error({ err, authorName }, '[TOTAL] Error getting total books by author');
     return 0;
@@ -306,6 +306,7 @@ const searchMeilisearch = async (query, limit = 5, filters = null) => {
     const searchParams = {
       limit,
       attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
+      attributesToSearchOn: ['title'],
     };
 
     if (filters && filters.author) {
@@ -315,7 +316,7 @@ const searchMeilisearch = async (query, limit = 5, filters = null) => {
       logger.info({ query, limit, filters }, '[MEILISEARCH] NO filter applied');
     }
 
-    const search = await index.search(query, searchParams);
+    const search = await index.search(`"${query}"`, searchParams);
 
     logger.info({ query, results: search.hits.length, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
 
@@ -728,15 +729,22 @@ async function startBot() {
         conversationStates.delete(chatId);
 
         const remainingTime = Math.round((5 * 60 * 1000 - (Date.now() - state.timestamp)) / 1000 / 60);
-        const messageText = `👤 Modo autor: ${state.displayName}\n\n` +
-          `📚 Libros de ${state.displayName} que coinciden con "${text}":\n\n` +
-          authorResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
-          `\n⏰ Expira en ${remainingTime} minutos\n` +
-          `/exit - Salir del modo autor`;
+        const messageText = authorResults.length > 5
+          ? `👤 Modo autor: ${state.displayName}\n\n` +
+            `📚 Encontré más de 5 libros. Mostrando los primeros 5:\n\n` +
+            authorResults.slice(0, 5).map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
+            `\n⚠️ Hay ${authorResults.length} libros de ${state.displayName} que coinciden con "${text}". Refina tu búsqueda o usa /exit para salir del modo autor.\n\n` +
+            `⏰ Expira en ${remainingTime} minutos\n` +
+            `/exit - Salir del modo autor`
+          : `👤 Modo autor: ${state.displayName}\n\n` +
+            `📚 Libros de ${state.displayName} que coinciden con "${text}":\n\n` +
+            authorResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
+            `\n⏰ Expira en ${remainingTime} minutos\n` +
+            `/exit - Salir del modo autor`;
 
         await bot.sendMessage(chatId, messageText, {
           disable_web_page_preview: true,
-          reply_markup: buildInlineKeyboard(authorResults, userId)
+          reply_markup: buildInlineKeyboard(authorResults.length > 5 ? authorResults.slice(0, 5) : authorResults, userId)
         });
 
         return;
@@ -757,20 +765,12 @@ async function startBot() {
 
       const totalCount = await getTotalResults(text);
 
-      if (totalCount > 5) {
-        bot.sendMessage(chatId,
-          `📚 Encontré más de 5 resultados para "${text}".\n\n` +
-          `Por favor refina tu búsqueda:\n` +
-          `• "${text} primera"\n` +
-          `• "${text} saga"\n` +
-          `• "${text} [año de publicación]"\n\n` +
-          `O usa /author <nombre> si quieres buscar solo libros de un autor específico.`
-        );
-        return;
-      }
-
-      const messageText = `📚 Resultados para "${text}":\n\n` +
-        results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
+      const messageText = totalCount > 5
+        ? `📚 Encontré más de 5 resultados para "${text}". Mostrando los primeros 5:\n\n` +
+          results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
+          `\n⚠️ Hay ${totalCount} resultados disponibles. Refina tu búsqueda para obtener más específicos o usa /author <nombre> para buscar por autor.`
+        : `📚 Resultados para "${text}":\n\n` +
+          results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
 
       await bot.sendMessage(chatId, messageText, {
         disable_web_page_preview: true,

@@ -9,4 +9,4 @@ COPY index.js .
 
 CMD ["node", "index.js"]
 
-# Version: v2.1.1 - Fix: Correct bookCount when selecting author from menu
+# Version: v2.1.3 - Fix: Show 5 results when >5 available, remove refinement barrier
