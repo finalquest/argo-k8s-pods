@@ -380,6 +380,7 @@ async function startBot() {
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id ? String(msg.from.id) : '';
+    const text = msg.text?.trim();
 
     if (allowedUsers.size && !allowedUsers.has(userId)) {
       logger.warn({ userId }, 'Unauthorized user');
