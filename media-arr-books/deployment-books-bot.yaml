@@ -50,7 +50,7 @@ spec:
               mountPath: /data
       containers:
         - name: books-bot
-          image: harbor.finalq.xyz/tools/books-bot:v1.0.0
+          image: harbor.finalq.xyz/tools/books-bot:v1.1.0
           imagePullPolicy: Always
           ports:
             - name: http
@@ -62,6 +62,12 @@ spec:
                 name: books-bot-secrets
             - secretRef:
                 name: books-bot-smtp
+          env:
+            - name: ADMIN_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: books-bot-secrets
+                  key: ADMIN_USER_ID
           resources:
             requests:
               cpu: 200m

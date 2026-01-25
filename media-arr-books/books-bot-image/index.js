@@ -9,6 +9,7 @@ const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const {
   TELEGRAM_BOT_TOKEN,
   ALLOWED_USER_IDS = '',
+  ADMIN_USER_ID = '',
   MEILI_HOST,
   MEILI_INDEX = 'biblioteca',
   BIBLIOTECA_BASE_URL,
@@ -36,6 +37,49 @@ const allowedUsers = new Set(
     .map((id) => id.trim())
     .filter(Boolean)
 );
+
+const WHITELIST_FILE = '/data/bot-whitelist.json';
+
+const loadWhitelist = () => {
+  try {
+    if (fs.existsSync(WHITELIST_FILE)) {
+      const data = fs.readFileSync(WHITELIST_FILE, 'utf-8');
+      const config = JSON.parse(data);
+      logger.info({ whitelist: config.whitelist, admin: config.admin }, 'Whitelist loaded from file');
+      return config;
+    } else {
+      logger.warn('Whitelist file not found, creating default');
+      const defaultConfig = {
+        whitelist: ALLOWED_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean),
+        admin: ADMIN_USER_ID || ALLOWED_USER_IDS.split(',')[0]?.trim()
+      };
+      saveWhitelist(defaultConfig);
+      return defaultConfig;
+    }
+  } catch (err) {
+    logger.error({ err }, 'Error loading whitelist file');
+    return {
+      whitelist: ALLOWED_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean),
+      admin: ADMIN_USER_ID || ALLOWED_USER_IDS.split(',')[0]?.trim()
+    };
+  }
+};
+
+const saveWhitelist = (config) => {
+  try {
+    fs.writeFileSync(WHITELIST_FILE, JSON.stringify(config, null, 2));
+    logger.info({ whitelist: config.whitelist, admin: config.admin }, 'Whitelist saved to file');
+  } catch (err) {
+    logger.error({ err }, 'Error saving whitelist file');
+    throw err;
+  }
+};
+
+const isAdmin = (userId, config) => {
+  return String(userId) === String(config.admin);
+};
+
+const whitelistConfig = loadWhitelist();
 
 const meiliClient = new MeiliSearch({
   host: MEILI_HOST,
@@ -225,9 +269,89 @@ async function startBot() {
 
     if (text.startsWith('/')) {
       if (text === '/start') {
-        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/addMail <email> - Asocia un email para recibir libros por correo');
+        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/addMail <email> - Asocia un email para recibir libros por correo\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
       } else if (text === '/help') {
-        bot.sendMessage(chatId, '📚 Biblioteca Secreta Bot\n\n• Envía un texto para buscar libros\n• Usa los botones para descargar o ver más info\n• Resultados limitados a 5 por búsqueda\n• Los EPUBs se envían como archivos (funciona desde cualquier red)\n• Usa /addMail <email> para recibir libros por correo electrónico\n\nComandos:\n/addMail <email> - Asocia un email a tu cuenta');
+        let helpMessage = '📚 Biblioteca Secreta Bot\n\n';
+        helpMessage += '• Envía un texto para buscar libros\n';
+        helpMessage += '• Usa los botones para descargar o ver más info\n';
+        helpMessage += '• Resultados limitados a 5 por búsqueda\n';
+        helpMessage += '• Los EPUBs se envían como archivos (funciona desde cualquier red)\n\n';
+        helpMessage += 'Comandos disponibles:\n';
+        helpMessage += '/start - Inicia el bot\n';
+        helpMessage += '/help - Muestra este mensaje de ayuda\n';
+        helpMessage += '/addMail <email> - Asocia un email a tu cuenta\n';
+        helpMessage += '/myId - Muestra tu ID de Telegram\n';
+
+        if (isAdmin(userId, whitelistConfig)) {
+          helpMessage += '\nComandos de administración:\n';
+          helpMessage += '/addUser <id> - Agrega un usuario a la whitelist\n';
+          helpMessage += '/removeUser <id> - Elimina un usuario de la whitelist\n';
+          helpMessage += '/listUsers - Lista todos los usuarios autorizados\n';
+        }
+
+        bot.sendMessage(chatId, helpMessage);
+      } else if (text === '/myId') {
+        bot.sendMessage(chatId, `👤 Tu ID de Telegram: ${userId}`);
+      } else if (text.startsWith('/addUser')) {
+        if (!isAdmin(userId, whitelistConfig)) {
+          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+          return;
+        }
+
+        const targetId = text.replace('/addUser', '').trim();
+
+        if (!targetId) {
+          bot.sendMessage(chatId, '❌ Por favor, incluye el ID del usuario.\n\nUso: /addUser 123456789');
+          return;
+        }
+
+        if (whitelistConfig.whitelist.includes(targetId)) {
+          bot.sendMessage(chatId, '⚠️ El usuario ya está en la whitelist.');
+          return;
+        }
+
+        whitelistConfig.whitelist.push(targetId);
+        saveWhitelist(whitelistConfig);
+        allowedUsers.add(targetId);
+
+        bot.sendMessage(chatId, `✅ Usuario agregado:\n\n👤 ID: ${targetId}\n\nTotal usuarios: ${whitelistConfig.whitelist.length}`);
+      } else if (text.startsWith('/removeUser')) {
+        if (!isAdmin(userId, whitelistConfig)) {
+          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+          return;
+        }
+
+        const targetId = text.replace('/removeUser', '').trim();
+
+        if (!targetId) {
+          bot.sendMessage(chatId, '❌ Por favor, incluye el ID del usuario.\n\nUso: /removeUser 123456789');
+          return;
+        }
+
+        if (targetId === whitelistConfig.admin) {
+          bot.sendMessage(chatId, '❌ No puedes eliminar al administrador.');
+          return;
+        }
+
+        const index = whitelistConfig.whitelist.indexOf(targetId);
+        if (index === -1) {
+          bot.sendMessage(chatId, '⚠️ El usuario no está en la whitelist.');
+          return;
+        }
+
+        whitelistConfig.whitelist.splice(index, 1);
+        saveWhitelist(whitelistConfig);
+        allowedUsers.delete(targetId);
+
+        bot.sendMessage(chatId, `✅ Usuario eliminado:\n\n👤 ID: ${targetId}\n\nTotal usuarios: ${whitelistConfig.whitelist.length}`);
+      } else if (text === '/listUsers') {
+        if (!isAdmin(userId, whitelistConfig)) {
+          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+          return;
+        }
+
+        const userList = whitelistConfig.whitelist.map((id, i) => `${i + 1}. ${id}${id === whitelistConfig.admin ? ' 👑 (admin)' : ''}`).join('\n');
+        bot.sendMessage(chatId, `👥 Usuarios autorizados (${whitelistConfig.whitelist.length}):\n\n${userList}`);
       } else if (text.startsWith('/addMail')) {
         const email = text.replace('/addMail', '').trim();
 
