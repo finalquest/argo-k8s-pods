@@ -17,6 +17,37 @@ spec:
     spec:
       nodeSelector:
         media-node: "true"
+      initContainers:
+        - name: init-whitelist
+          image: alpine:3.19
+          command: ["sh", "-lc"]
+          args:
+            - |
+              set -e
+
+              echo "Checking whitelist file..."
+
+              if [ ! -f /data/bot-whitelist.json ]; then
+                echo "Creating bot-whitelist.json from secret ALLOWED_USER_IDS..."
+                echo "{\"whitelist\": [\"$ALLOWED_USER_IDS\"], \"admin\": \"$ADMIN_USER_ID\"}" > /data/bot-whitelist.json
+                echo "Whitelist file created successfully"
+              else
+                echo "bot-whitelist.json already exists, skipping"
+              fi
+          env:
+            - name: ALLOWED_USER_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: books-bot-secrets
+                  key: ALLOWED_USER_IDS
+            - name: ADMIN_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: books-bot-secrets
+                  key: ADMIN_USER_ID
+          volumeMounts:
+            - name: biblioteca-data
+              mountPath: /data
       containers:
         - name: books-bot
           image: harbor.finalq.xyz/tools/books-bot:v1.0.0
