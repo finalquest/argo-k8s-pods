@@ -19,36 +19,8 @@ spec:
         media-node: "true"
       containers:
         - name: books-bot
-          image: node:20-alpine
-          imagePullPolicy: IfNotPresent
-          command: ["sh", "-lc"]
-          args:
-            - |
-              set -e
-
-              apk add --no-cache git
-
-              npm install -g pnpm
-              mkdir -p /app
-              cd /app
-
-              cat > package.json <<'JSON'
-              {
-                "name": "books-bot",
-                "type": "module",
-                "dependencies": {
-                  "node-telegram-bot-api": "^0.67.0",
-                  "meilisearch": "^0.44.0",
-                  "pino": "^10.1.0",
-                  "node-fetch": "^3.3.2",
-                  "nodemailer": "^6.9.0"
-                }
-              }
-              JSON
-
-              pnpm install --silent
-              cp /app-code-src/index.js .
-              node index.js
+          image: harbor.finalq.xyz/tools/books-bot:v1.0.0
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080
@@ -67,18 +39,9 @@ spec:
               cpu: 1
               memory: 1Gi
           volumeMounts:
-            - name: bot-code
-              mountPath: /app-code-src
-              readOnly: true
             - name: biblioteca-data
               mountPath: /data
       volumes:
-        - name: bot-code
-          configMap:
-            name: books-bot-code
-            items:
-              - key: index.js
-                path: index.js
         - name: biblioteca-data
           persistentVolumeClaim:
             claimName: biblioteca-secreta-nfs

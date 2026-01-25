@@ -1,0 +1,17 @@
+{
+  "name": "books-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Telegram bot para buscar y descargar libros de la Biblioteca Secreta",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.67.0",
+    "meilisearch": "^0.44.0",
+    "pino": "^10.1.0",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.0"
+  }
+}
