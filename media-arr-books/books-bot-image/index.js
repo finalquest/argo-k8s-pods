@@ -166,12 +166,23 @@ const clearConversationState = (chatId) => {
 
 const cleanOldStates = () => {
   const now = Date.now();
-  const TIMEOUT_MS = 5 * 60 * 1000;
+  const TIMEOUT_MS = 15 * 60 * 1000;
   
   for (const [chatId, state] of conversationStates.entries()) {
     if (now - state.timestamp > TIMEOUT_MS) {
+      const authorName = Array.isArray(state.originalQuery.split(',').map(s => s.trim())[0])
+        ? state.originalQuery.split(',')[0].trim()
+        : state.originalQuery;
+      
       conversationStates.delete(chatId);
       logger.info({ chatId }, 'Conversation state expired');
+      
+      bot.sendMessage(chatId,
+        `⏰ Tu búsqueda de ${authorName} expiró por inactividad.\n\n` +
+        `Para continuar buscando, envía nuevamente "${state.originalQuery}" o usa /restartSearch.`
+      ).catch(err => {
+        logger.error({ err, chatId }, 'Error sending expiration message');
+      });
     }
   }
 };
@@ -375,153 +386,56 @@ async function startBot() {
       return;
     }
 
-    const text = msg.text?.trim();
-    if (!text) {
-      bot.sendMessage(chatId, 'Por favor, envía un texto para buscar libros.');
-      return;
-    }
-
-    if (text.startsWith('/')) {
-      if (text === '/start') {
-        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título o autor de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/restartSearch - Cancela búsqueda activa y reinicia\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
-      } else if (text === '/help') {
-        let helpMessage = '📚 Biblioteca Secreta Bot\n\n';
-        helpMessage += '• Envía un texto para buscar libros\n';
-        helpMessage += '• Usa los botones para descargar o ver más info\n';
-        helpMessage += '• Resultados limitados a 5 por búsqueda\n';
-        helpMessage += '• Los EPUBs se envían como archivos (funciona desde cualquier red)\n\n';
-        helpMessage += 'Comandos disponibles:\n';
-        helpMessage += '/start - Inicia el bot\n';
-        helpMessage += '/help - Muestra este mensaje de ayuda\n';
-        helpMessage += '/restartSearch - Cancela búsqueda activa y reinicia\n';
-        helpMessage += '/addMail <email> - Asocia un email a tu cuenta\n';
-        helpMessage += '/changeMail <email> - Actualiza tu email configurado\n';
-        helpMessage += '/myId - Muestra tu ID de Telegram\n';
-
-        if (isAdmin(userId, whitelistConfig)) {
-          helpMessage += '\nComandos de administración:\n';
-          helpMessage += '/addUser <id> - Agrega un usuario a la whitelist\n';
-          helpMessage += '/removeUser <id> - Elimina un usuario de la whitelist\n';
-          helpMessage += '/listUsers - Lista todos los usuarios autorizados\n';
-        }
-
-        bot.sendMessage(chatId, helpMessage);
-      } else if (text === '/myId') {
-        bot.sendMessage(chatId, `👤 Tu ID de Telegram: ${userId}`);
-      } else if (text === '/restartSearch') {
-        if (conversationStates.has(chatId)) {
-          conversationStates.delete(chatId);
-          bot.sendMessage(chatId, '🔄 Búsqueda reiniciada.\n\nEnvía un nuevo texto para buscar libros.');
-        } else {
-          bot.sendMessage(chatId, 'ℹ️ No hay ninguna búsqueda activa.\n\nEnvía un texto para buscar libros.');
-        }
-      } else if (text.startsWith('/addUser')) {
-        if (!isAdmin(userId, whitelistConfig)) {
-          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+    if (conversationStates.has(chatId)) {
+      const state = conversationStates.get(chatId);
+      
+      if (state.state === 'WAITING_FOR_BOOK_FILTER') {
+        logger.info({ chatId, author: state.author, filter: text }, 'Filtering by author');
+        
+        const filteredResults = await searchMeilisearch(text, 10, { author: state.author });
+        
+        if (filteredResults.length === 0) {
+          const authorName = Array.isArray(state.originalQuery.split(',').map(s => s.trim())[0])
+            ? state.originalQuery.split(',')[0].trim()
+            : state.originalQuery;
+          
+          bot.sendMessage(chatId, 
+            `🔍 No encontré libros de ${authorName} que coincidan con "${text}".\n\n` +
+            `Intenta con otro filtro o usa /restartSearch para cancelar.`
+          );
           return;
         }
-
-        const targetId = text.replace('/addUser', '').trim();
-
-        if (!targetId) {
-          bot.sendMessage(chatId, '❌ Por favor, incluye el ID del usuario.\n\nUso: /addUser 123456789');
+        
+        if (filteredResults.length > 5) {
+          const originalAuthorName = filteredResults[0].authors;
+          const authorName = Array.isArray(originalAuthorName) 
+            ? originalAuthorName[0] 
+            : originalAuthorName;
+          
+          bot.sendMessage(chatId,
+            `🔍 Encontré ${filteredResults.length} libros de ${authorName} que coinciden con "${text}".\n\n` +
+            `Por favor refina tu búsqueda con un título más específico.\n\n` +
+            `Ejemplos de cómo refinar:\n` +
+            `• "${text} primera"\n` +
+            `• "${text} trilogía"\n` +
+            `• "${text} ciencia ficción"\n\n` +
+            `O usa /restartSearch para cancelar.`
+          );
           return;
         }
-
-        if (whitelistConfig.whitelist.includes(targetId)) {
-          bot.sendMessage(chatId, '⚠️ El usuario ya está en la whitelist.');
-          return;
-        }
-
-        whitelistConfig.whitelist.push(targetId);
-        saveWhitelist(whitelistConfig);
-        allowedUsers.add(targetId);
-
-        bot.sendMessage(chatId, `✅ Usuario agregado:\n\n👤 ID: ${targetId}\n\nTotal usuarios: ${whitelistConfig.whitelist.length}`);
-      } else if (text.startsWith('/removeUser')) {
-        if (!isAdmin(userId, whitelistConfig)) {
-          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
-          return;
-        }
-
-        const targetId = text.replace('/removeUser', '').trim();
-
-        if (!targetId) {
-          bot.sendMessage(chatId, '❌ Por favor, incluye el ID del usuario.\n\nUso: /removeUser 123456789');
-          return;
-        }
-
-        if (targetId === whitelistConfig.admin) {
-          bot.sendMessage(chatId, '❌ No puedes eliminar al administrador.');
-          return;
-        }
-
-        const index = whitelistConfig.whitelist.indexOf(targetId);
-        if (index === -1) {
-          bot.sendMessage(chatId, '⚠️ El usuario no está en la whitelist.');
-          return;
-        }
-
-        whitelistConfig.whitelist.splice(index, 1);
-        saveWhitelist(whitelistConfig);
-        allowedUsers.delete(targetId);
-
-        bot.sendMessage(chatId, `✅ Usuario eliminado:\n\n👤 ID: ${targetId}\n\nTotal usuarios: ${whitelistConfig.whitelist.length}`);
-      } else if (text === '/listUsers') {
-        if (!isAdmin(userId, whitelistConfig)) {
-          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
-          return;
-        }
-
-        const userList = whitelistConfig.whitelist.map((id, i) => `${i + 1}. ${id}${id === whitelistConfig.admin ? ' 👑 (admin)' : ''}`).join('\n');
-        bot.sendMessage(chatId, `👥 Usuarios autorizados (${whitelistConfig.whitelist.length}):\n\n${userList}`);
-      } else if (text.startsWith('/addMail')) {
-        const email = text.replace('/addMail', '').trim();
-
-        if (!email) {
-          bot.sendMessage(chatId, '❌ Por favor, incluye un email.\n\nUso: /addMail tu@email.com');
-          return;
-        }
-
-        if (!isValidEmail(email)) {
-          bot.sendMessage(chatId, '❌ El email no tiene un formato válido.\n\nUso: /addMail tu@email.com');
-          return;
-        }
-
-        const emails = loadEmails();
-        emails[userId] = email;
-        saveEmails(emails);
-
-        bot.sendMessage(chatId, `✅ Email asociado correctamente:\n\n📧 ${email}\n\nAhora puedes usar el botón 📧 Email en los resultados para recibir libros en este correo.`);
-      } else if (text.startsWith('/changeMail')) {
-        const newEmail = text.replace('/changeMail', '').trim();
-
-        if (!newEmail) {
-          bot.sendMessage(chatId, '❌ Por favor, incluye el nuevo email.\n\nUso: /changeMail nuevo@email.com');
-          return;
-        }
-
-        if (!isValidEmail(newEmail)) {
-          bot.sendMessage(chatId, '❌ El email no tiene un formato válido.\n\nUso: /changeMail nuevo@email.com');
-          return;
-        }
-
-        const emails = loadEmails();
-
-        if (!emails[userId]) {
-          bot.sendMessage(chatId, '❌ No tienes un email configurado.\n\nUsa el comando:\n/addMail tu@email.com\n\npara asociar un email a tu cuenta primero.');
-          return;
-        }
-
-        const oldEmail = emails[userId];
-        emails[userId] = newEmail;
-        saveEmails(emails);
-
-        bot.sendMessage(chatId, `✅ Email actualizado correctamente:\n\n📧 Anterior: ${oldEmail}\n📧 Nuevo: ${newEmail}`);
-      } else {
-        bot.sendMessage(chatId, 'Comando no reconocido. Envía un texto para buscar libros.');
+        
+        conversationStates.delete(chatId);
+        
+        const messageText = `📚 Libros de ${filteredResults[0].authors} que coinciden con "${text}":\n\n` +
+          filteredResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
+        
+        await bot.sendMessage(chatId, messageText, {
+          disable_web_page_preview: true,
+          reply_markup: buildInlineKeyboard(filteredResults, userId)
+        });
+        
+        return;
       }
-      return;
     }
 
     try {
@@ -669,62 +583,10 @@ async function startBot() {
         if (!userEmail) {
           bot.answerCallbackQuery(query.id, { text: '❌ No tienes email configurado' });
           bot.sendMessage(chatId, '❌ No tienes un email configurado.\n\nUsa el comando:\n/addMail tu@email.com\n\npara asociar un email a tu cuenta.');
-      return;
-    }
-
-    if (conversationStates.has(chatId)) {
-      const state = conversationStates.get(chatId);
-      
-      if (state.state === 'WAITING_FOR_BOOK_FILTER') {
-        logger.info({ chatId, author: state.author, filter: text }, 'Filtering by author');
-        
-        const filteredResults = await searchMeilisearch(text, 10, { author: state.author });
-        
-        if (filteredResults.length === 0) {
-          const authorName = Array.isArray(state.originalQuery.split(',').map(s => s.trim())[0])
-            ? state.originalQuery.split(',')[0].trim()
-            : state.originalQuery;
-          
-          bot.sendMessage(chatId, 
-            `🔍 No encontré libros de ${authorName} que coincidan con "${text}".\n\n` +
-            `Intenta con otro filtro o usa /restartSearch para cancelar.`
-          );
           return;
         }
-        
-        if (filteredResults.length > 5) {
-          const originalAuthorName = filteredResults[0].authors;
-          const authorName = Array.isArray(originalAuthorName) 
-            ? originalAuthorName[0] 
-            : originalAuthorName;
-          
-          bot.sendMessage(chatId,
-            `🔍 Encontré ${filteredResults.length} libros de ${authorName} que coinciden con "${text}".\n\n` +
-            `Por favor refina tu búsqueda con un título más específico.\n\n` +
-            `Ejemplos de cómo refinar:\n` +
-            `• "${text} primera"\n` +
-            `• "${text} trilogía"\n` +
-            `• "${text} ciencia ficción"\n\n` +
-            `O usa /restartSearch para cancelar.`
-          );
-          return;
-        }
-        
-        conversationStates.delete(chatId);
-        
-        const messageText = `📚 Libros de ${filteredResults[0].authors} que coinciden con "${text}":\n\n` +
-          filteredResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
-        
-        await bot.sendMessage(chatId, messageText, {
-          disable_web_page_preview: true,
-          reply_markup: buildInlineKeyboard(filteredResults, userId)
-        });
-        
-        return;
-      }
-    }
 
-    try {
+        try {
           bot.answerCallbackQuery(query.id, { text: '📧 Preparando envío por email...' });
 
           const downloadUrl = `${BIBLIOTECA_BASE_URL}/biblioteca/${book.filename}`;
