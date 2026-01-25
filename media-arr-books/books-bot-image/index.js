@@ -257,6 +257,51 @@ const searchMeilisearch = async (query, limit = 5, filters = null) => {
   }
 };
 
+const searchByAuthors = async (query, limit = 5) => {
+  try {
+    const index = meiliClient.index(MEILI_INDEX);
+    const search = await index.search(query, {
+      limit,
+      attributesToSearchOn: ['authors'],
+      attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
+    });
+    
+    logger.info({ query, results: search.hits.length }, 'Searched in authors field');
+    return search.hits;
+  } catch (err) {
+    logger.error({ err, query }, 'Error searching in authors');
+    throw err;
+  }
+};
+
+const smartSearch = async (query, limit = 5, filters = null) => {
+  if (filters && filters.author) {
+    logger.info({ query, filters }, 'Searching with author filter');
+    return {
+      results: await searchMeilisearch(query, limit, filters),
+      searchType: 'FILTERED'
+    };
+  }
+  
+  const authorResults = await searchByAuthors(query, limit);
+  
+  if (authorResults.length > 0) {
+    logger.info({ query, results: authorResults.length, type: 'AUTHOR' }, 'Author search successful');
+    return {
+      results: authorResults,
+      searchType: 'AUTHOR'
+    };
+  }
+  
+  logger.info({ query, type: 'GENERAL' }, 'No authors found, searching in all fields');
+  const generalResults = await searchMeilisearch(query, limit, null);
+  
+  return {
+    results: generalResults,
+    searchType: 'GENERAL'
+  };
+};
+
 const getBookById = async (libid) => {
   try {
     const index = meiliClient.index(MEILI_INDEX);
@@ -481,7 +526,8 @@ async function startBot() {
 
     try {
       logger.info({ chatId, text }, 'Searching for books');
-      const results = await searchMeilisearch(text);
+      const searchResult = await smartSearch(text);
+      const results = searchResult.results;
 
       if (results.length === 0) {
         bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}".\n\nIntenta con otro término de búsqueda.`);
@@ -489,9 +535,10 @@ async function startBot() {
         return;
       }
 
-      const authorDetection = detectAuthorSearch(results, text);
-
-      if (authorDetection) {
+      if (searchResult.searchType === 'AUTHOR') {
+        const authorDetection = detectAuthorSearch(results, text);
+        
+        if (authorDetection) {
         conversationStates.set(chatId, {
           state: 'WAITING_FOR_BOOK_FILTER',
           author: authorDetection.author,
@@ -515,7 +562,8 @@ async function startBot() {
         logger.info({ chatId, author: authorName, query: text }, 'Author search detected, waiting for filter');
         return;
       }
-
+      }
+      
       const messageText = `📚 Resultados para "${text}":\n\n` +
         results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
 
