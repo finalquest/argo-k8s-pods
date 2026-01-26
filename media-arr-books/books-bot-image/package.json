@@ -8,7 +8,9 @@
     "start": "node index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache pagination.test.js",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache search-pagination-integration.test.js"
   },
   "dependencies": {
     "meilisearch": "^0.44.0",

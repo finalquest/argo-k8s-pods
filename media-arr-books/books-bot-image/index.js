@@ -784,7 +784,7 @@ async function startBot() {
 
         logger.info({ chatId, author: state.author, filter: text, age: Math.round(age / 1000) + 's' }, '[AUTHOR] Searching in author mode');
 
-        const searchResult = await searchMeilisearch(text, 100, { author: state.author });
+        const searchResult = await searchMeilisearch(text, 5, { author: state.author });
         const authorResults = searchResult.hits;
         const totalCount = searchResult.totalHits;
 
@@ -811,10 +811,18 @@ async function startBot() {
 
           const messageText = buildPaginatedMessage(text, authorResults, 0, totalCount, 'AUTHOR', state.displayName);
 
-          await bot.sendMessage(chatId, messageText, {
-            disable_web_page_preview: true,
-            reply_markup: buildInlineKeyboard(authorResults, userId, 0, totalCount)
-          });
+          try {
+            await bot.sendMessage(chatId, messageText, {
+              disable_web_page_preview: true,
+              reply_markup: buildInlineKeyboard(authorResults, userId, 0, totalCount)
+            });
+          } catch (err) {
+            logger.error({ chatId, err }, '[SEND] Error sending message in author pagination mode');
+            bot.sendMessage(chatId,
+              `❌ Error al mostrar resultados. Intenta con una búsqueda más específica.`
+            );
+            return;
+          }
 
           logger.info({ chatId, query: text, author: state.author, totalResults: totalCount }, '[PAGINATION] Pagination mode activated in author mode');
           return;
@@ -829,10 +837,18 @@ async function startBot() {
           `\n⏰ Expira en ${remainingTime} minutos\n` +
           `/exit - Salir del modo autor`;
 
-        await bot.sendMessage(chatId, messageText, {
-          disable_web_page_preview: true,
-          reply_markup: buildInlineKeyboard(authorResults.length > 5 ? authorResults.slice(0, 5) : authorResults, userId)
-        });
+        try {
+          await bot.sendMessage(chatId, messageText, {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(authorResults.length > 5 ? authorResults.slice(0, 5) : authorResults, userId)
+          });
+        } catch (err) {
+          logger.error({ chatId, err }, '[SEND] Error sending message in author mode (no pagination)');
+          bot.sendMessage(chatId,
+            `❌ Error al mostrar resultados. Intenta con una búsqueda más específica.`
+          );
+          return;
+        }
 
         return;
       }
@@ -868,10 +884,18 @@ async function startBot() {
 
         const messageText = buildPaginatedMessage(text, results, 0, totalCount, 'NORMAL');
 
-        await bot.sendMessage(chatId, messageText, {
-          disable_web_page_preview: true,
-          reply_markup: buildInlineKeyboard(results, userId, 0, totalCount)
-        });
+        try {
+          await bot.sendMessage(chatId, messageText, {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(results, userId, 0, totalCount)
+          });
+        } catch (err) {
+          logger.error({ chatId, err }, '[SEND] Error sending message in normal pagination mode');
+          bot.sendMessage(chatId,
+            `❌ Error al mostrar resultados. Intenta con una búsqueda más específica.`
+          );
+          return;
+        }
 
         logger.info({ chatId, query: text, totalResults: totalCount }, '[PAGINATION] Pagination mode activated');
         return;
@@ -1116,7 +1140,7 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 100, state.filters, offset);
+        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
         const results = searchResult.hits;
 
         bot.editMessageText(
@@ -1159,7 +1183,7 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 100, state.filters, offset);
+        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
         const results = searchResult.hits;
 
         bot.editMessageText(
