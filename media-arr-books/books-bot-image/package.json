@@ -5,12 +5,12 @@
   "description": "Telegram bot para buscar y descargar libros de la Biblioteca Secreta",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache pagination.test.js",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache search-pagination-integration.test.js"
+    "start": "node --loader ts-node/esm index.js",
+    "test": "node --experimental-vm-modules --loader ts-node/esm node_modules/jest/bin/jest.js --no-cache",
+    "test:watch": "node --experimental-vm-modules --loader ts-node/esm node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules --loader ts-node/esm node_modules/jest/bin/jest.js --coverage",
+    "test:unit": "node --experimental-vm-modules --loader ts-node/esm node_modules/jest/bin/jest.js --no-cache pagination.test.js",
+    "test:integration": "node --experimental-vm-modules --loader ts-node/esm node_modules/jest/bin/jest.js --no-cache search-pagination-integration.test.js"
   },
   "dependencies": {
     "meilisearch": "^0.44.0",
@@ -20,6 +20,10 @@
     "pino": "^10.1.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@types/node": "^20.11.30",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

@@ -1,9 +1,13 @@
 export default {
   testEnvironment: 'node',
   testMatch: ['**/*.test.js'],
-  transform: {},
+  extensionsToTreatAsEsm: ['.ts'],
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.json' }]
+  },
   collectCoverageFrom: [
     'index.js',
+    'src/**/*.ts',
     '!node_modules/**'
   ],
   coverageThreshold: {
