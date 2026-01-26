@@ -749,7 +749,7 @@ async function startBot() {
             `Envía /author <nombre> para volver al modo autor.`
           );
 
-          const searchResult = await searchMeilisearch(text, 5, null);
+      const searchResult = await searchMeilisearch(text, 100, null);
           const searchResults = searchResult.hits;
 
           if (searchResults.length === 0) {
@@ -784,7 +784,7 @@ async function startBot() {
 
         logger.info({ chatId, author: state.author, filter: text, age: Math.round(age / 1000) + 's' }, '[AUTHOR] Searching in author mode');
 
-        const searchResult = await searchMeilisearch(text, 5, { author: state.author });
+        const searchResult = await searchMeilisearch(text, 100, { author: state.author });
         const authorResults = searchResult.hits;
         const totalCount = searchResult.totalHits;
 
@@ -1116,7 +1116,7 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const searchResult = await searchMeilisearch(state.query, 100, state.filters, offset);
         const results = searchResult.hits;
 
         bot.editMessageText(
@@ -1159,7 +1159,7 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const searchResult = await searchMeilisearch(state.query, 100, state.filters, offset);
         const results = searchResult.hits;
 
         bot.editMessageText(

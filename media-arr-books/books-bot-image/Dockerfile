@@ -9,4 +9,4 @@ COPY index.js .
 
 CMD ["node", "index.js"]
 
-# Version: v2.2.0 - Feature: Add pagination for >5 results
+# Version: v2.2.1 - Fix: Change search limit from 5 to 100 for proper pagination
