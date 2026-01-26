@@ -45,6 +45,15 @@ type SearchStrategyResult = SearchResult & {
   useExactPhrase: boolean;
 };
 
+type SearchStrategy = {
+  name: string;
+  searchIn: string[];
+  useExactPhrase: boolean;
+  desc: string;
+  filters?: { author: string };
+  queryOverride?: string;
+};
+
 type SearchFn = (
   query: string,
   limit: number,
@@ -167,7 +176,7 @@ const searchWithStrategies = async (
   searchFn: SearchFn,
   logger: Logger
 ): Promise<SearchStrategyResult> => {
-  const strategies = [
+  const strategies: SearchStrategy[] = [
     {
       name: 'title',
       searchIn: ['title'],

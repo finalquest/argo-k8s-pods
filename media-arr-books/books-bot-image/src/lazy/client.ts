@@ -32,8 +32,11 @@ const buildUrl = (baseUrl: string, apiKey: string, cmd: string, params: Record<s
 
 const safeArray = (value: unknown): LazyBookCandidate[] => {
   if (Array.isArray(value)) return value as LazyBookCandidate[];
-  if (value && typeof value === 'object' && Array.isArray((value as LazyFindBookResponse).results)) {
-    return (value as LazyFindBookResponse).results as LazyBookCandidate[];
+  if (value && typeof value === 'object' && 'results' in (value as Record<string, unknown>)) {
+    const results = (value as { results?: unknown }).results;
+    if (Array.isArray(results)) {
+      return results as LazyBookCandidate[];
+    }
   }
   return [];
 };

@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 
 type Bot = {
-  sendMessage: (chatId: string | number, text: string, options?: Record<string, unknown>) => Promise<unknown> | void;
-  sendDocument: (chatId: string | number, filePath: string, options?: Record<string, unknown>) => Promise<unknown> | void;
-  answerCallbackQuery: (id: string, options?: Record<string, unknown>) => Promise<unknown> | void;
-  editMessageText: (text: string, options: Record<string, unknown>) => Promise<unknown> | void;
+  sendMessage: (chatId: string | number, text: string, options?: Record<string, unknown>) => Promise<unknown>;
+  sendDocument: (chatId: string | number, filePath: string, options?: Record<string, unknown>) => Promise<unknown>;
+  answerCallbackQuery: (id: string, options?: Record<string, unknown>) => Promise<unknown>;
+  editMessageText: (text: string, options: Record<string, unknown>) => Promise<unknown>;
 };
 
 type Logger = {
@@ -140,8 +140,11 @@ const createCallbackHandler = (deps: Deps) => {
 
           logger.info({ libid, filename }, 'Archivo temporal guardado');
 
+          const authorsValue = (book as { authors?: string[] | string }).authors;
+          const authors = Array.isArray(authorsValue) ? authorsValue.join(', ') : authorsValue || 'Desconocido';
+
           await bot.sendDocument(chatId, tempPath, {
-            caption: `📥 ${(book as { title?: string }).title}\n✍️ ${Array.isArray((book as { authors?: string[] | string }).authors) ? (book as { authors?: string[] | string }).authors?.join(', ') : (book as { authors?: string[] | string }).authors}`,
+            caption: `📥 ${(book as { title?: string }).title}\n✍️ ${authors}`,
           });
 
           bot.answerCallbackQuery(query.id, { text: '✅ Archivo temporal enviado' });
@@ -159,8 +162,10 @@ const createCallbackHandler = (deps: Deps) => {
           return;
         }
 
-        const authors = Array.isArray((book as { authors?: string[] | string }).authors) ? (book as { authors?: string[] | string }).authors?.join(', ') : (book as { authors?: string[] | string }).authors || 'Desconocido';
-        const labels = Array.isArray((book as { labels?: string[] | string }).labels) ? (book as { labels?: string[] | string }).labels?.join(', ') : (book as { labels?: string[] | string }).labels || 'N/A';
+        const authorsValue = (book as { authors?: string[] | string }).authors;
+        const labelsValue = (book as { labels?: string[] | string }).labels;
+        const authors = Array.isArray(authorsValue) ? authorsValue.join(', ') : authorsValue || 'Desconocido';
+        const labels = Array.isArray(labelsValue) ? labelsValue.join(', ') : labelsValue || 'N/A';
         const downloadUrl = `${bibliotecaBaseUrl}/biblioteca/${(book as { filename?: string }).filename}`;
 
         const infoText = '📖 Detalles del libro\n\n' +
