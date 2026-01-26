@@ -37,6 +37,15 @@ import { createMessageHandler } from './src/handlers/message-handler.ts';
 import { createCallbackHandler } from './src/handlers/callback-handler.ts';
 import { createLazyClient } from './src/lazy/client.ts';
 import { normalizeLazyHits } from './src/lazy/formatters.ts';
+import {
+  addLazyJob,
+  getLazyJob,
+  updateLazyJob,
+  listLazyJobs,
+  listLazyJobsByUser,
+  removeLazyJob,
+} from './src/lazy/state.ts';
+import { processLazyJobs } from './src/lazy/poller.ts';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -107,6 +116,48 @@ const lazyFindBook = async (query) => {
     throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
   }
   return lazyClient.findBook(query);
+};
+
+const lazyAddBook = async (bookId) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.addBook(bookId);
+};
+
+const lazyQueueBook = async (bookId) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.queueBook(bookId);
+};
+
+const lazySearchBook = async (bookId) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.searchBook(bookId);
+};
+
+const lazyForceProcess = async () => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.forceProcess();
+};
+
+const lazyHeadFileDirect = async (bookId) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.headFileDirect(bookId);
+};
+
+const lazyDownloadFileDirect = async (bookId) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.downloadFileDirect(bookId);
 };
 
 const searchMeili = (
@@ -355,6 +406,19 @@ async function startBot() {
   logger.info('Bot connected to Telegram');
 
   setInterval(() => cleanOldStates(bot, logger), 60000);
+  setInterval(() => {
+    if (!lazyClient) return;
+    processLazyJobs({
+      bot,
+      logger,
+      listLazyJobs,
+      updateLazyJob,
+      removeLazyJob,
+      headFileDirect: lazyHeadFileDirect,
+      downloadFileDirect: lazyDownloadFileDirect,
+      fallbackFilename: (title, author) => generateFilename(title, author ? [author] : undefined),
+    });
+  }, 30000);
 
   const messageHandler = createMessageHandler({
     bot,
@@ -382,6 +446,7 @@ async function startBot() {
     clearConversationState,
     lazyFindBook,
     normalizeLazyHits,
+    listLazyJobsByUser,
   });
 
   bot.on('message', messageHandler);
@@ -403,6 +468,15 @@ async function startBot() {
     getTotalBooksByAuthor: getTotalBooksByAuthorBound,
     searchByAuthors: searchByAuthorsBound,
     extractUniqueAuthors,
+    lazyAddBook,
+    lazyQueueBook,
+    lazySearchBook,
+    lazyForceProcess,
+    lazyHeadFileDirect,
+    lazyDownloadFileDirect,
+    addLazyJob,
+    getLazyJob,
+    updateLazyJob,
   });
 
   bot.on('callback_query', callbackHandler);

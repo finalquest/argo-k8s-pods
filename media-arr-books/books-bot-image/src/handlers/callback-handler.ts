@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { downloadResponseToTemp } from '../lazy/download.ts';
 
 type Bot = {
   sendMessage: (chatId: string | number, text: string, options?: Record<string, unknown>) => Promise<unknown>;
@@ -30,6 +31,15 @@ type Deps = {
   getTotalBooksByAuthor: (authorName: string) => Promise<number>;
   searchByAuthors: (query: string, limit?: number) => Promise<Record<string, unknown>[]>;
   extractUniqueAuthors: (results: Record<string, unknown>[]) => { name: string; displayName: string; bookCount: number }[];
+  lazyAddBook: (bookId: string) => Promise<{ Success?: boolean; Error?: { Message?: string } }>;
+  lazyQueueBook: (bookId: string) => Promise<{ Success?: boolean; Error?: { Message?: string } }>;
+  lazySearchBook: (bookId: string) => Promise<{ Success?: boolean; Error?: { Message?: string } }>;
+  lazyForceProcess: () => Promise<{ Success?: boolean; Error?: { Message?: string } }>;
+  lazyHeadFileDirect: (bookId: string) => Promise<Response>;
+  lazyDownloadFileDirect: (bookId: string) => Promise<Response>;
+  addLazyJob: (job: { chatId: string | number; userId: string; bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }) => { jobId: string };
+  getLazyJob: (jobId: string) => { jobId: string } | undefined;
+  updateLazyJob: (jobId: string, update: { lastStatus?: string }) => { jobId: string } | null;
 };
 
 const createCallbackHandler = (deps: Deps) => {
@@ -50,6 +60,15 @@ const createCallbackHandler = (deps: Deps) => {
     getTotalBooksByAuthor,
     searchByAuthors,
     extractUniqueAuthors,
+    lazyAddBook,
+    lazyQueueBook,
+    lazySearchBook,
+    lazyForceProcess,
+    lazyHeadFileDirect,
+    lazyDownloadFileDirect,
+    addLazyJob,
+    getLazyJob,
+    updateLazyJob,
   } = deps;
 
   return async (query: { id: string; data: string; message: { chat: { id: string | number }; message_id: number }; from?: { id?: string | number } }) => {
@@ -63,8 +82,80 @@ const createCallbackHandler = (deps: Deps) => {
 
     try {
       if (query.data.startsWith('lazy_download_')) {
-        bot.answerCallbackQuery(query.id, { text: '⏳ Descarga Lazy deshabilitada por ahora' });
-        bot.sendMessage(chatId, 'ℹ️ Descarga en Lazy está deshabilitada por ahora. Estamos validando el flujo de búsqueda.');
+        const bookId = query.data.replace('lazy_download_', '');
+        if (!bookId) {
+          bot.answerCallbackQuery(query.id, { text: 'Libro no encontrado' });
+          return;
+        }
+
+        const jobId = `${userId}:${bookId}`;
+        const existingJob = getLazyJob(jobId);
+        if (existingJob) {
+          bot.answerCallbackQuery(query.id, { text: '⏳ Descarga ya en cola' });
+          bot.sendMessage(chatId, '⏳ Ya tengo esa descarga en cola. Te aviso cuando esté lista.');
+          return;
+        }
+
+        const state = conversationStates.get(chatId) as { state?: string; results?: Record<string, unknown>[] } | undefined;
+        const lazyHit = state?.state === 'ENGLISH_MODE'
+          ? (state.results || []).find(hit => String((hit as { libid?: string }).libid) === bookId)
+          : null;
+        const title = lazyHit ? (lazyHit as { title?: string }).title : undefined;
+        const authorsValue = lazyHit ? (lazyHit as { authors?: string[] | string }).authors : undefined;
+        const author = Array.isArray(authorsValue) ? authorsValue[0] : authorsValue;
+
+        try {
+          const headResponse = await lazyHeadFileDirect(bookId);
+          if (headResponse.ok) {
+            const response = await lazyDownloadFileDirect(bookId);
+            const fallback = generateFilename(title, author ? [author] : undefined);
+            const { tempPath } = await downloadResponseToTemp(response, fallback);
+            await bot.sendDocument(chatId, tempPath, {
+              caption: `📥 ${title || 'Libro listo'}${author ? `\n✍️ ${author}` : ''}`,
+            });
+            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado' });
+            return;
+          }
+        } catch (err) {
+          logger.warn({ err, bookId }, '[LAZY] Direct file check failed');
+        }
+
+        const addResult = await lazyAddBook(bookId);
+        if (addResult?.Success === false) {
+          logger.warn({ bookId, error: addResult?.Error }, '[LAZY] addBook failed');
+        }
+
+        const queueResult = await lazyQueueBook(bookId);
+        if (queueResult?.Success === false) {
+          bot.answerCallbackQuery(query.id, { text: '❌ No pude iniciar la descarga' });
+          bot.sendMessage(chatId, `❌ Error al poner en cola: ${queueResult?.Error?.Message || 'desconocido'}`);
+          return;
+        }
+
+        const searchResult = await lazySearchBook(bookId);
+        if (searchResult?.Success === false) {
+          logger.warn({ bookId, error: searchResult?.Error }, '[LAZY] searchBook failed');
+        }
+
+        const forceResult = await lazyForceProcess();
+        if (forceResult?.Success === false) {
+          logger.warn({ error: forceResult?.Error }, '[LAZY] forceProcess failed');
+        }
+
+        addLazyJob({
+          chatId,
+          userId,
+          bookId,
+          title,
+          author,
+          startedAt: Date.now(),
+          lastStatus: 'queued',
+        });
+
+        updateLazyJob(jobId, { lastStatus: 'queued' });
+
+        bot.answerCallbackQuery(query.id, { text: '⏳ Descarga iniciada' });
+        bot.sendMessage(chatId, '✅ Descarga iniciada. Te aviso cuando esté lista.\n\nPuedes seguir usando el bot.');
         return;
       } else if (query.data.startsWith('download_')) {
         const libid = query.data.replace('download_', '');

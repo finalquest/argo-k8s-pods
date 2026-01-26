@@ -26,6 +26,7 @@ type Deps = {
   clearConversationState: (chatId: string | number, logger: Deps['logger']) => void;
   lazyFindBook: (query: string) => Promise<Record<string, unknown>[]>;
   normalizeLazyHits: (items: Record<string, unknown>[]) => Record<string, unknown>[];
+  listLazyJobsByUser: (userId: string) => { bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }[];
 };
 
 const createMessageHandler = (deps: Deps) => {
@@ -55,6 +56,7 @@ const createMessageHandler = (deps: Deps) => {
     clearConversationState,
     lazyFindBook,
     normalizeLazyHits,
+    listLazyJobsByUser,
   } = deps;
 
   return async (msg: { chat: { id: string | number }; from?: { id?: string | number }; text?: string }) => {
@@ -120,7 +122,21 @@ const createMessageHandler = (deps: Deps) => {
         );
         return;
       } else if (text === '/status') {
-        bot.sendMessage(chatId, 'ℹ️ No hay descargas en curso.');
+        const jobs = listLazyJobsByUser(userId);
+        if (jobs.length === 0) {
+          bot.sendMessage(chatId, 'ℹ️ No hay descargas en curso.');
+          return;
+        }
+
+        const lines = jobs.map((job, index) => {
+          const elapsed = Math.round((Date.now() - job.startedAt) / 1000 / 60);
+          const title = job.title || `Libro ${job.bookId}`;
+          const author = job.author ? ` - ${job.author}` : '';
+          const status = job.lastStatus ? ` (${job.lastStatus})` : '';
+          return `${index + 1}. ${title}${author}${status} · ${elapsed}m`;
+        });
+
+        bot.sendMessage(chatId, `⏳ Descargas en curso:\n\n${lines.join('\n')}`);
         return;
       } else if (text.startsWith('/addUser')) {
         if (!isAdmin(userId, whitelistConfig)) {
