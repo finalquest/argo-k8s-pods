@@ -380,9 +380,12 @@ const searchMeilisearch = async (query, limit = 5, filters = null, offset = 0) =
 
     const search = await index.search(`"${query}"`, searchParams);
 
-    logger.info({ query, results: search.hits.length, offset, totalHits: search.totalHits, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
+    const totalHits = search.totalHits ?? search.estimatedTotalHits;
+    logger.info({ query, offset, totalHits: search.totalHits, estimatedTotalHits: search.estimatedTotalHits }, '[MEILISEARCH] Total hits fields');
 
-    return { hits: search.hits, totalHits: search.totalHits };
+    logger.info({ query, results: search.hits.length, offset, totalHits, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
+
+    return { hits: search.hits, totalHits };
   } catch (err) {
     logger.error({ err, query, filters, offset }, '[MEILISEARCH] Error searching');
     throw err;
