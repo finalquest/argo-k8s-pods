@@ -19,6 +19,16 @@ spec:
         media-node: "true"
       securityContext:
         fsGroup: 1000
+      initContainers:
+        - name: ensure-english-books
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - mkdir -p /books/english && chown -R 1000:1000 /books/english
+          volumeMounts:
+            - name: books
+              mountPath: /books
       containers:
         - name: lazylibrarian
           image: harbor.finalq.xyz/tools/lazylibrarian:latest
