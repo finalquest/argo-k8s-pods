@@ -304,7 +304,7 @@ const buildPaginatedMessage = (query, results, currentPage, totalResults, search
 
   let header = '';
 
-  if (searchType === 'AUTHOR' && displayName) {
+  if ((searchType === 'AUTHOR' || searchType === 'AUTHOR_BROWSE') && displayName) {
     header = `👤 Modo autor: ${displayName}\n`;
   }
 
@@ -905,7 +905,15 @@ async function startBot() {
             `⏰ Este modo expira en 5 minutos de inactividad.\n\n` +
             `Comandos disponibles:\n` +
             `/exit - Salir del modo autor\n` +
-            `/author - Cambiar autor`
+            `/author - Cambiar autor`,
+            {
+              reply_markup: {
+                inline_keyboard: [[{
+                  text: `📚 Navegar libros de este autor`,
+                  callback_data: `browse_author_${author.name}`
+                }]]
+              }
+            }
           );
 
           logger.info({ chatId, author: author.name, displayName: author.displayName, bookCount: author.bookCount }, '[AUTHOR] Author mode activated (single result)');
@@ -1396,13 +1404,79 @@ async function startBot() {
           `⏰ Este modo expira en 5 minutos de inactividad.\n\n` +
           `Comandos disponibles:\n` +
           `/exit - Salir del modo autor\n` +
-          `/author - Cambiar autor`
+          `/author - Cambiar autor`,
+          {
+            reply_markup: {
+              inline_keyboard: [[{
+                text: `📚 Navegar libros de este autor`,
+                callback_data: `browse_author_${authorName}`
+              }]]
+            }
+          }
         );
 
         logger.info({
           chatId,
           author: authorName
         }, '[CALLBACK] Author mode activated from suggestion');
+        return;
+      } else if (query.data.startsWith('browse_author_')) {
+        const authorName = query.data.replace('browse_author_', '');
+
+        logger.info({ chatId, authorName }, '[CALLBACK] Browse author requested');
+
+        if (!authorName) {
+          bot.answerCallbackQuery(query.id, { text: 'Autor no encontrado' });
+          return;
+        }
+
+        bot.answerCallbackQuery(query.id, { text: '📚 Navegando libros...' });
+
+        const searchResult = await searchMeilisearch('', 5, { author: authorName });
+        const results = searchResult.hits;
+        const totalCount = searchResult.totalHits;
+
+        if (results.length === 0) {
+          bot.sendMessage(chatId,
+            `❌ No encontré libros del autor "${authorName}" en la biblioteca.\n\n` +
+            `Intenta con otro autor o verifica el nombre.`
+          );
+
+          logger.info({ chatId, author: authorName }, '[CALLBACK] No books found for author');
+          return;
+        }
+
+        conversationStates.set(chatId, {
+          state: 'PAGINATION_MODE',
+          query: authorName,
+          searchQuery: '',
+          filters: { author: authorName },
+          searchIn: ['title'],
+          useExactPhrase: false,
+          currentPage: 0,
+          totalResults: totalCount,
+          resultsPerPage: 5,
+          searchType: 'AUTHOR_BROWSE',
+          displayName: authorName,
+          timestamp: Date.now()
+        });
+
+        const messageText = buildPaginatedMessage('', results, 0, totalCount, 'AUTHOR_BROWSE', authorName);
+
+        try {
+          await bot.sendMessage(chatId, messageText, {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(results, userId, 0, totalCount)
+          });
+        } catch (err) {
+          logger.error({ chatId, err }, '[SEND] Error sending message in author browse mode');
+          bot.sendMessage(chatId,
+            `❌ Error al mostrar libros de ${authorName}.`
+          );
+          return;
+        }
+
+        logger.info({ chatId, author: authorName, totalResults: totalCount }, '[CALLBACK] Author browse mode activated');
         return;
       } else if (query.data.startsWith('select_author_')) {
         const authorName = query.data.replace('select_author_', '');
