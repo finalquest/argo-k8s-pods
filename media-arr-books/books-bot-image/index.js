@@ -1544,7 +1544,7 @@ async function startBot() {
         state.timestamp = Date.now();
 
         const searchResult = await searchMeilisearch(
-          state.searchQuery || state.query,
+          state.searchQuery !== undefined ? state.searchQuery : state.query,
           5,
           state.filters,
           offset,
@@ -1594,7 +1594,7 @@ async function startBot() {
         state.timestamp = Date.now();
 
         const searchResult = await searchMeilisearch(
-          state.searchQuery || state.query,
+          state.searchQuery !== undefined ? state.searchQuery : state.query,
           5,
           state.filters,
           offset,

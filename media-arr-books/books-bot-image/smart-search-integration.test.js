@@ -73,4 +73,26 @@ describe('Smart Search Integration Tests (Real Meilisearch)', () => {
     expect(preview.hits.length).toBeLessThanOrEqual(5);
     expect(totalHits).toBeGreaterThan(5);
   });
+
+  test('author browse pagination keeps empty query and returns results', async () => {
+    const page1 = await index.search('', {
+      limit: 5,
+      offset: 0,
+      filter: 'authors = "Isaac Asimov"',
+      attributesToRetrieve: ['title', 'authors'],
+    });
+
+    const page2 = await index.search('', {
+      limit: 5,
+      offset: 5,
+      filter: 'authors = "Isaac Asimov"',
+      attributesToRetrieve: ['title', 'authors'],
+    });
+
+    expect(page1.hits.length).toBeGreaterThan(0);
+    expect(page2.hits.length).toBeGreaterThan(0);
+
+    expect(page1.hits.every((hit) => (hit.authors || []).includes('Isaac Asimov'))).toBe(true);
+    expect(page2.hits.every((hit) => (hit.authors || []).includes('Isaac Asimov'))).toBe(true);
+  });
 });

@@ -269,6 +269,17 @@ describe('Author Browse Mode Tests', () => {
 
       expect(offset).toBe(0);
     });
+
+    test('should keep empty searchQuery for browse pagination', () => {
+      const state = {
+        query: 'Isaac Asimov',
+        searchQuery: ''
+      };
+
+      const resolvedQuery = state.searchQuery !== undefined ? state.searchQuery : state.query;
+
+      expect(resolvedQuery).toBe('');
+    });
   });
 
   describe('Comparison with other search types', () => {
