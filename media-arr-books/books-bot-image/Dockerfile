@@ -9,4 +9,4 @@ COPY index.js .
 
 CMD ["node", "index.js"]
 
-# Version: v2.1.3 - Fix: Show 5 results when >5 available, remove refinement barrier
+# Version: v2.2.0 - Feature: Add pagination for >5 results

@@ -250,19 +250,36 @@ const cleanOldStates = (bot) => {
     if (now - state.timestamp > TIMEOUT_MS) {
       expiredCount++;
 
-      const displayName = state.displayName || state.author;
+      if (state.state === 'AUTHOR_MODE') {
+        const displayName = state.displayName || state.author;
 
-      conversationStates.delete(chatId);
+        conversationStates.delete(chatId);
 
-      bot.sendMessage(chatId,
-        `⏰ Modo autor expirado\n\n` +
-        `Ya no estás buscando solo libros de ${displayName}.\n\n` +
-        `Envía /author <nombre> para volver al modo autor.`
-      ).catch(err => {
-        logger.error({ err, chatId }, '[CLEANUP] Error sending timeout message');
-      });
+        bot.sendMessage(chatId,
+          `⏰ Modo autor expirado\n\n` +
+          `Ya no estás buscando solo libros de ${displayName}.\n\n` +
+          `Envía /author <nombre> para volver al modo autor.`
+        ).catch(err => {
+          logger.error({ err, chatId }, '[CLEANUP] Error sending timeout message');
+        });
 
-      logger.info({ chatId, author: displayName, age: Math.round(TIMEOUT_MS / 1000) + 's' }, '[CLEANUP] Author mode expired');
+        logger.info({ chatId, author: displayName, age: Math.round(TIMEOUT_MS / 1000) + 's' }, '[CLEANUP] Author mode expired');
+      } else if (state.state === 'PAGINATION_MODE') {
+        const query = state.query;
+        const totalPages = Math.ceil(state.totalResults / 5);
+
+        conversationStates.delete(chatId);
+
+        bot.sendMessage(chatId,
+          `⏰ Modo paginación expirado\n\n` +
+          `Ya no estás navegando los resultados de "${query}".\n\n` +
+          `Envía una nueva búsqueda para empezar.`
+        ).catch(err => {
+          logger.error({ err, chatId }, '[CLEANUP] Error sending timeout message');
+        });
+
+        logger.info({ chatId, query, totalPages, age: Math.round(TIMEOUT_MS / 1000) + 's' }, '[CLEANUP] Pagination mode expired');
+      }
     }
   }
 
@@ -271,7 +288,47 @@ const cleanOldStates = (bot) => {
   }
 };
 
-const buildInlineKeyboard = (results, userId) => {
+const buildPaginatedMessage = (query, results, currentPage, totalResults, searchType, displayName = null) => {
+  const totalPages = Math.ceil(totalResults / 5);
+
+  let header = '';
+
+  if (searchType === 'AUTHOR' && displayName) {
+    header = `👤 Modo autor: ${displayName}\n`;
+  }
+
+  header += `📚 Página ${currentPage + 1}/${totalPages} (${totalResults} resultados)\n`;
+  header += `🔍 Buscando: "${query}"\n\n`;
+
+  const bookList = results.map((hit, index) => {
+    const globalIndex = (currentPage * 5) + index + 1;
+    return `${globalIndex}. ${hit.title}`;
+  }).join('\n');
+
+  return header + bookList;
+};
+
+const buildPaginationKeyboard = (currentPage, totalPages, isLastPage) => {
+  const paginationRow = [];
+
+  if (currentPage > 0) {
+    paginationRow.push({
+      text: '⬅️ Anterior',
+      callback_data: 'page_prev'
+    });
+  }
+
+  if (!isLastPage) {
+    paginationRow.push({
+      text: 'Siguiente ➡️',
+      callback_data: 'page_next'
+    });
+  }
+
+  return paginationRow.length > 0 ? [paginationRow] : [];
+};
+
+const buildInlineKeyboard = (results, userId, currentPage = 0, totalResults = 5) => {
   const emails = loadEmails();
   const hasEmail = emails[userId];
 
@@ -297,32 +354,37 @@ const buildInlineKeyboard = (results, userId) => {
     return row;
   });
 
-  return { inline_keyboard: keyboard };
+  const totalPages = Math.ceil(totalResults / 5);
+  const isLastPage = currentPage >= totalPages - 1;
+  const paginationButtons = buildPaginationKeyboard(currentPage, totalPages, isLastPage);
+
+  return { inline_keyboard: [...keyboard, ...paginationButtons] };
 };
 
-const searchMeilisearch = async (query, limit = 5, filters = null) => {
+const searchMeilisearch = async (query, limit = 5, filters = null, offset = 0) => {
   try {
     const index = meiliClient.index(MEILI_INDEX);
     const searchParams = {
       limit,
+      offset,
       attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
       attributesToSearchOn: ['title'],
     };
 
     if (filters && filters.author) {
       searchParams.filter = `authors = "${filters.author}"`;
-      logger.info({ query, filter: searchParams.filter }, '[MEILISEARCH] Author filter APPLIED');
+      logger.info({ query, filter: searchParams.filter, offset }, '[MEILISEARCH] Author filter APPLIED');
     } else {
-      logger.info({ query, limit, filters }, '[MEILISEARCH] NO filter applied');
+      logger.info({ query, limit, offset, filters }, '[MEILISEARCH] NO filter applied');
     }
 
     const search = await index.search(`"${query}"`, searchParams);
 
-    logger.info({ query, results: search.hits.length, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
+    logger.info({ query, results: search.hits.length, offset, totalHits: search.totalHits, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
 
-    return search.hits;
+    return { hits: search.hits, totalHits: search.totalHits };
   } catch (err) {
-    logger.error({ err, query, filters }, '[MEILISEARCH] Error searching');
+    logger.error({ err, query, filters, offset }, '[MEILISEARCH] Error searching');
     throw err;
   }
 };
@@ -410,18 +472,18 @@ async function startBot() {
 
     if (text.startsWith('/')) {
       if (text === '/start') {
-        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/author <nombre> - Buscar solo libros de un autor\n/exit - Salir del modo autor\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda');
+        bot.sendMessage(chatId, '📚 ¡Hola! Soy el buscador de la Biblioteca Secreta.\n\nEnvía el título de un libro y buscaré en la biblioteca local de 152,080 EPUBs.\n\nComandos disponibles:\n/author <nombre> - Buscar solo libros de un autor\n/exit - Salir del modo autor o paginación\n/addMail <email> - Asocia un email para recibir libros por correo\n/changeMail <email> - Actualiza tu email configurado\n/myId - Muestra tu ID de Telegram\n/help - Muestra este mensaje de ayuda\n\n📝 Cuando hay más de 5 resultados, se activa modo paginación para navegar fácilmente.');
       } else if (text === '/help') {
         let helpMessage = '📚 Biblioteca Secreta Bot\n\n';
         helpMessage += '• Envía el título de un libro para buscar\n';
         helpMessage += '• Usa los botones para descargar o ver más info\n';
-        helpMessage += '• Resultados limitados a 5 por búsqueda\n';
+        helpMessage += '• Si hay más de 5 resultados, se activa paginación\n';
         helpMessage += '• Los EPUBs se envían como archivos (funciona desde cualquier red)\n\n';
         helpMessage += 'Comandos disponibles:\n';
         helpMessage += '/start - Inicia el bot\n';
         helpMessage += '/help - Muestra este mensaje de ayuda\n';
         helpMessage += '/author <nombre> - Buscar solo libros de un autor específico\n';
-        helpMessage += '/exit - Salir del modo autor\n';
+        helpMessage += '/exit - Salir del modo autor o paginación\n';
         helpMessage += '/addMail <email> - Asocia un email a tu cuenta\n';
         helpMessage += '/changeMail <email> - Actualiza tu email configurado\n';
         helpMessage += '/myId - Muestra tu ID de Telegram\n';
@@ -639,10 +701,27 @@ async function startBot() {
 
             logger.info({ chatId, author: displayName, age }, '[EXIT] Author mode deactivated');
             return;
+          } else if (state.state === 'PAGINATION_MODE') {
+            const query = state.query;
+            const age = Math.round((Date.now() - state.timestamp) / 1000);
+            const totalPages = Math.ceil(state.totalResults / 5);
+
+            conversationStates.delete(chatId);
+
+            bot.sendMessage(chatId,
+              `✅ Modo paginación desactivado\n\n` +
+              `Ya no estás navegando los resultados de "${query}".\n\n` +
+              `Páginas visitadas: ${state.currentPage + 1}/${totalPages}\n` +
+              `Duración: ${age}s\n\n` +
+              `Envía cualquier título para buscar en toda la biblioteca.`
+            );
+
+            logger.info({ chatId, query, currentPage: state.currentPage, age }, '[EXIT] Pagination mode deactivated');
+            return;
           }
         }
 
-        bot.sendMessage(chatId, 'ℹ️ No estás en modo autor.\n\nUsa /author <nombre> para activarlo.');
+        bot.sendMessage(chatId, 'ℹ️ No estás en modo autor ni en modo paginación.\n\nUsa /author <nombre> para activar modo autor.');
         return;
       } else {
         bot.sendMessage(chatId, 'Comando no reconocido. Envía un texto para buscar libros.');
@@ -670,14 +749,15 @@ async function startBot() {
             `Envía /author <nombre> para volver al modo autor.`
           );
 
-          const searchResults = await searchMeilisearch(text, 5, null);
+          const searchResult = await searchMeilisearch(text, 5, null);
+          const searchResults = searchResult.hits;
 
           if (searchResults.length === 0) {
             bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}".\n\nIntenta con otro término de búsqueda.`);
             return;
           }
 
-          const totalCount = await getTotalResults(text);
+          const totalCount = searchResult.totalHits;
 
           if (totalCount > 5) {
             bot.sendMessage(chatId,
@@ -704,7 +784,9 @@ async function startBot() {
 
         logger.info({ chatId, author: state.author, filter: text, age: Math.round(age / 1000) + 's' }, '[AUTHOR] Searching in author mode');
 
-        const authorResults = await searchMeilisearch(text, 10, { author: state.author });
+        const searchResult = await searchMeilisearch(text, 5, { author: state.author });
+        const authorResults = searchResult.hits;
+        const totalCount = searchResult.totalHits;
 
         if (authorResults.length === 0) {
           bot.sendMessage(chatId,
@@ -714,33 +796,38 @@ async function startBot() {
           return;
         }
 
-        if (authorResults.length > 5) {
-          bot.sendMessage(chatId,
-            `🔍 Encontré ${authorResults.length} libros de ${state.displayName} que coinciden con "${text}".\n\n` +
-            `Por favor refina tu búsqueda:\n` +
-            `• "${text} primera"\n` +
-            `• "${text} saga"\n` +
-            `• "${text} [año]"\n\n` +
-            `O usa /exit para salir del modo autor.`
-          );
+        if (totalCount > 5) {
+          conversationStates.set(chatId, {
+            state: 'PAGINATION_MODE',
+            query: text,
+            filters: { author: state.author },
+            currentPage: 0,
+            totalResults: totalCount,
+            resultsPerPage: 5,
+            searchType: 'AUTHOR',
+            displayName: state.displayName,
+            timestamp: Date.now()
+          });
+
+          const messageText = buildPaginatedMessage(text, authorResults, 0, totalCount, 'AUTHOR', state.displayName);
+
+          await bot.sendMessage(chatId, messageText, {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(authorResults, userId, 0, totalCount)
+          });
+
+          logger.info({ chatId, query: text, author: state.author, totalResults: totalCount }, '[PAGINATION] Pagination mode activated in author mode');
           return;
         }
 
         conversationStates.delete(chatId);
 
         const remainingTime = Math.round((5 * 60 * 1000 - (Date.now() - state.timestamp)) / 1000 / 60);
-        const messageText = authorResults.length > 5
-          ? `👤 Modo autor: ${state.displayName}\n\n` +
-            `📚 Encontré más de 5 libros. Mostrando los primeros 5:\n\n` +
-            authorResults.slice(0, 5).map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
-            `\n⚠️ Hay ${authorResults.length} libros de ${state.displayName} que coinciden con "${text}". Refina tu búsqueda o usa /exit para salir del modo autor.\n\n` +
-            `⏰ Expira en ${remainingTime} minutos\n` +
-            `/exit - Salir del modo autor`
-          : `👤 Modo autor: ${state.displayName}\n\n` +
-            `📚 Libros de ${state.displayName} que coinciden con "${text}":\n\n` +
-            authorResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
-            `\n⏰ Expira en ${remainingTime} minutos\n` +
-            `/exit - Salir del modo autor`;
+        const messageText = `👤 Modo autor: ${state.displayName}\n\n` +
+          `📚 Libros de ${state.displayName} que coinciden con "${text}":\n\n` +
+          authorResults.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
+          `\n⏰ Expira en ${remainingTime} minutos\n` +
+          `/exit - Salir del modo autor`;
 
         await bot.sendMessage(chatId, messageText, {
           disable_web_page_preview: true,
@@ -753,9 +840,10 @@ async function startBot() {
 
     try {
       logger.info({ chatId, text }, '[SEARCH] Normal search START');
-      const results = await searchMeilisearch(text, 5, null);
+      const searchResult = await searchMeilisearch(text, 5, null);
+      const results = searchResult.hits;
 
-      logger.info({ chatId, text, results: results.length }, '[SEARCH] Normal search completed');
+      logger.info({ chatId, text, results: results.length, totalHits: searchResult.totalHits }, '[SEARCH] Normal search completed');
 
       if (results.length === 0) {
         bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}".\n\nIntenta con otro término de búsqueda.`);
@@ -763,14 +851,34 @@ async function startBot() {
         return;
       }
 
-      const totalCount = await getTotalResults(text);
+      const totalCount = searchResult.totalHits;
 
-      const messageText = totalCount > 5
-        ? `📚 Encontré más de 5 resultados para "${text}". Mostrando los primeros 5:\n\n` +
-          results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n') +
-          `\n⚠️ Hay ${totalCount} resultados disponibles. Refina tu búsqueda para obtener más específicos o usa /author <nombre> para buscar por autor.`
-        : `📚 Resultados para "${text}":\n\n` +
-          results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
+      if (totalCount > 5) {
+        conversationStates.set(chatId, {
+          state: 'PAGINATION_MODE',
+          query: text,
+          filters: null,
+          currentPage: 0,
+          totalResults: totalCount,
+          resultsPerPage: 5,
+          searchType: 'NORMAL',
+          displayName: null,
+          timestamp: Date.now()
+        });
+
+        const messageText = buildPaginatedMessage(text, results, 0, totalCount, 'NORMAL');
+
+        await bot.sendMessage(chatId, messageText, {
+          disable_web_page_preview: true,
+          reply_markup: buildInlineKeyboard(results, userId, 0, totalCount)
+        });
+
+        logger.info({ chatId, query: text, totalResults: totalCount }, '[PAGINATION] Pagination mode activated');
+        return;
+      }
+
+      const messageText = `📚 Resultados para "${text}":\n\n` +
+        results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
 
       await bot.sendMessage(chatId, messageText, {
         disable_web_page_preview: true,
@@ -821,6 +929,25 @@ async function startBot() {
                 `Envía cualquier título para buscar en toda la biblioteca.`
               ).catch(err => {
                 logger.error({ err, chatId }, '[DOWNLOAD] Error sending auto-exit message');
+              });
+            }, 1000);
+          } else if (state.state === 'PAGINATION_MODE') {
+            const queryStr = state.query;
+
+            logger.info({ chatId, query: queryStr }, '[PAGINATION] Auto-exit pagination mode');
+
+            conversationStates.delete(chatId);
+
+            bot.answerCallbackQuery(query.id, { text: '📥 Descargando...' });
+
+            setTimeout(() => {
+              bot.sendMessage(chatId,
+                `✅ Descarga iniciada\n\n` +
+                `📚 Modo paginación desactivado\n\n` +
+                `Ya no estás navegando los resultados de "${queryStr}".\n\n` +
+                `Envía cualquier título para buscar en toda la biblioteca.`
+              ).catch(err => {
+                logger.error({ err, chatId }, '[PAGINATION] Error sending auto-exit message');
               });
             }, 1000);
           }
@@ -965,6 +1092,91 @@ async function startBot() {
       } else if (query.data === 'cancel_author_selection') {
         bot.answerCallbackQuery(query.id, { text: '❌ Cancelado' });
         bot.sendMessage(chatId, 'ℹ️ Selección de autor cancelada.\n\nUsa /author <nombre> para buscar otro autor.');
+        return;
+      } else if (query.data === 'page_prev') {
+        if (!conversationStates.has(chatId)) {
+          bot.answerCallbackQuery(query.id, { text: '❌ No hay búsqueda activa' });
+          return;
+        }
+
+        const state = conversationStates.get(chatId);
+        if (state.state !== 'PAGINATION_MODE') {
+          bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
+          return;
+        }
+
+        if (state.currentPage === 0) {
+          bot.answerCallbackQuery(query.id, { text: '❌ Ya estás en la primera página' });
+          return;
+        }
+
+        const newPage = state.currentPage - 1;
+        const offset = newPage * 5;
+
+        state.currentPage = newPage;
+        state.timestamp = Date.now();
+
+        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const results = searchResult.hits;
+
+        bot.editMessageText(
+          query.message.chat.id,
+          query.message.message_id,
+          buildPaginatedMessage(state.query, results, newPage, state.totalResults, state.searchType, state.displayName),
+          {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(results, userId, newPage, state.totalResults)
+          }
+        ).catch(err => {
+          logger.error({ err, chatId }, '[PAGINATION] Error editing message');
+        });
+
+        bot.answerCallbackQuery(query.id, { text: `⬅️ Página ${newPage + 1}` });
+
+        logger.info({ chatId, query: state.query, page: newPage }, '[PAGINATION] Previous page');
+        return;
+      } else if (query.data === 'page_next') {
+        if (!conversationStates.has(chatId)) {
+          bot.answerCallbackQuery(query.id, { text: '❌ No hay búsqueda activa' });
+          return;
+        }
+
+        const state = conversationStates.get(chatId);
+        if (state.state !== 'PAGINATION_MODE') {
+          bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
+          return;
+        }
+
+        const totalPages = Math.ceil(state.totalResults / 5);
+        if (state.currentPage >= totalPages - 1) {
+          bot.answerCallbackQuery(query.id, { text: '❌ Ya estás en la última página' });
+          return;
+        }
+
+        const newPage = state.currentPage + 1;
+        const offset = newPage * 5;
+
+        state.currentPage = newPage;
+        state.timestamp = Date.now();
+
+        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const results = searchResult.hits;
+
+        bot.editMessageText(
+          query.message.chat.id,
+          query.message.message_id,
+          buildPaginatedMessage(state.query, results, newPage, state.totalResults, state.searchType, state.displayName),
+          {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(results, userId, newPage, state.totalResults)
+          }
+        ).catch(err => {
+          logger.error({ err, chatId }, '[PAGINATION] Error editing message');
+        });
+
+        bot.answerCallbackQuery(query.id, { text: `➡️ Página ${newPage + 1}` });
+
+        logger.info({ chatId, query: state.query, page: newPage }, '[PAGINATION] Next page');
         return;
       }
     } catch (err) {

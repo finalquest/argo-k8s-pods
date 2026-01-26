@@ -5,13 +5,19 @@
   "description": "Telegram bot para buscar y descargar libros de la Biblioteca Secreta",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "dependencies": {
-    "node-telegram-bot-api": "^0.67.0",
     "meilisearch": "^0.44.0",
-    "pino": "^10.1.0",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.0"
+    "node-telegram-bot-api": "^0.67.0",
+    "nodemailer": "^6.9.0",
+    "pino": "^10.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
