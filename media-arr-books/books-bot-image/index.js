@@ -10,7 +10,6 @@ const {
   TELEGRAM_BOT_TOKEN,
   ALLOWED_USER_IDS = '',
   ADMIN_USER_ID = '',
-  MEILI_HOST,
   MEILI_INDEX = 'biblioteca',
   BIBLIOTECA_BASE_URL,
   MEILI_API_KEY,
@@ -22,14 +21,19 @@ const {
   SMTP_FROM
 } = process.env;
 
-if (!TELEGRAM_BOT_TOKEN) {
-  logger.error('Missing TELEGRAM_BOT_TOKEN');
-  process.exit(1);
-}
+const isTestEnv = process.env.NODE_ENV === 'test';
+const MEILI_HOST = process.env.MEILI_HOST || (isTestEnv ? 'http://localhost:7700' : undefined);
 
-if (!MEILI_HOST) {
-  logger.error('Missing MEILI_HOST');
-  process.exit(1);
+if (!isTestEnv) {
+  if (!TELEGRAM_BOT_TOKEN) {
+    logger.error('Missing TELEGRAM_BOT_TOKEN');
+    process.exit(1);
+  }
+
+  if (!MEILI_HOST) {
+    logger.error('Missing MEILI_HOST');
+    process.exit(1);
+  }
 }
 
 const allowedUsers = new Set(
@@ -42,6 +46,13 @@ const WHITELIST_FILE = '/data/bot-whitelist.json';
 
 const loadWhitelist = () => {
   try {
+    if (isTestEnv) {
+      return {
+        whitelist: ALLOWED_USER_IDS.split(',').map((id) => id.trim()).filter(Boolean),
+        admin: ADMIN_USER_ID || ALLOWED_USER_IDS.split(',')[0]?.trim()
+      };
+    }
+
     if (fs.existsSync(WHITELIST_FILE)) {
       const data = fs.readFileSync(WHITELIST_FILE, 'utf-8');
       const config = JSON.parse(data);
@@ -361,35 +372,276 @@ const buildInlineKeyboard = (results, userId, currentPage = 0, totalResults = 5)
   return { inline_keyboard: [...keyboard, ...paginationButtons] };
 };
 
-const searchMeilisearch = async (query, limit = 5, filters = null, offset = 0) => {
+const searchMeilisearch = async (
+  query,
+  limit = 5,
+  filters = null,
+  offset = 0,
+  searchIn = ['title'],
+  useExactPhrase = false
+) => {
   try {
     const index = meiliClient.index(MEILI_INDEX);
     const searchParams = {
       limit,
       offset,
       attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
-      attributesToSearchOn: ['title'],
+      attributesToSearchOn: searchIn,
     };
 
     if (filters && filters.author) {
       searchParams.filter = `authors = "${filters.author}"`;
-      logger.info({ query, filter: searchParams.filter, offset }, '[MEILISEARCH] Author filter APPLIED');
+      logger.info({ query, filter: searchParams.filter, offset, searchIn, useExactPhrase }, '[MEILISEARCH] Author filter APPLIED');
     } else {
-      logger.info({ query, limit, offset, filters }, '[MEILISEARCH] NO filter applied');
+      logger.info({ query, limit, offset, filters, searchIn, useExactPhrase }, '[MEILISEARCH] NO filter applied');
     }
 
-    const search = await index.search(`"${query}"`, searchParams);
+    const effectiveQuery = useExactPhrase ? `"${query}"` : query;
+    const search = await index.search(effectiveQuery, searchParams);
 
     const totalHits = search.totalHits ?? search.estimatedTotalHits;
-    logger.info({ query, offset, totalHits: search.totalHits, estimatedTotalHits: search.estimatedTotalHits }, '[MEILISEARCH] Total hits fields');
+    logger.info({ query, offset, totalHits: search.totalHits, estimatedTotalHits: search.estimatedTotalHits, searchIn, useExactPhrase }, '[MEILISEARCH] Total hits fields');
 
-    logger.info({ query, results: search.hits.length, offset, totalHits, hasFilter: !!filters, filterValue: filters?.author }, '[MEILISEARCH] Search completed');
+    logger.info({ query, results: search.hits.length, offset, totalHits, hasFilter: !!filters, filterValue: filters?.author, searchIn, useExactPhrase }, '[MEILISEARCH] Search completed');
 
     return { hits: search.hits, totalHits };
   } catch (err) {
-    logger.error({ err, query, filters, offset }, '[MEILISEARCH] Error searching');
+    logger.error({ err, query, filters, offset, searchIn, useExactPhrase }, '[MEILISEARCH] Error searching');
     throw err;
   }
+};
+
+const searchWithStrategies = async (query, limit = 5, searchFn = searchMeilisearch) => {
+  const strategies = [
+    {
+      name: 'title',
+      searchIn: ['title'],
+      useExactPhrase: true,
+      desc: 'Búsqueda en título (frase exacta)'
+    },
+    {
+      name: 'combined',
+      searchIn: ['title', 'authors'],
+      useExactPhrase: false,
+      desc: 'Búsqueda en título y autor (sin comillas)'
+    }
+  ];
+
+  const words = query.trim().split(/\s+/);
+  if (words.length >= 2) {
+    const firstWord = words[0];
+    const restWords = words.slice(1).join(' ');
+
+    strategies.push({
+      name: 'author_plus_title',
+      searchIn: ['title'],
+      useExactPhrase: false,
+      filters: { author: firstWord },
+      queryOverride: restWords,
+      desc: `Autor: "${firstWord}" + Título: "${restWords}"`
+    });
+  }
+
+  for (const strategy of strategies) {
+    const searchQuery = strategy.queryOverride || query;
+    const result = await searchFn(
+      searchQuery,
+      limit,
+      strategy.filters || null,
+      0,
+      strategy.searchIn,
+      strategy.useExactPhrase
+    );
+
+    logger.info({
+      query,
+      strategy: strategy.name,
+      results: result.hits.length,
+      totalHits: result.totalHits,
+      searchIn: strategy.searchIn,
+      useExactPhrase: strategy.useExactPhrase
+    }, '[COMBINED] Strategy tried');
+
+    if (result.hits.length > 0) {
+      return {
+        ...result,
+        strategy: strategy.name,
+        strategyDesc: strategy.desc,
+        queryUsed: searchQuery,
+        filtersUsed: strategy.filters || null,
+        searchIn: strategy.searchIn,
+        useExactPhrase: strategy.useExactPhrase
+      };
+    }
+  }
+
+  return {
+    hits: [],
+    totalHits: 0,
+    strategy: 'none',
+    strategyDesc: 'No se encontraron resultados',
+    queryUsed: query,
+    filtersUsed: null,
+    searchIn: ['title'],
+    useExactPhrase: true
+  };
+};
+
+const searchAuthorFacets = async (query, meili = meiliClient) => {
+  const index = meili.index(MEILI_INDEX);
+  const search = await index.search(query, {
+    limit: 0,
+    facets: ['authors'],
+    attributesToSearchOn: ['authors']
+  });
+
+  return search.facetDistribution?.authors || {};
+};
+
+const extractAuthorsFromFacets = (facetMap, query, limit = 10) => {
+  const normalizedQuery = normalizeAuthor(query);
+
+  return Object.entries(facetMap || {})
+    .map(([name, count]) => ({
+      name,
+      displayName: name,
+      bookCount: count
+    }))
+    .filter((author) => normalizeAuthor(author.name).includes(normalizedQuery))
+    .sort((a, b) => b.bookCount - a.bookCount)
+    .slice(0, limit);
+};
+
+const escapeFilterValue = (value) => {
+  return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+};
+
+const buildAuthorPreviewMessage = (author, previewBooks, totalBooks, originalQuery) => {
+  let messageText = `🔍 No encontré libros con el título "${originalQuery}".\n\n`;
+  messageText += `👤 ¡Pero encontré un autor!\n\n`;
+  messageText += `✍️ ${author.displayName}\n`;
+  messageText += `📚 Tiene ${totalBooks} libro${totalBooks > 1 ? 's' : ''} en la biblioteca.\n\n`;
+
+  if (totalBooks > 5) {
+    messageText += `📖 Primeros 5 libros:\n\n`;
+  } else {
+    messageText += `📖 Todos sus libros:\n\n`;
+  }
+
+  previewBooks.forEach((book, index) => {
+    const year = book.published ? `(${book.published})` : '';
+    messageText += `${index + 1}. ${book.title} ${year}\n`;
+  });
+
+  if (totalBooks > 5) {
+    messageText += `\n💡 Y ${totalBooks - 5} más libros de ${author.displayName}...\n\n`;
+    messageText += `¿Quieres buscar solo libros de ${author.displayName}?`;
+  } else {
+    messageText += `\n\n¿Quieres buscar libros de ${author.displayName}?`;
+  }
+
+  return messageText;
+};
+
+const sendAuthorCtaAfterTitleResults = async (bot, chatId, uniqueAuthors) => {
+  if (uniqueAuthors.length !== 1) return;
+
+  const author = uniqueAuthors[0];
+  await bot.sendMessage(chatId,
+    `👤 Encontré un autor que coincide: ${author.displayName}.\n\n` +
+    `¿Quieres pasar a modo autor?`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{
+          text: `✅ Sí, buscar solo libros de ${author.displayName.substring(0, 25)}`,
+          callback_data: `activate_author_${author.name}`
+        }]]
+      }
+    }
+  );
+};
+
+const handleAuthorSuggestion = async (
+  bot,
+  chatId,
+  userId,
+  originalQuery,
+  uniqueAuthors,
+  deps = {}
+) => {
+  if (uniqueAuthors.length === 0) return;
+
+  const meili = deps.meiliClient || meiliClient;
+  const getTotal = deps.getTotalBooksByAuthor || getTotalBooksByAuthor;
+  const escapeValue = deps.escapeFilterValue || escapeFilterValue;
+
+  if (uniqueAuthors.length === 1) {
+    const author = uniqueAuthors[0];
+    const totalBooks = await getTotal(author.name);
+
+    const index = meili.index(MEILI_INDEX);
+    const previewSearch = await index.search('', {
+      limit: 5,
+      filter: `authors = "${escapeValue(author.name)}"`,
+      attributesToRetrieve: ['libid', 'title', 'authors', 'description', 'published', 'filename'],
+    });
+
+    const previewBooks = previewSearch.hits;
+    const messageText = buildAuthorPreviewMessage(author, previewBooks, totalBooks, originalQuery);
+
+    const keyboard = [[{
+      text: `✅ Sí, buscar libros de ${author.displayName.substring(0, 25)}`,
+      callback_data: `activate_author_${author.name}`
+    }]];
+
+    await bot.sendMessage(chatId, messageText, {
+      disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info({
+      chatId,
+      author: author.name,
+      totalBooks,
+      previewBooks: previewBooks.length
+    }, '[SUGGESTION] Author suggestion with preview sent');
+    return;
+  }
+
+  if (uniqueAuthors.length <= 5) {
+    let messageText = `🔍 No encontré libros con el título "${originalQuery}".\n\n`;
+    messageText += `👤 Encontré ${uniqueAuthors.length} autores que coinciden:\n\n`;
+
+    uniqueAuthors.forEach((author, index) => {
+      messageText += `${index + 1}. ${author.displayName} (${author.bookCount} libro${author.bookCount > 1 ? 's' : ''})\n`;
+    });
+
+    messageText += `\nElige el autor que quieres usar:`;
+
+    const keyboard = uniqueAuthors.map((author, index) => [{
+      text: `${index + 1}. ${author.displayName.substring(0, 30)} (${author.bookCount})`,
+      callback_data: `activate_author_${author.name}`
+    }]);
+
+    await bot.sendMessage(chatId, messageText, {
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info({
+      chatId,
+      authors: uniqueAuthors.length,
+      authorsList: uniqueAuthors.map(a => a.name)
+    }, '[SUGGESTION] Multiple authors suggestion sent');
+    return;
+  }
+
+  let messageText = `🔍 No encontré libros con el título "${originalQuery}".\n\n`;
+  messageText += `👤 Encontré muchos autores que coinciden.\n\n`;
+  messageText += `Usa /author ${originalQuery} [apellido] para refinar la búsqueda.`;
+
+  await bot.sendMessage(chatId, messageText);
+
+  logger.info({ chatId, query: originalQuery }, '[SUGGESTION] Too many authors, asking for refinement');
 };
 
 const getBookById = async (libid) => {
@@ -803,7 +1055,10 @@ async function startBot() {
           conversationStates.set(chatId, {
             state: 'PAGINATION_MODE',
             query: text,
+            searchQuery: text,
             filters: { author: state.author },
+            searchIn: ['title'],
+            useExactPhrase: false,
             currentPage: 0,
             totalResults: totalCount,
             resultsPerPage: 5,
@@ -858,25 +1113,50 @@ async function startBot() {
     }
 
     try {
-      logger.info({ chatId, text }, '[SEARCH] Normal search START');
-      const searchResult = await searchMeilisearch(text, 5, null);
+      logger.info({ chatId, text }, '[SEARCH] Combined search START');
+
+      const searchResult = await searchWithStrategies(text, 5);
       const results = searchResult.hits;
 
-      logger.info({ chatId, text, results: results.length, totalHits: searchResult.totalHits }, '[SEARCH] Normal search completed');
+      logger.info({
+        chatId,
+        text,
+        results: results.length,
+        totalHits: searchResult.totalHits,
+        strategy: searchResult.strategy,
+        strategyDesc: searchResult.strategyDesc
+      }, '[SEARCH] Combined search completed');
 
       if (results.length === 0) {
+        logger.info({ chatId, text }, '[SEARCH] No results, checking authors...');
+
+        const authorFacets = await searchAuthorFacets(text);
+        const uniqueAuthors = extractAuthorsFromFacets(authorFacets, text, 10);
+
+        if (uniqueAuthors.length > 0) {
+          await handleAuthorSuggestion(bot, chatId, userId, text, uniqueAuthors);
+          return;
+        }
+
         bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}".\n\nIntenta con otro término de búsqueda.`);
         clearConversationState(chatId);
         return;
       }
 
       const totalCount = searchResult.totalHits;
+      const searchQuery = searchResult.queryUsed ?? text;
+      const searchFilters = searchResult.filtersUsed ?? null;
+      const searchIn = searchResult.searchIn ?? ['title'];
+      const useExactPhrase = searchResult.useExactPhrase ?? false;
 
       if (totalCount > 5) {
         conversationStates.set(chatId, {
           state: 'PAGINATION_MODE',
           query: text,
-          filters: null,
+          searchQuery,
+          filters: searchFilters,
+          searchIn,
+          useExactPhrase,
           currentPage: 0,
           totalResults: totalCount,
           resultsPerPage: 5,
@@ -901,6 +1181,10 @@ async function startBot() {
         }
 
         logger.info({ chatId, query: text, totalResults: totalCount }, '[PAGINATION] Pagination mode activated');
+
+        const authorFacets = await searchAuthorFacets(text);
+        const uniqueAuthors = extractAuthorsFromFacets(authorFacets, text, 10);
+        await sendAuthorCtaAfterTitleResults(bot, chatId, uniqueAuthors);
         return;
       }
 
@@ -911,6 +1195,10 @@ async function startBot() {
         disable_web_page_preview: true,
         reply_markup: buildInlineKeyboard(results, userId)
       });
+
+      const authorFacets = await searchAuthorFacets(text);
+      const uniqueAuthors = extractAuthorsFromFacets(authorFacets, text, 10);
+      await sendAuthorCtaAfterTitleResults(bot, chatId, uniqueAuthors);
     } catch (err) {
       logger.error({ chatId, err }, '[SEARCH] Error processing search');
       clearConversationState(chatId);
@@ -1078,6 +1366,44 @@ async function startBot() {
           logger.error({ err: emailError, userId, libid }, 'Error sending email');
           bot.sendMessage(chatId, `❌ Error al enviar por email: ${emailError.message}`);
         }
+      } else if (query.data.startsWith('activate_author_')) {
+        const authorName = query.data.replace('activate_author_', '');
+
+        logger.info({ chatId, authorName }, '[CALLBACK] Activate author requested');
+
+        if (!authorName) {
+          bot.answerCallbackQuery(query.id, { text: 'Autor no encontrado' });
+          return;
+        }
+
+        const actualBookCount = await getTotalBooksByAuthor(authorName);
+
+        conversationStates.set(chatId, {
+          state: 'AUTHOR_MODE',
+          author: authorName,
+          displayName: authorName,
+          timestamp: Date.now()
+        });
+
+        bot.answerCallbackQuery(query.id, { text: `✅ ${authorName}` });
+
+        bot.sendMessage(chatId,
+          `✅ Modo autor activado\n\n` +
+          `👤 Autor: ${authorName}\n\n` +
+          `📚 Tiene ${actualBookCount} libro${actualBookCount > 1 ? 's' : ''} en la biblioteca.\n\n` +
+          `Ahora las búsquedas se filtrarán solo por este autor.\n\n` +
+          `Envía un título o parte del título para buscar libros de ${authorName}.\n\n` +
+          `⏰ Este modo expira en 5 minutos de inactividad.\n\n` +
+          `Comandos disponibles:\n` +
+          `/exit - Salir del modo autor\n` +
+          `/author - Cambiar autor`
+        );
+
+        logger.info({
+          chatId,
+          author: authorName
+        }, '[CALLBACK] Author mode activated from suggestion');
+        return;
       } else if (query.data.startsWith('select_author_')) {
         const authorName = query.data.replace('select_author_', '');
 
@@ -1143,14 +1469,21 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const searchResult = await searchMeilisearch(
+          state.searchQuery || state.query,
+          5,
+          state.filters,
+          offset,
+          state.searchIn || ['title'],
+          state.useExactPhrase || false
+        );
         const results = searchResult.hits;
 
         bot.editMessageText(
-          query.message.chat.id,
-          query.message.message_id,
           buildPaginatedMessage(state.query, results, newPage, state.totalResults, state.searchType, state.displayName),
           {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
             disable_web_page_preview: true,
             reply_markup: buildInlineKeyboard(results, userId, newPage, state.totalResults)
           }
@@ -1186,14 +1519,21 @@ async function startBot() {
         state.currentPage = newPage;
         state.timestamp = Date.now();
 
-        const searchResult = await searchMeilisearch(state.query, 5, state.filters, offset);
+        const searchResult = await searchMeilisearch(
+          state.searchQuery || state.query,
+          5,
+          state.filters,
+          offset,
+          state.searchIn || ['title'],
+          state.useExactPhrase || false
+        );
         const results = searchResult.hits;
 
         bot.editMessageText(
-          query.message.chat.id,
-          query.message.message_id,
           buildPaginatedMessage(state.query, results, newPage, state.totalResults, state.searchType, state.displayName),
           {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
             disable_web_page_preview: true,
             reply_markup: buildInlineKeyboard(results, userId, newPage, state.totalResults)
           }
@@ -1219,7 +1559,20 @@ async function startBot() {
   logger.info('Bot ready to receive messages');
 }
 
-startBot().catch((err) => {
-  logger.error({ err }, 'Bot failed to start');
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test') {
+  startBot().catch((err) => {
+    logger.error({ err }, 'Bot failed to start');
+    process.exit(1);
+  });
+}
+
+export {
+  searchWithStrategies,
+  searchAuthorFacets,
+  extractAuthorsFromFacets,
+  buildAuthorPreviewMessage,
+  sendAuthorCtaAfterTitleResults,
+  handleAuthorSuggestion,
+  escapeFilterValue,
+  normalizeAuthor
+};
