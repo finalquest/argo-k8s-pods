@@ -62,7 +62,11 @@ const createCallbackHandler = (deps: Deps) => {
     }
 
     try {
-      if (query.data.startsWith('download_')) {
+      if (query.data.startsWith('lazy_download_')) {
+        bot.answerCallbackQuery(query.id, { text: '⏳ Descarga Lazy deshabilitada por ahora' });
+        bot.sendMessage(chatId, 'ℹ️ Descarga en Lazy está deshabilitada por ahora. Estamos validando el flujo de búsqueda.');
+        return;
+      } else if (query.data.startsWith('download_')) {
         const libid = query.data.replace('download_', '');
         const book = await getBookById(libid);
 
@@ -362,8 +366,8 @@ const createCallbackHandler = (deps: Deps) => {
           return;
         }
 
-        const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string };
-        if (state.state !== 'PAGINATION_MODE') {
+        const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string; results?: Record<string, unknown>[] };
+        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE') {
           bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
           return;
         }
@@ -379,15 +383,21 @@ const createCallbackHandler = (deps: Deps) => {
         state.currentPage = newPage;
         (state as { timestamp?: number }).timestamp = Date.now();
 
-        const searchResult = await searchMeili(
-          state.searchQuery !== undefined ? state.searchQuery : (state.query as string),
-          5,
-          state.filters || null,
-          offset,
-          state.searchIn || ['title'],
-          state.useExactPhrase || false
-        );
-        const results = searchResult.hits;
+        let results: Record<string, unknown>[] = [];
+        if (state.state === 'ENGLISH_MODE') {
+          const all = state.results || [];
+          results = all.slice(offset, offset + 5);
+        } else {
+          const searchResult = await searchMeili(
+            state.searchQuery !== undefined ? state.searchQuery : (state.query as string),
+            5,
+            state.filters || null,
+            offset,
+            state.searchIn || ['title'],
+            state.useExactPhrase || false
+          );
+          results = searchResult.hits;
+        }
 
         bot.editMessageText(
           buildPaginatedMessage(state.query as string, results, newPage, state.totalResults || 0, state.searchType || '', state.displayName || null),
@@ -411,8 +421,8 @@ const createCallbackHandler = (deps: Deps) => {
           return;
         }
 
-        const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string };
-        if (state.state !== 'PAGINATION_MODE') {
+        const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string; results?: Record<string, unknown>[] };
+        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE') {
           bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
           return;
         }
@@ -429,15 +439,21 @@ const createCallbackHandler = (deps: Deps) => {
         state.currentPage = newPage;
         (state as { timestamp?: number }).timestamp = Date.now();
 
-        const searchResult = await searchMeili(
-          state.searchQuery !== undefined ? state.searchQuery : (state.query as string),
-          5,
-          state.filters || null,
-          offset,
-          state.searchIn || ['title'],
-          state.useExactPhrase || false
-        );
-        const results = searchResult.hits;
+        let results: Record<string, unknown>[] = [];
+        if (state.state === 'ENGLISH_MODE') {
+          const all = state.results || [];
+          results = all.slice(offset, offset + 5);
+        } else {
+          const searchResult = await searchMeili(
+            state.searchQuery !== undefined ? state.searchQuery : (state.query as string),
+            5,
+            state.filters || null,
+            offset,
+            state.searchIn || ['title'],
+            state.useExactPhrase || false
+          );
+          results = searchResult.hits;
+        }
 
         bot.editMessageText(
           buildPaginatedMessage(state.query as string, results, newPage, state.totalResults || 0, state.searchType || '', state.displayName || null),

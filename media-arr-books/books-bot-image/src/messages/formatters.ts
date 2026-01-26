@@ -6,6 +6,7 @@ type BookHit = {
   authors?: string[] | string;
   description?: string;
   published?: string | number;
+  source?: string;
 };
 
 type AuthorSummary = {
@@ -89,15 +90,18 @@ const buildInlineKeyboard = (
     const row: InlineKeyboardButton[] = [
       {
         text: `📥 ${index + 1}. ${truncate(hit.title, 40)}`,
-        callback_data: `download_${hit.libid}`
-      },
-      {
-        text: 'ℹ️ Info',
-        callback_data: `info_${hit.libid}`
+        callback_data: hit.source === 'lazy' ? `lazy_download_${hit.libid}` : `download_${hit.libid}`
       }
     ];
 
-    if (hasEmail) {
+    if (hit.source !== 'lazy') {
+      row.push({
+        text: 'ℹ️ Info',
+        callback_data: `info_${hit.libid}`
+      });
+    }
+
+    if (hasEmail && hit.source !== 'lazy') {
       row.push({
         text: '📧 Email',
         callback_data: `email_${hit.libid}`

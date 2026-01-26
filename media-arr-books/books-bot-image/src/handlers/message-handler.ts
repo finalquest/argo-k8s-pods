@@ -24,6 +24,8 @@ type Deps = {
   sendAuthorCtaAfterTitleResults: (bot: Deps['bot'], chatId: string | number, uniqueAuthors: { name: string; displayName: string; bookCount: number }[]) => Promise<void>;
   handleAuthorSuggestion: (bot: Deps['bot'], chatId: string | number, userId: string, originalQuery: string, uniqueAuthors: { name: string; displayName: string; bookCount: number }[]) => Promise<void>;
   clearConversationState: (chatId: string | number, logger: Deps['logger']) => void;
+  lazyFindBook: (query: string) => Promise<Record<string, unknown>[]>;
+  normalizeLazyHits: (items: Record<string, unknown>[]) => Record<string, unknown>[];
 };
 
 const createMessageHandler = (deps: Deps) => {
@@ -51,6 +53,8 @@ const createMessageHandler = (deps: Deps) => {
     sendAuthorCtaAfterTitleResults,
     handleAuthorSuggestion,
     clearConversationState,
+    lazyFindBook,
+    normalizeLazyHits,
   } = deps;
 
   return async (msg: { chat: { id: string | number }; from?: { id?: string | number }; text?: string }) => {
@@ -96,6 +100,28 @@ const createMessageHandler = (deps: Deps) => {
         bot.sendMessage(chatId, helpMessage);
       } else if (text === '/myId') {
         bot.sendMessage(chatId, `👤 Tu ID de Telegram: ${userId}`);
+      } else if (text === '/english') {
+        conversationStates.set(chatId, {
+          state: 'ENGLISH_MODE',
+          currentPage: 0,
+          totalResults: 0,
+          resultsPerPage: 5,
+          timestamp: Date.now()
+        });
+
+        bot.sendMessage(chatId,
+          '🇬🇧 Modo inglés activado\n\n' +
+          'Las búsquedas se harán en LazyLibrarian.\n\n' +
+          'Envía un título en inglés para buscar.\n\n' +
+          '⏰ Este modo expira en 5 minutos de inactividad.\n\n' +
+          'Comandos disponibles:\n' +
+          '/exit - Salir del modo inglés\n' +
+          '/status - Ver descargas pendientes'
+        );
+        return;
+      } else if (text === '/status') {
+        bot.sendMessage(chatId, 'ℹ️ No hay descargas en curso.');
+        return;
       } else if (text.startsWith('/addUser')) {
         if (!isAdmin(userId, whitelistConfig)) {
           bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
@@ -324,6 +350,16 @@ const createMessageHandler = (deps: Deps) => {
 
             logger.info({ chatId, query, currentPage: state.currentPage, age }, '[EXIT] Pagination mode deactivated');
             return;
+          } else if (state.state === 'ENGLISH_MODE') {
+            const age = Math.round((Date.now() - (state.timestamp || Date.now())) / 1000);
+            conversationStates.delete(chatId);
+            bot.sendMessage(chatId,
+              '✅ Modo inglés desactivado\n\n' +
+              `Duración: ${age}s\n\n` +
+              'Envía cualquier título para buscar en toda la biblioteca.'
+            );
+            logger.info({ chatId, age }, '[EXIT] English mode deactivated');
+            return;
           }
         }
 
@@ -336,7 +372,69 @@ const createMessageHandler = (deps: Deps) => {
     }
 
     if (conversationStates.has(chatId)) {
-      const state = conversationStates.get(chatId) as { state?: string; timestamp?: number; author?: string; displayName?: string };
+      const state = conversationStates.get(chatId) as { state?: string; timestamp?: number; author?: string; displayName?: string; query?: string; currentPage?: number; totalResults?: number };
+
+      if (state.state === 'ENGLISH_MODE') {
+        const age = Date.now() - (state.timestamp || Date.now());
+        const TIMEOUT_MS = 5 * 60 * 1000;
+
+        if (age > TIMEOUT_MS) {
+          logger.info({ chatId, age: Math.round(age / 1000) + 's' }, '[ENGLISH] Timeout expired before search');
+          conversationStates.delete(chatId);
+          bot.sendMessage(chatId,
+            '⏰ Modo inglés expirado\n\n' +
+            `Búsqueda normal: "${text}"\n\n` +
+            'Envía /english para volver al modo inglés.'
+          );
+        } else {
+          let resultsRaw: Record<string, unknown>[];
+          try {
+            resultsRaw = await lazyFindBook(text);
+          } catch (err) {
+            bot.sendMessage(chatId, '❌ LazyLibrarian no está configurado o no responde.');
+            logger.error({ err, chatId }, '[ENGLISH] Lazy search failed');
+            return;
+          }
+
+          const results = normalizeLazyHits(resultsRaw);
+          const totalCount = results.length;
+
+          if (totalCount === 0) {
+            bot.sendMessage(chatId, `🔍 No encontré resultados para "${text}" en Lazy.`);
+            return;
+          }
+
+          if (totalCount > 5) {
+            conversationStates.set(chatId, {
+              state: 'ENGLISH_MODE',
+              query: text,
+              results,
+              currentPage: 0,
+              totalResults: totalCount,
+              resultsPerPage: 5,
+              searchType: 'ENGLISH',
+              timestamp: Date.now()
+            });
+
+            const pageResults = results.slice(0, 5);
+            const messageText = buildPaginatedMessage(text, pageResults, 0, totalCount, 'ENGLISH', 'English');
+            await bot.sendMessage(chatId, messageText, {
+              disable_web_page_preview: true,
+              reply_markup: buildInlineKeyboard(pageResults, userId, 0, totalCount, hasEmail(userId))
+            });
+            return;
+          }
+
+          const messageText = `📚 Resultados en Lazy para "${text}":\n\n` +
+            results.map((hit, i) => `${i + 1}. ${formatResult(hit)}`).join('\n\n---\n\n');
+
+          await bot.sendMessage(chatId, messageText, {
+            disable_web_page_preview: true,
+            reply_markup: buildInlineKeyboard(results, userId, 0, totalCount, hasEmail(userId))
+          });
+          return;
+        }
+      }
 
       if (state.state === 'AUTHOR_MODE') {
         const age = Date.now() - (state.timestamp || Date.now());

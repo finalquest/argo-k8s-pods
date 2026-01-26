@@ -35,6 +35,8 @@ import {
 } from './src/search/meili.ts';
 import { createMessageHandler } from './src/handlers/message-handler.ts';
 import { createCallbackHandler } from './src/handlers/callback-handler.ts';
+import { createLazyClient } from './src/lazy/client.ts';
+import { normalizeLazyHits } from './src/lazy/formatters.ts';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -50,7 +52,9 @@ const {
   SMTP_PORT,
   SMTP_EMAIL,
   SMTP_PASSWORD,
-  SMTP_FROM
+  SMTP_FROM,
+  LAZY_BASE_URL,
+  LAZY_API_KEY
 } = process.env;
 
 const isTestEnv = process.env.NODE_ENV === 'test';
@@ -93,6 +97,17 @@ const meiliClient = new MeiliSearch({
   host: MEILI_HOST,
   apiKey: MEILI_API_KEY,
 });
+
+const lazyClient = (LAZY_BASE_URL && LAZY_API_KEY)
+  ? createLazyClient({ baseUrl: LAZY_BASE_URL, apiKey: LAZY_API_KEY, logger })
+  : null;
+
+const lazyFindBook = async (query) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.findBook(query);
+};
 
 const searchMeili = (
   query,
@@ -365,6 +380,8 @@ async function startBot() {
     sendAuthorCtaAfterTitleResults,
     handleAuthorSuggestion,
     clearConversationState,
+    lazyFindBook,
+    normalizeLazyHits,
   });
 
   bot.on('message', messageHandler);
