@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { downloadResponseToTemp } from '../lazy/download.ts';
+import { normalizeLazyHits } from '../lazy/formatters.ts';
 
 type Bot = {
   sendMessage: (chatId: string | number, text: string, options?: Record<string, unknown>) => Promise<unknown>;
@@ -37,6 +38,9 @@ type Deps = {
   lazyForceProcess: () => Promise<{ Success?: boolean; Error?: { Message?: string } }>;
   lazyHeadFileDirect: (bookId: string) => Promise<Response>;
   lazyDownloadFileDirect: (bookId: string) => Promise<Response>;
+  lazyFindBook: (query: string) => Promise<Record<string, unknown>[]>;
+  lazyFindAuthor: (query: string) => Promise<Record<string, unknown>[]>;
+  normalizeLazyHits: (items: Record<string, unknown>[]) => Record<string, unknown>[];
   addLazyJob: (job: { chatId: string | number; userId: string; bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }) => { jobId: string };
   getLazyJob: (jobId: string) => { jobId: string } | undefined;
   updateLazyJob: (jobId: string, update: { lastStatus?: string }) => { jobId: string } | null;
@@ -66,6 +70,9 @@ const createCallbackHandler = (deps: Deps) => {
     lazyForceProcess,
     lazyHeadFileDirect,
     lazyDownloadFileDirect,
+    lazyFindBook,
+    lazyFindAuthor,
+    normalizeLazyHits,
     addLazyJob,
     getLazyJob,
     updateLazyJob,
@@ -88,6 +95,9 @@ const createCallbackHandler = (deps: Deps) => {
           return;
         }
 
+        bot.answerCallbackQuery(query.id, { text: '⏳ Descarga iniciada' });
+        bot.sendMessage(chatId, '✅ Descarga iniciada. Te aviso cuando esté lista.\n\nPuedes seguir usando el bot.');
+
         const jobId = `${userId}:${bookId}`;
         const existingJob = getLazyJob(jobId);
         if (existingJob) {
@@ -103,11 +113,28 @@ const createCallbackHandler = (deps: Deps) => {
         const title = lazyHit ? (lazyHit as { title?: string }).title : undefined;
         const authorsValue = lazyHit ? (lazyHit as { authors?: string[] | string }).authors : undefined;
         const author = Array.isArray(authorsValue) ? authorsValue[0] : authorsValue;
+        const isbn = lazyHit ? (lazyHit as { isbn?: string }).isbn : undefined;
+        let resolvedBookId = bookId;
+
+        if (isbn) {
+          try {
+            const isbnResults = await lazyFindBook(isbn);
+            const match = isbnResults.find(item => {
+              const itemIsbn = (item as { bookisbn?: string }).bookisbn;
+              return itemIsbn && String(itemIsbn).trim() === isbn;
+            });
+            if (match && (match as { bookid?: string }).bookid) {
+              resolvedBookId = String((match as { bookid?: string }).bookid);
+            }
+          } catch (err) {
+            logger.warn({ err, isbn }, '[LAZY] ISBN lookup failed');
+          }
+        }
 
         try {
-          const headResponse = await lazyHeadFileDirect(bookId);
+          const headResponse = await lazyHeadFileDirect(resolvedBookId);
           if (headResponse.ok) {
-            const response = await lazyDownloadFileDirect(bookId);
+            const response = await lazyDownloadFileDirect(resolvedBookId);
             const fallback = generateFilename(title, author ? [author] : undefined);
             const { tempPath } = await downloadResponseToTemp(response, fallback);
             await bot.sendDocument(chatId, tempPath, {
@@ -117,24 +144,47 @@ const createCallbackHandler = (deps: Deps) => {
             return;
           }
         } catch (err) {
-          logger.warn({ err, bookId }, '[LAZY] Direct file check failed');
+          logger.warn({ err, bookId: resolvedBookId }, '[LAZY] Direct file check failed');
         }
 
-        const addResult = await lazyAddBook(bookId);
+        const addResult = await lazyAddBook(resolvedBookId);
         if (addResult?.Success === false) {
-          logger.warn({ bookId, error: addResult?.Error }, '[LAZY] addBook failed');
+          logger.warn({ bookId: resolvedBookId, error: addResult?.Error }, '[LAZY] addBook failed');
         }
 
-        const queueResult = await lazyQueueBook(bookId);
+        // Give Lazy a moment to persist the book before queueing
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        let queueResult = await lazyQueueBook(resolvedBookId);
         if (queueResult?.Success === false) {
+          const details = queueResult?.Error?.Message
+            || (typeof (queueResult as { Data?: unknown })?.Data === 'string'
+              ? (queueResult as { Data?: string }).Data
+              : 'desconocido');
+          logger.error({ bookId: resolvedBookId, originalBookId: bookId, isbn }, '[LAZY] queueBook failed');
+          logger.error({ queueResult }, '[LAZY] queueBook response');
+
+          if (details.toLowerCase().includes('invalid id') && resolvedBookId !== bookId) {
+            queueResult = await lazyQueueBook(bookId);
+          } else if (details.toLowerCase().includes('invalid id')) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            queueResult = await lazyQueueBook(resolvedBookId);
+          }
+        }
+
+        if (queueResult?.Success === false) {
+          const details = queueResult?.Error?.Message
+            || (typeof (queueResult as { Data?: unknown })?.Data === 'string'
+              ? (queueResult as { Data?: string }).Data
+              : 'desconocido');
           bot.answerCallbackQuery(query.id, { text: '❌ No pude iniciar la descarga' });
-          bot.sendMessage(chatId, `❌ Error al poner en cola: ${queueResult?.Error?.Message || 'desconocido'}`);
+          bot.sendMessage(chatId, `❌ Error al poner en cola: ${details}`);
           return;
         }
 
-        const searchResult = await lazySearchBook(bookId);
+        const searchResult = await lazySearchBook(resolvedBookId);
         if (searchResult?.Success === false) {
-          logger.warn({ bookId, error: searchResult?.Error }, '[LAZY] searchBook failed');
+          logger.warn({ bookId: resolvedBookId, error: searchResult?.Error }, '[LAZY] searchBook failed');
         }
 
         const forceResult = await lazyForceProcess();
@@ -145,7 +195,7 @@ const createCallbackHandler = (deps: Deps) => {
         addLazyJob({
           chatId,
           userId,
-          bookId,
+          bookId: resolvedBookId,
           title,
           author,
           startedAt: Date.now(),
@@ -154,8 +204,6 @@ const createCallbackHandler = (deps: Deps) => {
 
         updateLazyJob(jobId, { lastStatus: 'queued' });
 
-        bot.answerCallbackQuery(query.id, { text: '⏳ Descarga iniciada' });
-        bot.sendMessage(chatId, '✅ Descarga iniciada. Te aviso cuando esté lista.\n\nPuedes seguir usando el bot.');
         return;
       } else if (query.data.startsWith('download_')) {
         const libid = query.data.replace('download_', '');
@@ -456,6 +504,54 @@ const createCallbackHandler = (deps: Deps) => {
         bot.answerCallbackQuery(query.id, { text: '❌ Cancelado' });
         bot.sendMessage(chatId, 'ℹ️ Selección de autor cancelada.\n\nUsa /author <nombre> para buscar otro autor.');
         return;
+      } else if (query.data.startsWith('activate_english_author_')) {
+        const authorName = query.data.replace('activate_english_author_', '');
+
+        if (!authorName) {
+          bot.answerCallbackQuery(query.id, { text: 'Autor no encontrado' });
+          return;
+        }
+
+        bot.answerCallbackQuery(query.id, { text: `✅ ${authorName}` });
+
+        let rawResults: Record<string, unknown>[] = [];
+        try {
+          rawResults = await lazyFindAuthor(authorName);
+        } catch (err) {
+          bot.sendMessage(chatId, '❌ LazyLibrarian no está configurado o no responde.');
+          logger.error({ err, chatId }, '[ENGLISH_AUTHOR] Lazy author search failed');
+          return;
+        }
+
+        const results = normalizeLazyHits(rawResults);
+        if (results.length === 0) {
+          bot.sendMessage(chatId, `❌ No encontré libros del autor "${authorName}".`);
+          return;
+        }
+
+        conversationStates.set(chatId, {
+          state: 'ENGLISH_AUTHOR_MODE',
+          author: authorName,
+          displayName: authorName,
+          query: '',
+          results,
+          currentPage: 0,
+          totalResults: results.length,
+          resultsPerPage: 5,
+          searchType: 'ENGLISH_AUTHOR',
+          timestamp: Date.now()
+        });
+
+        const pageResults = results.slice(0, 5);
+        const messageText = buildPaginatedMessage('', pageResults, 0, results.length, 'ENGLISH_AUTHOR', authorName);
+
+        await bot.sendMessage(chatId, messageText, {
+          disable_web_page_preview: true,
+          reply_markup: buildInlineKeyboard(pageResults, userId, 0, results.length, hasEmail(userId))
+        });
+
+        logger.info({ chatId, author: authorName }, '[CALLBACK] English author mode activated');
+        return;
       } else if (query.data === 'page_prev') {
         if (!conversationStates.has(chatId)) {
           bot.answerCallbackQuery(query.id, { text: '❌ No hay búsqueda activa' });
@@ -463,7 +559,7 @@ const createCallbackHandler = (deps: Deps) => {
         }
 
         const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string; results?: Record<string, unknown>[] };
-        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE') {
+        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE' && state.state !== 'ENGLISH_AUTHOR_MODE') {
           bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
           return;
         }
@@ -480,7 +576,7 @@ const createCallbackHandler = (deps: Deps) => {
         (state as { timestamp?: number }).timestamp = Date.now();
 
         let results: Record<string, unknown>[] = [];
-        if (state.state === 'ENGLISH_MODE') {
+        if (state.state === 'ENGLISH_MODE' || state.state === 'ENGLISH_AUTHOR_MODE') {
           const all = state.results || [];
           results = all.slice(offset, offset + 5);
         } else {
@@ -518,7 +614,7 @@ const createCallbackHandler = (deps: Deps) => {
         }
 
         const state = conversationStates.get(chatId) as { state?: string; currentPage?: number; query?: string; totalResults?: number; searchQuery?: string; filters?: { author: string } | null; searchIn?: string[]; useExactPhrase?: boolean; displayName?: string; searchType?: string; results?: Record<string, unknown>[] };
-        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE') {
+        if (state.state !== 'PAGINATION_MODE' && state.state !== 'ENGLISH_MODE' && state.state !== 'ENGLISH_AUTHOR_MODE') {
           bot.answerCallbackQuery(query.id, { text: '❌ No estás en modo paginación' });
           return;
         }
@@ -536,7 +632,7 @@ const createCallbackHandler = (deps: Deps) => {
         (state as { timestamp?: number }).timestamp = Date.now();
 
         let results: Record<string, unknown>[] = [];
-        if (state.state === 'ENGLISH_MODE') {
+        if (state.state === 'ENGLISH_MODE' || state.state === 'ENGLISH_AUTHOR_MODE') {
           const all = state.results || [];
           results = all.slice(offset, offset + 5);
         } else {

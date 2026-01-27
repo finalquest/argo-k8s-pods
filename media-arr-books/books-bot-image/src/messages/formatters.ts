@@ -44,7 +44,7 @@ const buildPaginatedMessage = (
 
   let header = '';
 
-  if ((searchType === 'AUTHOR' || searchType === 'AUTHOR_BROWSE') && displayName) {
+  if ((searchType === 'AUTHOR' || searchType === 'AUTHOR_BROWSE' || searchType === 'ENGLISH_AUTHOR') && displayName) {
     header = `👤 Modo autor: ${displayName}\n`;
   }
 
@@ -53,7 +53,9 @@ const buildPaginatedMessage = (
 
   const bookList = results.map((hit, index) => {
     const globalIndex = (currentPage * 5) + index + 1;
-    return `${globalIndex}. ${hit.title}`;
+    const authors = Array.isArray(hit.authors) ? hit.authors.join(', ') : hit.authors;
+    const authorSuffix = searchType === 'ENGLISH' && authors ? ` — ${authors}` : '';
+    return `${globalIndex}. ${hit.title}${authorSuffix}`;
   }).join('\n');
 
   return header + bookList;
@@ -89,33 +91,34 @@ const buildInlineKeyboard = (
   const keyboard = results.map((hit, index) => {
     const row: InlineKeyboardButton[] = [
       {
-        text: `📥 ${index + 1}. ${truncate(hit.title, 40)}`,
+        text: `📥 ${index + 1}. ${truncate(hit.title, 36)}`,
         callback_data: hit.source === 'lazy' ? `lazy_download_${hit.libid}` : `download_${hit.libid}`
       }
     ];
 
+    const actionRow: InlineKeyboardButton[] = [];
     if (hit.source !== 'lazy') {
-      row.push({
+      actionRow.push({
         text: 'ℹ️ Info',
         callback_data: `info_${hit.libid}`
       });
     }
 
     if (hasEmail && hit.source !== 'lazy') {
-      row.push({
+      actionRow.push({
         text: '📧 Email',
         callback_data: `email_${hit.libid}`
       });
     }
 
-    return row;
+    return actionRow.length > 0 ? [row, actionRow] : [row];
   });
 
   const totalPages = Math.ceil(totalResults / 5);
   const isLastPage = currentPage >= totalPages - 1;
   const paginationButtons = buildPaginationKeyboard(currentPage, totalPages, isLastPage);
 
-  return { inline_keyboard: [...keyboard, ...paginationButtons] };
+  return { inline_keyboard: [...keyboard.flat(), ...paginationButtons] };
 };
 
 const buildAuthorPreviewMessage = (

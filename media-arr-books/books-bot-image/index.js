@@ -118,6 +118,13 @@ const lazyFindBook = async (query) => {
   return lazyClient.findBook(query);
 };
 
+const lazyFindAuthor = async (query) => {
+  if (!lazyClient) {
+    throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
+  }
+  return lazyClient.findAuthor(query);
+};
+
 const lazyAddBook = async (bookId) => {
   if (!lazyClient) {
     throw new Error('LazyLibrarian no configurado (LAZY_BASE_URL/LAZY_API_KEY)');
@@ -445,8 +452,11 @@ async function startBot() {
     handleAuthorSuggestion,
     clearConversationState,
     lazyFindBook,
+    lazyFindAuthor,
     normalizeLazyHits,
     listLazyJobsByUser,
+    listLazyJobs,
+    removeLazyJob,
   });
 
   bot.on('message', messageHandler);
@@ -474,6 +484,9 @@ async function startBot() {
     lazyForceProcess,
     lazyHeadFileDirect,
     lazyDownloadFileDirect,
+    lazyFindBook,
+    lazyFindAuthor,
+    normalizeLazyHits,
     addLazyJob,
     getLazyJob,
     updateLazyJob,

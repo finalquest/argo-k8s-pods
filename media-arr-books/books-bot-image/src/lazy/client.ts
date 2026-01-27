@@ -89,6 +89,19 @@ const createLazyClient = ({ baseUrl, apiKey, logger }: LazyClientDeps) => {
     }
   };
 
+  const findAuthor = async (query: string) => {
+    const url = buildUrl(baseUrl, apiKey, 'findAuthor', { name: query });
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = (await response.json()) as LazyFindBookResponse;
+      return safeArray(data);
+    } catch (err) {
+      logger.error({ err, query }, '[LAZY] findAuthor failed');
+      throw err;
+    }
+  };
+
   const addBook = async (bookId: string) => {
     return requestJson('addBook', { id: bookId });
   };
@@ -125,6 +138,7 @@ const createLazyClient = ({ baseUrl, apiKey, logger }: LazyClientDeps) => {
 
   return {
     findBook,
+    findAuthor,
     addBook,
     queueBook,
     searchBook,

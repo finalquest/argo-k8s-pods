@@ -25,8 +25,11 @@ type Deps = {
   handleAuthorSuggestion: (bot: Deps['bot'], chatId: string | number, userId: string, originalQuery: string, uniqueAuthors: { name: string; displayName: string; bookCount: number }[]) => Promise<void>;
   clearConversationState: (chatId: string | number, logger: Deps['logger']) => void;
   lazyFindBook: (query: string) => Promise<Record<string, unknown>[]>;
+  lazyFindAuthor: (query: string) => Promise<Record<string, unknown>[]>;
   normalizeLazyHits: (items: Record<string, unknown>[]) => Record<string, unknown>[];
   listLazyJobsByUser: (userId: string) => { bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }[];
+  listLazyJobs: () => { jobId: string; userId: string; bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }[];
+  removeLazyJob: (jobId: string) => void;
 };
 
 const createMessageHandler = (deps: Deps) => {
@@ -55,8 +58,11 @@ const createMessageHandler = (deps: Deps) => {
     handleAuthorSuggestion,
     clearConversationState,
     lazyFindBook,
+    lazyFindAuthor,
     normalizeLazyHits,
     listLazyJobsByUser,
+    listLazyJobs,
+    removeLazyJob,
   } = deps;
 
   return async (msg: { chat: { id: string | number }; from?: { id?: string | number }; text?: string }) => {
@@ -97,6 +103,8 @@ const createMessageHandler = (deps: Deps) => {
           helpMessage += '/addUser <id> - Agrega un usuario a la whitelist\n';
           helpMessage += '/removeUser <id> - Elimina un usuario de la whitelist\n';
           helpMessage += '/listUsers - Lista todos los usuarios autorizados\n';
+          helpMessage += '/queue - Lista descargas en cola (Lazy)\n';
+          helpMessage += '/cancel <jobId> - Cancela una descarga en cola\n';
         }
 
         bot.sendMessage(chatId, helpMessage);
@@ -137,6 +145,43 @@ const createMessageHandler = (deps: Deps) => {
         });
 
         bot.sendMessage(chatId, `⏳ Descargas en curso:\n\n${lines.join('\n')}`);
+        return;
+      } else if (text === '/queue') {
+        if (!isAdmin(userId, whitelistConfig)) {
+          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+          return;
+        }
+
+        const jobs = listLazyJobs();
+        if (jobs.length === 0) {
+          bot.sendMessage(chatId, 'ℹ️ No hay descargas en cola.');
+          return;
+        }
+
+        const lines = jobs.map((job, index) => {
+          const elapsed = Math.round((Date.now() - job.startedAt) / 1000 / 60);
+          const title = job.title || `Libro ${job.bookId}`;
+          const author = job.author ? ` - ${job.author}` : '';
+          const status = job.lastStatus ? ` (${job.lastStatus})` : '';
+          return `${index + 1}. ${title}${author}${status} · ${elapsed}m · ${job.jobId}`;
+        });
+
+        bot.sendMessage(chatId, `📋 Descargas en cola (todas):\n\n${lines.join('\n')}\n\nUsa /cancel <jobId> para cancelar.`);
+        return;
+      } else if (text.startsWith('/cancel')) {
+        if (!isAdmin(userId, whitelistConfig)) {
+          bot.sendMessage(chatId, '❌ Solo el administrador puede usar este comando.');
+          return;
+        }
+
+        const target = text.replace('/cancel', '').trim();
+        if (!target) {
+          bot.sendMessage(chatId, '❌ Uso: /cancel <jobId>');
+          return;
+        }
+
+        removeLazyJob(target);
+        bot.sendMessage(chatId, `✅ Job cancelado: ${target}`);
         return;
       } else if (text.startsWith('/addUser')) {
         if (!isAdmin(userId, whitelistConfig)) {
@@ -366,7 +411,7 @@ const createMessageHandler = (deps: Deps) => {
 
             logger.info({ chatId, query, currentPage: state.currentPage, age }, '[EXIT] Pagination mode deactivated');
             return;
-          } else if (state.state === 'ENGLISH_MODE') {
+          } else if (state.state === 'ENGLISH_MODE' || state.state === 'ENGLISH_AUTHOR_MODE') {
             const age = Math.round((Date.now() - (state.timestamp || Date.now())) / 1000);
             conversationStates.delete(chatId);
             bot.sendMessage(chatId,
@@ -438,6 +483,24 @@ const createMessageHandler = (deps: Deps) => {
               disable_web_page_preview: true,
               reply_markup: buildInlineKeyboard(pageResults, userId, 0, totalCount, hasEmail(userId))
             });
+            const uniqueAuthors = Array.from(new Set(results.map(hit => {
+              const authorsValue = (hit as { authors?: string[] | string }).authors;
+              return Array.isArray(authorsValue) ? authorsValue[0] : authorsValue;
+            }).filter(Boolean)));
+            if (uniqueAuthors.length === 1) {
+              await bot.sendMessage(chatId,
+                `👤 Encontré un autor que coincide: ${uniqueAuthors[0]}.\n\n` +
+                '¿Quieres pasar a modo autor en inglés?',
+                {
+                  reply_markup: {
+                    inline_keyboard: [[{
+                      text: `✅ Sí, buscar libros de ${uniqueAuthors[0].substring(0, 25)}`,
+                      callback_data: `activate_english_author_${uniqueAuthors[0]}`
+                    }]]
+                  }
+                }
+              );
+            }
             return;
           }
 
@@ -448,8 +511,89 @@ const createMessageHandler = (deps: Deps) => {
             disable_web_page_preview: true,
             reply_markup: buildInlineKeyboard(results, userId, 0, totalCount, hasEmail(userId))
           });
+
+          const uniqueAuthors = Array.from(new Set(results.map(hit => {
+            const authorsValue = (hit as { authors?: string[] | string }).authors;
+            return Array.isArray(authorsValue) ? authorsValue[0] : authorsValue;
+          }).filter(Boolean)));
+          if (uniqueAuthors.length === 1) {
+            await bot.sendMessage(chatId,
+              `👤 Encontré un autor que coincide: ${uniqueAuthors[0]}.\n\n` +
+              '¿Quieres pasar a modo autor en inglés?',
+              {
+                reply_markup: {
+                  inline_keyboard: [[{
+                    text: `✅ Sí, buscar libros de ${uniqueAuthors[0].substring(0, 25)}`,
+                    callback_data: `activate_english_author_${uniqueAuthors[0]}`
+                  }]]
+                }
+              }
+            );
+          }
           return;
         }
+      }
+
+      if (state.state === 'ENGLISH_AUTHOR_MODE') {
+        const age = Date.now() - (state.timestamp || Date.now());
+        const TIMEOUT_MS = 5 * 60 * 1000;
+
+        if (age > TIMEOUT_MS) {
+          conversationStates.delete(chatId);
+          bot.sendMessage(chatId,
+            '⏰ Modo autor en inglés expirado\n\n' +
+            `Búsqueda normal: "${text}"\n\n` +
+            'Envía /english para volver al modo inglés.'
+          );
+          return;
+        }
+
+        const authorName = state.author as string;
+        let authorResults: Record<string, unknown>[] = [];
+        try {
+          const raw = await lazyFindAuthor(authorName);
+          const normalized = normalizeLazyHits(raw);
+          if (text) {
+            const lower = text.toLowerCase();
+            authorResults = normalized.filter(hit => (hit as { title?: string }).title?.toLowerCase().includes(lower));
+          } else {
+            authorResults = normalized;
+          }
+        } catch (err) {
+          bot.sendMessage(chatId, '❌ LazyLibrarian no está configurado o no responde.');
+          logger.error({ err, chatId }, '[ENGLISH_AUTHOR] Lazy author search failed');
+          return;
+        }
+
+        if (authorResults.length === 0) {
+          bot.sendMessage(chatId,
+            `🔍 No encontré libros de ${authorName} que coincidan con "${text}".\n\n` +
+            'Intenta con otro término o usa /exit.'
+          );
+          return;
+        }
+
+        const totalCount = authorResults.length;
+        conversationStates.set(chatId, {
+          state: 'ENGLISH_AUTHOR_MODE',
+          author: authorName,
+          displayName: authorName,
+          query: text,
+          results: authorResults,
+          currentPage: 0,
+          totalResults: totalCount,
+          resultsPerPage: 5,
+          searchType: 'ENGLISH_AUTHOR',
+          timestamp: Date.now()
+        });
+
+        const pageResults = authorResults.slice(0, 5);
+        const messageText = buildPaginatedMessage(text, pageResults, 0, totalCount, 'ENGLISH_AUTHOR', authorName);
+        await bot.sendMessage(chatId, messageText, {
+          disable_web_page_preview: true,
+          reply_markup: buildInlineKeyboard(pageResults, userId, 0, totalCount, hasEmail(userId))
+        });
+        return;
       }
 
       if (state.state === 'AUTHOR_MODE') {
