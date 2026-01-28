@@ -11,4 +11,4 @@ COPY src ./src
 
 CMD ["npm", "start"]
 
-# Version: v3.2.0 - Add email support for async/lazy downloads
+# Version: v3.2.1 - Fix email body already read error

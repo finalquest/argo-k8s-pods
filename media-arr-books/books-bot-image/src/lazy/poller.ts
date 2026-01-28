@@ -92,8 +92,7 @@ const processLazyJobs = async (deps: PollerDeps) => {
       const { tempPath, filename } = await downloadResponseToTemp(response, fallback);
 
       if (job.deliveryMethod === 'email' && job.userEmail && sendEmail) {
-        const arrayBuffer = await response.arrayBuffer();
-        const epubBuffer = Buffer.from(arrayBuffer);
+        const epubBuffer = fs.readFileSync(tempPath);
         
         const book: Book = {
           title: job.title || filename,

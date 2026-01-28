@@ -50,7 +50,7 @@ spec:
               mountPath: /data
       containers:
         - name: books-bot
-          image: harbor.finalq.xyz/tools/books-bot:v3.2.0
+          image: harbor.finalq.xyz/tools/books-bot:v3.2.1
           imagePullPolicy: Always
           ports:
             - name: http

@@ -41,9 +41,9 @@ type Deps = {
   lazyFindBook: (query: string) => Promise<Record<string, unknown>[]>;
   lazyFindAuthor: (query: string) => Promise<Record<string, unknown>[]>;
   normalizeLazyHits: (items: Record<string, unknown>[]) => Record<string, unknown>[];
-  addLazyJob: (job: { chatId: string | number; userId: string; bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string }) => { jobId: string };
+  addLazyJob: (job: { chatId: string | number; userId: string; bookId: string; title?: string; author?: string; startedAt: number; lastStatus?: string; deliveryMethod?: 'telegram' | 'email'; userEmail?: string }) => { jobId: string };
   getLazyJob: (jobId: string) => { jobId: string } | undefined;
-  updateLazyJob: (jobId: string, update: { lastStatus?: string }) => { jobId: string } | null;
+  updateLazyJob: (jobId: string, update: { lastStatus?: string; deliveryMethod?: 'telegram' | 'email'; userEmail?: string }) => { jobId: string } | null;
 };
 
 const createCallbackHandler = (deps: Deps) => {
