@@ -1,0 +1,121 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-configure-session
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: keycloak-configurator
+      initContainers:
+        - name: wait-for-keycloak
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Keycloak to be ready..."
+              until curl -s http://keycloak:8080/realms/master | grep -q '"realm"'; do
+                echo "Keycloak not ready yet, waiting..."
+                sleep 5
+              done
+              echo "Keycloak is ready!"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      containers:
+        - name: configure-session
+          image: quay.io/keycloak/keycloak:24.0
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              
+              echo "Configuring Keycloak session timeouts..."
+              
+              # Get admin credentials from secrets
+              ADMIN_USER="${KEYCLOAK_ADMIN}"
+              ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+              REALM="${REALM_NAME}"
+              
+              # Configure kcadm
+              /opt/keycloak/bin/kcadm.sh config credentials \
+                --server http://keycloak:8080 \
+                --realm master \
+                --user "${ADMIN_USER}" \
+                --password "${ADMIN_PASSWORD}"
+              
+              # Update realm with 8 hour session timeout (28800 seconds)
+              echo "Setting session timeouts to 8 hours (28800 seconds)..."
+              /opt/keycloak/bin/kcadm.sh update realms/${REALM} \
+                -s 'ssoSessionIdleTimeout=28800' \
+                -s 'ssoSessionMaxLifespan=28800' \
+                -s 'clientSessionIdleTimeout=0' \
+                -s 'clientSessionMaxLifespan=0'
+              
+              echo "Session configuration completed successfully!"
+              echo "Settings applied:"
+              echo "  - ssoSessionIdleTimeout: 28800 seconds (8 hours)"
+              echo "  - ssoSessionMaxLifespan: 28800 seconds (8 hours)"
+          env:
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KEYCLOAK_ADMIN
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KEYCLOAK_ADMIN_PASSWORD
+            - name: REALM_NAME
+              value: "homelab"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: keycloak-configurator
+  namespace: keycloak
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: keycloak-configurator-role
+  namespace: keycloak
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: keycloak-configurator-binding
+  namespace: keycloak
+subjects:
+  - kind: ServiceAccount
+    name: keycloak-configurator
+    namespace: keycloak
+roleRef:
+  kind: Role
+  name: keycloak-configurator-role
+  apiGroup: rbac.authorization.k8s.io
