@@ -104,10 +104,13 @@ const buildInlineKeyboard = (
       });
     }
 
-    if (hasEmail && hit.source !== 'lazy') {
+    if (hasEmail) {
+      const emailCallback = hit.source === 'lazy' 
+        ? `lazy_email_${hit.libid}` 
+        : `email_${hit.libid}`;
       actionRow.push({
         text: '📧 Email',
-        callback_data: `email_${hit.libid}`
+        callback_data: emailCallback
       });
     }
 

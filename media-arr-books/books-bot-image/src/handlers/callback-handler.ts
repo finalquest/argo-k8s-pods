@@ -205,6 +205,133 @@ const createCallbackHandler = (deps: Deps) => {
         updateLazyJob(jobId, { lastStatus: 'queued' });
 
         return;
+      } else if (query.data.startsWith('lazy_email_')) {
+        const bookId = query.data.replace('lazy_email_', '');
+        if (!bookId) {
+          bot.answerCallbackQuery(query.id, { text: 'Libro no encontrado' });
+          return;
+        }
+
+        const emails = getEmails();
+        const userEmail = emails[userId];
+
+        if (!userEmail) {
+          bot.answerCallbackQuery(query.id, { text: '❌ No tienes email configurado' });
+          bot.sendMessage(chatId, '❌ No tienes un email configurado.\n\nUsa el comando:\n/addMail tu@email.com\n\npara asociar un email a tu cuenta.');
+          return;
+        }
+
+        const jobId = `${userId}:${bookId}`;
+        const existingJob = getLazyJob(jobId);
+        if (existingJob) {
+          bot.answerCallbackQuery(query.id, { text: '⏳ Envío ya en cola' });
+          bot.sendMessage(chatId, '⏳ Ya tengo ese envío por email en cola. Te aviso cuando esté listo.');
+          return;
+        }
+
+        const state = conversationStates.get(chatId) as { state?: string; results?: Record<string, unknown>[] } | undefined;
+        const lazyHit = state?.state === 'ENGLISH_MODE' || state?.state === 'ENGLISH_AUTHOR_MODE'
+          ? (state.results || []).find(hit => String((hit as { libid?: string }).libid) === bookId)
+          : null;
+        const title = lazyHit ? (lazyHit as { title?: string }).title : undefined;
+        const authorsValue = lazyHit ? (lazyHit as { authors?: string[] | string }).authors : undefined;
+        const author = Array.isArray(authorsValue) ? authorsValue[0] : authorsValue;
+        const isbn = lazyHit ? (lazyHit as { isbn?: string }).isbn : undefined;
+        let resolvedBookId = bookId;
+
+        if (isbn) {
+          try {
+            const isbnResults = await lazyFindBook(isbn);
+            const match = isbnResults.find(item => {
+              const itemIsbn = (item as { bookisbn?: string }).bookisbn;
+              return itemIsbn && String(itemIsbn).trim() === isbn;
+            });
+            if (match && (match as { bookid?: string }).bookid) {
+              resolvedBookId = String((match as { bookid?: string }).bookid);
+            }
+          } catch (err) {
+            logger.warn({ err, isbn }, '[LAZY] ISBN lookup failed');
+          }
+        }
+
+        bot.answerCallbackQuery(query.id, { text: '📧 Envío por email iniciado' });
+        bot.sendMessage(chatId, `📧 Envío por email iniciado.\n\nEl libro se enviará a:\n${userEmail}\n\nTe aviso cuando esté listo.\n\nPuedes seguir usando el bot.`);
+
+        try {
+          const headResponse = await lazyHeadFileDirect(resolvedBookId);
+          if (headResponse.ok) {
+            const response = await lazyDownloadFileDirect(resolvedBookId);
+            const fallback = generateFilename(title, author ? [author] : undefined);
+            const { tempPath } = await downloadResponseToTemp(response, fallback);
+            await bot.sendDocument(chatId, tempPath, {
+              caption: `📥 ${title || 'Libro listo'}${author ? `\n✍️ ${author}` : ''}`,
+            });
+            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado' });
+            return;
+          }
+        } catch (err) {
+          logger.warn({ err, bookId: resolvedBookId }, '[LAZY] Direct file check failed');
+        }
+
+        const addResult = await lazyAddBook(resolvedBookId);
+        if (addResult?.Success === false) {
+          logger.warn({ bookId: resolvedBookId, error: addResult?.Error }, '[LAZY] addBook failed');
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        let queueResult = await lazyQueueBook(resolvedBookId);
+        if (queueResult?.Success === false) {
+          const details = queueResult?.Error?.Message
+            || (typeof (queueResult as { Data?: unknown })?.Data === 'string'
+              ? (queueResult as { Data?: string }).Data
+              : 'desconocido');
+          logger.error({ bookId: resolvedBookId, originalBookId: bookId, isbn }, '[LAZY] queueBook failed');
+          logger.error({ queueResult }, '[LAZY] queueBook response');
+
+          if (details.toLowerCase().includes('invalid id') && resolvedBookId !== bookId) {
+            queueResult = await lazyQueueBook(bookId);
+          } else if (details.toLowerCase().includes('invalid id')) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            queueResult = await lazyQueueBook(resolvedBookId);
+          }
+        }
+
+        if (queueResult?.Success === false) {
+          const details = queueResult?.Error?.Message
+            || (typeof (queueResult as { Data?: unknown })?.Data === 'string'
+              ? (queueResult as { Data?: string }).Data
+              : 'desconocido');
+          bot.answerCallbackQuery(query.id, { text: '❌ No pude iniciar el envío' });
+          bot.sendMessage(chatId, `❌ Error al poner en cola: ${details}`);
+          return;
+        }
+
+        const searchResult = await lazySearchBook(resolvedBookId);
+        if (searchResult?.Success === false) {
+          logger.warn({ bookId: resolvedBookId, error: searchResult?.Error }, '[LAZY] searchBook failed');
+        }
+
+        const forceResult = await lazyForceProcess();
+        if (forceResult?.Success === false) {
+          logger.warn({ error: forceResult?.Error }, '[LAZY] forceProcess failed');
+        }
+
+        addLazyJob({
+          chatId,
+          userId,
+          bookId: resolvedBookId,
+          title,
+          author,
+          startedAt: Date.now(),
+          lastStatus: 'queued',
+          deliveryMethod: 'email',
+          userEmail,
+        });
+
+        updateLazyJob(jobId, { lastStatus: 'queued', deliveryMethod: 'email', userEmail });
+
+        return;
       } else if (query.data.startsWith('download_')) {
         const libid = query.data.replace('download_', '');
         const book = await getBookById(libid);

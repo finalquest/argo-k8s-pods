@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { downloadResponseToTemp } from './download.ts';
 
 type Bot = {
@@ -20,6 +21,20 @@ type LazyJob = {
   author?: string;
   startedAt: number;
   lastStatus?: string;
+  deliveryMethod?: 'telegram' | 'email';
+  userEmail?: string;
+};
+
+type Book = {
+  title?: string;
+  authors?: string[] | string;
+  published?: string | number;
+  pagecount?: string | number;
+  size?: number;
+  labels?: string[] | string;
+  filename?: string;
+  libid?: string | number;
+  description?: string;
 };
 
 type PollerDeps = {
@@ -31,6 +46,7 @@ type PollerDeps = {
   headFileDirect: (bookId: string, type?: string) => Promise<Response>;
   downloadFileDirect: (bookId: string, type?: string) => Promise<Response>;
   fallbackFilename: (title?: string, author?: string) => string;
+  sendEmail?: (toEmail: string, book: Book, epubBuffer: Buffer, filename: string) => Promise<boolean>;
 };
 
 let running = false;
@@ -50,6 +66,7 @@ const processLazyJobs = async (deps: PollerDeps) => {
     headFileDirect,
     downloadFileDirect,
     fallbackFilename,
+    sendEmail,
   } = deps;
 
   const jobs = listLazyJobs();
@@ -72,19 +89,41 @@ const processLazyJobs = async (deps: PollerDeps) => {
 
       const response = await downloadFileDirect(job.bookId);
       const fallback = fallbackFilename(job.title, job.author);
-      const { tempPath } = await downloadResponseToTemp(response, fallback);
+      const { tempPath, filename } = await downloadResponseToTemp(response, fallback);
 
-      const captionParts = [];
-      if (job.title) captionParts.push(`📥 ${job.title}`);
-      if (job.author) captionParts.push(`✍️ ${job.author}`);
+      if (job.deliveryMethod === 'email' && job.userEmail && sendEmail) {
+        const arrayBuffer = await response.arrayBuffer();
+        const epubBuffer = Buffer.from(arrayBuffer);
+        
+        const book: Book = {
+          title: job.title || filename,
+          authors: job.author ? [job.author] : undefined,
+        };
 
-      await bot.sendDocument(job.chatId, tempPath, {
-        caption: captionParts.join('\n') || '📥 Libro listo',
-      });
+        await sendEmail(job.userEmail, book, epubBuffer, filename);
 
-      removeLazyJob(job.jobId);
-      bot.sendMessage(job.chatId, '✅ Descarga completa. Si quieres otro libro, envía un nuevo título.');
-      logger.info({ jobId: job.jobId, bookId: job.bookId }, '[LAZY] Job delivered');
+        removeLazyJob(job.jobId);
+        bot.sendMessage(job.chatId, `✅ Libro enviado por email a:\n\n📧 ${job.userEmail}\n\n📚 ${job.title || 'Libro'}`);
+        logger.info({ jobId: job.jobId, bookId: job.bookId, email: job.userEmail }, '[LAZY] Job delivered via email');
+      } else {
+        const captionParts = [];
+        if (job.title) captionParts.push(`📥 ${job.title}`);
+        if (job.author) captionParts.push(`✍️ ${job.author}`);
+
+        await bot.sendDocument(job.chatId, tempPath, {
+          caption: captionParts.join('\n') || '📥 Libro listo',
+        });
+
+        removeLazyJob(job.jobId);
+        bot.sendMessage(job.chatId, '✅ Descarga completa. Si quieres otro libro, envía un nuevo título.');
+        logger.info({ jobId: job.jobId, bookId: job.bookId }, '[LAZY] Job delivered');
+      }
+
+      try {
+        fs.unlinkSync(tempPath);
+      } catch (unlinkErr) {
+        logger.warn({ err: unlinkErr, tempPath }, '[LAZY] Failed to cleanup temp file');
+      }
     } catch (err) {
       logger.error({ err, jobId: job.jobId, bookId: job.bookId }, '[LAZY] Poller error');
     }

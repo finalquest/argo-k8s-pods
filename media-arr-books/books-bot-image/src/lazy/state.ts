@@ -16,6 +16,8 @@ type LazyJob = {
   author?: string;
   startedAt: number;
   lastStatus?: string;
+  deliveryMethod?: 'telegram' | 'email';
+  userEmail?: string;
 };
 
 const lazyJobs = new Map<string, LazyJob>();

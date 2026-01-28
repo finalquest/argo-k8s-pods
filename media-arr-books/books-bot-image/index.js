@@ -424,6 +424,7 @@ async function startBot() {
       headFileDirect: lazyHeadFileDirect,
       downloadFileDirect: lazyDownloadFileDirect,
       fallbackFilename: (title, author) => generateFilename(title, author ? [author] : undefined),
+      sendEmail,
     });
   }, 30000);
 

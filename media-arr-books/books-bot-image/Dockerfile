@@ -11,4 +11,4 @@ COPY src ./src
 
 CMD ["npm", "start"]
 
-# Version: v2.2.1 - Fix: Change search limit from 5 to 100 for proper pagination
+# Version: v3.2.0 - Add email support for async/lazy downloads
