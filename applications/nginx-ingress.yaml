@@ -5,13 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://kubernetes.github.io/ingress-nginx
-    chart: ingress-nginx
-    targetRevision: 4.11.2   # fija una versión del chart
-    helm:
-      valueFiles:
-        - values.yaml        # este archivo está en tu repo si usas 'directory' (ver nota abajo)
+  sources:
+    - repoURL: https://kubernetes.github.io/ingress-nginx
+      chart: ingress-nginx
+      targetRevision: 4.11.2   # fija una versión del chart
+      helm:
+        valueFiles:
+          - $values/ingress-nginx/values.yaml
+    - repoURL: https://github.com/finalquest/argo-k8s-pods
+      targetRevision: main
+      ref: values
       values: |
         controller:
           resources:
