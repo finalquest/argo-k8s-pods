@@ -12,6 +12,15 @@ spec:
     helm:
       valueFiles:
         - values.yaml        # este archivo está en tu repo si usas 'directory' (ver nota abajo)
+      values: |
+        controller:
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 512Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
