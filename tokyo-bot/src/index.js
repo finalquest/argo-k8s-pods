@@ -81,7 +81,12 @@ const stripUiNoise = (text, lastPrompt = '') => {
 
 const buildCodexArgs = (outputFile) => [
   'exec',
-  '--dangerously-bypass-approvals-and-sandbox',
+  '--sandbox',
+  'danger-full-access',
+  '--ask-for-approval',
+  'never',
+  '--color',
+  'never',
   '--output-last-message',
   outputFile,
   '-'
@@ -198,13 +203,12 @@ const runCodexPrompt = (prompt, chatId) =>
     const args = buildCodexArgs(outputFile);
     logger.debug({ chatId, args }, 'Ejecutando codex exec');
     const codexEnv = {
-      ...process.env,
-      CODEX_API_KEY
+      ...process.env
     };
-    delete codexEnv.CODEX_SANDBOX;
-    delete codexEnv.CODEX_SANDBOX_NETWORK_DISABLED;
-    codexEnv.CODEX_SANDBOX = 'danger-full-access';
-    codexEnv.CODEX_SANDBOX_NETWORK_DISABLED = '0';
+    if (CODEX_API_KEY) {
+      codexEnv.OPENAI_API_KEY = CODEX_API_KEY;
+      codexEnv.CODEX_API_KEY = CODEX_API_KEY;
+    }
     const child = spawn(CODEX_CMD, args, {
       cwd: repoPath,
       env: codexEnv,

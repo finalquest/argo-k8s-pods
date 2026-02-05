@@ -4,7 +4,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends git openssh-client ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @openai/codex
+RUN npm install -g @openai/codex@latest
 
 WORKDIR /app
 
