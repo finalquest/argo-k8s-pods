@@ -168,7 +168,7 @@ const writeFileTool = async ({ repoPath, path, content }) => {
 const runCommandTool = ({ repoPath, command, timeoutMs = 120000 }) =>
   new Promise((resolvePromise) => {
     const boundedTimeout = Math.min(Math.max(Number(timeoutMs) || 120000, 1000), 300000);
-    const child = spawn('/bin/zsh', ['-lc', command], {
+    const child = spawn('sh', ['-c', command], {
       cwd: repoPath,
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe']
@@ -187,6 +187,16 @@ const runCommandTool = ({ repoPath, command, timeoutMs = 120000 }) =>
     });
     child.stderr.on('data', (chunk) => {
       stderr += chunk.toString();
+    });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      resolvePromise({
+        command,
+        exitCode: -1,
+        timedOut: false,
+        stdout: truncate(stdout),
+        stderr: truncate(`${stderr}\n${err?.message || 'spawn error'}`.trim())
+      });
     });
     child.on('close', (code) => {
       clearTimeout(timer);
