@@ -4,8 +4,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends git openssh-client ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @openai/codex@latest
-
 WORKDIR /app
 
 COPY package*.json ./
@@ -14,8 +12,8 @@ RUN npm install --omit=dev
 COPY . .
 
 RUN useradd --create-home --shell /bin/bash bot \
-  && mkdir -p /data/repos /home/bot/.codex \
-  && chown -R bot:bot /app /data /home/bot/.codex
+  && mkdir -p /data/repos \
+  && chown -R bot:bot /app /data
 
 USER bot
 ENV TOKYO_REPO_DIR=/data/repos \

@@ -1,10 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
 import pino from 'pino';
 import { spawn } from 'child_process';
-import { mkdirSync, existsSync, readFileSync, rmSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
-import { tmpdir } from 'os';
-import { randomUUID } from 'crypto';
+import { createMoonshotRuntime, runMoonshotPrompt } from './moonshot.js';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -20,15 +19,20 @@ const {
   GIT_USER_NAME = 'Codex Telegram Bot',
   GIT_USER_EMAIL = 'bot@example.com',
   TOKYO_REPO_BRANCH = '',
-  CODEX_CMD = 'codex',
-  CODEX_ARGS = '',
-  CODEX_API_KEY,
   CODEX_HISTORY_LIMIT = '6',
   CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN) {
   logger.error('Missing TELEGRAM_BOT_TOKEN');
+  process.exit(1);
+}
+
+let moonshotRuntime;
+try {
+  moonshotRuntime = createMoonshotRuntime(process.env);
+} catch (err) {
+  logger.error({ err }, 'Moonshot configuration error');
   process.exit(1);
 }
 
@@ -41,56 +45,6 @@ const allowedUsers = new Set(
 const repoPath = join(TOKYO_REPO_DIR, TOKYO_REPO_NAME);
 const parsedHistoryLimit = Number(CODEX_HISTORY_LIMIT);
 const historyLimit = Number.isNaN(parsedHistoryLimit) || parsedHistoryLimit < 0 ? 6 : Math.floor(parsedHistoryLimit);
-
-const ANSI_REGEX = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
-const OSC_REGEX = /\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\|$)/g;
-const SINGLE_ESCAPE_REGEX = /\u001b[\(\)][0-9A-Za-z]/g;
-const RESIDUAL_CSI_REGEX = /\[[><\?][0-9;]*[A-Za-z]/g;
-
-const stripAnsi = (text) =>
-  text
-    .replace(/\r/g, '')
-    .replace(OSC_REGEX, '')
-    .replace(ANSI_REGEX, '')
-    .replace(SINGLE_ESCAPE_REGEX, '')
-    .replace(/\u001bM/g, '')
-    .replace(/\u001b=/g, '')
-    .replace(/\u001b>/g, '')
-    .replace(/\u001b[><]/g, '')
-    .replace(RESIDUAL_CSI_REGEX, '');
-
-const UI_BOX_REGEX = /╭[\s\S]*?╯/g;
-const WORKING_LINE_REGEX = /•\s*(Working|Exploring|Checking|Considering|Requesting|Preparing)[^\n]*/gi;
-const PROGRESS_LINE_REGEX = /─ Worked for .*?─/g;
-
-const stripUiNoise = (text, lastPrompt = '') => {
-  let result = text;
-  result = result.replace(UI_BOX_REGEX, '');
-  result = result.replace(/›Contexto:sosCodex[^\n]*/gi, '');
-  result = result.replace(/100%\s*context\s*left/gi, '');
-  result = result.replace(WORKING_LINE_REGEX, '');
-  result = result.replace(PROGRESS_LINE_REGEX, '');
-  result = result.replace(/^›/gm, '');
-  result = result.replace(/^•\s*/gm, '');
-  if (lastPrompt) {
-    const escapedPrompt = lastPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(new RegExp(escapedPrompt, 'gi'), '');
-  }
-  return result;
-};
-
-const buildCodexArgs = (outputFile) => [
-  'exec',
-  '--sandbox',
-  'danger-full-access',
-  '--ask-for-approval',
-  'never',
-  '--color',
-  'never',
-  '--output-last-message',
-  outputFile,
-  '-'
-];
 
 const runCommand = (cmd, args, options = {}) =>
   new Promise((resolve, reject) => {
@@ -197,69 +151,9 @@ async function ensureRepo() {
   await runCommand('git', ['-C', repoPath, 'config', 'user.email', GIT_USER_EMAIL]);
 }
 
-const runCodexPrompt = (prompt, chatId) =>
-  new Promise((resolve, reject) => {
-    const outputFile = join(tmpdir(), `tokyo-bot-codex-${randomUUID()}.txt`);
-    const args = buildCodexArgs(outputFile);
-    logger.debug({ chatId, args }, 'Ejecutando codex exec');
-    const codexEnv = {
-      ...process.env
-    };
-    if (CODEX_API_KEY) {
-      codexEnv.OPENAI_API_KEY = CODEX_API_KEY;
-      codexEnv.CODEX_API_KEY = CODEX_API_KEY;
-    }
-    const child = spawn(CODEX_CMD, args, {
-      cwd: repoPath,
-      env: codexEnv,
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
-    let stdout = '';
-    let stderr = '';
-
-    const cleanup = () => {
-      try {
-        rmSync(outputFile, { force: true });
-      } catch (err) {
-        logger.debug({ chatId, err }, 'No pude borrar el archivo temporal');
-      }
-    };
-
-    child.stdout.on('data', (chunk) => {
-      const text = chunk.toString();
-      stdout += text;
-      logger.debug({ chatId, chunk: text }, 'codex exec stdout');
-    });
-    child.stderr.on('data', (chunk) => {
-      const text = chunk.toString();
-      stderr += text;
-      logger.debug({ chatId, chunk: text }, 'codex exec stderr');
-    });
-    child.on('error', (err) => {
-      cleanup();
-      reject(err);
-    });
-    child.on('close', (code) => {
-      let output = '';
-      if (code === 0) {
-        try {
-          output = readFileSync(outputFile, 'utf8');
-        } catch (err) {
-          logger.warn({ chatId, err }, 'No pude leer el resultado final de Codex');
-          output = stdout;
-        }
-        const cleaned = stripUiNoise(stripAnsi(output));
-        cleanup();
-        resolve(cleaned.trim());
-        return;
-      }
-      const combined = `${stderr}\n${stdout}`.trim();
-      cleanup();
-      const errorText = stripUiNoise(stripAnsi(combined));
-      reject(new Error(errorText || `Codex salió con código ${code}`));
-    });
-    child.stdin.end(`${prompt}\n`);
-  });
+const runLlmPrompt = async (prompt, chatId) => {
+  return runMoonshotPrompt({ runtime: moonshotRuntime, prompt, chatId, logger });
+};
 
 class CodexExecManager {
   constructor(limit) {
@@ -287,7 +181,7 @@ class CodexExecManager {
     this.active.add(chatId);
     try {
       const prompt = this.buildPrompt(chatId, message);
-      const response = await runCodexPrompt(prompt, chatId);
+      const response = await runLlmPrompt(prompt, chatId);
       this.recordHistory(chatId, message, response);
       return response.trim() ? response.trim() : '(sin salida)';
     } finally {

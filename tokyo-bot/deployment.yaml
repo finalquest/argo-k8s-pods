@@ -17,21 +17,6 @@ spec:
     spec:
       nodeSelector:
         role: worker
-      initContainers:
-        - name: codex-auth-sync
-          image: busybox:1.36
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -euo pipefail
-              cp -a /codex-src/. /codex-dst/
-              chown -R 1000:1000 /codex-dst
-          volumeMounts:
-            - name: codex-auth-ro
-              mountPath: /codex-src
-            - name: codex-home
-              mountPath: /codex-dst
       containers:
         - name: tokyo-bot
           image: harbor.finalq.xyz/tools/tokyo-bot:latest
@@ -47,8 +32,6 @@ spec:
           volumeMounts:
             - name: repo-data
               mountPath: /data
-            - name: codex-home
-              mountPath: /home/bot/.codex
           resources:
             requests:
               cpu: 500m
@@ -60,8 +43,3 @@ spec:
         - name: repo-data
           persistentVolumeClaim:
             claimName: tokyo-bot-data
-        - name: codex-auth-ro
-          secret:
-            secretName: tokyo-bot-codex-auth
-        - name: codex-home
-          emptyDir: {}
