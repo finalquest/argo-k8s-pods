@@ -152,7 +152,7 @@ async function ensureRepo() {
 }
 
 const runLlmPrompt = async (prompt, chatId) => {
-  return runMoonshotPrompt({ runtime: moonshotRuntime, prompt, chatId, logger });
+  return runMoonshotPrompt({ runtime: moonshotRuntime, prompt, chatId, logger, repoPath });
 };
 
 class CodexExecManager {
