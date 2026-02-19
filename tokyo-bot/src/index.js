@@ -2,8 +2,14 @@ import TelegramBot from 'node-telegram-bot-api';
 import pino from 'pino';
 import { spawn } from 'child_process';
 import { mkdirSync, existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { createMoonshotRuntime, runMoonshotPrompt } from './moonshot.js';
+import { createHash } from 'crypto';
+import {
+  createMoonshotRuntime,
+  runMoonshotPrompt,
+  generateRepoGuidanceSystemText
+} from './moonshot.js';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -20,7 +26,9 @@ const {
   GIT_USER_EMAIL = 'bot@example.com',
   TOKYO_REPO_BRANCH = '',
   CODEX_HISTORY_LIMIT = '6',
-  CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`
+  CODEX_SESSION_PROMPT = `Contexto: sos Codex ejecutándote en el bot tokyo-bot. Te escriben usuarios autorizados por Telegram para trabajar en el repo tokyo2026. Debés responder en español, con tono conciso, describiendo los comandos que sugerís ejecutar y resaltando pasos o riesgos importantes. Asumí que tus mensajes se enviarán directamente por Telegram y evitá incluir secuencias ANSI.`,
+  REPO_GUIDANCE_RETRY_BASE_MS = '5000',
+  REPO_GUIDANCE_RETRY_MAX_MS = '300000'
 } = process.env;
 
 if (!TELEGRAM_BOT_TOKEN) {
@@ -45,6 +53,24 @@ const allowedUsers = new Set(
 const repoPath = join(TOKYO_REPO_DIR, TOKYO_REPO_NAME);
 const parsedHistoryLimit = Number(CODEX_HISTORY_LIMIT);
 const historyLimit = Number.isNaN(parsedHistoryLimit) || parsedHistoryLimit < 0 ? 6 : Math.floor(parsedHistoryLimit);
+const baseSystemPrompt = CODEX_SESSION_PROMPT?.trim() || '';
+const knownAuthorizedChatIds = new Set();
+
+const repoGuidanceState = {
+  valid: false,
+  guidanceSystemText: '',
+  versionHash: '',
+  generatedAt: 0,
+  lastError: null,
+  retryTimer: null,
+  retryAttempt: 0,
+  failureNotified: false,
+  recoveryNotified: false,
+  pendingAlertMessage: ''
+};
+
+let guidanceRefreshPromise = null;
+let botInstance = null;
 
 const runCommand = (cmd, args, options = {}) =>
   new Promise((resolve, reject) => {
@@ -151,8 +177,152 @@ async function ensureRepo() {
   await runCommand('git', ['-C', repoPath, 'config', 'user.email', GIT_USER_EMAIL]);
 }
 
+const readRepoGuidanceFiles = async () => {
+  const agentsPath = join(repoPath, 'AGENTS.md');
+  const readmePath = join(repoPath, 'README.md');
+  let agentsText = '';
+  let readmeText = '';
+
+  try {
+    agentsText = await readFile(agentsPath, 'utf8');
+  } catch (err) {
+    logger.warn({ err, agentsPath }, 'AGENTS.md no disponible en repo clonado');
+  }
+  try {
+    readmeText = await readFile(readmePath, 'utf8');
+  } catch (err) {
+    logger.warn({ err, readmePath }, 'README.md no disponible en repo clonado');
+  }
+
+  return {
+    agentsText: agentsText || '(AGENTS.md no disponible)',
+    readmeText: readmeText || '(README.md no disponible)'
+  };
+};
+
+const buildGuidanceHash = ({ agentsText, readmeText }) =>
+  createHash('sha256')
+    .update(`AGENTS\n${agentsText}\n\nREADME\n${readmeText}`)
+    .digest('hex');
+
+const notifyKnownChats = async (message) => {
+  if (!botInstance || knownAuthorizedChatIds.size === 0) {
+    return false;
+  }
+  await Promise.all(
+    Array.from(knownAuthorizedChatIds).map((chatId) =>
+      botInstance.sendMessage(chatId, message).catch((err) => {
+        logger.warn({ err, chatId }, 'No pude enviar alerta de guidance');
+      })
+    )
+  );
+  return true;
+};
+
+const nextRetryDelayMs = (attempt) => {
+  const base = Number(REPO_GUIDANCE_RETRY_BASE_MS) || 5000;
+  const max = Number(REPO_GUIDANCE_RETRY_MAX_MS) || 300000;
+  const exponential = base * 2 ** Math.max(0, attempt - 1);
+  return Math.min(exponential, max);
+};
+
+const scheduleGuidanceRetry = () => {
+  if (repoGuidanceState.retryTimer) {
+    return;
+  }
+  repoGuidanceState.retryAttempt += 1;
+  const delay = nextRetryDelayMs(repoGuidanceState.retryAttempt);
+  repoGuidanceState.retryTimer = setTimeout(async () => {
+    repoGuidanceState.retryTimer = null;
+    try {
+      await ensureRepo();
+      await refreshRepoGuidanceCache('retry');
+    } catch (err) {
+      logger.error({ err }, 'Falló retry de cache de guidance');
+      scheduleGuidanceRetry();
+    }
+  }, delay);
+};
+
+const buildSystemPrompt = () => {
+  const sections = [baseSystemPrompt];
+  if (repoGuidanceState.guidanceSystemText) {
+    sections.push(`Contexto compilado del repo:\n${repoGuidanceState.guidanceSystemText}`);
+  }
+  return sections.filter(Boolean).join('\n\n');
+};
+
+async function refreshRepoGuidanceCache(reason = 'manual') {
+  if (guidanceRefreshPromise) {
+    return guidanceRefreshPromise;
+  }
+  guidanceRefreshPromise = (async () => {
+    const { agentsText, readmeText } = await readRepoGuidanceFiles();
+    const versionHash = buildGuidanceHash({ agentsText, readmeText });
+    if (repoGuidanceState.valid && repoGuidanceState.versionHash === versionHash) {
+      logger.debug({ reason, versionHash }, 'Guidance cache sin cambios, se reutiliza');
+      return;
+    }
+    const guidanceText = await generateRepoGuidanceSystemText({
+      runtime: moonshotRuntime,
+      agentsText,
+      readmeText,
+      logger
+    });
+    repoGuidanceState.valid = true;
+    repoGuidanceState.guidanceSystemText = guidanceText;
+    repoGuidanceState.versionHash = versionHash;
+    repoGuidanceState.generatedAt = Date.now();
+    repoGuidanceState.lastError = null;
+    repoGuidanceState.retryAttempt = 0;
+    if (repoGuidanceState.retryTimer) {
+      clearTimeout(repoGuidanceState.retryTimer);
+      repoGuidanceState.retryTimer = null;
+    }
+    if (repoGuidanceState.failureNotified && !repoGuidanceState.recoveryNotified) {
+      await notifyKnownChats(
+        '✅ Contexto del repo regenerado correctamente. El bot vuelve a estar operativo.'
+      );
+      repoGuidanceState.recoveryNotified = true;
+      repoGuidanceState.failureNotified = false;
+    }
+  })();
+
+  try {
+    await guidanceRefreshPromise;
+  } catch (err) {
+    repoGuidanceState.valid = false;
+    repoGuidanceState.lastError = err?.message || 'Error desconocido';
+    repoGuidanceState.recoveryNotified = false;
+    if (!repoGuidanceState.failureNotified) {
+      const failureMessage = `⚠️ Error al generar el contexto del repo (AGENTS.md/README.md): ${repoGuidanceState.lastError}. El bot queda bloqueado hasta regenerarlo.`;
+      const sent = await notifyKnownChats(failureMessage);
+      if (!sent) {
+        repoGuidanceState.pendingAlertMessage = failureMessage;
+      }
+      repoGuidanceState.failureNotified = true;
+    }
+    scheduleGuidanceRetry();
+    throw err;
+  } finally {
+    guidanceRefreshPromise = null;
+  }
+}
+
 const runLlmPrompt = async (prompt, chatId) => {
-  return runMoonshotPrompt({ runtime: moonshotRuntime, prompt, chatId, logger, repoPath });
+  if (!repoGuidanceState.valid) {
+    throw new Error(
+      'No puedo procesar tareas hasta regenerar el contexto del repo (AGENTS/README).'
+    );
+  }
+  return runMoonshotPrompt({
+    runtime: moonshotRuntime,
+    prompt,
+    chatId,
+    logger,
+    repoPath,
+    systemPrompt: buildSystemPrompt()
+  });
 };
 
 class CodexExecManager {
@@ -191,9 +361,6 @@ class CodexExecManager {
 
   buildPrompt(chatId, message) {
     const segments = [];
-    if (CODEX_SESSION_PROMPT) {
-      segments.push(CODEX_SESSION_PROMPT.trim());
-    }
     const history = this.history.get(chatId) || [];
     if (history.length) {
       const formattedHistory = history
@@ -308,6 +475,12 @@ function setupPollingRecovery(bot) {
 async function startBot() {
   await ensureRepo();
   const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+  botInstance = bot;
+  try {
+    await refreshRepoGuidanceCache('startup');
+  } catch (err) {
+    logger.error({ err }, 'No pude generar cache de guidance al iniciar; bot queda bloqueado');
+  }
   logger.info('Bot connected to Telegram');
   setupPollingRecovery(bot);
 
@@ -317,6 +490,15 @@ async function startBot() {
     if (allowedUsers.size && !allowedUsers.has(userId)) {
       logger.warn({ userId }, 'Unauthorized user');
       return;
+    }
+    knownAuthorizedChatIds.add(chatId);
+    if (repoGuidanceState.pendingAlertMessage) {
+      bot
+        .sendMessage(chatId, repoGuidanceState.pendingAlertMessage)
+        .catch((err) => logger.warn({ err, chatId }, 'No pude enviar alerta pendiente'))
+        .finally(() => {
+          repoGuidanceState.pendingAlertMessage = '';
+        });
     }
 
     const text = msg.text?.trim();
@@ -332,6 +514,13 @@ async function startBot() {
     }
 
     if (text === '/status') {
+      if (!repoGuidanceState.valid) {
+        bot.sendMessage(
+          chatId,
+          `Bot bloqueado: fallo cache de contexto del repo. Error: ${repoGuidanceState.lastError || 'desconocido'}`
+        );
+        return;
+      }
       if (codexManager.isBusy(chatId)) {
         bot.sendMessage(chatId, 'Codex está procesando un mensaje.');
         return;
@@ -355,6 +544,14 @@ async function startBot() {
       bot.sendMessage(
         chatId,
         'Listo para trabajar con Codex. Mandame instrucciones y usaré el repo tokyo2026.'
+      );
+      return;
+    }
+
+    if (!repoGuidanceState.valid) {
+      bot.sendMessage(
+        chatId,
+        'No puedo procesar tareas hasta regenerar el contexto del repo (AGENTS/README).'
       );
       return;
     }

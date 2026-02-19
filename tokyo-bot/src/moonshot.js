@@ -5,8 +5,9 @@ import { dirname, resolve } from 'path';
 
 const DEFAULT_MOONSHOT_BASE_URL = 'https://api.moonshot.ai/v1';
 const DEFAULT_MOONSHOT_MODEL = 'kimi-k2.5';
-const DEFAULT_TOOL_LOOP_MAX_STEPS = 8;
+const DEFAULT_TOOL_LOOP_MAX_STEPS = 20;
 const OUTPUT_LIMIT = 12000;
+const DEFAULT_GUIDANCE_CHUNK_SIZE = 32000;
 
 export const resolveMoonshotConfig = (env = process.env) => {
   const apiKey = env.MOONSHOT_API_KEY || env.OPENAI_API_KEY || env.CODEX_API_KEY;
@@ -241,7 +242,8 @@ export const runMoonshotPrompt = async ({
   prompt,
   chatId = 'n/a',
   logger,
-  repoPath
+  repoPath,
+  systemPrompt = ''
 }) => {
   if (logger?.debug) {
     logger.debug(
@@ -256,6 +258,16 @@ export const runMoonshotPrompt = async ({
   }
   try {
     const messages = [];
+    let lastAssistantContent = '';
+    const toolSignatureCount = new Map();
+    let lastToolBatchSignature = '';
+    let repeatedBatchCount = 0;
+    if (systemPrompt?.trim()) {
+      messages.push({
+        role: 'system',
+        content: systemPrompt.trim()
+      });
+    }
     if (repoPath) {
       messages.push({
         role: 'system',
@@ -275,8 +287,22 @@ export const runMoonshotPrompt = async ({
         ...(repoPath ? { tools: toolDefinitions, tool_choice: 'auto' } : {})
       });
       const message = completion?.choices?.[0]?.message;
+      const currentText = getCompletionText(message?.content);
+      if (currentText) {
+        lastAssistantContent = currentText;
+      }
       const toolCalls = message?.tool_calls || [];
       if (toolCalls.length && repoPath) {
+        const currentBatchSignature = toolCalls
+          .map((toolCall) => `${toolCall?.function?.name}:${toolCall?.function?.arguments || '{}'}`)
+          .join('||');
+        if (currentBatchSignature === lastToolBatchSignature) {
+          repeatedBatchCount += 1;
+        } else {
+          repeatedBatchCount = 0;
+          lastToolBatchSignature = currentBatchSignature;
+        }
+
         messages.push({
           role: 'assistant',
           content: message?.content || null,
@@ -285,8 +311,26 @@ export const runMoonshotPrompt = async ({
             ? { reasoning_content: message.reasoning_content }
             : {})
         });
+        let loopGuardTriggered = false;
         for (const toolCall of toolCalls) {
-          const args = parseToolArgs(toolCall?.function?.arguments);
+          const rawArgs = toolCall?.function?.arguments || '{}';
+          const signature = `${toolCall?.function?.name}:${rawArgs}`;
+          const seenCount = toolSignatureCount.get(signature) || 0;
+          if (seenCount >= 2) {
+            loopGuardTriggered = true;
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify({
+                error: 'loop_detected_same_tool_call',
+                detail:
+                  'Se bloqueó una tool call idéntica repetida para evitar bucles. Debés avanzar con otro enfoque o finalizar.'
+              })
+            });
+            continue;
+          }
+          toolSignatureCount.set(signature, seenCount + 1);
+          const args = parseToolArgs(rawArgs);
           try {
             const toolResult = await runTool({
               repoPath,
@@ -308,12 +352,152 @@ export const runMoonshotPrompt = async ({
             });
           }
         }
+        if (repeatedBatchCount >= 2 || loopGuardTriggered) {
+          logger?.warn(
+            { chatId, repeatedBatchCount, loopGuardTriggered },
+            'Guardrail de tools activado, se fuerza finalización'
+          );
+          break;
+        }
         continue;
       }
-      return getCompletionText(message?.content);
+      return currentText || '(sin salida)';
     }
-    return 'No pude completar la tarea dentro del límite de pasos de herramientas.';
+    if (repoPath) {
+      const finalCompletion = await runtime.client.chat.completions.create({
+        model: runtime.config.model,
+        temperature: 1,
+        messages,
+        extra_body: {
+          thinking: { type: 'enabled' }
+        },
+        tools: toolDefinitions,
+        tool_choice: 'none'
+      });
+      const finalText = getCompletionText(finalCompletion?.choices?.[0]?.message?.content);
+      if (finalText) {
+        return finalText;
+      }
+    }
+    return lastAssistantContent || 'No pude completar la tarea en este intento.';
   } catch (err) {
     throw new Error(normalizeMoonshotError(err));
   }
+};
+
+const chunkText = (text, chunkSize) => {
+  if (!text) {
+    return [];
+  }
+  const chunks = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    chunks.push(text.slice(cursor, cursor + chunkSize));
+    cursor += chunkSize;
+  }
+  return chunks;
+};
+
+const compileGuidance = async ({ runtime, docPayload, systemPrompt, model }) => {
+  const response = await runtime.client.chat.completions.create({
+    model,
+    temperature: 1,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: docPayload }
+    ],
+    extra_body: {
+      thinking: { type: 'disabled' }
+    }
+  });
+  return getCompletionText(response?.choices?.[0]?.message?.content);
+};
+
+const shouldFallbackToChunking = (err) => {
+  const status = Number(err?.status || 0);
+  const message = `${err?.error?.message || err?.message || ''}`.toLowerCase();
+  if (status === 413) {
+    return true;
+  }
+  return status === 400 && /token|context|length|max/.test(message);
+};
+
+export const generateRepoGuidanceSystemText = async ({
+  runtime,
+  agentsText,
+  readmeText,
+  logger
+}) => {
+  const model = process.env.REPO_GUIDANCE_MODEL || runtime.config.model;
+  const compilerSystemPrompt =
+    'Sos un compilador de contexto para un bot de ingeniería. Tu salida se usará como system prompt. ' +
+    'Debe ser breve, accionable y sin relleno. Estructura exacta requerida:\n' +
+    '1) OBJETIVO_DEL_REPO\n2) REGLAS_OBLIGATORIAS\n3) CONVENCIONES_DE_CODIGO\n4) USO_DE_HERRAMIENTAS\n5) CHECKLIST_DE_EJECUCION\n' +
+    'En REGLAS_OBLIGATORIAS incluye solo reglas explícitas de AGENTS/README. No inventes reglas.';
+
+  const fullPayload =
+    `AGENTS.md\n<<<\n${agentsText || '(no disponible)'}\n>>>\n\n` +
+    `README.md\n<<<\n${readmeText || '(no disponible)'}\n>>>`;
+
+  try {
+    const compiled = await compileGuidance({
+      runtime,
+      docPayload: fullPayload,
+      systemPrompt: compilerSystemPrompt,
+      model
+    });
+    if (!compiled) {
+      throw new Error('Guidance compiler returned empty output');
+    }
+    return compiled;
+  } catch (err) {
+    if (!shouldFallbackToChunking(err)) {
+      throw err;
+    }
+    logger?.warn({ err }, 'Guidance compiler fallback to chunking');
+  }
+
+  const chunkSize = Number(process.env.REPO_GUIDANCE_CHUNK_SIZE) || DEFAULT_GUIDANCE_CHUNK_SIZE;
+  const agentsChunks = chunkText(agentsText || '(no disponible)', chunkSize);
+  const readmeChunks = chunkText(readmeText || '(no disponible)', chunkSize);
+
+  const chunkSummaries = [];
+  const chunkSystemPrompt =
+    'Extraé solo reglas y decisiones operativas explícitas del texto. ' +
+    'Salida breve en bullets. No inventes.';
+
+  for (const [index, chunk] of agentsChunks.entries()) {
+    const summary = await compileGuidance({
+      runtime,
+      docPayload: `Chunk AGENTS ${index + 1}/${agentsChunks.length}\n<<<\n${chunk}\n>>>`,
+      systemPrompt: chunkSystemPrompt,
+      model
+    });
+    if (summary) {
+      chunkSummaries.push(`AGENTS chunk ${index + 1}:\n${summary}`);
+    }
+  }
+  for (const [index, chunk] of readmeChunks.entries()) {
+    const summary = await compileGuidance({
+      runtime,
+      docPayload: `Chunk README ${index + 1}/${readmeChunks.length}\n<<<\n${chunk}\n>>>`,
+      systemPrompt: chunkSystemPrompt,
+      model
+    });
+    if (summary) {
+      chunkSummaries.push(`README chunk ${index + 1}:\n${summary}`);
+    }
+  }
+
+  const mergedSummaries = chunkSummaries.join('\n\n');
+  const compiled = await compileGuidance({
+    runtime,
+    docPayload: `Resumenes de chunks\n<<<\n${mergedSummaries}\n>>>`,
+    systemPrompt: compilerSystemPrompt,
+    model
+  });
+  if (!compiled) {
+    throw new Error('Guidance compiler returned empty output after chunking');
+  }
+  return compiled;
 };
