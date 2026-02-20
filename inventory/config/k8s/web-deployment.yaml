@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: web
-          image: harbor.finalq.xyz/tools/inventory-web:sha-88e5655-web8
-          imagePullPolicy: IfNotPresent
+          image: harbor.finalq.xyz/tools/inventory-web:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               name: http
