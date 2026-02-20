@@ -1,0 +1,82 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["linux-musl-openssl-3.0.x", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  items       PantryItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Location {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  items       PantryItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Unit {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  abbreviation String?     // ej: "g", "kg", "ml", "L"
+  description String?
+  items       PantryItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PantryItem {
+  id             String          @id @default(cuid())
+  name           String
+  barcode        String          @unique
+  description    String?
+  notes          String?
+  photoPath      String?
+  
+  // Relaciones
+  categoryId     String
+  category       Category        @relation(fields: [categoryId], references: [id])
+  locationId     String
+  location       Location        @relation(fields: [locationId], references: [id])
+  unitId         String
+  unit           Unit            @relation(fields: [unitId], references: [id])
+  
+  // Campos específicos de cocina/despensa
+  expirationDate DateTime?       // Fecha de vencimiento
+  frozenAt       DateTime?       // Cuándo se congeló (null = no está congelado)
+  minQuantity    Int             @default(0)  // Cantidad mínima para alerta de compra
+  
+  // Stock
+  movements      StockMovement[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model StockMovement {
+  id        String     @id @default(cuid())
+  itemId    String
+  item      PantryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  delta     Int        // positivo = entrada, negativo = salida
+  reason    String?
+  createdAt DateTime   @default(now())
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

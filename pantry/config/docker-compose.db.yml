@@ -1,0 +1,15 @@
+services:
+  pantry-postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pantry
+      POSTGRES_USER: pantry
+      POSTGRES_PASSWORD: pantry
+    ports:
+      - "5545:5432"
+    volumes:
+      - pantry-pgdata:/var/lib/postgresql/data
+
+volumes:
+  pantry-pgdata:

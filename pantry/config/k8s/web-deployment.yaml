@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pantry-web
+  namespace: pantry
+  labels:
+    app: pantry-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pantry-web
+  template:
+    metadata:
+      labels:
+        app: pantry-web
+    spec:
+      containers:
+        - name: web
+          image: harbor.finalq.xyz/tools/pantry-web:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

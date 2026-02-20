@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pantry
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/finalquest/argo-k8s-pods.git
+    targetRevision: main
+    path: pantry/config/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pantry
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

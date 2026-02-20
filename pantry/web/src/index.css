@@ -1,0 +1,301 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --background: #f8fafc;
+  --text: #0f172a;
+  --text-strong: #0b1120;
+  --muted: #475569;
+  --muted-strong: #1e293b;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --accent-bg: #eef2ff;
+  --accent-border: #c7d2fe;
+  --accent-text: #312e81;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #b91c1c;
+  --pill-bg: #e2e8f0;
+  --pill-active: #ffffff;
+  --table-header: #f1f5f9;
+}
+
+[data-theme='dark'] {
+  --background: #0f172a;
+  --text: #e2e8f0;
+  --text-strong: #ffffff;
+  --muted: #94a3b8;
+  --muted-strong: #cbd5f5;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --accent-bg: #312e81;
+  --accent-border: #4338ca;
+  --accent-text: #e0e7ff;
+  --success-bg: #065f46;
+  --success-border: #34d399;
+  --success-text: #ecfdf5;
+  --danger-bg: #7f1d1d;
+  --danger-border: #fecaca;
+  --danger-text: #fee2e2;
+  --pill-bg: #1e293b;
+  --pill-active: #0f172a;
+  --table-header: #1f2937;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.card {
+  border-radius: 1.5rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.input {
+  border-radius: 0.75rem;
+  border: 1px solid var(--card-border);
+  padding: 0.65rem 0.85rem;
+  background-color: var(--card-bg);
+  color: var(--text);
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-muted,
+.btn-small-primary,
+.btn-small-danger,
+.btn-small-muted {
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, #4338ca, #6d28d9);
+  color: #fff;
+}
+
+.btn-secondary {
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  color: var(--text);
+}
+
+.btn-muted {
+  border: 1px solid var(--card-border);
+  background-color: transparent;
+  color: var(--text);
+}
+
+.btn-small-primary,
+.btn-small-danger,
+.btn-small-muted {
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+}
+
+.btn-small-primary {
+  background-color: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-text);
+}
+
+.btn-small-danger {
+  background-color: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.btn-small-muted {
+  background-color: transparent;
+  border-color: var(--card-border);
+  color: var(--muted);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-muted:disabled,
+.btn-small-primary:disabled,
+.btn-small-danger:disabled,
+.btn-small-muted:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sort-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: pointer;
+}
+
+.sort-button:focus-visible {
+  outline: 2px solid var(--accent-border);
+  border-radius: 0.5rem;
+  outline-offset: 2px;
+}
+
+.sort-indicator {
+  font-size: 0.75em;
+}
+
+.inventory-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.inventory-table th,
+.inventory-table td {
+  word-break: break-word;
+}
+
+@media (min-width: 641px) {
+  .inventory-row {
+    transition: background-color 0.2s ease;
+  }
+  .inventory-row-selected {
+    background-color: rgba(99, 102, 241, 0.08);
+  }
+}
+
+@media (max-width: 640px) {
+  .inventory-table,
+  .inventory-table thead,
+  .inventory-table tbody,
+  .inventory-table th,
+  .inventory-table td,
+  .inventory-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .inventory-table thead {
+    display: none;
+  }
+
+  .inventory-table tr {
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--card-bg);
+  }
+
+  .inventory-table tr {
+    position: relative;
+    border: 1px solid var(--card-border);
+    border-radius: 1.25rem;
+    padding: 1.25rem 1rem 0.95rem;
+    margin-bottom: 0.85rem;
+    background-color: var(--card-bg);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.25);
+  }
+
+  .inventory-table td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .inventory-table td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+
+  .inventory-table td[data-label='Acciones'] {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    border-bottom: 0;
+    margin-top: 0.35rem;
+  }
+
+  .inventory-table td[data-label='Acciones']::before {
+    align-self: flex-start;
+    margin-bottom: 0.35rem;
+  }
+
+  .inventory-table td[data-label='Nombre'] {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-strong);
+    border-bottom: 0;
+    padding-bottom: 0.1rem;
+  }
+
+  .inventory-table td[data-label='Código'] {
+    font-size: 0.95rem;
+  }
+
+  .inventory-table td[data-label='Seleccionar'] {
+    display: none;
+  }
+
+  .inventory-table td[data-label='Acciones'] .flex {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.6rem;
+  }
+
+  .inventory-row {
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .inventory-row.inventory-row-selected {
+    border-color: var(--accent-border);
+    box-shadow: 0 12px 28px rgba(99, 102, 241, 0.25);
+  }
+
+  .inventory-row::after {
+    content: '';
+    position: absolute;
+    top: 0.75rem;
+    right: 0.85rem;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 2px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    background-color: var(--card-bg);
+  }
+
+  .inventory-row.inventory-row-selected::after {
+    content: '✓';
+    border-color: var(--accent-border);
+    color: var(--accent-text);
+    background-color: var(--accent-bg);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+}
