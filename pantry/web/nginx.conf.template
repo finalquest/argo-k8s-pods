@@ -12,8 +12,8 @@ server {
   }
 
   location /api/ {
-    proxy_pass http://$INVENTORY_API_SERVICE_HOST:$INVENTORY_API_SERVICE_PORT/;
-    proxy_set_header Host $INVENTORY_API_SERVICE_HOST;
+    proxy_pass http://$PANTRY_API_SERVICE_HOST:$PANTRY_API_SERVICE_PORT/;
+    proxy_set_header Host $PANTRY_API_SERVICE_HOST;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }

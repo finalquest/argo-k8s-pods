@@ -18,7 +18,7 @@ spec:
       containers:
         - name: api
           image: harbor.finalq.xyz/tools/pantry-api:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
               name: http
