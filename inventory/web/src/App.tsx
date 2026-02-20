@@ -20,11 +20,17 @@ type Category = {
   name: string;
 };
 
+type Location = {
+  id: string;
+  name: string;
+};
+
 type Item = {
   id: string;
   name: string;
   barcode: string;
   category: Category | null;
+  location: Location | null;
   quantity: number;
   createdAt?: string;
   updatedAt?: string;
@@ -81,7 +87,9 @@ export default function App() {
   const [externalLookup, setExternalLookup] = useState<ExternalProduct | null>(null);
   const [pendingIncrementItem, setPendingIncrementItem] = useState<Item | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<Item[]>([]);
   const [tab, setTab] = useState<'capture' | 'extract' | 'inventory'>('capture');
@@ -140,8 +148,12 @@ export default function App() {
     barcode: '',
     categoryId: '',
     externalCategoryName: '',
+    locationId: '',
+    externalLocationName: '',
     initialQuantity: 1,
   });
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const login = async (evt: FormEvent) => {
     evt.preventDefault();
@@ -168,33 +180,43 @@ export default function App() {
     setCategories(await handleResponse(res));
   }, [authedFetch]);
 
+  const fetchLocations = useCallback(async () => {
+    const res = await authedFetch('/locations');
+    setLocations(await handleResponse(res));
+  }, [authedFetch]);
+
   const fetchInventory = useCallback(async () => {
     setInventoryLoading(true);
     try {
-      const res = await authedFetch('/items');
+      const params = new URLSearchParams();
+      if (locationFilter !== 'all') params.set('locationId', locationFilter);
+      const queryString = params.toString();
+      const res = await authedFetch(`/items${queryString ? `?${queryString}` : ''}`);
       setItems(await handleResponse(res));
     } catch (err) {
       showStatus('error', err instanceof Error ? err.message : 'Error cargando inventario');
     } finally {
       setInventoryLoading(false);
     }
-  }, [authedFetch, showStatus]);
+  }, [authedFetch, showStatus, locationFilter]);
 
   useEffect(() => {
     if (!token) return;
     fetchCategories().catch(() => {});
+    fetchLocations().catch(() => {});
     fetchInventory().catch(() => {});
-  }, [token, fetchCategories, fetchInventory]);
+  }, [token, fetchCategories, fetchLocations, fetchInventory]);
 
   useEffect(() => {
     setSelectedItems(new Set());
-  }, [categoryFilter]);
+  }, [categoryFilter, locationFilter]);
 
   const lookupBarcode = async (value?: string) => {
     const target = value ?? barcode;
     if (!target) return;
     setLookup(null);
     setExternalLookup(null);
+    setShowCreateForm(false);
     setLookupLoading(true);
     try {
       const res = await authedFetch(`/items/barcode/${encodeURIComponent(target)}`);
@@ -202,9 +224,10 @@ export default function App() {
       setLookup(found);
       setPendingIncrementItem(found);
       setBarcode('');
-      setCreateForm((prev) => ({ ...prev, barcode: '', name: '', externalCategoryName: '' }));
-      showStatus('info', 'Producto encontrado, confirmá para sumar al stock');
+      showStatus('info', `Producto "${found.name}" ya existe. ¿Querés agregar +1 unidad?`);
     } catch (err) {
+      setLookup(null);
+      setPendingIncrementItem(null);
       try {
         const externalRes = await authedFetch(
           `/items/barcode/${encodeURIComponent(target)}/external`,
@@ -213,26 +236,32 @@ export default function App() {
         setExternalLookup(external);
         setCreateForm((prev) => ({
           ...prev,
-          name: external.name ?? prev.name,
+          name: external.name ?? '',
           barcode: target,
-          externalCategoryName: external.category ?? prev.externalCategoryName,
+          externalCategoryName: external.category ?? '',
           categoryId:
             categories.find((cat) =>
               external.category
                 ? cat.name.toLowerCase() === external.category.toLowerCase()
                 : false,
-            )?.id ?? prev.categoryId,
+            )?.id ?? '',
         }));
-        showStatus(
-          'info',
-          external.source === 'enc'
-            ? 'No existe en inventario, sugerencia de enc.finalq.xyz'
-            : 'No existe, usamos datos externos',
-        );
+        setShowCreateForm(true);
+        showStatus('info', 'Producto no encontrado. Completá los datos para crearlo.');
       } catch {
         setExternalLookup(null);
-        setCreateForm((prev) => ({ ...prev, barcode: target }));
-        showStatus('info', 'No existe, completá los datos para crearlo');
+        setCreateForm((prev) => ({ 
+          ...prev, 
+          barcode: target,
+          name: '',
+          categoryId: '',
+          externalCategoryName: '',
+          locationId: '',
+          externalLocationName: '',
+          initialQuantity: 1,
+        }));
+        setShowCreateForm(true);
+        showStatus('info', 'Producto no encontrado. Completá los datos para crearlo.');
       }
     } finally {
       setLookupLoading(false);
@@ -385,11 +414,20 @@ export default function App() {
       if (!createForm.categoryId) {
         delete payload.categoryId;
       }
+      if (!createForm.locationId) {
+        delete payload.locationId;
+      }
       const externalCategory = createForm.externalCategoryName.trim();
       if (externalCategory) {
         payload.externalCategoryName = externalCategory;
       } else {
         delete payload.externalCategoryName;
+      }
+      const externalLocation = createForm.externalLocationName.trim();
+      if (externalLocation) {
+        payload.externalLocationName = externalLocation;
+      } else {
+        delete payload.externalLocationName;
       }
       await handleResponse(
         await authedFetch('/items', {
@@ -403,13 +441,21 @@ export default function App() {
         barcode: '',
         categoryId: '',
         externalCategoryName: '',
+        locationId: '',
+        externalLocationName: '',
         initialQuantity: 1,
       });
       setExternalLookup(null);
+      setShowCreateForm(false);
       const needsCategoryRefresh =
         !createForm.categoryId && !!createForm.externalCategoryName?.trim();
+      const needsLocationRefresh =
+        !createForm.locationId && !!createForm.externalLocationName?.trim();
       if (needsCategoryRefresh) {
         await fetchCategories().catch(() => {});
+      }
+      if (needsLocationRefresh) {
+        await fetchLocations().catch(() => {});
       }
       await fetchInventory();
     } catch (err) {
@@ -630,19 +676,29 @@ export default function App() {
         )}
       </section>
 
+      {showCreateForm && (
       <section className="card space-y-4 p-4 md:p-6">
-        <h2 className="text-lg font-semibold text-[var(--text-strong)]">Nuevo item</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-[var(--text-strong)]">Nuevo item</h2>
+          <button 
+            type="button" 
+            className="btn-small-muted"
+            onClick={() => setShowCreateForm(false)}
+          >
+            Cancelar
+          </button>
+        </div>
         <form className="grid gap-3 md:grid-cols-2" onSubmit={submitNewItem}>
           <input
             className="input"
-            placeholder="Nombre"
+            placeholder="Nombre *"
             required
             value={createForm.name}
             onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
           />
           <input
             className="input"
-            placeholder="Código de barras"
+            placeholder="Código de barras *"
             required
             value={createForm.barcode}
             onChange={(e) => setCreateForm({ ...createForm, barcode: e.target.value })}
@@ -660,15 +716,38 @@ export default function App() {
               </option>
             ))}
           </select>
+          <select
+            aria-label="Ubicación"
+            className="input"
+            value={createForm.locationId}
+            onChange={(e) => setCreateForm({ ...createForm, locationId: e.target.value })}
+          >
+            <option value="">Ubicación</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
           <input
             className="input"
             placeholder="Cantidad inicial"
+            type="number"
+            min="0"
             value={createForm.initialQuantity}
             onChange={(e) =>
               setCreateForm({
                 ...createForm,
-                initialQuantity: Number(e.target.value.replace(/[^0-9-]/g, '')) || 0,
+                initialQuantity: Number(e.target.value) || 0,
               })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Ubicación (nueva si no existe)"
+            value={createForm.externalLocationName}
+            onChange={(e) =>
+              setCreateForm({ ...createForm, externalLocationName: e.target.value })
             }
           />
           <input
@@ -692,6 +771,7 @@ export default function App() {
           </div>
         </form>
       </section>
+      )}
     </div>
   );
 
@@ -767,7 +847,7 @@ export default function App() {
           <div>
             <h2 className="text-lg font-semibold text-[var(--text-strong)]">Stock actual</h2>
             <p className="text-sm text-[var(--muted)]">
-              Filtrá por categoría o seleccioná varias filas para operar en lote.
+              Filtrá por categoría o ubicación. Seleccioná varias filas para operar en lote.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -782,6 +862,18 @@ export default function App() {
                 </option>
               ))}
             </select>
+            <select
+              className="input"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+            >
+              <option value="all">Todas las ubicaciones</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
             <button className="btn-muted" onClick={() => fetchInventory()} disabled={inventoryLoading}>
               {inventoryLoading ? (
                 <>
@@ -791,7 +883,7 @@ export default function App() {
                 'Actualizar'
               )}
             </button>
-            {categoryFilter === 'all' && filteredItems.length > 0 && (
+            {filteredItems.length > 0 && (
               <button className="btn-small-muted" type="button" onClick={toggleSelectAllFiltered}>
                 {allFilteredSelected ? 'Quitar selección global' : 'Seleccionar todos'}
               </button>
@@ -891,6 +983,7 @@ export default function App() {
                         Código <span className="sort-indicator">{sortIndicator('barcode')}</span>
                       </button>
                     </th>
+                <th className="py-3 px-4">Ubicación</th>
                 <th className="py-3 px-4">
                   <button type="button" className="sort-button" onClick={() => handleSort('quantity')}>
                     Stock <span className="sort-indicator">{sortIndicator('quantity')}</span>
@@ -923,6 +1016,9 @@ export default function App() {
                       </td>
                       <td className="py-3 px-4" data-label="Código">
                         {item.barcode}
+                      </td>
+                      <td className="py-3 px-4" data-label="Ubicación">
+                        {item.location?.name ?? '-'}
                       </td>
                   <td className="py-3 px-4" data-label="Stock">
                     {item.quantity}

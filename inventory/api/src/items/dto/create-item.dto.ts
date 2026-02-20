@@ -47,6 +47,14 @@ export class CreateItemDto {
   @IsOptional()
   externalCategoryName?: string;
 
+  @IsString()
+  @IsOptional()
+  locationId?: string;
+
+  @IsString()
+  @IsOptional()
+  externalLocationName?: string;
+
   @IsInt()
   @IsOptional()
   initialQuantity?: number;

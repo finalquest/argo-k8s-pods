@@ -6,18 +6,23 @@ import {
 import { load } from 'cheerio';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
+import { LocationsService } from '../locations/locations.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
 
 @Injectable()
 export class ItemsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly locationsService: LocationsService,
+  ) {}
   private encEndpoint =
     process.env.ENC_SEARCH_URL ?? 'https://enc.finalq.xyz/search?q=';
 
   async create(dto: CreateItemDto) {
-    const { initialQuantity, externalCategoryName, ...data } = dto;
+    const { initialQuantity, externalCategoryName, externalLocationName, ...data } = dto;
+    
     let categoryId = data.categoryId;
     if (!categoryId) {
       if (!externalCategoryName) {
@@ -25,11 +30,18 @@ export class ItemsService {
       }
       categoryId = await this.resolveCategoryId(externalCategoryName);
     }
+
+    let locationId = data.locationId;
+    if (!locationId && externalLocationName) {
+      locationId = await this.locationsService.resolveLocationId(externalLocationName);
+    }
+
     try {
       const item = await this.prisma.item.create({
         data: {
           ...data,
           categoryId: categoryId!,
+          locationId: locationId || undefined,
           unit: data.unit ?? 'unit',
         },
       });
@@ -51,10 +63,14 @@ export class ItemsService {
     }
   }
 
-  async findAll() {
+  async findAll(locationId?: string) {
+    const where: any = {};
+    if (locationId) where.locationId = locationId;
+
     const [items, totals] = await Promise.all([
       this.prisma.item.findMany({
-        include: { category: true },
+        where,
+        include: { category: true, location: true },
         orderBy: { updatedAt: 'desc' },
       }),
       this.prisma.stockMovement.groupBy({
@@ -77,7 +93,7 @@ export class ItemsService {
   async findOne(id: string) {
     const item = await this.prisma.item.findUnique({
       where: { id },
-      include: { category: true },
+      include: { category: true, location: true },
     });
     if (!item) {
       throw new NotFoundException(`Item ${id} not found`);
@@ -95,7 +111,7 @@ export class ItemsService {
   async findByBarcode(barcode: string) {
     const item = await this.prisma.item.findUnique({
       where: { barcode },
-      include: { category: true },
+      include: { category: true, location: true },
     });
     if (!item) {
       throw new NotFoundException(`Item with barcode ${barcode} not found`);
