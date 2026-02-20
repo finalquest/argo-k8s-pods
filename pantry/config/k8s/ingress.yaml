@@ -4,7 +4,8 @@ metadata:
   name: pantry-ingress
   namespace: pantry
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
@@ -12,17 +13,17 @@ spec:
     - host: pantry.finalq.xyz
       http:
         paths:
+          - path: /api/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: pantry-api
+                port:
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: pantry-web
-                port:
-                  number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: pantry-api
                 port:
                   number: 80
