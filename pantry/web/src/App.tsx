@@ -149,7 +149,21 @@ export default function App() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [rowActionId, setRowActionId] = useState<string | null>(null);
   const [rowActionType, setRowActionType] = useState<'extract' | 'delete' | 'freeze' | 'thaw' | null>(null);
-  
+
+  // Estado para edición de items
+  const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    notes: '',
+    categoryId: '',
+    locationId: '',
+    unitId: '',
+    minQuantity: 1,
+    expirationDate: '',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
   type SortKey = 'name' | 'barcode' | 'quantity' | 'expirationDate' | 'updatedAt';
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
     key: 'updatedAt',
@@ -195,10 +209,12 @@ export default function App() {
     externalUnitName: '',
     initialQuantity: 1,
     expirationDate: '',
-    minQuantity: 0,
+    minQuantity: 1,
     description: '',
     notes: '',
   });
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const login = async (evt: FormEvent) => {
     evt.preventDefault();
@@ -284,6 +300,7 @@ export default function App() {
     if (!target) return;
     setLookup(null);
     setExternalLookup(null);
+    setShowCreateForm(false);
     setLookupLoading(true);
     try {
       const res = await authedFetch(`/pantry-items/barcode/${encodeURIComponent(target)}`);
@@ -291,35 +308,48 @@ export default function App() {
       setLookup(found);
       setPendingIncrementItem(found);
       setBarcode('');
-      setCreateForm((prev) => ({ ...prev, barcode: '', name: '', externalCategoryName: '', externalLocationName: '' }));
-      showStatus('info', 'Producto encontrado, confirmá para sumar al stock');
+      showStatus('info', `Producto "${found.name}" ya existe. ¿Querés agregar +1 unidad?`);
     } catch (err) {
+      setLookup(null);
+      setPendingIncrementItem(null);
       try {
         const externalRes = await authedFetch(`/pantry-items/lookup/${encodeURIComponent(target)}`);
         const external = await handleResponse<ExternalProduct>(externalRes);
         setExternalLookup(external);
         setCreateForm((prev) => ({
           ...prev,
-          name: external.name ?? prev.name,
+          name: external.name ?? '',
           barcode: target,
-          externalCategoryName: external.category ?? prev.externalCategoryName,
+          externalCategoryName: external.category ?? '',
           categoryId:
             categories.find((cat) =>
               external.category
                 ? cat.name.toLowerCase() === external.category.toLowerCase()
                 : false,
-            )?.id ?? prev.categoryId,
+            )?.id ?? '',
         }));
-        showStatus(
-          'info',
-          external.source === 'enc'
-            ? 'No existe en inventario, sugerencia de enc.finalq.xyz'
-            : 'No existe, usamos datos externos',
-        );
+        setShowCreateForm(true);
+        showStatus('info', 'Producto no encontrado. Completá los datos para crearlo.');
       } catch {
         setExternalLookup(null);
-        setCreateForm((prev) => ({ ...prev, barcode: target }));
-        showStatus('info', 'No existe, completá los datos para crearlo');
+        setCreateForm((prev) => ({ 
+          ...prev, 
+          barcode: target,
+          name: '',
+          categoryId: '',
+          externalCategoryName: '',
+          locationId: '',
+          externalLocationName: '',
+          unitId: '',
+          externalUnitName: '',
+          initialQuantity: 1,
+          minQuantity: 1,
+          expirationDate: '',
+          description: '',
+          notes: ''
+        }));
+        setShowCreateForm(true);
+        showStatus('info', 'Producto no encontrado. Completá los datos para crearlo.');
       }
     } finally {
       setLookupLoading(false);
@@ -439,6 +469,72 @@ export default function App() {
     }
   };
 
+  const openEditModal = (item: PantryItem) => {
+    setEditingItem(item);
+    setEditForm({
+      name: item.name,
+      description: item.description || '',
+      notes: item.notes || '',
+      categoryId: item.category?.id || '',
+      locationId: item.location?.id || '',
+      unitId: item.unit?.id || '',
+      minQuantity: item.minQuantity,
+      expirationDate: item.expirationDate || '',
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingItem(null);
+    setEditForm({
+      name: '',
+      description: '',
+      notes: '',
+      categoryId: '',
+      locationId: '',
+      unitId: '',
+      minQuantity: 1,
+      expirationDate: '',
+    });
+  };
+
+  const saveEdit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    
+    setEditLoading(true);
+    try {
+      const payload: Record<string, unknown> = {};
+      
+      if (editForm.name !== editingItem.name) payload.name = editForm.name;
+      if (editForm.description !== (editingItem.description || '')) payload.description = editForm.description || undefined;
+      if (editForm.notes !== (editingItem.notes || '')) payload.notes = editForm.notes || undefined;
+      if (editForm.categoryId !== editingItem.category?.id) payload.categoryId = editForm.categoryId || undefined;
+      if (editForm.locationId !== editingItem.location?.id) payload.locationId = editForm.locationId || undefined;
+      if (editForm.unitId !== editingItem.unit?.id) payload.unitId = editForm.unitId || undefined;
+      if (editForm.minQuantity !== editingItem.minQuantity) payload.minQuantity = editForm.minQuantity;
+      if (editForm.expirationDate !== (editingItem.expirationDate || '')) payload.expirationDate = editForm.expirationDate || undefined;
+      
+      if (Object.keys(payload).length === 0) {
+        showStatus('info', 'No hay cambios para guardar');
+        closeEditModal();
+        return;
+      }
+
+      await authedFetch(`/pantry-items/${editingItem.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      
+      showStatus('success', 'Item actualizado');
+      closeEditModal();
+      await Promise.all([fetchInventory(), fetchAlerts()]);
+    } catch (err) {
+      showStatus('error', err instanceof Error ? err.message : 'Error al actualizar');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const batchExtract = async () => {
     if (selectedItems.size === 0) return;
     setBulkLoading(true);
@@ -547,7 +643,7 @@ export default function App() {
         externalUnitName: '',
         initialQuantity: 1,
         expirationDate: '',
-        minQuantity: 0,
+        minQuantity: 1,
         description: '',
         notes: '',
       });
@@ -796,8 +892,18 @@ export default function App() {
         )}
       </section>
 
+      {showCreateForm && (
       <section className="card space-y-4 p-4 md:p-6">
-        <h2 className="text-lg font-semibold text-[var(--text-strong)]">Nuevo item</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-[var(--text-strong)]">Nuevo item</h2>
+          <button 
+            type="button" 
+            className="btn-small-muted"
+            onClick={() => setShowCreateForm(false)}
+          >
+            Cancelar
+          </button>
+        </div>
         <form className="grid gap-3 md:grid-cols-2" onSubmit={submitNewItem}>
           <input
             className="input"
@@ -878,13 +984,21 @@ export default function App() {
               })
             }
           />
-          <input
-            className="input"
-            placeholder="Fecha de vencimiento"
-            type="date"
-            value={createForm.expirationDate}
-            onChange={(e) => setCreateForm({ ...createForm, expirationDate: e.target.value })}
-          />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+              Fecha de vencimiento (opcional)
+            </label>
+            <input
+              className="input w-full"
+              placeholder="Seleccioná la fecha de vencimiento"
+              type="date"
+              value={createForm.expirationDate}
+              onChange={(e) => setCreateForm({ ...createForm, expirationDate: e.target.value })}
+            />
+            <p className="text-xs text-[var(--muted)] mt-1">
+              Te avisaremos cuando el producto esté próximo a vencer
+            </p>
+          </div>
           <input
             className="input"
             placeholder="Categoría (nueva si no existe)"
@@ -928,6 +1042,7 @@ export default function App() {
           </div>
         </form>
       </section>
+      )}
     </div>
   );
 
@@ -1218,6 +1333,13 @@ export default function App() {
                         <td className="py-3 pr-4 text-right" data-label="Acciones">
                           <div className="flex justify-end gap-1 flex-wrap">
                             <button
+                              className="btn-small-secondary"
+                              onClick={() => openEditModal(item)}
+                              disabled={rowActionId === item.id}
+                            >
+                              Editar
+                            </button>
+                            <button
                               className="btn-small-primary"
                               onClick={() => extractItem(item.id)}
                               disabled={item.quantity <= 0 || rowActionId === item.id}
@@ -1266,6 +1388,164 @@ export default function App() {
             </div>
           </section>
         ))}
+
+      {/* Modal de edición */}
+      {editingItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-[var(--text-strong)]">
+                  Editar: {editingItem.name}
+                </h2>
+                <button
+                  type="button"
+                  className="btn-small-muted"
+                  onClick={closeEditModal}
+                  disabled={editLoading}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={saveEdit} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Nombre
+                    </label>
+                    <input
+                      className="input w-full"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Categoría
+                    </label>
+                    <select
+                      className="input w-full"
+                      value={editForm.categoryId}
+                      onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
+                    >
+                      <option value="">Sin categoría</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Ubicación
+                    </label>
+                    <select
+                      className="input w-full"
+                      value={editForm.locationId}
+                      onChange={(e) => setEditForm({ ...editForm, locationId: e.target.value })}
+                    >
+                      <option value="">Sin ubicación</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Unidad
+                    </label>
+                    <select
+                      className="input w-full"
+                      value={editForm.unitId}
+                      onChange={(e) => setEditForm({ ...editForm, unitId: e.target.value })}
+                    >
+                      <option value="">Sin unidad</option>
+                      {units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>
+                          {unit.name} {unit.abbreviation ? `(${unit.abbreviation})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Cantidad mínima (alerta)
+                    </label>
+                    <input
+                      className="input w-full"
+                      type="number"
+                      min="0"
+                      value={editForm.minQuantity}
+                      onChange={(e) => setEditForm({ ...editForm, minQuantity: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Fecha de vencimiento
+                    </label>
+                    <input
+                      className="input w-full"
+                      type="date"
+                      value={editForm.expirationDate}
+                      onChange={(e) => setEditForm({ ...editForm, expirationDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Descripción
+                    </label>
+                    <input
+                      className="input w-full"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--muted)] mb-1">
+                      Notas
+                    </label>
+                    <input
+                      className="input w-full"
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1"
+                    disabled={editLoading}
+                  >
+                    {editLoading ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-muted"
+                    onClick={closeEditModal}
+                    disabled={editLoading}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
