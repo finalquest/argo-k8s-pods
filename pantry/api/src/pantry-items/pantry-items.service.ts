@@ -1,5 +1,7 @@
 import {
+  BadRequestException,
   ConflictException,
+  InternalServerErrorException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +13,7 @@ import { UnitsService } from '../units/units.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
+import { SuggestRecipesDto } from './dto/suggest-recipes.dto';
 
 @Injectable()
 export class PantryItemsService {
@@ -361,6 +364,94 @@ export class PantryItemsService {
     return this.findOne(id);
   }
 
+  async suggestRecipes(dto: SuggestRecipesDto) {
+    const moonshotApiKey = process.env.MOONSHOT_API_KEY || '';
+    if (!moonshotApiKey) {
+      throw new BadRequestException(
+        'MOONSHOT_API_KEY no está configurada en el backend',
+      );
+    }
+
+    const availableItems = await this.findInventoryForRecipes();
+    if (availableItems.length === 0) {
+      throw new BadRequestException(
+        'No hay items con stock positivo en inventario',
+      );
+    }
+
+    const model = process.env.MOONSHOT_MODEL || 'kimi-k2.5';
+    const baseUrl = process.env.MOONSHOT_BASE_URL || 'https://api.moonshot.ai/v1';
+    const endpoint = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
+    const userPrompt = dto.prompt?.trim();
+
+    const inventoryLines = availableItems.map((item) => {
+      const unitLabel = item.unit.abbreviation || item.unit.name;
+      return `- ${item.name}: ${item.quantity} ${unitLabel} (ubicación: ${item.location.name})`;
+    });
+
+    const payload = {
+      model,
+      temperature: 0.6,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Eres un asistente de cocina. Responde solo JSON válido con { "recipes": Recipe[] }. Cada Recipe debe incluir: title, summary, ingredients, steps, difficulty, estimatedMinutes.',
+        },
+        {
+          role: 'user',
+          content: [
+            'Generá entre 3 y 5 recetas que prioricen usar el inventario disponible.',
+            userPrompt ? `Preferencias del usuario: ${userPrompt}` : null,
+            'Inventario:',
+            ...inventoryLines,
+            'Reglas: ingredientes y pasos en español, recetas realistas, sin inventar cantidades absurdas.',
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        },
+      ],
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${moonshotApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const bodyText = await response.text();
+    if (!response.ok) {
+      throw new BadRequestException(
+        `Moonshot API error (${response.status}): ${bodyText || 'request failed'}`,
+      );
+    }
+
+    let data: any = null;
+    try {
+      data = JSON.parse(bodyText);
+    } catch {
+      throw new InternalServerErrorException(
+        'Moonshot devolvió una respuesta inválida',
+      );
+    }
+
+    const content = this.extractCompletionText(data);
+    if (!content) {
+      throw new InternalServerErrorException('Moonshot devolvió contenido vacío');
+    }
+
+    const parsed = this.parseRecipesContent(content);
+    return {
+      model,
+      sourceItems: availableItems,
+      recipes: parsed.recipes,
+      rawText: parsed.rawText,
+    };
+  }
+
   // External lookup (Open Food Facts + custom endpoint)
 
   async lookupExternal(barcode: string) {
@@ -450,6 +541,78 @@ export class PantryItemsService {
       },
     });
     return created.id;
+  }
+
+  private async findInventoryForRecipes() {
+    const [items, totals] = await Promise.all([
+      this.prisma.pantryItem.findMany({
+        include: {
+          location: true,
+          unit: true,
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.stockMovement.groupBy({
+        by: ['itemId'],
+        _sum: { delta: true },
+      }),
+    ]);
+
+    const totalsMap = new Map<string, number>();
+    totals.forEach((row) => {
+      totalsMap.set(row.itemId, row._sum.delta ?? 0);
+    });
+
+    return items
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: totalsMap.get(item.id) ?? 0,
+        location: {
+          name: item.location.name,
+        },
+        unit: {
+          name: item.unit.name,
+          abbreviation: item.unit.abbreviation,
+        },
+      }))
+      .filter((item) => item.quantity > 0);
+  }
+
+  private extractCompletionText(data: any): string {
+    const content = data?.choices?.[0]?.message?.content;
+    if (typeof content === 'string') {
+      return content.trim();
+    }
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => (typeof part?.text === 'string' ? part.text : ''))
+        .join('')
+        .trim();
+    }
+    return '';
+  }
+
+  private parseRecipesContent(content: string) {
+    const cleaned = content
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      const recipes = Array.isArray(parsed?.recipes) ? parsed.recipes : [];
+      return {
+        recipes,
+        rawText: recipes.length === 0 ? cleaned : null,
+      };
+    } catch {
+      return {
+        recipes: [],
+        rawText: cleaned,
+      };
+    }
   }
 
   private async ensureExists(id: string) {

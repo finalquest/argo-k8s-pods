@@ -62,6 +62,28 @@ type StatusBanner = {
   text: string;
 };
 
+type SuggestedRecipe = {
+  title?: string;
+  summary?: string;
+  ingredients?: string[];
+  steps?: string[];
+  difficulty?: string;
+  estimatedMinutes?: number;
+};
+
+type RecipesResponse = {
+  model: string;
+  sourceItems: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    location: { name: string };
+    unit: { name: string; abbreviation?: string };
+  }>;
+  recipes: SuggestedRecipe[];
+  rawText?: string | null;
+};
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text();
@@ -131,7 +153,9 @@ export default function App() {
   const [expiringItems, setExpiringItems] = useState<PantryItem[]>([]);
   const [lowStockItems, setLowStockItems] = useState<PantryItem[]>([]);
   
-  const [tab, setTab] = useState<'capture' | 'extract' | 'inventory' | 'alerts'>('capture');
+  const [tab, setTab] = useState<
+    'capture' | 'extract' | 'inventory' | 'alerts' | 'recipes'
+  >('capture');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannerContext, setScannerContext] = useState<'capture' | 'extract'>('capture');
 
@@ -149,6 +173,9 @@ export default function App() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [rowActionId, setRowActionId] = useState<string | null>(null);
   const [rowActionType, setRowActionType] = useState<'extract' | 'delete' | 'freeze' | 'thaw' | null>(null);
+  const [recipePrompt, setRecipePrompt] = useState('');
+  const [recipeLoading, setRecipeLoading] = useState(false);
+  const [recipesResult, setRecipesResult] = useState<RecipesResponse | null>(null);
 
   // Estado para edición de items
   const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
@@ -665,6 +692,32 @@ export default function App() {
       showStatus('error', err instanceof Error ? err.message : 'Error al crear item');
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const generateRecipes = async () => {
+    setRecipeLoading(true);
+    try {
+      const res = await authedFetch('/pantry-items/recipes/suggest', {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt: recipePrompt.trim() || undefined,
+        }),
+      });
+      const data = await handleResponse<RecipesResponse>(res);
+      setRecipesResult(data);
+      if ((data.recipes?.length ?? 0) > 0) {
+        showStatus('success', `Se generaron ${data.recipes.length} recetas`);
+      } else {
+        showStatus('info', 'Moonshot respondió sin recetas estructuradas');
+      }
+    } catch (err) {
+      showStatus(
+        'error',
+        err instanceof Error ? err.message : 'Error generando recetas',
+      );
+    } finally {
+      setRecipeLoading(false);
     }
   };
 
@@ -1646,6 +1699,115 @@ export default function App() {
     </div>
   );
 
+  const renderRecipesTab = () => (
+    <div className="space-y-4">
+      <section className="card space-y-3 p-4 md:p-6">
+        <h2 className="text-lg font-semibold text-[var(--text-strong)]">
+          Recetas con Moonshot
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Usamos tu inventario con stock positivo para sugerir recetas
+          (Moonshot configurado en backend por Secret).
+        </p>
+        <label className="block text-sm font-medium text-[var(--muted)]">
+          Preferencias (opcional)
+          <textarea
+            className="input mt-1 w-full min-h-24"
+            value={recipePrompt}
+            onChange={(e) => setRecipePrompt(e.target.value)}
+            placeholder="Ej: recetas rápidas para cena, sin fritura"
+          />
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={generateRecipes}
+            disabled={recipeLoading}
+          >
+            {recipeLoading ? (
+              <>
+                <Spinner /> <span className="ml-2">Generando</span>
+              </>
+            ) : (
+              'Generar recetas'
+            )}
+          </button>
+          {recipesResult && (
+            <button
+              type="button"
+              className="btn-muted"
+              onClick={() => setRecipesResult(null)}
+            >
+              Limpiar resultado
+            </button>
+          )}
+        </div>
+      </section>
+
+      {recipesResult && (
+        <section className="card space-y-3 p-4 md:p-6">
+          <p className="text-sm text-[var(--muted)]">
+            Modelo: {recipesResult.model} • Items usados:{' '}
+            {recipesResult.sourceItems.length}
+          </p>
+          {recipesResult.recipes.length > 0 ? (
+            <div className="space-y-4">
+              {recipesResult.recipes.map((recipe, index) => (
+                <article
+                  key={`${recipe.title ?? 'recipe'}-${index}`}
+                  className="rounded-xl border border-[var(--card-border)] p-4"
+                >
+                  <h3 className="text-base font-semibold text-[var(--text-strong)]">
+                    {recipe.title || `Receta ${index + 1}`}
+                  </h3>
+                  {recipe.summary && (
+                    <p className="mt-1 text-sm text-[var(--muted)]">
+                      {recipe.summary}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
+                    {recipe.difficulty && <span>Dificultad: {recipe.difficulty}</span>}
+                    {recipe.estimatedMinutes ? (
+                      <span>Tiempo: {recipe.estimatedMinutes} min</span>
+                    ) : null}
+                  </div>
+                  {Array.isArray(recipe.ingredients) &&
+                    recipe.ingredients.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium">Ingredientes</p>
+                        <ul className="mt-1 list-disc pl-5 text-sm text-[var(--muted)]">
+                          {recipe.ingredients.map((ingredient, ingredientIndex) => (
+                            <li key={`${index}-ingredient-${ingredientIndex}`}>
+                              {ingredient}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  {Array.isArray(recipe.steps) && recipe.steps.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium">Pasos</p>
+                      <ol className="mt-1 list-decimal pl-5 text-sm text-[var(--muted)]">
+                        {recipe.steps.map((step, stepIndex) => (
+                          <li key={`${index}-step-${stepIndex}`}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[var(--card-border)] p-3 text-sm whitespace-pre-wrap text-[var(--muted)]">
+              {recipesResult.rawText || 'Sin contenido'}
+            </div>
+          )}
+        </section>
+      )}
+    </div>
+  );
+
   if (!token) {
     return (
       <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
@@ -1740,6 +1902,16 @@ export default function App() {
             >
               Alertas
             </button>
+            <button
+              className={`flex-1 rounded-full px-4 py-2 whitespace-nowrap ${
+                tab === 'recipes'
+                  ? 'bg-[var(--pill-active)] text-[var(--text-strong)]'
+                  : ''
+              }`}
+              onClick={() => setTab('recipes')}
+            >
+              Recetas
+            </button>
           </div>
 
           {tab === 'capture'
@@ -1748,7 +1920,9 @@ export default function App() {
               ? renderExtractTab()
               : tab === 'inventory'
                 ? renderInventoryTab()
-                : renderAlertsTab()}
+                : tab === 'alerts'
+                  ? renderAlertsTab()
+                  : renderRecipesTab()}
 
           {status && (
             <div

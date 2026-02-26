@@ -25,6 +25,11 @@ spec:
           envFrom:
             - secretRef:
                 name: pantry-api-secret
+          env:
+            - name: MOONSHOT_MODEL
+              value: kimi-k2.5
+            - name: MOONSHOT_BASE_URL
+              value: https://api.moonshot.ai/v1
           readinessProbe:
             httpGet:
               path: /

@@ -14,6 +14,7 @@ import { PantryItemsService } from './pantry-items.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
+import { SuggestRecipesDto } from './dto/suggest-recipes.dto';
 
 @Controller('pantry-items')
 @UseGuards(AuthGuard('jwt'))
@@ -87,5 +88,10 @@ export class PantryItemsController {
   @Post(':id/extract')
   extractOne(@Param('id') id: string) {
     return this.pantryItemsService.extractOne(id);
+  }
+
+  @Post('recipes/suggest')
+  suggestRecipes(@Body() dto: SuggestRecipesDto) {
+    return this.pantryItemsService.suggestRecipes(dto);
   }
 }
