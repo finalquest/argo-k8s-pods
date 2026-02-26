@@ -383,6 +383,10 @@ export class PantryItemsService {
     const baseUrl = process.env.MOONSHOT_BASE_URL || 'https://api.moonshot.ai/v1';
     const endpoint = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
     const userPrompt = dto.prompt?.trim();
+    const maxTokensRaw = Number(process.env.MOONSHOT_MAX_TOKENS ?? '0');
+    const maxTokens = Number.isFinite(maxTokensRaw) && maxTokensRaw > 0
+      ? Math.floor(maxTokensRaw)
+      : undefined;
 
     const inventoryLines = availableItems.map((item) => {
       const unitLabel = item.unit.abbreviation || item.unit.name;
@@ -391,7 +395,8 @@ export class PantryItemsService {
 
     const payload = {
       model,
-      temperature: 0.6,
+      temperature: 1,
+      ...(maxTokens ? { max_tokens: maxTokens } : {}),
       messages: [
         {
           role: 'system',
