@@ -57,4 +57,76 @@ describe('lazy download callback', () => {
     expect(bot.answerCallbackQuery).toHaveBeenCalledWith('cb1', { text: '⏳ Descarga iniciada' });
     expect(bot.sendMessage).toHaveBeenCalledWith('chat1', expect.stringContaining('Descarga iniciada'));
   });
+
+  test('sends email immediately when lazy file is ready', async () => {
+    const bot = {
+      sendMessage: jest.fn().mockResolvedValue({}),
+      sendDocument: jest.fn().mockResolvedValue({}),
+      answerCallbackQuery: jest.fn().mockResolvedValue({}),
+      editMessageText: jest.fn().mockResolvedValue({}),
+    };
+    const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const conversationStates = new Map();
+    const sendEmail = jest.fn().mockResolvedValue(true);
+
+    conversationStates.set('chat1', {
+      state: 'ENGLISH_MODE',
+      results: [
+        { libid: '123', title: 'Dune', authors: ['Frank Herbert'] }
+      ]
+    });
+
+    const handler = createCallbackHandler({
+      bot,
+      logger,
+      allowedUsers: new Set(),
+      conversationStates,
+      getBookById: jest.fn().mockResolvedValue(null),
+      bibliotecaBaseUrl: 'http://example.com',
+      generateFilename: jest.fn().mockReturnValue('Dune.epub'),
+      sendEmail,
+      getEmails: jest.fn().mockReturnValue({ user1: 'reader@example.com' }),
+      searchMeili: jest.fn().mockResolvedValue({ hits: [], totalHits: 0 }),
+      buildPaginatedMessage: jest.fn().mockReturnValue(''),
+      buildInlineKeyboard: jest.fn().mockReturnValue({ inline_keyboard: [] }),
+      hasEmail: jest.fn().mockReturnValue(true),
+      getTotalBooksByAuthor: jest.fn().mockResolvedValue(0),
+      searchByAuthors: jest.fn().mockResolvedValue([]),
+      extractUniqueAuthors: jest.fn().mockReturnValue([]),
+      lazyAddBook: jest.fn().mockResolvedValue({ Success: true }),
+      lazyQueueBook: jest.fn().mockResolvedValue({ Success: true }),
+      lazySearchBook: jest.fn().mockResolvedValue({ Success: true }),
+      lazyForceProcess: jest.fn().mockResolvedValue({ Success: true }),
+      lazyHeadFileDirect: jest.fn().mockResolvedValue({ ok: true, status: 200 }),
+      lazyDownloadFileDirect: jest.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3]).buffer),
+        headers: {
+          get: jest.fn().mockReturnValue(null),
+        },
+      }),
+      lazyFindBook: jest.fn().mockResolvedValue([]),
+      lazyFindAuthor: jest.fn().mockResolvedValue([]),
+      normalizeLazyHits: jest.fn(items => items),
+      addLazyJob: jest.fn().mockReturnValue({ jobId: 'user1:123' }),
+      getLazyJob: jest.fn().mockReturnValue(undefined),
+      updateLazyJob: jest.fn().mockReturnValue({ jobId: 'user1:123' }),
+    });
+
+    await handler({
+      id: 'cb2',
+      data: 'lazy_email_123',
+      message: { chat: { id: 'chat1' }, message_id: 1 },
+      from: { id: 'user1' },
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'reader@example.com',
+      expect.objectContaining({ title: 'Dune', authors: ['Frank Herbert'] }),
+      expect.any(Buffer),
+      'Dune.epub'
+    );
+    expect(bot.sendDocument).not.toHaveBeenCalled();
+    expect(bot.sendMessage).toHaveBeenCalledWith('chat1', expect.stringContaining('reader@example.com'));
+  });
 });

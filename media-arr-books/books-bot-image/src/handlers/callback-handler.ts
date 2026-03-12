@@ -136,11 +136,23 @@ const createCallbackHandler = (deps: Deps) => {
           if (headResponse.ok) {
             const response = await lazyDownloadFileDirect(resolvedBookId);
             const fallback = generateFilename(title, author ? [author] : undefined);
-            const { tempPath } = await downloadResponseToTemp(response, fallback);
-            await bot.sendDocument(chatId, tempPath, {
-              caption: `📥 ${title || 'Libro listo'}${author ? `\n✍️ ${author}` : ''}`,
-            });
-            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado' });
+            const { tempPath, filename } = await downloadResponseToTemp(response, fallback);
+            const epubBuffer = fs.readFileSync(tempPath);
+            const book = {
+              title: title || fallback,
+              authors: author ? [author] : undefined,
+            };
+
+            await sendEmail(userEmail, book, epubBuffer, filename);
+
+            try {
+              fs.unlinkSync(tempPath);
+            } catch (unlinkErr) {
+              logger.warn({ err: unlinkErr, tempPath }, '[LAZY] Failed to cleanup temp file after email send');
+            }
+
+            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado por email' });
+            bot.sendMessage(chatId, `✅ Libro enviado a:\n\n📧 ${userEmail}\n\n📚 ${title || 'Libro'}`);
             return;
           }
         } catch (err) {
@@ -262,11 +274,23 @@ const createCallbackHandler = (deps: Deps) => {
           if (headResponse.ok) {
             const response = await lazyDownloadFileDirect(resolvedBookId);
             const fallback = generateFilename(title, author ? [author] : undefined);
-            const { tempPath } = await downloadResponseToTemp(response, fallback);
-            await bot.sendDocument(chatId, tempPath, {
-              caption: `📥 ${title || 'Libro listo'}${author ? `\n✍️ ${author}` : ''}`,
-            });
-            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado' });
+            const { tempPath, filename } = await downloadResponseToTemp(response, fallback);
+            const epubBuffer = fs.readFileSync(tempPath);
+            const book = {
+              title: title || fallback,
+              authors: author ? [author] : undefined,
+            };
+
+            await sendEmail(userEmail, book, epubBuffer, filename);
+
+            try {
+              fs.unlinkSync(tempPath);
+            } catch (unlinkErr) {
+              logger.warn({ err: unlinkErr, tempPath }, '[LAZY] Failed to cleanup temp file after email send');
+            }
+
+            bot.answerCallbackQuery(query.id, { text: '✅ Libro enviado por email' });
+            bot.sendMessage(chatId, `✅ Libro enviado a:\n\n📧 ${userEmail}\n\n📚 ${title || 'Libro'}`);
             return;
           }
         } catch (err) {
