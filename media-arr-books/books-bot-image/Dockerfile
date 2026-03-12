@@ -11,4 +11,4 @@ COPY src ./src
 
 CMD ["npm", "start"]
 
-# Version: v3.2.2 - Fix English mode email delivery branch
+# Version: v3.2.3 - Fix English mode email delivery branch
