@@ -6,7 +6,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: llm.finalquest.xyz
+    - host: llm.finalq.xyz
       http:
         paths:
           - path: /
