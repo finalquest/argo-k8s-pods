@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openwebui
+  namespace: openwebui
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: llm.finalquest.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openwebui
+                port:
+                  number: 8080

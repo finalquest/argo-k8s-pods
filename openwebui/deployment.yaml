@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openwebui
+  namespace: openwebui
+  labels:
+    app: openwebui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openwebui
+  template:
+    metadata:
+      labels:
+        app: openwebui
+    spec:
+      nodeSelector:
+        role: worker
+      containers:
+        - name: openwebui
+          image: ghcr.io/open-webui/open-webui:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "llm.nerv"
+          volumeMounts:
+            - name: data
+              mountPath: /app/backend/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openwebui-data
