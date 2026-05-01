@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planka
+  namespace: planka
+  labels:
+    app: planka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: planka
+  template:
+    metadata:
+      labels:
+        app: planka
+    spec:
+      nodeSelector:
+        role: worker
+      containers:
+        - name: planka
+          image: ghcr.io/plankanban/planka:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 1337
+              name: http
+          envFrom:
+            - secretRef:
+                name: planka-db
+          env:
+            - name: TRUST_PROXY
+              value: "true"
+            - name: DEFAULT_ADMIN_EMAIL
+              value: admin@finalq.xyz
+            - name: DEFAULT_ADMIN_NAME
+              value: Admin
+            - name: DEFAULT_ADMIN_USERNAME
+              value: admin
+            - name: BASE_URL
+              value: https://tasks.finalq.xyz
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 1337
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 1337
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/data
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: planka-uploads

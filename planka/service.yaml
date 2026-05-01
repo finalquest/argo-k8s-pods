@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: planka
+  namespace: planka
+spec:
+  type: ClusterIP
+  selector:
+    app: planka
+  ports:
+    - name: http
+      port: 1337
+      targetPort: 1337
