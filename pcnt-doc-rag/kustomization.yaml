@@ -1,0 +1,4 @@
+resources:
+  - namespace.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml

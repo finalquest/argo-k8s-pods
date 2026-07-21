@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pcnt-doc-rag
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/finalquest/argo-k8s-pods
+    targetRevision: main
+    path: pcnt-doc-rag
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pcnt-doc-rag
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
