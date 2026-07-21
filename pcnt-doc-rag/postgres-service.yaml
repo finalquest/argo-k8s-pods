@@ -4,10 +4,11 @@ metadata:
   name: pcnt-doc-rag-postgres
   namespace: pcnt-doc-rag
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: pcnt-doc-rag-postgres
   ports:
     - name: postgres
       port: 5432
       targetPort: 5432
+      nodePort: 30432
