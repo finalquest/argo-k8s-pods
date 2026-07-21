@@ -1,3 +1,5 @@
+tcp:
+  5432: "pcnt-doc-rag/pcnt-doc-rag-postgres:5432"
 controller:
   resources:
     requests:
