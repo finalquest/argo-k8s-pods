@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: control-hmi-config
+  namespace: control-hmi
+data:
+  SIM: "0"
+  LOGO_HOST: "10.1.0.55"
+  LOGO_PORT: "502"
+  MODBUS_UNIT: "1"
+  POLL_MS: "250"
+  PORT: "3001"
+  HA_URL: "https://dmplug.finalq.xyz"
+  HA_MOCK: "0"
+  HA_POLL_MS: "2000"
+  STATIC_ROOT: "/app/public"
+  CORS_ORIGIN: "*"
