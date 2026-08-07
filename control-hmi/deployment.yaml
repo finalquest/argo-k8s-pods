@@ -19,7 +19,7 @@ spec:
         role: worker
       containers:
         - name: control-hmi
-          image: harbor.finalq.xyz/tools/control-hmi:2026-08-07-173049
+          image: harbor.finalq.xyz/tools/control-hmi:2026-08-07-182037
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
