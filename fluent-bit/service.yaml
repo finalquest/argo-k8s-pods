@@ -17,4 +17,4 @@ spec:
       protocol: TCP
       port: 5140
       targetPort: 5140
-      nodePort: 30515
+      nodePort: 30514
