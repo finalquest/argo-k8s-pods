@@ -29,14 +29,12 @@ spec:
               containerPort: 5140
               protocol: TCP
           readinessProbe:
-            httpGet:
-              path: /api/v1/health
+            tcpSocket:
               port: 2020
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /api/v1/health
+            tcpSocket:
               port: 2020
             initialDelaySeconds: 20
             periodSeconds: 30
