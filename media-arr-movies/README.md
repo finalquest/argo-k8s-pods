@@ -69,6 +69,7 @@ Bazarr solo trackea películas que ya tienen archivo en `/movies`.
 - **Settings -> Radarr**: host `radarr.media.svc.cluster.local`, puerto `7878`, API key de Radarr.
 - **Settings -> Languages**: perfil `Español Latam > España > Inglés`, cutoff en Inglés. Asignarlo como default de películas.
 - **Settings -> Providers**: habilitar OpenSubtitles.com con usuario y contraseña. Bazarr usa su propia API key.
+- **Settings -> Jellyfin**: URL `http://jellyfin.media.svc.cluster.local:8096`, API key de Jellyfin, activar "Update movie library". Así Jellyfin detecta el subtítulo al instante (NFS no dispara el monitoreo en tiempo real).
 
 ## Notas
 
