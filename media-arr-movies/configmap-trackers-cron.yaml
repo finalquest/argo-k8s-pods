@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trackers-cron
+  namespace: media
+data:
+  update-trackers.py: |
+    #!/usr/bin/env python3
+    """Fetch public tracker lists, merge them, and set qBittorrent's global tracker list."""
+    import json
+    import os
+    import sys
+    import urllib.parse
+    import urllib.request
+    import http.cookiejar
+
+    SOURCES = [
+        "https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt",
+        "https://newtrackon.com/api/live",
+        "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt",
+    ]
+    QBIT = "http://qbittorrent.media.svc.cluster.local:8080"
+
+
+    def main():
+        trackers = set()
+        for url in SOURCES:
+            try:
+                body = urllib.request.urlopen(url, timeout=60).read().decode()
+            except Exception as exc:
+                print("warn: could not fetch %s: %s" % (url, exc))
+                continue
+            for line in body.splitlines():
+                line = line.strip()
+                if line:
+                    trackers.add(line)
+
+        trackers = sorted(trackers)
+        print("trackers merged: %d" % len(trackers))
+        if not trackers:
+            print("no trackers found, aborting")
+            return 1
+
+        user = os.environ["QBITTORRENT_USERNAME"]
+        password = os.environ["QBITTORRENT_PASSWORD"]
+
+        opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+        )
+        login = urllib.parse.urlencode({"username": user, "password": password}).encode()
+        opener.open(QBIT + "/api/v2/auth/login", login, timeout=30).read()
+
+        prefs = json.dumps({
+            "add_trackers_enabled": True,
+            "add_trackers": "\n".join(trackers),
+            "add_trackers_from_url_enabled": False,
+        })
+        payload = urllib.parse.urlencode({"json": prefs}).encode()
+        resp = opener.open(QBIT + "/api/v2/app/setPreferences", payload, timeout=30)
+        print("setPreferences: HTTP %s" % resp.status)
+        return 0
+
+
+    if __name__ == "__main__":
+        sys.exit(main())

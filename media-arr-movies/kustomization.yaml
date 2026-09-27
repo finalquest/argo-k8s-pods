@@ -5,6 +5,8 @@ resources:
   - pv-pvc-movies-nfs.yaml
   - pvc.yaml
   - configmap-radarr-scripts.yaml
+  - configmap-trackers-cron.yaml
+  - cronjob-trackers.yaml
   - deployment-radarr.yaml
   - service-radarr.yaml
   - deployment-jellyfin.yaml

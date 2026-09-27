@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qbittorrent-trackers
+  namespace: media
+spec:
+  schedule: "0 4 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: qbittorrent-trackers
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            media-node: "true"
+          containers:
+            - name: update-trackers
+              image: python:3-alpine
+              command:
+                - python
+                - /scripts/update-trackers.py
+              env:
+                - name: QBITTORRENT_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: qbittorrent-credentials
+                      key: WEBUI_USERNAME
+                - name: QBITTORRENT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: qbittorrent-credentials
+                      key: WEBUI_PASSWORD
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: trackers-cron
