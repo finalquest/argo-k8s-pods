@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyseerr
+  namespace: media
+  labels:
+    app: jellyseerr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyseerr
+  template:
+    metadata:
+      labels:
+        app: jellyseerr
+    spec:
+      nodeSelector:
+        media-node: "true"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: jellyseerr
+          image: ghcr.io/fallenbagel/jellyseerr:latest
+          env:
+            - name: TZ
+              value: "America/Argentina/Buenos_Aires"
+          ports:
+            - name: http
+              containerPort: 5055
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: jellyseerr-config
