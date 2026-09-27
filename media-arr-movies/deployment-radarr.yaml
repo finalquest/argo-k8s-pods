@@ -39,6 +39,11 @@ spec:
               mountPath: /downloads
             - name: movies
               mountPath: /movies
+            - name: scripts
+              mountPath: /scripts
+            - name: jellyfin-secret
+              mountPath: /scripts/secret
+              readOnly: true
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -49,3 +54,11 @@ spec:
         - name: movies
           persistentVolumeClaim:
             claimName: movies-nfs
+        - name: scripts
+          configMap:
+            name: radarr-scripts
+            defaultMode: 0755
+        - name: jellyfin-secret
+          secret:
+            secretName: jellyfin-api-key
+            optional: true

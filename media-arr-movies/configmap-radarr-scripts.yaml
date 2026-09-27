@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: radarr-scripts
+  namespace: media
+data:
+  refresh-jellyfin.sh: |
+    #!/bin/sh
+    # Radarr custom script: trigger a Jellyfin library scan after an import.
+    # The Jellyfin API key is mounted at /scripts/secret/api-key.
+    TOKEN="$(cat /scripts/secret/api-key 2>/dev/null)"
+    if [ -z "$TOKEN" ]; then
+      echo "refresh-jellyfin: no token found, skipping"
+      exit 0
+    fi
+    JELLYFIN_URL="${JELLYFIN_URL:-http://jellyfin.media.svc.cluster.local:8096}"
+    curl -s -m 30 -X POST "$JELLYFIN_URL/Library/Refresh" \
+      -H "Authorization: MediaBrowser Token=\"$TOKEN\"" \
+      -o /dev/null -w "refresh-jellyfin: HTTP %{http_code}\n"

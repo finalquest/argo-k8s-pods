@@ -4,6 +4,7 @@ namespace: media
 resources:
   - pv-pvc-movies-nfs.yaml
   - pvc.yaml
+  - configmap-radarr-scripts.yaml
   - deployment-radarr.yaml
   - service-radarr.yaml
   - deployment-jellyfin.yaml
