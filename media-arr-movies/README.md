@@ -71,6 +71,25 @@ Bazarr solo trackea películas que ya tienen archivo en `/movies`.
 - **Settings -> Providers**: habilitar OpenSubtitles.com con usuario y contraseña. Bazarr usa su propia API key.
 - **Settings -> Jellyfin**: URL `http://jellyfin.media.svc.cluster.local:8096`, API key de Jellyfin, activar "Update movie library". Así Jellyfin detecta el subtítulo al instante (NFS no dispara el monitoreo en tiempo real).
 
+### 7. Radarr -> Jellyfin al importar
+
+Jellyfin no detecta archivos nuevos por NFS (inotify no ve los cambios de otro contenedor). Para que la película aparezca al instante, Radarr ejecuta un script al importar.
+
+- El script vive en el ConfigMap `radarr-scripts` y se monta en `/scripts/refresh-jellyfin.sh`.
+- El token de Jellyfin viene del secret `jellyfin-api-key` (clave `api-key`), montado en `/scripts/secret`.
+
+El secret se crea a mano (no se versiona):
+
+```bash
+kubectl -n media create secret generic jellyfin-api-key \
+  --from-literal=api-key='<JELLYFIN_API_KEY>'
+```
+
+Conexión en Radarr: **Settings -> Connect -> Custom Script**
+
+- Path: `/scripts/refresh-jellyfin.sh`
+- Events: **On Import** y **On Upgrade**.
+
 ## Notas
 
 - Todos los pods usan `nodeSelector: media-node=true` y `fsGroup: 1000`.
