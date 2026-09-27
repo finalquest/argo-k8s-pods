@@ -10,4 +10,6 @@ resources:
   - service-jellyfin.yaml
   - deployment-jellyseerr.yaml
   - service-jellyseerr.yaml
+  - deployment-bazarr.yaml
+  - service-bazarr.yaml
   - ingress.yaml
