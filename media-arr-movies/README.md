@@ -9,12 +9,14 @@ Stack para descargar y ver películas en la red. Reutiliza Prowlarr y qBittorren
 | Radarr | `lscr.io/linuxserver/radarr` | 7878 | `https://radarr.finalq.xyz` |
 | Jellyfin | `lscr.io/linuxserver/jellyfin` | 8096 | `https://jellyfin.finalq.xyz` |
 | Jellyseerr | `ghcr.io/fallenbagel/jellyseerr` | 5055 | `https://jellyseerr.finalq.xyz` |
+| Bazarr | `lscr.io/linuxserver/bazarr` | 6767 | `https://bazarr.finalq.xyz` |
 
 ## Storage
 
 - `movies-nfs` -> NFS `10.1.0.152:/data/exports/media/movies` (biblioteca final, RWX).
 - `downloads-nfs` -> PVC existente del stack de libros (descargas en curso).
-- Configs en `local-path`: `radarr-config`, `jellyfin-config`, `jellyseerr-config`.
+- `movies-nfs` también se monta en Bazarr en `/movies` (escribe los subtítulos junto al video).
+- Configs en `local-path`: `radarr-config`, `jellyfin-config`, `jellyseerr-config`, `bazarr-config`.
 
 ## Conexiones manuales (una vez)
 
@@ -59,6 +61,14 @@ El asistente pide conectar Jellyfin, Radarr y (opcional) Prowlarr:
 - Radarr URL: `http://radarr.media.svc.cluster.local:7878`
 
 Luego los usuarios piden películas desde `https://jellyseerr.finalq.xyz`.
+
+### 6. Bazarr (subtítulos)
+
+Bazarr solo trackea películas que ya tienen archivo en `/movies`.
+
+- **Settings -> Radarr**: host `radarr.media.svc.cluster.local`, puerto `7878`, API key de Radarr.
+- **Settings -> Languages**: perfil `Español Latam > España > Inglés`, cutoff en Inglés. Asignarlo como default de películas.
+- **Settings -> Providers**: habilitar OpenSubtitles.com con usuario y contraseña. Bazarr usa su propia API key.
 
 ## Notas
 
