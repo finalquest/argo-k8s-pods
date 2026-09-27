@@ -90,6 +90,23 @@ Conexión en Radarr: **Settings -> Connect -> Custom Script**
 - Path: `/scripts/refresh-jellyfin.sh`
 - Events: **On Import** y **On Upgrade**.
 
+### 8. Trackers de qBittorrent (CronJob)
+
+qBittorrent solo acepta **una** URL en "Automatically append trackers from URL". Para combinar varias fuentes hay un CronJob diario:
+
+- `configmap-trackers-cron.yaml`: script Python que descarga y mezcla.
+- `cronjob-trackers.yaml`: corre todos los días a las 04:00.
+
+Fuentes: XIU2 `all.txt`, NewTrackon `live` y ngosang `best`. El script las une, saca repetidos, y escribe la lista en `add_trackers` de qBittorrent. Usa el secret `qbittorrent-credentials`.
+
+Notas:
+
+- `add_trackers_from_url` queda desactivado: el CronJob es la única fuente.
+- Prueba manual:
+  ```bash
+  kubectl -n media create job trackers-test --from=cronjob/qbittorrent-trackers
+  ```
+
 ## Notas
 
 - Todos los pods usan `nodeSelector: media-node=true` y `fsGroup: 1000`.
