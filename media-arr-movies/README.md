@@ -1,81 +1,91 @@
 # media-arr-movies
 
-Stack para descargar y ver películas en la red. Reutiliza Prowlarr y qBittorrent del stack `media-arr-books`.
+Stack para descargar y ver películas y series en la red. Reutiliza Prowlarr y qBittorrent del stack `media-arr-books`.
 
 ## Componentes
 
 | App | Imagen | Puerto | URL |
 | --- | --- | --- | --- |
 | Radarr | `lscr.io/linuxserver/radarr` | 7878 | `https://radarr.finalq.xyz` |
+| Sonarr | `lscr.io/linuxserver/sonarr` | 8989 | `https://sonarr.finalq.xyz` |
 | Jellyfin | `lscr.io/linuxserver/jellyfin` | 8096 | `https://jellyfin.finalq.xyz` |
 | Jellyseerr | `ghcr.io/fallenbagel/jellyseerr` | 5055 | `https://jellyseerr.finalq.xyz` |
 | Bazarr | `lscr.io/linuxserver/bazarr` | 6767 | `https://bazarr.finalq.xyz` |
 
 ## Storage
 
-- `movies-nfs` -> NFS `10.1.0.152:/data/exports/media/movies` (biblioteca final, RWX).
+- `movies-nfs` -> NFS `10.1.0.152:/data/exports/media/movies` (películas, RWX).
+- `tv-nfs` -> NFS `10.1.0.152:/data/exports/media/tv` (series, RWX).
 - `downloads-nfs` -> PVC existente del stack de libros (descargas en curso).
-- `movies-nfs` también se monta en Bazarr en `/movies` (escribe los subtítulos junto al video).
-- Configs en `local-path`: `radarr-config`, `jellyfin-config`, `jellyseerr-config`, `bazarr-config`.
+- `movies-nfs` y `tv-nfs` también se montan en Bazarr en `/movies` y `/tv` (escribe los subtítulos junto al video).
+- Configs en `local-path`: `radarr-config`, `sonarr-config`, `jellyfin-config`, `jellyseerr-config`, `bazarr-config`.
 
 ## Conexiones manuales (una vez)
 
 Estos pasos se hacen por UI. Necesitan las API keys, así que no se versionan.
 
-### 1. Radarr -> qBittorrent
+### 1. Radarr y Sonarr -> qBittorrent
 
 En Radarr: **Settings -> Download Clients -> + -> qBittorrent**
+En Sonarr: lo mismo (**Settings -> Download Clients -> + -> qBittorrent**)
 
 - Host: `qbittorrent.media.svc.cluster.local`
 - Port: `8080`
 - Username / Password: los del secret `qbittorrent-credentials`.
 
-### 2. Prowlarr -> Radarr
+### 2. Prowlarr -> Radarr y Sonarr
 
-En Prowlarr: **Settings -> Apps -> + -> Radarr**
+En Prowlarr: **Settings -> Apps -> + -> Radarr** (y repetir con Sonarr)
 
 - Prowlarr Server: `http://prowlarr.media.svc.cluster.local:9696`
 - Radarr Server: `http://radarr.media.svc.cluster.local:7878`
-- API Key: la de Radarr (**Settings -> General**).
+- Sonarr Server: `http://sonarr.media.svc.cluster.local:8989`
+- API Key: la del *arr (**Settings -> General**).
 
 Guarda con **Test**.
 
-### 3. Radarr -> carpeta de películas
+### 3. Radarr y Sonarr -> carpeta de biblioteca
 
 En Radarr: **Settings -> Media Management -> Root Folder -> Add Root Folder**
 
-- Ruta: `/movies` (mapea a la biblioteca NFS).
+- Ruta: `/movies` (mapea a la biblioteca NFS de películas).
+
+En Sonarr: **Settings -> Media Management -> Root Folder -> Add Root Folder**
+
+- Ruta: `/tv` (mapea a la biblioteca NFS de series).
 
 ### 4. Jellyfin
 
-En el asistente inicial, agrega la biblioteca:
+En el asistente inicial, agrega las bibliotecas:
 
-- Tipo: **Movies**.
-- Folder: `/data/movies`.
+- Tipo: **Movies**. Folder: `/data/movies`.
+- Tipo: **Shows**. Folder: `/data/tv`.
 
 ### 5. Jellyseerr
 
-El asistente pide conectar Jellyfin, Radarr y (opcional) Prowlarr:
+El asistente pide conectar Jellyfin, Radarr, Sonarr y (opcional) Prowlarr:
 
 - Jellyfin URL: `http://jellyfin.media.svc.cluster.local:8096`
 - Radarr URL: `http://radarr.media.svc.cluster.local:7878`
+- Sonarr URL: `http://sonarr.media.svc.cluster.local:8989`
 
-Luego los usuarios piden películas desde `https://jellyseerr.finalq.xyz`.
+Luego los usuarios piden películas y series desde `https://jellyseerr.finalq.xyz`.
 
 ### 6. Bazarr (subtítulos)
 
-Bazarr solo trackea películas que ya tienen archivo en `/movies`.
+Bazarr solo trackea contenido que ya tiene archivo en `/movies` o `/tv`.
 
 - **Settings -> Radarr**: host `radarr.media.svc.cluster.local`, puerto `7878`, API key de Radarr.
+- **Settings -> Sonarr**: host `sonarr.media.svc.cluster.local`, puerto `8989`, API key de Sonarr.
 - **Settings -> Languages**: perfil `Español Latam > España > Inglés`, cutoff en Inglés. Asignarlo como default de películas.
 - **Settings -> Providers**: habilitar OpenSubtitles.com con usuario y contraseña. Bazarr usa su propia API key.
 - **Settings -> Jellyfin**: URL `http://jellyfin.media.svc.cluster.local:8096`, API key de Jellyfin, activar "Update movie library". Así Jellyfin detecta el subtítulo al instante (NFS no dispara el monitoreo en tiempo real).
 
-### 7. Radarr -> Jellyfin al importar
+### 7. Radarr y Sonarr -> Jellyfin al importar
 
-Jellyfin no detecta archivos nuevos por NFS (inotify no ve los cambios de otro contenedor). Para que la película aparezca al instante, Radarr ejecuta un script al importar.
+Jellyfin no detecta archivos nuevos por NFS (inotify no ve los cambios de otro contenedor). Para que el contenido aparezca al instante, Radarr y Sonarr ejecutan un script al importar.
 
-- El script vive en el ConfigMap `radarr-scripts` y se monta en `/scripts/refresh-jellyfin.sh`.
+- El script vive en el ConfigMap `arr-scripts` y se monta en `/scripts/refresh-jellyfin.sh`.
 - El token de Jellyfin viene del secret `jellyfin-api-key` (clave `api-key`), montado en `/scripts/secret`.
 
 El secret se crea a mano (no se versiona):
@@ -85,7 +95,7 @@ kubectl -n media create secret generic jellyfin-api-key \
   --from-literal=api-key='<JELLYFIN_API_KEY>'
 ```
 
-Conexión en Radarr: **Settings -> Connect -> Custom Script**
+Conexión en Radarr y Sonarr: **Settings -> Connect -> Custom Script**
 
 - Path: `/scripts/refresh-jellyfin.sh`
 - Events: **On Import** y **On Upgrade**.
@@ -110,4 +120,4 @@ Notas:
 ## Notas
 
 - Todos los pods usan `nodeSelector: media-node=true` y `fsGroup: 1000`.
-- Si cambias la ruta NFS, edita `pv-pvc-movies-nfs.yaml`.
+- Si cambias una ruta NFS, edita `pv-pvc-movies-nfs.yaml` o `pv-pvc-tv-nfs.yaml`.

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-tv-nfs
+spec:
+  capacity:
+    storage: 1000Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-manual
+  mountOptions:
+    - vers=4
+  nfs:
+    server: 10.1.0.152
+    path: /data/exports/media/tv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tv-nfs
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1000Gi
+  storageClassName: nfs-manual
+  volumeName: pv-tv-nfs

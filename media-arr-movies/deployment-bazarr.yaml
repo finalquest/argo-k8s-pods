@@ -37,6 +37,8 @@ spec:
               mountPath: /config
             - name: movies
               mountPath: /movies
+            - name: tv
+              mountPath: /tv
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -44,3 +46,6 @@ spec:
         - name: movies
           persistentVolumeClaim:
             claimName: movies-nfs
+        - name: tv
+          persistentVolumeClaim:
+            claimName: tv-nfs

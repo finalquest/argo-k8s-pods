@@ -56,7 +56,7 @@ spec:
             claimName: movies-nfs
         - name: scripts
           configMap:
-            name: radarr-scripts
+            name: arr-scripts
             defaultMode: 0755
         - name: jellyfin-secret
           secret:

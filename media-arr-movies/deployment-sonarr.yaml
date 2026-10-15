@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: media
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      nodeSelector:
+        media-node: "true"
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Argentina/Buenos_Aires"
+          ports:
+            - name: http
+              containerPort: 8989
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: tv
+              mountPath: /tv
+            - name: scripts
+              mountPath: /scripts
+            - name: jellyfin-secret
+              mountPath: /scripts/secret
+              readOnly: true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: downloads-nfs
+        - name: tv
+          persistentVolumeClaim:
+            claimName: tv-nfs
+        - name: scripts
+          configMap:
+            name: arr-scripts
+            defaultMode: 0755
+        - name: jellyfin-secret
+          secret:
+            secretName: jellyfin-api-key
+            optional: true

@@ -3,12 +3,15 @@ kind: Kustomization
 namespace: media
 resources:
   - pv-pvc-movies-nfs.yaml
+  - pv-pvc-tv-nfs.yaml
   - pvc.yaml
-  - configmap-radarr-scripts.yaml
+  - configmap-arr-scripts.yaml
   - configmap-trackers-cron.yaml
   - cronjob-trackers.yaml
   - deployment-radarr.yaml
   - service-radarr.yaml
+  - deployment-sonarr.yaml
+  - service-sonarr.yaml
   - deployment-jellyfin.yaml
   - service-jellyfin.yaml
   - deployment-jellyseerr.yaml
