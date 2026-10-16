@@ -1,0 +1,11 @@
+- greeting:
+    text: Home
+- resources:
+    label: Sistema
+    cpu: true
+    memory: true
+    uptime: true
+- resources:
+    label: Almacenamiento (NAS)
+    expanded: true
+    disk: /mnt/media

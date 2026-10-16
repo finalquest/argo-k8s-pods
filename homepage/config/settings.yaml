@@ -1,0 +1,14 @@
+title: Home
+theme: dark
+color: slate
+headerStyle: clean
+hideVersion: true
+layout:
+  Storage:
+    style: row
+    columns: 1
+  Media:
+    style: row
+    columns: 4
+providers:
+  kubernetes: {}

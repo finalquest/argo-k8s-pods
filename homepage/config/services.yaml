@@ -1,0 +1,62 @@
+- Storage:
+    - Uso del NAS:
+        icon: mdi-harddisk
+        widget:
+          type: customapi
+          url: http://diskusage.homepage.svc.cluster.local/usage.json
+          display: dynamic-list
+          mappings:
+            name: name
+            label: bytes
+            format: bytes
+- Media:
+    - Sonarr:
+        icon: sonarr.png
+        href: https://sonarr.finalq.xyz
+        widget:
+          type: sonarr
+          url: http://sonarr.media.svc.cluster.local:8989
+          key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
+          enableQueue: true
+    - Radarr:
+        icon: radarr.png
+        href: https://radarr.finalq.xyz
+        widget:
+          type: radarr
+          url: http://radarr.media.svc.cluster.local:7878
+          key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
+          enableQueue: true
+    - Jellyseerr:
+        icon: jellyseerr.png
+        href: https://jellyseerr.finalq.xyz
+    - Bazarr:
+        icon: bazarr.png
+        href: https://bazarr.finalq.xyz
+        widget:
+          type: bazarr
+          url: http://bazarr.media.svc.cluster.local:6767
+          key: "{{HOMEPAGE_VAR_BAZARR_KEY}}"
+    - Prowlarr:
+        icon: prowlarr.png
+        href: https://prowlarr.finalq.xyz
+        widget:
+          type: prowlarr
+          url: http://prowlarr.media.svc.cluster.local:9696
+          key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
+    - qBittorrent:
+        icon: qbittorrent.png
+        href: https://qbittorrent.finalq.xyz
+        widget:
+          type: qbittorrent
+          url: http://qbittorrent.media.svc.cluster.local:8080
+          username: "{{HOMEPAGE_VAR_QBIT_USER}}"
+          password: "{{HOMEPAGE_VAR_QBIT_PASS}}"
+    - Jellyfin:
+        icon: jellyfin.png
+        href: https://jellyfin.finalq.xyz
+        widget:
+          type: jellyfin
+          url: http://jellyfin.media.svc.cluster.local:8096
+          key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+          enableBlocks: true
+          enableNowPlaying: true
