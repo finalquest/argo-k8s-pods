@@ -5,6 +5,7 @@ resources:
   - rbac.yaml
   - storage.yaml
   - configmap.yaml
+  - diskusage.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

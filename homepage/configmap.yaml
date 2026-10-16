@@ -11,6 +11,9 @@ data:
     headerStyle: clean
     hideVersion: true
     layout:
+      Storage:
+        style: row
+        columns: 1
       Media:
         style: row
         columns: 4
@@ -21,6 +24,17 @@ data:
     ingress:
       enabled: true
   services.yaml: |
+    - Storage:
+        - Uso del NAS:
+            icon: mdi-harddisk
+            widget:
+              type: customapi
+              url: http://diskusage.homepage.svc.cluster.local/usage.json
+              display: dynamic-list
+              mappings:
+                name: name
+                label: bytes
+                format: bytes
     - Media:
         - Sonarr:
             icon: sonarr.png
