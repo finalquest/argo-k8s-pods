@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app: homepage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      nodeSelector:
+        media-node: "true"
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: America/Argentina/Buenos_Aires
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: homepage.finalq.xyz
+            - name: HOMEPAGE_VAR_SONARR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: sonarr-key
+            - name: HOMEPAGE_VAR_RADARR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: radarr-key
+            - name: HOMEPAGE_VAR_PROWLARR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: prowlarr-key
+            - name: HOMEPAGE_VAR_BAZARR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: bazarr-key
+            - name: HOMEPAGE_VAR_JELLYFIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: jellyfin-key
+            - name: HOMEPAGE_VAR_QBIT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: qbittorrent-user
+            - name: HOMEPAGE_VAR_QBIT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: qbittorrent-pass
+          ports:
+            - name: http
+              containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 6
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: logs
+              mountPath: /app/config/logs
+            - name: media
+              mountPath: /mnt/media
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: homepage-config
+        - name: logs
+          emptyDir: {}
+        - name: media
+          persistentVolumeClaim:
+            claimName: homepage-media-nfs
