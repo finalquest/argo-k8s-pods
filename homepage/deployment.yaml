@@ -70,14 +70,15 @@ spec:
               path: /
               port: http
             failureThreshold: 30
-            periodSeconds: 5
-            timeoutSeconds: 5
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 10
           readinessProbe:
             httpGet:
               path: /
               port: http
             failureThreshold: 6
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
@@ -85,16 +86,16 @@ spec:
               path: /
               port: http
             failureThreshold: 6
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 10
           resources:
             requests:
               cpu: 100m
               memory: 128Mi
             limits:
               cpu: 300m
-              memory: 256Mi
+              memory: 512Mi
           volumeMounts:
             - name: config
               mountPath: /app/config
