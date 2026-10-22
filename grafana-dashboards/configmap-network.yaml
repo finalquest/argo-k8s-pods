@@ -320,9 +320,7 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "right",
-              "calcs": [
-                "sum"
-              ]
+              "calcs": []
             },
             "tooltip": {
               "mode": "multi",
@@ -372,9 +370,7 @@ data:
             "legend": {
               "displayMode": "table",
               "placement": "right",
-              "calcs": [
-                "sum"
-              ]
+              "calcs": []
             },
             "tooltip": {
               "mode": "multi",
@@ -401,7 +397,7 @@ data:
           "title": "Top equipos (subida)",
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 8,
             "x": 0,
             "y": 12
           },
@@ -474,8 +470,8 @@ data:
           "title": "Top destinos externos",
           "gridPos": {
             "h": 8,
-            "w": 12,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 12
           },
           "datasource": {
@@ -638,6 +634,76 @@ data:
             "enableLogDetails": true,
             "dedupStrategy": "none",
             "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 11,
+          "type": "table",
+          "title": "Top equipos (bajada)",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 12
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "topk(15, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | dst=~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__range])))",
+              "instant": true,
+              "range": false,
+              "format": "table",
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value.*",
+                "renamePattern": "Bytes"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "dst": "Equipo"
+                }
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Bytes",
+                "desc": true
+              }
+            ]
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "align": "auto"
+              }
+            },
+            "overrides": []
           }
         }
       ]
