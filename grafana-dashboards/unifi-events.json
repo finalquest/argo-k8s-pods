@@ -290,7 +290,7 @@
           "legendFormat": "Protect"
         },
         {
-          "refId": "A",
+          "refId": "B",
           "expr": "sum(count_over_time({job=\"unifi\"} |= \"UniFi Network\" [$__interval]))",
           "datasource": {
             "type": "loki",
@@ -299,7 +299,7 @@
           "legendFormat": "Network"
         },
         {
-          "refId": "A",
+          "refId": "C",
           "expr": "sum(count_over_time({job=\"unifi\"} |= \"UniFi OS\" [$__interval]))",
           "datasource": {
             "type": "loki",
@@ -381,12 +381,24 @@
       },
       "transformations": [
         {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "Value.*",
+            "renamePattern": "Eventos"
+          }
+        },
+        {
           "id": "organize",
           "options": {
-            "excludeByName": {},
+            "excludeByName": {
+              "Time": true
+            },
             "renameByName": {
-              "event": "Detección",
-              "Value": "Eventos"
+              "event": "Detección"
             }
           }
         }
@@ -409,7 +421,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "{job=\"unifi\"}",
+          "expr": "{job=\"unifi\"} | json | line_format \"{{.message}}\"",
           "datasource": {
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"

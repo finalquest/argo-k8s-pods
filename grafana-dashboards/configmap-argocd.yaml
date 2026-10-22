@@ -267,6 +267,12 @@ data:
                         }
                       }
                     ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
                   }
                 ]
               },
@@ -309,6 +315,12 @@ data:
                         }
                       }
                     ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
                   }
                 ]
               }
@@ -331,6 +343,11 @@ data:
               "id": "organize",
               "options": {
                 "excludeByName": {},
+                "indexByName": {
+                  "name": 0,
+                  "sync_status": 1,
+                  "health_status": 2
+                },
                 "renameByName": {
                   "name": "App",
                   "sync_status": "Sync",
