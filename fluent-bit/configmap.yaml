@@ -29,12 +29,36 @@ data:
         Parser  unifi
         Tag     unifi
 
+    [INPUT]
+        Name    syslog
+        Mode    udp
+        Listen  0.0.0.0
+        Port    5141
+        Parser  unifi
+        Tag     traffic
+
+    [INPUT]
+        Name    syslog
+        Mode    tcp
+        Listen  0.0.0.0
+        Port    5141
+        Parser  unifi
+        Tag     traffic
+
     [OUTPUT]
         Name         loki
         Match        unifi
         Host         loki-gateway.logging.svc.cluster.local
         Port         80
         Labels       job=unifi
+        Line_Format  json
+
+    [OUTPUT]
+        Name         loki
+        Match        traffic
+        Host         loki-gateway.logging.svc.cluster.local
+        Port         80
+        Labels       job=unifi-traffic
         Line_Format  json
   parsers.conf: |
     [PARSER]

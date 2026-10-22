@@ -18,3 +18,13 @@ spec:
       port: 5140
       targetPort: 5140
       nodePort: 30515
+    - name: traffic-udp
+      protocol: UDP
+      port: 5141
+      targetPort: 5141
+      nodePort: 30516
+    - name: traffic-tcp
+      protocol: TCP
+      port: 5141
+      targetPort: 5141
+      nodePort: 30517
