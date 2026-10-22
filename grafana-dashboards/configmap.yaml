@@ -316,7 +316,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [1h]))",
+              "expr": "sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [$__interval]))",
               "legendFormat": "{{dst}}",
               "datasource": {
                 "type": "loki",
@@ -369,7 +369,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [1h]))",
+              "expr": "sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [$__interval]))",
               "legendFormat": "{{src}}",
               "datasource": {
                 "type": "loki",

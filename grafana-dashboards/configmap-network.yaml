@@ -308,7 +308,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(10, sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [1h])))",
+              "expr": "topk(10, sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__interval])))",
               "datasource": {
                 "type": "loki",
                 "uid": "P8E80F9AEF21F6940"
@@ -360,7 +360,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(10, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | dst=~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [1h])))",
+              "expr": "topk(10, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | dst=~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__interval])))",
               "datasource": {
                 "type": "loki",
                 "uid": "P8E80F9AEF21F6940"
@@ -543,7 +543,7 @@ data:
         },
         {
           "id": 9,
-          "type": "piechart",
+          "type": "barchart",
           "title": "Protocolos (subida)",
           "gridPos": {
             "h": 8,
@@ -569,25 +569,30 @@ data:
             }
           ],
           "options": {
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "pieType": "donut",
+            "xField": "protocol",
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "barWidth": 0.7,
+            "groupWidth": 0.7,
             "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "values": [
-                "value"
-              ]
+              "showLegend": false,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "bytes"
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 1,
+                "fillOpacity": 80,
+                "gradientMode": "none"
+              }
             },
             "overrides": []
           }
