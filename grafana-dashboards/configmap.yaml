@@ -2,13 +2,19 @@ apiVersion: v1
 data:
   unifi-tv.json: |
     {
-      "annotations": { "list": [] },
+      "annotations": {
+        "list": []
+      },
       "editable": true,
       "graphTooltip": 1,
       "links": [],
       "refresh": "1m",
       "schemaVersion": 39,
-      "tags": ["unifi", "netflow", "tv"],
+      "tags": [
+        "unifi",
+        "netflow",
+        "tv"
+      ],
       "templating": {
         "list": [
           {
@@ -22,15 +28,26 @@ data:
               "value": "10.1.0.25"
             },
             "options": [
-              { "selected": true, "text": "10.1.0.25", "value": "10.1.0.25" },
-              { "selected": false, "text": "10.1.0.118", "value": "10.1.0.118" }
+              {
+                "selected": true,
+                "text": "10.1.0.25",
+                "value": "10.1.0.25"
+              },
+              {
+                "selected": false,
+                "text": "10.1.0.118",
+                "value": "10.1.0.118"
+              }
             ],
             "multi": false,
             "includeAll": false
           }
         ]
       },
-      "time": { "from": "now-24h", "to": "now" },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
       "timezone": "browser",
       "title": "UniFi — TV",
       "description": "Tráfico de la TV según NetFlow exportado por el UDM y almacenado en Loki.",
@@ -42,19 +59,36 @@ data:
           "type": "stat",
           "title": "Bajada",
           "description": "Bytes recibidos por la TV en el rango seleccionado.",
-          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "sum(sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [$__range]))",
               "instant": true,
               "range": false,
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
@@ -65,8 +99,18 @@ data:
             "defaults": {
               "unit": "bytes",
               "decimals": 1,
-              "color": { "mode": "thresholds" },
-              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
             },
             "overrides": []
           }
@@ -76,19 +120,36 @@ data:
           "type": "stat",
           "title": "Subida",
           "description": "Bytes enviados por la TV en el rango seleccionado.",
-          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "sum(sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [$__range]))",
               "instant": true,
               "range": false,
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
@@ -99,8 +160,18 @@ data:
             "defaults": {
               "unit": "bytes",
               "decimals": 1,
-              "color": { "mode": "thresholds" },
-              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
             },
             "overrides": []
           }
@@ -110,19 +181,36 @@ data:
           "type": "stat",
           "title": "Flujos enviados",
           "description": "Cantidad de flujos con origen la TV.",
-          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "sum(count_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" [$__range]))",
               "instant": true,
               "range": false,
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
@@ -133,8 +221,18 @@ data:
             "defaults": {
               "unit": "short",
               "decimals": 0,
-              "color": { "mode": "thresholds" },
-              "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
             },
             "overrides": []
           }
@@ -144,19 +242,36 @@ data:
           "type": "stat",
           "title": "Destinos distintos",
           "description": "Cantidad de IPs de destino contactadas por la TV.",
-          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "count(count by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [$__range])))",
               "instant": true,
               "range": false,
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
@@ -167,8 +282,18 @@ data:
             "defaults": {
               "unit": "short",
               "decimals": 0,
-              "color": { "mode": "thresholds" },
-              "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] }
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple",
+                    "value": null
+                  }
+                ]
+              }
             },
             "overrides": []
           }
@@ -178,24 +303,50 @@ data:
           "type": "timeseries",
           "title": "Subida por destino",
           "description": "Bytes enviados por la TV, agrupados por IP de destino.",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 4
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [1h]))",
               "legendFormat": "{{dst}}",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] },
-            "tooltip": { "mode": "multi", "sort": "desc" }
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "fieldConfig": {
             "defaults": {
               "unit": "bytes",
-              "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never", "spanNulls": true }
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              }
             },
             "overrides": []
           }
@@ -205,24 +356,50 @@ data:
           "type": "timeseries",
           "title": "Bajada por origen",
           "description": "Bytes recibidos por la TV, agrupados por IP de origen.",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 4
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [1h]))",
               "legendFormat": "{{src}}",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {
-            "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] },
-            "tooltip": { "mode": "multi", "sort": "desc" }
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "fieldConfig": {
             "defaults": {
               "unit": "bytes",
-              "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never", "spanNulls": true }
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 1,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              }
             },
             "overrides": []
           }
@@ -232,25 +409,73 @@ data:
           "type": "table",
           "title": "Top destinos (subida)",
           "description": "IPs y puertos que la TV contacta, ordenados por bytes enviados.",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(15, sum by (dst, dst_port) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [$__range])))",
+              "expr": "topk(15, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=\"$tv\" | unwrap in_bytes [$__range])))",
               "instant": true,
               "range": false,
               "format": "table",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "dst": "Destino", "dst_port": "Puerto", "Value": "Bytes" } } }
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value.*",
+                "renamePattern": "Bytes"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "dst": "Destino",
+                  "src": "Origen",
+                  "dst_port": "Puerto",
+                  "src_port": "Puerto"
+                }
+              }
+            }
           ],
-          "options": { "showHeader": true, "sortBy": [{ "displayName": "Bytes", "desc": true }] },
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Bytes",
+                "desc": true
+              }
+            ]
+          },
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "custom": { "align": "auto" } },
-            "overrides": [{ "matcher": { "id": "byName", "options": "Destino" }, "properties": [{ "id": "custom.width", "value": 160 }] }]
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "align": "auto"
+              }
+            },
+            "overrides": []
           }
         },
         {
@@ -258,25 +483,73 @@ data:
           "type": "table",
           "title": "Top orígenes (bajada)",
           "description": "IPs y puertos que envían datos a la TV, ordenados por bytes recibidos.",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(15, sum by (src, src_port) (sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [$__range])))",
+              "expr": "topk(15, sum by (src) (sum_over_time({job=\"netflow\"} | logfmt | dst=\"$tv\" | unwrap in_bytes [$__range])))",
               "instant": true,
               "range": false,
               "format": "table",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "src": "Origen", "src_port": "Puerto", "Value": "Bytes" } } }
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value.*",
+                "renamePattern": "Bytes"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "dst": "Destino",
+                  "src": "Origen",
+                  "dst_port": "Puerto",
+                  "src_port": "Puerto"
+                }
+              }
+            }
           ],
-          "options": { "showHeader": true, "sortBy": [{ "displayName": "Bytes", "desc": true }] },
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "displayName": "Bytes",
+                "desc": true
+              }
+            ]
+          },
           "fieldConfig": {
-            "defaults": { "unit": "bytes", "custom": { "align": "auto" } },
-            "overrides": [{ "matcher": { "id": "byName", "options": "Origen" }, "properties": [{ "id": "custom.width", "value": 160 }] }]
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "align": "auto"
+              }
+            },
+            "overrides": []
           }
         },
         {
@@ -284,18 +557,32 @@ data:
           "type": "logs",
           "title": "Flujos de la TV",
           "description": "Registros NetFlow crudos, en ambos sentidos.",
-          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 20 },
-          "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
           "targets": [
             {
               "refId": "A",
               "expr": "{job=\"netflow\"} | logfmt | src=\"$tv\"",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             },
             {
               "refId": "B",
               "expr": "{job=\"netflow\"} | logfmt | dst=\"$tv\"",
-              "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" }
+              "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+              }
             }
           ],
           "options": {

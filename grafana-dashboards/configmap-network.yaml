@@ -424,14 +424,27 @@ data:
           ],
           "transformations": [
             {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value.*",
+                "renamePattern": "Bytes"
+              }
+            },
+            {
               "id": "organize",
               "options": {
                 "excludeByName": {
                   "Time": true
                 },
                 "renameByName": {
-                  "src": "Equipo",
-                  "Value": "Bytes"
+                  "dst": "Destino",
+                  "src": "Origen",
+                  "dst_port": "Puerto",
+                  "src_port": "Puerto"
                 }
               }
             }
@@ -472,7 +485,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(15, sum by (dst, dst_port) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | dst!~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__range])))",
+              "expr": "topk(15, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | dst!~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__range])))",
               "datasource": {
                 "type": "loki",
                 "uid": "P8E80F9AEF21F6940"
@@ -484,6 +497,17 @@ data:
           ],
           "transformations": [
             {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value.*",
+                "renamePattern": "Bytes"
+              }
+            },
+            {
               "id": "organize",
               "options": {
                 "excludeByName": {
@@ -491,7 +515,9 @@ data:
                 },
                 "renameByName": {
                   "dst": "Destino",
-                  "Value": "Bytes"
+                  "src": "Origen",
+                  "dst_port": "Puerto",
+                  "src_port": "Puerto"
                 }
               }
             }
