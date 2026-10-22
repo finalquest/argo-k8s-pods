@@ -23,7 +23,7 @@ spec:
             type: filesystem
           limits_config:
             retention_period: 720h
-            max_query_series: 3000
+            max_query_series: 5000
         singleBinary:
           replicas: 1
           nodeSelector:

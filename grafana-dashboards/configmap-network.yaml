@@ -467,7 +467,7 @@ data:
         {
           "id": 8,
           "type": "table",
-          "title": "Top destinos externos",
+          "title": "Top destinos externos (6 h)",
           "gridPos": {
             "h": 8,
             "w": 8,
@@ -481,7 +481,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "topk(15, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | dst!~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [$__range])))",
+              "expr": "topk(15, sum by (dst) (sum_over_time({job=\"netflow\"} | logfmt | src=~\"10\\\\.1\\\\.0\\\\..*\" | dst!~\"10\\\\.1\\\\.0\\\\..*\" | unwrap in_bytes [6h])))",
               "datasource": {
                 "type": "loki",
                 "uid": "P8E80F9AEF21F6940"
