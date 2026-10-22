@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   - configmap.yaml
   - configmap-network.yaml
+  - configmap-unifi-events.yaml
+  - configmap-cluster.yaml
+  - configmap-argocd.yaml
