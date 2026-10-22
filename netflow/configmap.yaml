@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netflow
+  namespace: logging
+data:
+  telegraf.conf: |
+    [agent]
+      interval = "10s"
+      flush_interval = "5s"
+      metric_batch_size = 5000
+      omit_hostname = true
+
+    [[inputs.netflow]]
+      service_address = "udp://:2055"
+      protocol = "ipfix"
+      read_buffer_size = "4MiB"
+
+    [[outputs.loki]]
+      domain = "http://loki-gateway.logging.svc.cluster.local"
+      endpoint = "/loki/api/v1/push"
+      metric_name_label = "job"
+      timeout = "10s"

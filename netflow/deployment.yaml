@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflow
+  namespace: logging
+  labels:
+    app: netflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: netflow
+  template:
+    metadata:
+      labels:
+        app: netflow
+    spec:
+      nodeSelector:
+        role: worker
+      containers:
+        - name: telegraf
+          image: telegraf:1.32-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: ipfix-udp
+              containerPort: 2055
+              protocol: UDP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/telegraf
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: netflow
