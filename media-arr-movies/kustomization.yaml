@@ -8,6 +8,8 @@ resources:
   - configmap-arr-scripts.yaml
   - configmap-trackers-cron.yaml
   - cronjob-trackers.yaml
+  - configmap-sonarr-skyhook-aliases.yaml
+  - cronjob-sonarr-skyhook-aliases.yaml
   - deployment-radarr.yaml
   - service-radarr.yaml
   - deployment-sonarr.yaml

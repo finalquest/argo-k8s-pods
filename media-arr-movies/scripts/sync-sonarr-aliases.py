@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Sync Sonarr series aliases from Skyhook into Sonarr's SceneMappings table."""
+
+import json
+import os
+import re
+import sqlite3
+import sys
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
+
+SONARR_DB = os.environ.get("SONARR_DB", "/config/sonarr.db")
+CONFIG_XML = os.environ.get("SONARR_CONFIG_XML", "/config/config.xml")
+SONARR_URL = os.environ.get("SONARR_URL", "http://sonarr.media.svc.cluster.local:8989")
+SKYHOOK_URL = "https://skyhook.sonarr.tv/v1/tvdb/shows/en/{tvdb_id}"
+USER_AGENT = "Sonarr-Skyhook-Alias-Sync/1.0"
+
+
+def clean(value):
+    return re.sub(r"[^A-Za-z0-9]", "", value or "").lower()
+
+
+def fetch_json(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return json.load(response)
+
+
+def read_api_key():
+    try:
+        root = ET.parse(CONFIG_XML).getroot()
+        node = root.find("ApiKey")
+        return node.text.strip() if node is not None and node.text else None
+    except Exception as exc:
+        print(f"config: no api key ({exc})")
+        return None
+
+
+def trigger_refresh(api_key):
+    if not api_key:
+        return
+    payload = json.dumps({"name": "UpdateSceneMapping"}).encode()
+    req = urllib.request.Request(
+        f"{SONARR_URL}/api/v3/command",
+        data=payload,
+        headers={"X-Api-Key": api_key, "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            print(f"refresh: HTTP {response.status}")
+    except Exception as exc:
+        print(f"refresh: failed ({exc})")
+
+
+def main():
+    if not os.path.exists(SONARR_DB):
+        print("sonarr.db not found, skip")
+        return 0
+
+    con = sqlite3.connect(SONARR_DB, timeout=30)
+    con.execute("PRAGMA busy_timeout=30000")
+    cur = con.cursor()
+
+    if not cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='SceneMappings'"
+    ).fetchone():
+        print("SceneMappings not found, skip")
+        return 0
+
+    series = cur.execute("SELECT TvdbId, Title, CleanTitle FROM Series").fetchall()
+    titles = {row[2]: row[0] for row in series}
+
+    inserted = 0
+    skipped = 0
+
+    for tvdb_id, title, clean_title in series:
+        try:
+            data = fetch_json(SKYHOOK_URL.format(tvdb_id=tvdb_id))
+        except Exception as exc:
+            print(f"{title}: skyhook failed ({exc})")
+            continue
+
+        aliases = []
+        for item in data.get("alternativeTitles") or []:
+            alias = (item.get("title") or "").strip()
+            if not alias:
+                continue
+            key = clean(alias)
+            if len(key) < 4 or key == clean_title:
+                skipped += 1
+                continue
+            owner = titles.get(key)
+            if owner is not None and owner != tvdb_id:
+                skipped += 1
+                continue
+            conflict = cur.execute(
+                "SELECT TvdbId FROM SceneMappings WHERE ParseTerm=? AND TvdbId<>? LIMIT 1",
+                (key, tvdb_id),
+            ).fetchone()
+            if conflict:
+                skipped += 1
+                continue
+            aliases.append((alias, key))
+
+        for alias, key in aliases:
+            exists = cur.execute(
+                "SELECT 1 FROM SceneMappings WHERE TvdbId=? AND ParseTerm=? LIMIT 1",
+                (tvdb_id, key),
+            ).fetchone()
+            if exists:
+                continue
+            cur.execute(
+                """
+                INSERT INTO SceneMappings
+                    (TvdbId, SeasonNumber, SearchTerm, ParseTerm, Title, Type,
+                     SceneSeasonNumber, FilterRegex, SceneOrigin, SearchMode, Comment)
+                VALUES
+                    (?, -1, ?, ?, ?, 'skyhook-sync', NULL, NULL, 'Skyhook', NULL,
+                     'Auto alias from Skyhook')
+                """,
+                (tvdb_id, alias, key, alias),
+            )
+            inserted += 1
+            print(f"{title}: + {alias}")
+
+        time.sleep(0.2)
+
+    con.commit()
+    con.close()
+    print(f"done: inserted={inserted} skipped={skipped}")
+    trigger_refresh(read_api_key())
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sonarr-skyhook-aliases
+  namespace: media
+spec:
+  schedule: "17 5 * * *"
+  timeZone: "America/Argentina/Buenos_Aires"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: sonarr-skyhook-aliases
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            media-node: "true"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: sync-aliases
+              image: python:3.12-alpine
+              command:
+                - python
+                - /scripts/sync_aliases.py
+              env:
+                - name: SONARR_DB
+                  value: /config/sonarr.db
+                - name: SONARR_CONFIG_XML
+                  value: /config/config.xml
+                - name: SONARR_URL
+                  value: http://sonarr.media.svc.cluster.local:8989
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: config
+              persistentVolumeClaim:
+                claimName: sonarr-config
+            - name: scripts
+              configMap:
+                name: sonarr-skyhook-aliases
+                defaultMode: 0555
