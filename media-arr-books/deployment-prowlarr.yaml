@@ -35,7 +35,13 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: custom-definitions
+              mountPath: /config/Definitions/Custom
+              readOnly: true
       volumes:
         - name: config
           persistentVolumeClaim:
             claimName: prowlarr-config
+        - name: custom-definitions
+          configMap:
+            name: prowlarr-custom-definitions

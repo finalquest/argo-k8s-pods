@@ -8,6 +8,7 @@ resources:
   - pv-pvc-books-nfs.yaml
   - pv-pvc-biblioteca-secreta-nfs.yaml
   - configmap-nginx-biblioteca.yaml
+  - configmap-prowlarr-definitions.yaml
   - deployment-qbittorrent.yaml
   - deployment-prowlarr.yaml
   - deployment-lazylibrarian.yaml
